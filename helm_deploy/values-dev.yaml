@@ -5,10 +5,15 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: hmpps-challenge-support-intervention-plan-api-dev.hmpps.service.justice.gov.uk
+    host: csip-api-dev.hmpps.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
+    SPRING_PROFILES_ACTIVE: dev
+    API_BASE_URL_HMPPS_AUTH: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+    API_BASE_URL_MANAGE_USERS: "https://manage-users-api-dev.hmpps.service.justice.gov.uk"
+    EVENTS_BASE_URL: "https://csip-api-dev.hmpps.service.justice.gov.uk"
+    SERVICE_ACTIVE_PRISONS: "LEI"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
