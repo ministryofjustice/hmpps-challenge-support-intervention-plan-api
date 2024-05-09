@@ -38,6 +38,7 @@ generic-service:
       DB_NAME: "database_name"
       DB_USER: "database_username"
       DB_PASS: "database_password"
+    hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_HMPPSEVENTTOPIC_ARN: "topic_arn"
 
   allowlist:
