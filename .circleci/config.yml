@@ -65,23 +65,23 @@ workflows:
             - build_docker
             - helm_lint
           helm_timeout: 5m
-#      - request-preprod-approval:
-#          type: approval
-#          requires:
-#            - deploy_dev
-#      - hmpps/deploy_env:
-#          name: deploy_preprod
-#          env: "preprod"
-#          jira_update: true
-#          jira_env_type: staging
-#          pipeline_id: <<pipeline.id>>
-#          pipeline_number: <<pipeline.number>>
-#          context:
-#            - hmpps-common-vars
-#            - hmpps-challenge-support-intervention-plan-api-preprod
-#          requires:
-#            - request-preprod-approval
-#          helm_timeout: 5m
+      - request-preprod-approval:
+          type: approval
+          requires:
+            - deploy_dev
+      - hmpps/deploy_env:
+          name: deploy_preprod
+          env: "preprod"
+          jira_update: true
+          jira_env_type: staging
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
+          context:
+            - hmpps-common-vars
+            - hmpps-challenge-support-intervention-plan-preprod
+          requires:
+            - request-preprod-approval
+          helm_timeout: 5m
 #      - request-prod-approval:
 #          type: approval
 #          requires:
@@ -97,7 +97,7 @@ workflows:
 #          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
 #          context:
 #            - hmpps-common-vars
-#            - hmpps-challenge-support-intervention-plan-api-prod
+#            - hmpps-challenge-support-intervention-plan-prod
 #          requires:
 #            - request-prod-approval
 #          helm_timeout: 5m
