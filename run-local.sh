@@ -31,6 +31,8 @@ export PRISONER_SEARCH_CLIENT_SECRET="$HMPPS_CSIP_PRISONER_SEARCH_CLIENT_SECRET"
 export API_BASE_URL_HMPPS_AUTH=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
 export API_BASE_URL_MANAGE_USERS=https://manage-users-api-dev.hmpps.service.justice.gov.uk
 export API_BASE_URL_PRISONER_SEARCH=https://prisoner-search-dev.prison.service.justice.gov.uk
+export EVENTS_PUBLISH=false
+export EVENTS_BASE_URL=https://csip-api-dev.hmpps.service.justice.gov.uk
 
 export SERVICE_ACTIVE_PRISONS=***
 
