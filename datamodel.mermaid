@@ -1,262 +1,304 @@
 erDiagram
+    csip_record ||--|| referral : "was created by"
+    csip_record ||--o{ audit_event : "changes tracked by"
+    referral ||--o{ contributory_factor : "has contributory factors"
+    referral ||--o| investigation : "optionally has an"
+    referral ||--o| safer_custody_screening_outcome : "optionally has a"
+    investigation ||--o{ interview : "can involve interviews with"
+    referral ||--o| decisions_and_actions : "optionally has"
+    csip_record ||--o| plan : "if decision is progress to CSIP"
+    plan ||--o{ identified_need : "has one or more"
+    plan ||--o{ review : "regularly reviewed"
+    review ||--o{ attendee : "attended by"
     referral }o--|| incident_type : "incident categorised by"
     referral }o--|| incident_location : "incident occurred in"
     referral }o--|| area_of_work : "referer categorised by"
     referral }o--|| incident_involvement : "referred person was involved in the indecent as"
-    referral }o--|| outcome : "referral and decision outcome categorised by"
-    referral }o--|| role : "role of person signing off the referral decision"
-    referral ||--o{ contributory_factor : "has contributory factors"
-    referral ||--o{ interview : "involved interviews with"
-    referral ||--o{ plan : "has intervention plans"
-    referral ||--o{ review : "regularly reviewed"
-    review ||--o{ attendee : "attended by"
+    safer_custody_screening_outcome }o--|| outcome : "outcome categorised by"
+    decisions_and_actions }o--|| outcome : "outcome categorised by"
+    decisions_and_actions }o--|| role : "role of person signing off the referral decision"
     contributory_factor }o--|| contributory_factor_type : "categorised by"
 
-referral {
-    bigserial referral_id PK "not null"
-    uuid referral_uuid "not null unique"
-    varchar(10) prison_number "not null"
-    varchar(6) prison_code_at_referral
-    int referral_sequence "not null"
-    varchar(10) log_number
-    date incident_date "not null"
-    time incident_time
-    int incident_type_id FK "not null"
-    int incident_location_id FK "not null"
-    varchar(240) referred_by
-    int referer_area_of_work_id FK "not null"
-    date referral_date
-    text referral_summary
-    boolean proactive_referral
-    boolean staff_assaulted
-    text assaulted_staff_name
+    csip_record {
+        bigserial record_id PK "not null"
+        uuid record_uuid "not null unique. Mapped to OFFENDER_CSIP_REPORTS"
+        varchar(10) prison_number "not null"
+        varchar(6) prison_code_when_recorded
+        int sequence "not null. We could calculate this or delegate to sync"
+        varchar(10) log_number
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        varchar(255) created_by_display_name "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        varchar(255) last_modified_by_display_name
+    }
 
-    date release_date
-    int incident_involvement_id FK
-    text description_of_concern
-    text known_reasons
-    text other_information
-    boolean safer_custody_team_informed
-    boolean referral_complete
-    varchar(32) referral_completed_by
-    varchar(255) referral_completed_by_display_name
-    date referral_completed_date
+    referral {
+        bigserial record_id PK "not null. Shared primary key with csip_record"
+        date incident_date "not null"
+        time incident_time
+        int incident_type_id FK "not null"
+        int incident_location_id FK "not null"
+        varchar(240) referred_by
+        int referer_area_of_work_id FK "not null"
+        date referral_date
+        text referral_summary
+        boolean proactive_referral
+        boolean staff_assaulted
+        text assaulted_staff_name
+        date release_date
+        int incident_involvement_id FK
+        text description_of_concern
+        text known_reasons
+        text other_information
+        boolean safer_custody_team_informed
+        boolean referral_complete
+        varchar(32) referral_completed_by
+        varchar(255) referral_completed_by_display_name
+        date referral_completed_date
+    }
 
-    int safer_custody_screening_outcome_id
-    varchar(100) safer_custody_screening_outcome_recorded_by
-    varchar(255) safer_custody_screening_outcome_recorded_by_display_name
-    date safer_custody_screening_outcome_date
-    text safer_custody_screening_reason_for_decision
+    contributory_factor {
+        bigserial contributory_factor_id PK "not null"
+        uuid contributory_factor_uuid "not null unique. Mapped to OFFENDER_CSIP_FACTORS"
+        bigserial record_id FK "not null"
+        bigserial contributory_factor_type_id FK "not null"
+        text comment
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        varchar(255) created_by_display_name "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        varchar(255) last_modified_by_display_name
+    }
 
-    text investigation_staff_involved
-    text investigation_evidence_secured
-    text investigation_occurrence_reason
-    text investigation_persons_usual_behaviour
-    text investigation_persons_trigger
-    text investigation_protective_factors
+    safer_custody_screening_outcome {
+        bigserial record_id PK "not null. Shared primary key with csip_record"
+        int outcome_id
+        varchar(100) recorded_by
+        varchar(255) recorded_by_display_name
+        date date
+        text reason_for_decision
+    }
 
-    text decision_conclusion
-    int decision_outcome_id
-    int decision_outcome_signed_off_by_role
-    varchar(100) decision_outcome_recorded_by
-    varchar(255) decision_outcome_recorded_by_display_name
-    date decision_outcome_date
-    text next_steps
-    boolean action_open_csip_alert
-    boolean action_non_associations_updated
-    boolean action_observation_book
-    boolean action_unit_or_cell_move
-    boolean action_csra_or_rsra_review
-    boolean action_service_referral
-    boolean action_sim_referral
-    text action_other
+    investigation {
+        bigserial record_id PK "not null. Shared primary key with csip_record"
+        text staff_involved
+        text evidence_secured
+        text occurrence_reason
+        text persons_usual_behaviour
+        text persons_trigger
+        text protective_factors
+    }
 
-    varchar(100) case_manager
-    varchar(240) reason_for_plan
-    date case_review_date
+    interview {
+        bigserial interview_id PK "not null"
+        uuid interview_uuid "not null unique. Mapped to OFFENDER_CSIP_INTVW"
+        bigserial record_id FK "not null"
+        varchar(100) interviewee "not null. Person being interviewed (free text)"
+        date interview_date
+        varchar(12) interviewee_role "not null. What role the interviewee played in the referral"
+        text interview_text
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        varchar(255) created_by_display_name "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        varchar(255) last_modified_by_display_name
+    }
 
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    varchar(255) created_by_display_name "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    varchar(255) last_modified_by_display_name
-}
+    decisions_and_actions {
+        bigserial record_id PK "not null. Shared primary key with csip_record"
+        text decision_conclusion
+        int decision_outcome_id
+        int decision_outcome_signed_off_by_role
+        varchar(100) decision_outcome_recorded_by
+        varchar(255) decision_outcome_recorded_by_display_name
+        date decision_outcome_date
+        text next_steps
+        boolean action_open_csip_alert
+        boolean action_non_associations_updated
+        boolean action_observation_book
+        boolean action_unit_or_cell_move
+        boolean action_csra_or_rsra_review
+        boolean action_service_referral
+        boolean action_sim_referral
+        text action_other
+    }
 
-contributory_factor {
-    bigserial contributory_factor_id PK "not null"
-    uuid contributory_factor_uuid "not null unique"
-    bigserial referral_id FK "not null"
-    bigserial contributory_factor_type_id FK "not null"
-    text comment
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    varchar(255) created_by_display_name "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    varchar(255) last_modified_by_display_name
-}
+    plan {
+        bigserial record_id PK "not null. Shared primary key with csip_record"
+        varchar(100) case_manager
+        varchar(240) reason_for_plan
+        date case_review_date
+    }
 
-interview {
-    bigserial interview_id PK "not null"
-    uuid interview_uuid "not null unique"
-    bigserial referral_id FK "not null"
-    varchar(100) interviewee "not null. Person being interviewed (free text)"
-    date interview_date
-    varchar(12) interviewee_role "not null. What role the interviewee played in the referral"
-    text interview_text
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    varchar(255) created_by_display_name "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    varchar(255) last_modified_by_display_name
-}
+    identified_need {
+        bigserial identified_need_id PK "not null"
+        uuid identified_need_uuid "not null unique. Mapped to OFFENDER_CSIP_PLANS"
+        bigserial record_id FK "not null"
+        text identified_need "Details of the need"
+        varchar(100) need_identified_by "not null. Who identified the need (free text)"
+        date created_date "not null. Date the need was identified"
+        date target_date "not null. Target date of the identified need"
+        date closed_date "Date the identified need was closed"
+        text intervention "The planned intervention"
+        text progression "How the plan is progressing"
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        varchar(255) created_by_display_name "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        varchar(255) last_modified_by_display_name
+    }
 
-plan {
-    bigserial plan_id PK "not null"
-    uuid plan_uuid "not null unique"
-    bigserial referral_id FK "not null"
-    text identified_need "Details of the need"
-    varchar(100) need_identified_by "not null. Who identified the need (free text)"
-    date plan_date "not null. Date the plan was created"
-    date target_date "not null. Target date of the plan"
-    date closed_date "Date the plan was closed"
-    text intervention "The planned intervention"
-    text progression "How the plan is progressing"
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    varchar(255) created_by_display_name "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    varchar(255) last_modified_by_display_name
-}
+    review {
+        bigserial review_id PK "not null"
+        uuid review_uuid "not null unique. Mapped to OFFENDER_CSIP_REVIEWS"
+        bigserial record_id FK "not null"
+        int review_sequence "not null"
+        date review_date
+        date next_review_date
+        boolean action_responsible_people_informed
+        boolean action_csip_updated
+        boolean action_remain_on_csip
+        boolean action_case_note
+        boolean action_close_csip
+        date csip_closed_date
+        text summary
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        varchar(255) created_by_display_name "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        varchar(255) last_modified_by_display_name
+    }
 
-review {
-    bigserial review_id PK "not null"
-    uuid review_uuid "not null unique"
-    bigserial referral_id FK "not null"
-    int review_sequence "not null"
-    date review_date
-    date next_review_date
-    boolean action_responsible_people_informed
-    boolean action_csip_updated
-    boolean action_remain_on_csip
-    boolean action_case_note
-    boolean action_close_csip
-    date csip_closed_date
-    text summary
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    varchar(255) created_by_display_name "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    varchar(255) last_modified_by_display_name
-}
+    attendee {
+        bigserial attendee_id PK "not null"
+        uuid attendee_uuid "not null unique. Mapped to OFFENDER_CSIP_ATTENDEES"
+        bigserial review_id FK "not null"
+        varchar(100) name "Name of attendee/contributor"
+        varchar(50) role "Role of attendee/contributor"
+        boolean attended "If attended (otherwise contributor)"
+        text contribution "Free text description of attendee contribution"
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        varchar(255) created_by_display_name "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        varchar(255) last_modified_by_display_name
+    }
 
-attendee {
-    bigserial attendee_id PK "not null"
-    uuid attendee_uuid "not null unique"
-    bigserial referral_id FK "not null"
-    varchar(100) name "Name of attendee/contributor"
-    varchar(50) role "Role of attendee/contributor"
-    boolean attended "If attended (otherwise contributor)"
-    text contribution "Free text description of attendee contribution"
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    varchar(255) created_by_display_name "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    varchar(255) last_modified_by_display_name
-}
+    audit_event {
+        long id PK
+        long alert_id FK
+        varchar(40) action
+        text description
+        timestamp actioned_at
+        varchar(32) actioned_by
+        varchar(255) actioned_by_captured_name
+        boolean recordAffected
+        boolean referralAffected
+        boolean contributoryFactorAffected
+        boolean saferCustodyScreeningOutcomeAffected
+        boolean investigationAffected
+        boolean interviewAffected
+        boolean decisionsAndActionsAffected
+        boolean planAffected
+        boolean identifiedNeedAffected
+        boolean reviewAffected
+        boolean attendeeAffected
+    }
 
-incident_type {
-    bigserial incident_type_id PK "not null"
-    varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_TYP domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    incident_type {
+        bigserial incident_type_id PK "not null"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_TYP domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
 
-incident_location {
-    bigserial incident_location_id PK "not null"
-    varchar(40) code "not null unique. The NOMIS reference data code for the CSIP_LOC domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    incident_location {
+        bigserial incident_location_id PK "not null"
+        varchar(40) code "not null unique. The NOMIS reference data code for the CSIP_LOC domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
 
-area_of_work {
-    bigserial area_of_work_id PK "not null"
-    varchar(40) code "not null unique. The NOMIS reference data code for the CSIP_FUNC domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    area_of_work {
+        bigserial area_of_work_id PK "not null"
+        varchar(40) code "not null unique. The NOMIS reference data code for the CSIP_FUNC domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
 
-incident_involvement {
-    bigserial incident_involvement_id PK "not null"
-    varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_INV domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    incident_involvement {
+        bigserial incident_involvement_id PK "not null"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_INV domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
 
-contributory_factor_type {
-    bigserial contributory_factor_type_id PK "not null"
-    varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_FAC domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    contributory_factor_type {
+        bigserial contributory_factor_type_id PK "not null"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_FAC domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
 
-outcome {
-    bigserial outcome_id PK "not null"
-    varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_OUT domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    outcome {
+        bigserial outcome_id PK "not null"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_OUT domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
 
-role {
-    bigserial role_id PK "not null"
-    varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_ROLE domain"
-    varchar(40) description
-    int list_sequence
-    timestamp created_at "not null"
-    varchar(32) created_by "not null"
-    timestamp last_modified_at
-    varchar(32) last_modified_by
-    timestamp deactivated_at
-    varchar(32) deactivated_by
-}
+    role {
+        bigserial role_id PK "not null"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_ROLE domain"
+        varchar(40) description
+        int list_sequence
+        timestamp created_at "not null"
+        varchar(32) created_by "not null"
+        timestamp last_modified_at
+        varchar(32) last_modified_by
+        timestamp deactivated_at
+        varchar(32) deactivated_by
+    }
