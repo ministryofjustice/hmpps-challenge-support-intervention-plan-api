@@ -19,6 +19,7 @@ abstract class IntegrationTestBase {
 
   companion object {
     private val pgContainer = PostgresContainer.instance
+
     @JvmStatic
     @DynamicPropertySource
     fun properties(registry: DynamicPropertyRegistry) {
