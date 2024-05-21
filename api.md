@@ -20,6 +20,7 @@ Contains primary retrieval endpoints
 - GET /prison/{prisonCode}/csip-records?filterParams=values - Retrieve and filter all CSIP records for prisoners resident in the prison. Supports log number filtering. Returns CSIP record summaries
 - GET /csip-record/{recordUuid} - Retrieve a complete CSIP record by its unique id
 - PATCH /csip-record/log-number - Update the log number for a CSIP record. Publishes prisoner-csip.csip-record-updated event with recordAffected = true
+- DELETE /csip-record/{recordUuid} - (Soft) delete a complete CSIP record. Requires admin permissions. Publishes prisoner-csip.csip-record-deleted event
 
 ### Referral controller
 - POST /prisoner/{prisonNumber}/csip-record/referral - Create the CSIP record, referral and any contributory factors. This starts the CSIP process. Publishes prisoner-csip.csip-record-created and prisoner-csip.contributory-factor-created events
