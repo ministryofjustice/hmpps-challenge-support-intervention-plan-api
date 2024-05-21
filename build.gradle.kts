@@ -10,9 +10,17 @@ configurations {
 dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+  // Database dependencies
+  runtimeOnly("org.flywaydb:flyway-core")
+  runtimeOnly("org.postgresql:postgresql")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-62:3.7.5")
+
+  testImplementation("org.testcontainers:postgresql:1.19.8")
 }
 
 kotlin {
