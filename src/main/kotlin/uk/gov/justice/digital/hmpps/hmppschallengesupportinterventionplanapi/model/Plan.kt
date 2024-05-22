@@ -31,7 +31,7 @@ data class Plan(
   val identifiedNeeds: Collection<IdentifiedNeed>,
 
   @Schema(
-    description = "Regular reviews of the CSIP Plan"
+    description = "Regular reviews of the CSIP Plan",
   )
   val reviews: Collection<Review>,
 )

@@ -32,5 +32,5 @@ data class CreatePlanRequest(
     description = "The needs identified in the CSIP plan.",
   )
   @field:Size(min = 1, message = "A CSIP Plan must have >=1 identified need(s).")
-  val identifiedNeeds: Collection<IdentifiedNeedRequest>
+  val identifiedNeeds: Collection<IdentifiedNeedRequest>,
 )

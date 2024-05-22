@@ -12,6 +12,7 @@ data class DecisionsAndActionsRequest(
   @Schema(
     description = "The conclusion of the referral and reasons for the outcome decision.",
   )
+  @field:Size(min = 0, max = 4000, message = "Conclusion must be <= 4000 characters")
   val conclusion: String?,
 
   @Schema(

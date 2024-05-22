@@ -27,6 +27,6 @@ data class AttendeeRequest(
   @Schema(
     description = "Description of attendee contribution.",
   )
-  @field:Size(min = 0, max = 4000, message = "Contribution name must be <= 4000 characters")
+  @field:Size(min = 0, max = 4000, message = "Contribution must be <= 4000 characters")
   val contribution: String?,
 )

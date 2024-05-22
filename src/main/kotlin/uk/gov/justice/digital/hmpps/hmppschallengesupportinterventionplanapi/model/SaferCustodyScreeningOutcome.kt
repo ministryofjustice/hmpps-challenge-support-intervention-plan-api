@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.OutcomeType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import java.time.LocalDate
 
 @Schema(description = "The Safer Custody Screening Outcome to the CSIP referral")
@@ -10,7 +10,7 @@ data class SaferCustodyScreeningOutcome(
   @Schema(
     description = "The type of outcome of the safer custody screening.",
   )
-  val outcome: OutcomeType,
+  val outcome: ReferenceData,
 
   @Schema(
     description = "The username of the user who recorded the safer custody screening outcome.",

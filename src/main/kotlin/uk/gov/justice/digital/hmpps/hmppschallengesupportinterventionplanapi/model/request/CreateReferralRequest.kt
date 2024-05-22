@@ -9,7 +9,7 @@ import java.time.LocalTime
 @Schema(
   description = "The request body for creating a CSIP referral",
 )
-data class CreateReferralRequest (
+data class CreateReferralRequest(
   @Schema(
     description = "The date the incident that motivated the CSIP referral occurred",
     example = "2021-09-27",

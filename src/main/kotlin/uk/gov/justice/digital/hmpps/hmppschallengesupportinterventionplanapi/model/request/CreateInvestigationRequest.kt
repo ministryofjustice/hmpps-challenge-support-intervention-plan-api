@@ -22,7 +22,7 @@ data class CreateInvestigationRequest(
   @Schema(
     description = "The reasons why the incident occurred.",
   )
-  @field:Size(min = 0, max = 4000, message = "Occurence reason must be <= 4000 characters")
+  @field:Size(min = 0, max = 4000, message = "Occurrence reason must be <= 4000 characters")
   val occurrenceReason: String?,
 
   @Schema(

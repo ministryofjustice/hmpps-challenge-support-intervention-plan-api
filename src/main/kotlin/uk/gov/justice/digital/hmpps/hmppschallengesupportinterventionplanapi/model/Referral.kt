@@ -2,10 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.AreaOfWork
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.IncidentInvolvement
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.IncidentLocation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.IncidentType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -30,12 +27,12 @@ data class Referral(
   @Schema(
     description = "The type of incident that motivated the CSIP referral.",
   )
-  val incidentType: IncidentType,
+  val incidentType: ReferenceData,
 
   @Schema(
     description = "The location of incident that motivated the CSIP referral.",
   )
-  val incidentLocation: IncidentLocation,
+  val incidentLocation: ReferenceData,
 
   @Schema(
     description = "The person reporting the incident or creating the CSIP referral.",
@@ -45,7 +42,7 @@ data class Referral(
   @Schema(
     description = "The area of work of the person reporting the incident or creating the CSIP referral.",
   )
-  val refererArea: AreaOfWork,
+  val refererArea: ReferenceData,
 
   @Schema(
     description = "Summary of the CSIP referral.",
@@ -70,7 +67,7 @@ data class Referral(
   @Schema(
     description = "The type of involvement the person had in the incident",
   )
-  val incidentInvolvement: IncidentInvolvement,
+  val incidentInvolvement: ReferenceData,
 
   @Schema(
     description = "The reasons why there is cause for concern.",

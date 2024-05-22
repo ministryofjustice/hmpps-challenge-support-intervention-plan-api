@@ -38,7 +38,7 @@ data class Investigation(
   val protectiveFactors: String?,
 
   @Schema(
-    description = "The interviews in relation to the Investigation"
+    description = "The interviews in relation to the Investigation",
   )
   val interviews: Collection<Interview>,
 )

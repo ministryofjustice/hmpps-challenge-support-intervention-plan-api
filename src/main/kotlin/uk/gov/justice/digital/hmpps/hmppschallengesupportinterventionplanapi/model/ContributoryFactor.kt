@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ContributoryFactorType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import java.time.LocalDateTime
 import java.util.*
 
@@ -19,7 +19,7 @@ data class ContributoryFactor(
   @Schema(
     description = "The type of contributory factor to the incident or motivation for CSIP referral.",
   )
-  val factorType: ContributoryFactorType,
+  val factorType: ReferenceData,
 
   @Schema(
     description = "Additional information about the contributory factor to the incident or motivation for CSIP referral.",

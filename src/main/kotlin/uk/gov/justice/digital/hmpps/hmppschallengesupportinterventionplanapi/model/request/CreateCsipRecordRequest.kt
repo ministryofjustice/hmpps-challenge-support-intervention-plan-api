@@ -8,13 +8,13 @@ import jakarta.validation.constraints.Size
 )
 data class CreateCsipRecordRequest(
   @Schema(
-    description = "User entered identifier for the CSIP record. Defaults to the prison code."
+    description = "User entered identifier for the CSIP record. Defaults to the prison code.",
   )
   @field:Size(max = 10, message = "Log number must be <= 10 characters")
   val logNumber: String,
 
   @Schema(
-    description = "The referral that results in the creation of this CSIP record."
+    description = "The referral that results in the creation of this CSIP record.",
   )
   val referral: CreateReferralRequest,
 )

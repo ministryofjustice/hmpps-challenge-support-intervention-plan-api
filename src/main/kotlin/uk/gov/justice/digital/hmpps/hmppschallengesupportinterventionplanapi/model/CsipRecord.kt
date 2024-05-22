@@ -16,17 +16,17 @@ data class CsipRecord(
   val recordUuid: UUID,
 
   @Schema(
-    description = "The prison number of the person the CSIP record is for."
+    description = "The prison number of the person the CSIP record is for.",
   )
   val prisonNumber: String,
 
   @Schema(
-    description = "The prison code where the person was resident at the time the CSIP record was created."
+    description = "The prison code where the person was resident at the time the CSIP record was created.",
   )
   val prisonCodeWhenRecorded: String,
 
   @Schema(
-    description = "User entered identifier for the CSIP record. Defaults to the prison code."
+    description = "User entered identifier for the CSIP record. Defaults to the prison code.",
   )
   val logNumber: String,
 
@@ -69,12 +69,12 @@ data class CsipRecord(
   val lastModifiedByDisplayName: String?,
 
   @Schema(
-    description = "The referral that results in the creation of this CSIP record."
+    description = "The referral that results in the creation of this CSIP record.",
   )
   val referral: Referral,
 
   @Schema(
-    description = "The CSIP Plan of this CSIP record."
+    description = "The CSIP Plan of this CSIP record.",
   )
   val plan: Plan?,
 )

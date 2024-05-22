@@ -2,34 +2,33 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.DecisionSignerRole
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.OutcomeType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import java.time.LocalDate
 
 @Schema(description = "The Decisions and Actions for the CSIP referral")
 data class DecisionsAndActions(
   @Schema(
-      description = "The conclusion of the referral and reasons for the outcome decision.",
+    description = "The conclusion of the referral and reasons for the outcome decision.",
   )
   val conclusion: String?,
 
   @Schema(
-      description = "The outcome decision for the referral.",
+    description = "The outcome decision for the referral.",
   )
-  val outcome: OutcomeType,
+  val outcome: ReferenceData,
 
   @Schema(
-      description = "The role of the person making the outcome decision.",
+    description = "The role of the person making the outcome decision.",
   )
-  val outcomeSignedOffByRole: DecisionSignerRole?,
+  val outcomeSignedOffByRole: ReferenceData?,
 
   @Schema(
-      description = "The username of the user who recorded the outcome decision.",
+    description = "The username of the user who recorded the outcome decision.",
   )
   val outcomeRecordedBy: String?,
 
   @Schema(
-      description = "The displayable name of the user who recorded the outcome decision.",
+    description = "The displayable name of the user who recorded the outcome decision.",
   )
   val outcomeRecordedByDisplayName: String?,
 
