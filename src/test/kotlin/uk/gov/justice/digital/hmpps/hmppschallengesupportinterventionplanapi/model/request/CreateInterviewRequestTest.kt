@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class InterviewRequestTest : RequestValidationTest() {
+class CreateInterviewRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = InterviewRequest(
+    val request = CreateInterviewRequest(
       interviewee = "ei",
       interviewDate = LocalDate.now(),
       intervieweeRoleCode = "et",
@@ -18,7 +18,7 @@ class InterviewRequestTest : RequestValidationTest() {
 
   @Test
   fun `validation fails if size constraints are not met`() {
-    val request = InterviewRequest(
+    val request = CreateInterviewRequest(
       interviewee = "n".repeat(101),
       interviewDate = LocalDate.now(),
       intervieweeRoleCode = "n".repeat(13),

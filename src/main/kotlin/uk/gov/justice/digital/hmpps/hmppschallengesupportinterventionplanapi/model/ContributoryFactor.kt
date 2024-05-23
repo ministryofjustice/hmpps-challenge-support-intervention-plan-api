@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 @Schema(
   description = "The contributory factor to the incident that motivated the CSIP referral",

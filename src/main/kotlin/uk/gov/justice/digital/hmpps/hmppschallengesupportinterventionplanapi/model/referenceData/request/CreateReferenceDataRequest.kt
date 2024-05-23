@@ -4,11 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 
 @Schema(
-  description = "The request body to create a new code to a non-location reference data table",
+  description = "The request body to create a new code to a reference data table",
 )
 data class CreateReferenceDataRequest(
   @Schema(
-    description = "The short code for a non-location reference data",
+    description = "The short code for a reference data",
   )
   @field:Size(min = 1, max = 12, message = "Reference data code must be <= 12 characters")
   val code: String,

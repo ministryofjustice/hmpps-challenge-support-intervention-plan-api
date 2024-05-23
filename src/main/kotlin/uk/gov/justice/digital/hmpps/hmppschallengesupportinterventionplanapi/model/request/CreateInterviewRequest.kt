@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
-@Schema(description = "The request body to create/update an interview")
-data class InterviewRequest(
+@Schema(description = "The request body to create an interview")
+data class CreateInterviewRequest(
   @Schema(
     description = "Name of the person being interviewed.",
   )

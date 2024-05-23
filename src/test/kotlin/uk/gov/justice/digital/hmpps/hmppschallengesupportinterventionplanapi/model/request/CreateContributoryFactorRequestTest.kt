@@ -3,16 +3,16 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class ContributoryFactorRequestTest : RequestValidationTest() {
+class CreateContributoryFactorRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = ContributoryFactorRequest(factorTypeCode = "CODE", comment = "none")
+    val request = CreateContributoryFactorRequest(factorTypeCode = "CODE", comment = "none")
     assertThat(validator.validate(request)).isEmpty()
   }
 
   @Test
   fun `Contributory factor type code must be no more than 12 characters`() {
-    val request = ContributoryFactorRequest(factorTypeCode = "n".repeat(13), comment = "none")
+    val request = CreateContributoryFactorRequest(factorTypeCode = "n".repeat(13), comment = "none")
     assertSingleValidationError(
       validator.validate(request),
       "factorTypeCode",

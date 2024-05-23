@@ -33,7 +33,7 @@ data class UpdateReferralRequest(
   @Schema(
     description = "The location of incident that motivated the CSIP referral.",
   )
-  @field:Size(min = 1, max = 40, message = "Incident Location code must be <= 40 characters")
+  @field:Size(min = 1, max = 12, message = "Incident Location code must be <= 12 characters")
   val incidentLocationCode: String,
 
   @Schema(
@@ -45,7 +45,7 @@ data class UpdateReferralRequest(
   @Schema(
     description = "The area of work of the person reporting the incident or creating the CSIP referral.",
   )
-  @field:Size(min = 1, max = 40, message = "Area code must be <= 40 characters")
+  @field:Size(min = 1, max = 12, message = "Area code must be <= 12 characters")
   val refererAreaCode: String,
 
   @Schema(

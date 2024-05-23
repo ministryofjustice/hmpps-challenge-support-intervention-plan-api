@@ -4,10 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 
 @Schema(
-  description = "The request body for creating or updating a contributory factor " +
+  description = "The request body to create a contributory factor " +
     "to the incident that motivated the CSIP referral",
 )
-data class ContributoryFactorRequest(
+data class CreateContributoryFactorRequest(
   @Schema(
     description = "The type of contributory factor to the incident or motivation for CSIP referral.",
   )

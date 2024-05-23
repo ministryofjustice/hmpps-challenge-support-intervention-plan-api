@@ -12,7 +12,7 @@ class CreatePlanRequestTest : RequestValidationTest() {
       reasonForPlan = "posidonium",
       firstCaseReviewDate = LocalDate.now(),
       identifiedNeeds = listOf(
-        IdentifiedNeedRequest(
+        CreateIdentifiedNeedRequest(
           identifiedNeed = "nobis",
           needIdentifiedBy = "vivamus",
           createdDate = LocalDate.now(),
@@ -48,7 +48,7 @@ class CreatePlanRequestTest : RequestValidationTest() {
       reasonForPlan = "posidonium",
       firstCaseReviewDate = LocalDate.now(),
       identifiedNeeds = listOf(
-        IdentifiedNeedRequest(
+        CreateIdentifiedNeedRequest(
           identifiedNeed = "nobis",
           needIdentifiedBy = "vivamus",
           createdDate = LocalDate.now(),
@@ -73,7 +73,7 @@ class CreatePlanRequestTest : RequestValidationTest() {
       reasonForPlan = "n".repeat(241),
       firstCaseReviewDate = LocalDate.now(),
       identifiedNeeds = listOf(
-        IdentifiedNeedRequest(
+        CreateIdentifiedNeedRequest(
           identifiedNeed = "nobis",
           needIdentifiedBy = "vivamus",
           createdDate = LocalDate.now(),

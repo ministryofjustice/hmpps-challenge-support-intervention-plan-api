@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
 @Schema(
-  description = "The request body to create/update an Identified Need in a CSIP Plan",
+  description = "The request body to create an Identified Need in a CSIP Plan",
 )
-data class IdentifiedNeedRequest(
+data class CreateIdentifiedNeedRequest(
   @Schema(
     description = "Details of the need identified in the CSIP plan.",
   )

@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class DecisionsAndActionsRequestTest : RequestValidationTest() {
+class CreateDecisionsAndActionsRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = DecisionsAndActionsRequest(
+    val request = CreateDecisionsAndActionsRequest(
       conclusion = null,
       outcomeTypeCode = "suscipiantur",
       outcomeSignedOffByRoleCode = null,
@@ -28,7 +28,7 @@ class DecisionsAndActionsRequestTest : RequestValidationTest() {
 
   @Test
   fun `validation fails if size constraints are not met`() {
-    val request = DecisionsAndActionsRequest(
+    val request = CreateDecisionsAndActionsRequest(
       conclusion = "n".repeat(4001),
       outcomeTypeCode = "n".repeat(13),
       outcomeSignedOffByRoleCode = "n".repeat(13),

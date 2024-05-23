@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
-@Schema(description = "The request body to create/update the Safer Custody Screening Outcome to the CSIP referral")
-data class SaferCustodyScreeningOutcomeRequest(
+@Schema(description = "The request body to create the Safer Custody Screening Outcome to the CSIP referral")
+data class CreateSaferCustodyScreeningOutcomeRequest(
   @Schema(
     description = "The type of outcome of the safer custody screening.",
   )

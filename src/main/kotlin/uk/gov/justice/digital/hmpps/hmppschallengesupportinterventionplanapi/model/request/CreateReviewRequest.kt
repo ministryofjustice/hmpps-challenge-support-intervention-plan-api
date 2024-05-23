@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
@@ -76,5 +77,6 @@ data class CreateReviewRequest(
   @Schema(
     description = "The attendees/contributors to the review.",
   )
-  val attendees: Collection<AttendeeRequest>?,
+  @Valid
+  val attendees: Collection<CreateAttendeeRequest>?,
 )

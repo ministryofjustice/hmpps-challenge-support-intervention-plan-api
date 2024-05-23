@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 
 @Schema(
-  description = "The request body to create/update a Attendee/Contributor to the review of a CSIP Plan",
+  description = "The request body to create a Attendee/Contributor to the review of a CSIP Plan",
 )
-data class AttendeeRequest(
+data class CreateAttendeeRequest(
   @Schema(
     description = "Name of review attendee/contributor.",
   )

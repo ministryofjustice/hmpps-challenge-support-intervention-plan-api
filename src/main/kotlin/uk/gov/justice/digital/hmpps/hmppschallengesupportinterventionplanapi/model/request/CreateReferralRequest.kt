@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 import java.time.LocalTime
@@ -33,7 +34,7 @@ data class CreateReferralRequest(
   @Schema(
     description = "The location of incident that motivated the CSIP referral.",
   )
-  @field:Size(min = 1, max = 40, message = "Incident Location code must be <= 40 characters")
+  @field:Size(min = 1, max = 12, message = "Incident Location code must be <= 12 characters")
   val incidentLocationCode: String,
 
   @Schema(
@@ -45,7 +46,7 @@ data class CreateReferralRequest(
   @Schema(
     description = "The area of work of the person reporting the incident or creating the CSIP referral.",
   )
-  @field:Size(min = 1, max = 40, message = "Area code must be <= 40 characters")
+  @field:Size(min = 1, max = 12, message = "Area code must be <= 12 characters")
   val refererAreaCode: String,
 
   @Schema(
@@ -105,5 +106,6 @@ data class CreateReferralRequest(
     description = "Contributory factors to the incident that motivated the referral.",
   )
   @field:Size(min = 1, message = "A referral must have >=1 contributory factor(s).")
-  val contributoryFactors: Collection<ContributoryFactorRequest>,
+  @Valid
+  val contributoryFactors: Collection<CreateContributoryFactorRequest>,
 )

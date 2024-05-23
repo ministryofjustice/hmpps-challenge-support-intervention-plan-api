@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class SaferCustodyScreeningOutcomeRequestTest : RequestValidationTest() {
+class CreateSaferCustodyScreeningOutcomeRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = SaferCustodyScreeningOutcomeRequest(
+    val request = CreateSaferCustodyScreeningOutcomeRequest(
       outcomeTypeCode = "viverra",
       recordBy = "eget",
       recordByDisplayName = "Charles Alford",
@@ -19,7 +19,7 @@ class SaferCustodyScreeningOutcomeRequestTest : RequestValidationTest() {
 
   @Test
   fun `validation fails if size constraints are not met`() {
-    val request = SaferCustodyScreeningOutcomeRequest(
+    val request = CreateSaferCustodyScreeningOutcomeRequest(
       outcomeTypeCode = "n".repeat(13),
       recordBy = "n".repeat(101),
       recordByDisplayName = "n".repeat(256),

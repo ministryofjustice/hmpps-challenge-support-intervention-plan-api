@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request
 
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 
 @Schema(
@@ -47,5 +48,6 @@ data class CreateInvestigationRequest(
   @Schema(
     description = "The interviews in relation to the investigation",
   )
-  val interviews: Collection<InterviewRequest>?,
+  @Valid
+  val interviews: Collection<CreateInterviewRequest>?,
 )

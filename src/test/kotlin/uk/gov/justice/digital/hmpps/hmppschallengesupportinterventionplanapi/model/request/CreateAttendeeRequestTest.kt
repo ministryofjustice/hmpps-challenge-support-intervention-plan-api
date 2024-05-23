@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class AttendeeRequestTest : RequestValidationTest() {
+class CreateAttendeeRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
     val request = createRequest()
@@ -33,8 +33,8 @@ class AttendeeRequestTest : RequestValidationTest() {
     role: String? = "Role",
     isAttended: Boolean? = true,
     contribution: String? = null,
-  ): AttendeeRequest {
-    return AttendeeRequest(
+  ): CreateAttendeeRequest {
+    return CreateAttendeeRequest(
       name = name,
       role = role,
       isAttended = isAttended,

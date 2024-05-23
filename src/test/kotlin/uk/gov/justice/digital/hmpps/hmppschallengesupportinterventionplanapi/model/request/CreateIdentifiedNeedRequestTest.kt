@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class IdentifiedNeedRequestTest : RequestValidationTest() {
+class CreateIdentifiedNeedRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = IdentifiedNeedRequest(
+    val request = CreateIdentifiedNeedRequest(
       identifiedNeed = "qui",
       needIdentifiedBy = "melius",
       createdDate = LocalDate.now(),
@@ -21,7 +21,7 @@ class IdentifiedNeedRequestTest : RequestValidationTest() {
 
   @Test
   fun `validation fails if size constraints are not met`() {
-    val request = IdentifiedNeedRequest(
+    val request = CreateIdentifiedNeedRequest(
       identifiedNeed = "n".repeat(1001),
       needIdentifiedBy = "n".repeat(101),
       createdDate = LocalDate.now(),

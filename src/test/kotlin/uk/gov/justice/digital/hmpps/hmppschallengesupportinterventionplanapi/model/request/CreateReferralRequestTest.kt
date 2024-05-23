@@ -26,7 +26,7 @@ class CreateReferralRequestTest : RequestValidationTest() {
       isSaferCustodyTeamInformed = null,
       isReferralComplete = null,
       contributoryFactors = listOf(
-        ContributoryFactorRequest(
+        CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
           comment = null,
         ),
@@ -41,9 +41,9 @@ class CreateReferralRequestTest : RequestValidationTest() {
       incidentDate = LocalDate.now(),
       incidentTime = LocalTime.now(),
       incidentTypeCode = "n".repeat(13),
-      incidentLocationCode = "n".repeat(41),
+      incidentLocationCode = "n".repeat(13),
       referredBy = "n".repeat(241),
-      refererAreaCode = "n".repeat(41),
+      refererAreaCode = "n".repeat(13),
       referralSummary = "n".repeat(4001),
       isProactiveReferral = null,
       isStaffAssaulted = null,
@@ -55,7 +55,7 @@ class CreateReferralRequestTest : RequestValidationTest() {
       isSaferCustodyTeamInformed = null,
       isReferralComplete = null,
       contributoryFactors = listOf(
-        ContributoryFactorRequest(
+        CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
           comment = null,
         ),
@@ -63,10 +63,10 @@ class CreateReferralRequestTest : RequestValidationTest() {
     )
     assertValidationErrors(
       validator.validate(request),
-      Pair("incidentLocationCode", "Incident Location code must be <= 40 characters"),
+      Pair("incidentLocationCode", "Incident Location code must be <= 12 characters"),
       Pair("incidentTypeCode", "Incident Type code must be <= 12 characters"),
       Pair("referredBy", "Referer name must be <= 240 characters"),
-      Pair("refererAreaCode", "Area code must be <= 40 characters"),
+      Pair("refererAreaCode", "Area code must be <= 12 characters"),
       Pair("referralSummary", "Summary must be <= 4000 characters"),
       Pair("incidentInvolvementCode", "Involvement code must be <= 12 characters"),
       Pair("assaultedStaffName", "Name or names must be <= 1000 characters"),

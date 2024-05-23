@@ -28,7 +28,7 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         isSaferCustodyTeamInformed = null,
         isReferralComplete = null,
         contributoryFactors = listOf(
-          ContributoryFactorRequest(
+          CreateContributoryFactorRequest(
             factorTypeCode = "pericula",
             comment = null,
           ),
@@ -60,7 +60,7 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         isSaferCustodyTeamInformed = null,
         isReferralComplete = null,
         contributoryFactors = listOf(
-          ContributoryFactorRequest(
+          CreateContributoryFactorRequest(
             factorTypeCode = "pericula",
             comment = null,
           ),

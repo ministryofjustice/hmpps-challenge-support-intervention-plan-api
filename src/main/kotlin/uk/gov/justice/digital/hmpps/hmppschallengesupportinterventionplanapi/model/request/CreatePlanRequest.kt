@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
@@ -32,5 +33,6 @@ data class CreatePlanRequest(
     description = "The needs identified in the CSIP plan.",
   )
   @field:Size(min = 1, message = "A CSIP Plan must have >=1 identified need(s).")
-  val identifiedNeeds: Collection<IdentifiedNeedRequest>,
+  @Valid
+  val identifiedNeeds: Collection<CreateIdentifiedNeedRequest>,
 )
