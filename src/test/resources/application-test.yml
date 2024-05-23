@@ -4,3 +4,9 @@ server:
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
+
+spring:
+  datasource:
+    url: 'jdbc:postgresql://localhost:5432/csip'
+    username: csip
+    password: csip
