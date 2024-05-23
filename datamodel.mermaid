@@ -229,7 +229,7 @@ erDiagram
 
     incident_location {
         bigserial incident_location_id PK "not null"
-        varchar(40) code "not null unique. The NOMIS reference data code for the CSIP_LOC domain"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_LOC domain"
         varchar(40) description
         int list_sequence
         timestamp created_at "not null"
@@ -242,7 +242,7 @@ erDiagram
 
     area_of_work {
         bigserial area_of_work_id PK "not null"
-        varchar(40) code "not null unique. The NOMIS reference data code for the CSIP_FUNC domain"
+        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_FUNC domain"
         varchar(40) description
         int list_sequence
         timestamp created_at "not null"
