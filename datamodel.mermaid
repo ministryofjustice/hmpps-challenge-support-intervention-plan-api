@@ -10,15 +10,15 @@ erDiagram
     plan ||--o{ identified_need : "has one or more"
     plan ||--o{ review : "regularly reviewed"
     review ||--o{ attendee : "attended by"
-    referral }o--|| incident_type : "incident categorised by"
-    referral }o--|| incident_location : "incident occurred in"
-    referral }o--|| area_of_work : "referer categorised by"
-    referral }o--|| incident_involvement : "referred person was involved in the indecent as"
-    safer_custody_screening_outcome }o--|| outcome : "outcome categorised by"
-    interview }o--|| interviewee_role : "role of interviewee"
-    decisions_and_actions }o--|| outcome : "outcome categorised by"
-    decisions_and_actions }o--|| role : "role of person signing off the referral decision"
-    contributory_factor }o--|| contributory_factor_type : "categorised by"
+    referral }o--|| reference_data : "incident categorised by"
+    referral }o--|| reference_data : "incident occurred in"
+    referral }o--|| reference_data : "referer categorised by"
+    referral }o--|| reference_data : "referred person was involved in the indecent as"
+    safer_custody_screening_outcome }o--|| reference_data : "outcome categorised by"
+    interview }o--|| reference_data : "role of interviewee"
+    decisions_and_actions }o--|| reference_data : "outcome categorised by"
+    decisions_and_actions }o--|| reference_data : "role of person signing off the referral decision"
+    contributory_factor }o--|| reference_data : "categorised by"
 
     csip_record {
         bigserial record_id PK "not null"
@@ -38,17 +38,17 @@ erDiagram
         bigserial record_id PK "not null. Shared primary key with csip_record"
         date incident_date "not null. The date the incident that motivated the CSIP referral occurred. Maps to RFR_INCIDENT_DATE"
         time incident_time "The time the incident that motivated the CSIP referral occurred. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME"
-        int incident_type_id FK "not null. FK to incident_type. The type of incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE"
-        int incident_location_id FK "not null. FK to incident_location. The location of the incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION"
+        int incident_type_id FK "not null. FK to reference_data. The type of incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE"
+        int incident_location_id FK "not null. FK to reference_data. The location of the incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION"
         varchar(240) referred_by "not null. The person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY"
-        int referer_area_of_work_id FK "not null. FK to area_of_work. The area of work of the person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION"
+        int referer_area_of_work_id FK "not null. FK to reference_data. The area of work of the person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION"
         date referral_date "not null. The date the CSIP referral was raised. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED"
         text referral_summary "Summary of the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_COMMENT? 4000 character limit"
         boolean proactive_referral "Was this referral proactive or preventative. Maps to OFFENDER_CSIP_REPORTS.RFR_PROACTIVE_RESPONSE where the default is 'N'"
         boolean staff_assaulted "Were any members of staff assaulted in the incident. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_ASSAULTED where the default is 'N'"
         text assaulted_staff_name "Name or names of assaulted members of staff if any. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_NAME. 1000 character limit"
         date release_date "The release date of the person in prison. Can be planned released date or the date they were released. Maps to OFFENDER_CSIP_REPORTS.CDR_RELEASE_DATE. Likely set by another screen in NOMIS"
-        int incident_involvement_id FK "not null. FK to incident_involvement. The type of involvement the person had in the incident. Maps to OFFENDER_CSIP_REPORTS.CDR_INVOLVEMENT"
+        int incident_involvement_id FK "not null. FK to reference_data. The type of involvement the person had in the incident. Maps to OFFENDER_CSIP_REPORTS.CDR_INVOLVEMENT"
         text description_of_concern "not null. The reasons why there is cause for concern. Maps to OFFENDER_CSIP_REPORTS.CDR_CONCERN_DESCRIPTION"
         text known_reasons "not null. The reasons already known about the causes of the incident or motivation for CSIP referral. Maps to OFFENDER_CSIP_REPORTS.INV_KNOWN_REASONS"
         text other_information "Any other information about the incident or reasons for CSIP referral. Maps to OFFENDER_CSIP_REPORTS.CDR_OTHER_INFORMATION"
@@ -63,7 +63,7 @@ erDiagram
         bigserial contributory_factor_id PK "not null"
         uuid contributory_factor_uuid "not null unique. Mapped to OFFENDER_CSIP_FACTORS"
         bigserial record_id FK "not null"
-        bigserial contributory_factor_type_id FK "not null. FK to contributory_factor_type. The type of contributory factor to the incident or motivation for CSIP referral. Mapped to OFFENDER_CSIP_FACTORS.CSIP_FACTOR"
+        bigserial contributory_factor_type_id FK "not null. FK to reference_data. The type of contributory factor to the incident or motivation for CSIP referral. Mapped to OFFENDER_CSIP_FACTORS.CSIP_FACTOR"
         text comment "Additional information about the contributory factor to the incident or motivation for CSIP referral. Maps to OFFENDER_CSIP_FACTORS.COMMENTS"
         timestamp created_at "not null. The date and time the contributory factor was created. Maps to OFFENDER_CSIP_FACTORS.CREATE_DATETIME"
         varchar(32) created_by "not null. The username of the user who created the contributory factor. Maps to OFFENDER_CSIP_FACTORS.CREATE_USER_ID"
@@ -75,7 +75,7 @@ erDiagram
 
     safer_custody_screening_outcome {
         bigserial record_id PK "not null. Shared primary key with csip_record"
-        int outcome_id "not null. FK to outcome. The type of outcome of the safer custody screening. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME"
+        int outcome_id "not null. FK to reference_data. The type of outcome of the safer custody screening. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME"
         varchar(100) recorded_by "not null. The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY"
         varchar(255) recorded_by_display_name "not null. The displayable name of the user who recorded the safer custody screening outcome. Not mapped"
         date date "not null. The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE"
@@ -98,7 +98,7 @@ erDiagram
         bigserial record_id FK "not null"
         varchar(100) interviewee "not null. Name of the person being interviewed. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE"
         date interview_date "not null. The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE"
-        int interviewee_role_id FK "not null. FK to interviewee_role. What role the interviewee played in the incident or referral. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE"
+        int interviewee_role_id FK "not null. FK to reference_data. What role the interviewee played in the incident or referral. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE"
         text interview_text "Information provided in interview. Maps to OFFENDER_CSIP_INTVW.COMMENTS. 4000 character limit"
         timestamp created_at "not null. The date and time the interview was created. Maps to OFFENDER_CSIP_INTVW.CREATE_DATETIME"
         varchar(32) created_by "not null. The username of the user who created the interview. Maps to OFFENDER_CSIP_INTVW.CREATE_USER_ID"
@@ -111,8 +111,8 @@ erDiagram
     decisions_and_actions {
         bigserial record_id PK "not null. Shared primary key with csip_record"
         text decision_conclusion "The conclusion of the referral and reasons for the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_CONCLUSION. 4000 character limit"
-        int decision_outcome_id "not null. FK to outcome. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME"
-        int decision_outcome_signed_off_by_role_id "FK to role. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY"
+        int decision_outcome_id "not null. FK to reference_data. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME"
+        int decision_outcome_signed_off_by_role_id "FK to reference_data. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY"
         varchar(100) decision_outcome_recorded_by "The username of the user who recorded the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_RECORDED_BY"
         varchar(255) decision_outcome_recorded_by_display_name "The displayable name of the user who recorded the outcome decision. Not mapped"
         date decision_outcome_date "The date the outcome decision was made. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_DATE"
@@ -214,100 +214,10 @@ erDiagram
         boolean attendeeAffected
     }
 
-    incident_type {
+    reference_data {
         bigserial incident_type_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_TYP domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    incident_location {
-        bigserial incident_location_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_LOC domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    area_of_work {
-        bigserial area_of_work_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_FUNC domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    incident_involvement {
-        bigserial incident_involvement_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_INV domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    contributory_factor_type {
-        bigserial contributory_factor_type_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_FAC domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    outcome {
-        bigserial outcome_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_OUT domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    interviewee_role {
-        bigserial interviewee_role_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_INTVROL domain"
-        varchar(40) description
-        int list_sequence
-        timestamp created_at "not null"
-        varchar(32) created_by "not null"
-        timestamp last_modified_at
-        varchar(32) last_modified_by
-        timestamp deactivated_at
-        varchar(32) deactivated_by
-    }
-
-    role {
-        bigserial role_id PK "not null"
-        varchar(12) code "not null unique. The NOMIS reference data code for the CSIP_ROLE domain"
+        varchar(30) domain "not null composite-unique(domain+code)."
+        varchar(12) code "not null composite-unique(domain+code). The NOMIS reference data code for the CSIP_TYP, CSIP_LOC, CSIP_FUNC, CSIP_INV, CSIP_FAC, CSIP_OUT, CSIP_INTVROL, and CSIP_ROLE domain"
         varchar(40) description
         int list_sequence
         timestamp created_at "not null"
