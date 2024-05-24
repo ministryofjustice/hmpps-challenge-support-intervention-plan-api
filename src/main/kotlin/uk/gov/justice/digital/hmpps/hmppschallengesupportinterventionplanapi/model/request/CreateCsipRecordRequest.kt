@@ -17,6 +17,6 @@ data class CreateCsipRecordRequest(
   @Schema(
     description = "The referral that results in the creation of this CSIP record.",
   )
-  @Valid
+  @field:Valid
   val referral: CreateReferralRequest,
 )

@@ -24,7 +24,7 @@ class AuditEventTest : ModelTest() {
       isReferralAffected = true,
       isPlanAffected = false,
       isInvestigationAffected = false,
-      isDecisionsAndActionsAffected = false,
+      isDecisionAndActionsAffected = false,
       isIdentifiedNeedAffected = false,
       isContributoryFactorAffected = true,
       isSaferCustodyScreeningOutcomeAffected = false,

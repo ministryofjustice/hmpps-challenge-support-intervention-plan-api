@@ -69,4 +69,40 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
     )
     assertSingleValidationError(validator.validate(request), "logNumber", "Log number must be <= 10 characters")
   }
+
+  @Test
+  fun `child nested object validation`() {
+    val request = CreateCsipRecordRequest(
+      logNumber = "na",
+      referral = CreateReferralRequest(
+        incidentDate = LocalDate.now(),
+        incidentTime = LocalTime.now(),
+        incidentTypeCode = "idque",
+        incidentLocationCode = "ridiculus",
+        referredBy = "maximus",
+        refererAreaCode = "intellegat",
+        referralSummary = null,
+        isProactiveReferral = null,
+        isStaffAssaulted = null,
+        assaultedStaffName = null,
+        incidentInvolvementCode = "vidisse",
+        descriptionOfConcern = "molestie",
+        knownReasons = "dicat",
+        otherInformation = null,
+        isSaferCustodyTeamInformed = null,
+        isReferralComplete = null,
+        contributoryFactors = listOf(
+          CreateContributoryFactorRequest(
+            factorTypeCode = "n".repeat(13),
+            comment = null,
+          ),
+        ),
+      ),
+    )
+    assertSingleValidationError(
+      validator.validate(request),
+      "referral.contributoryFactors[0].factorTypeCode",
+      "Contributory factor type code must be <= 12 characters",
+    )
+  }
 }

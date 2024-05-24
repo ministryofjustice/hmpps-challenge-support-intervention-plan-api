@@ -20,6 +20,8 @@ data class Referral(
   @Schema(
     description = "The time the incident that motivated the CSIP referral occurred",
     example = "14:19:25",
+    type = "String",
+    pattern = "HH:mm:SS",
   )
   @JsonFormat(pattern = "HH:mm:ss")
   val incidentTime: LocalTime?,
@@ -110,7 +112,7 @@ data class Referral(
   val saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome?,
 
   @Schema(
-    description = "The Decisions and Actions for the CSIP referral.",
+    description = "The Decision and Actions for the CSIP referral.",
   )
-  val decisionsAndActions: DecisionsAndActions?,
+  val decisionAndActions: DecisionAndActions?,
 )

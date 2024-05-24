@@ -48,6 +48,6 @@ data class CreateInvestigationRequest(
   @Schema(
     description = "The interviews in relation to the investigation",
   )
-  @Valid
+  @field:Valid
   val interviews: Collection<CreateInterviewRequest>?,
 )

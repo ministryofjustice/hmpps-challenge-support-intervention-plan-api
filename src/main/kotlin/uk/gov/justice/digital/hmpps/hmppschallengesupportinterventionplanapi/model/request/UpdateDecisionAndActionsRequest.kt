@@ -1,35 +1,42 @@
-package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
+import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
-@Schema(description = "The Decisions and Actions for the CSIP referral")
-data class DecisionsAndActions(
+@Schema(
+  description = "The request body to update a Decision and Actions for a CSIP referral",
+)
+data class UpdateDecisionAndActionsRequest(
   @Schema(
     description = "The conclusion of the referral and reasons for the outcome decision.",
   )
+  @field:Size(min = 0, max = 4000, message = "Conclusion must be <= 4000 characters")
   val conclusion: String?,
 
   @Schema(
     description = "The outcome decision for the referral.",
   )
-  val outcome: ReferenceData,
+  @field:Size(min = 1, max = 12, message = "Outcome Type code must be <= 12 characters")
+  val outcomeTypeCode: String,
 
   @Schema(
     description = "The role of the person making the outcome decision.",
   )
-  val outcomeSignedOffByRole: ReferenceData?,
+  @field:Size(min = 1, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
+  val outcomeSignedOffByRoleCode: String?,
 
   @Schema(
     description = "The username of the user who recorded the outcome decision.",
   )
+  @field:Size(min = 0, max = 100, message = "Outcome Recorded By username must be <= 100 characters")
   val outcomeRecordedBy: String?,
 
   @Schema(
     description = "The displayable name of the user who recorded the outcome decision.",
   )
+  @field:Size(min = 0, max = 255, message = "Outcome Recorded By display name must be <= 255 characters")
   val outcomeRecordedByDisplayName: String?,
 
   @Schema(
@@ -42,6 +49,7 @@ data class DecisionsAndActions(
   @Schema(
     description = "The next steps that should be taken following the outcome decision.",
   )
+  @field:Size(min = 0, max = 4000, message = "Next Step must be <= 4000 characters")
   val nextSteps: String?,
 
   @Schema(
@@ -82,5 +90,6 @@ data class DecisionsAndActions(
   @Schema(
     description = "Any other actions that are recommended to be considered.",
   )
+  @field:Size(min = 0, max = 4000, message = "Action Other must be <= 4000 characters")
   val actionOther: String?,
 )

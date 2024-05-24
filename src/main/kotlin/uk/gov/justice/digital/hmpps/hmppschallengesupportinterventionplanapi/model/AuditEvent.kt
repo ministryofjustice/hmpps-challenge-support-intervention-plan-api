@@ -69,9 +69,9 @@ data class AuditEvent(
   val isInterviewAffected: Boolean?,
 
   @Schema(
-    description = "If the Decisions And Actions entity is affected",
+    description = "If the Decision And Actions entity is affected",
   )
-  val isDecisionsAndActionsAffected: Boolean?,
+  val isDecisionAndActionsAffected: Boolean?,
 
   @Schema(
     description = "If the Plan entity is affected",

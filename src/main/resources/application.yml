@@ -13,6 +13,12 @@ spring:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${api.base.url.hmpps-auth}/.well-known/jwks.json
+
   jpa:
     open-in-view: false
     show-sql: false
@@ -34,6 +40,11 @@ spring:
     placeholders:
       dpr_user: ${DPR_USER}
       dpr_password: ${DPR_PASSWORD}
+
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: alpha
 
 server:
   port: 8080
