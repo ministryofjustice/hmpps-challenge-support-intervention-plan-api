@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.in
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -17,6 +18,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var webTestClient: WebTestClient
 
+  @Autowired
+  lateinit var jwtAuthHelper: JwtAuthHelper
+
   companion object {
     private val pgContainer = PostgresContainer.instance
 
@@ -30,4 +34,11 @@ abstract class IntegrationTestBase {
       }
     }
   }
+
+  internal fun setAuthorisation(
+    user: String? = null,
+    client: String = CLIENT_ID,
+    roles: List<String> = listOf(),
+    isUserToken: Boolean = true,
+  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, client, roles, isUserToken = isUserToken)
 }

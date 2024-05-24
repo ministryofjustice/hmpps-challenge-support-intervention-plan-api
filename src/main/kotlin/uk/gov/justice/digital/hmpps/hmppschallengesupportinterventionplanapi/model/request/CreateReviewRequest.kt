@@ -77,6 +77,6 @@ data class CreateReviewRequest(
   @Schema(
     description = "The attendees/contributors to the review.",
   )
-  @Valid
+  @field:Valid
   val attendees: Collection<CreateAttendeeRequest>?,
 )
