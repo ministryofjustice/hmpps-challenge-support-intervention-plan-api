@@ -61,7 +61,7 @@ class CsipRecordTest : ModelTest() {
             lastModifiedByDisplayName = null,
           ),
         ),
-        decisionsAndActions = DecisionsAndActions(
+        decisionAndActions = DecisionAndActions(
           conclusion = null,
           outcome = referenceData,
           outcomeSignedOffByRole = null,

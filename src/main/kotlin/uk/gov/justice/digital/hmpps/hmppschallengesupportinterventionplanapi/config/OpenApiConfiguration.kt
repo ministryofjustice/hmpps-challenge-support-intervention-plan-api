@@ -31,10 +31,10 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun customOpenAPI(): OpenAPI? = OpenAPI()
     .info(
       Info()
-        .title("Challenge Support Intervention Plan API")
+        .title("Challenge, Support, and Intervention Plan API")
         .version(version)
         .description(
-          "API for retrieving and managing Challenge Support Intervention Plan (CSIP) relating to a person.\n\n" +
+          "API for retrieving and managing Challenge, Support, and Intervention Plan (CSIP) relating to a person.\n\n" +
             "## Authentication\n\n" +
             "This API uses OAuth2 with JWTs. " +
             "You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n" +

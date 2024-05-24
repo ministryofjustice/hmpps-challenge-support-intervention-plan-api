@@ -112,7 +112,7 @@ data class Referral(
   val saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome?,
 
   @Schema(
-    description = "The Decisions and Actions for the CSIP referral.",
+    description = "The Decision and Actions for the CSIP referral.",
   )
-  val decisionsAndActions: DecisionsAndActions?,
+  val decisionAndActions: DecisionAndActions?,
 )

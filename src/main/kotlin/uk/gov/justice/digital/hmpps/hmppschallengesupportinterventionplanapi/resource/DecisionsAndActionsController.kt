@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionsAndActions
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionsAndActionsRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateDecisionsAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateDecisionAndActionsRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
@@ -31,21 +31,21 @@ import java.util.UUID
   produces = [MediaType.APPLICATION_JSON_VALUE],
 )
 @Tag(
-  name = "4. Decisions And Actions Controller",
-  description = "Endpoints for Decisions And Actions operations",
+  name = "4. Decision And Actions Controller",
+  description = "Endpoints for Decision And Actions operations",
 )
 class DecisionsAndActionsController {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   @Operation(
-    summary = "Add decisions and actions to the referral.",
+    summary = "Add decision and actions to the referral.",
     description = "Create the decision and actions. Publishes prisoner-csip.csip-record-updated event with decisionAndActionsAffected = true",
   )
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "201",
-        description = "Decisions and Actions added to CSIP referral",
+        description = "Decision and Actions added to CSIP referral",
       ),
       ApiResponse(
         responseCode = "400",
@@ -70,13 +70,13 @@ class DecisionsAndActionsController {
     ],
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun createDecisions(
+  fun createDecision(
     @PathVariable @Parameter(
       description = "CSIP record unique identifier",
       required = true,
     ) recordUuid: UUID,
-    @Valid @RequestBody createDecisionsAndActionsRequest: CreateDecisionsAndActionsRequest,
-  ): DecisionsAndActions = throw NotImplementedError()
+    @Valid @RequestBody createDecisionAndActionsRequest: CreateDecisionAndActionsRequest,
+  ): DecisionAndActions = throw NotImplementedError()
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping
@@ -88,7 +88,7 @@ class DecisionsAndActionsController {
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Decisions and Actions updated",
+        description = "Decision and Actions updated",
       ),
       ApiResponse(
         responseCode = "400",
@@ -113,11 +113,11 @@ class DecisionsAndActionsController {
     ],
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun updateDecisions(
+  fun updateDecision(
     @PathVariable @Parameter(
       description = "CSIP record unique identifier",
       required = true,
     ) recordUuid: UUID,
-    @Valid @RequestBody updateDecisionsAndActionsRequest: UpdateDecisionsAndActionsRequest,
-  ): DecisionsAndActions = throw NotImplementedError()
+    @Valid @RequestBody updateDecisionAndActionsRequest: UpdateDecisionAndActionsRequest,
+  ): DecisionAndActions = throw NotImplementedError()
 }

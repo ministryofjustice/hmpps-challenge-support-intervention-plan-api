@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
 @Schema(
-  description = "The request body to create a Decisions and Actions for a CSIP referral",
+  description = "The request body to create a Decision and Actions for a CSIP referral",
 )
-data class CreateDecisionsAndActionsRequest(
+data class CreateDecisionAndActionsRequest(
   @Schema(
     description = "The conclusion of the referral and reasons for the outcome decision.",
   )
