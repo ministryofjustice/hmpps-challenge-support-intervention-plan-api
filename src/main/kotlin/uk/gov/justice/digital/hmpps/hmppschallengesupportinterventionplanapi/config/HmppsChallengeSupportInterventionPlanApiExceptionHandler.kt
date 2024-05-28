@@ -43,6 +43,10 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> {
+    if (e.cause?.cause is InvalidDomainException) {
+      return handleInvalidDomainException(e.cause!!.cause as InvalidDomainException)
+    }
+
     val type = e.requiredType
     val message = if (type.isEnum) {
       "Parameter ${e.name} must be one of the following ${StringUtils.join(type.enumConstants, ", ")}"
@@ -126,9 +130,9 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
     ).also { log.info("No resource found exception: {}", e.message) }
 
   @ExceptionHandler(InvalidDomainException::class)
-  fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<ErrorResponse> =
+  fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
     ResponseEntity.status(NOT_FOUND).body(
-      ErrorResponse(
+      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
         status = NOT_FOUND,
         userMessage = "No resource found failure: ${e.message}",
         developerMessage = e.message,

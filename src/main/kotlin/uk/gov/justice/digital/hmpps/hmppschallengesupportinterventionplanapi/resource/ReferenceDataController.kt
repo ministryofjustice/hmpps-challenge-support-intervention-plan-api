@@ -68,12 +68,10 @@ class ReferenceDataController {
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun getReferenceData(
     @PathVariable @Parameter(
-      description = "Reference data domain. ${ReferenceDataType.VALIDATION_DESCRIPTION}",
+      description = "Reference data domain.",
       required = true,
-    ) domain: String,
-  ): Collection<ReferenceData> = ReferenceDataType.fromDomain(domain).let {
-    throw NotImplementedError()
-  }
+    ) domain: ReferenceDataType,
+  ): Collection<ReferenceData> = throw NotImplementedError()
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
@@ -112,13 +110,11 @@ class ReferenceDataController {
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun addReferenceDataCode(
     @PathVariable @Parameter(
-      description = "Reference data domain. ${ReferenceDataType.VALIDATION_DESCRIPTION}",
+      description = "Reference data domain.",
       required = true,
-    ) domain: String,
+    ) domain: ReferenceDataType,
     @Valid @RequestBody createReferenceDataRequest: CreateReferenceDataRequest,
-  ): ReferenceData = ReferenceDataType.fromDomain(domain).let {
-    throw NotImplementedError()
-  }
+  ): ReferenceData = throw NotImplementedError()
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/{code}")
@@ -157,17 +153,15 @@ class ReferenceDataController {
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateReferenceDataCode(
     @PathVariable @Parameter(
-      description = "Reference data domain. ${ReferenceDataType.VALIDATION_DESCRIPTION}",
+      description = "Reference data domain.",
       required = true,
-    ) domain: String,
+    ) domain: ReferenceDataType,
     @PathVariable @Parameter(
       description = "Short code of the reference data to be updated",
       required = true,
     ) code: String,
     @Valid @RequestBody updateReferenceDataRequest: UpdateReferenceDataRequest,
-  ): ReferenceData = ReferenceDataType.fromDomain(domain).let {
-    throw NotImplementedError()
-  }
+  ): ReferenceData = throw NotImplementedError()
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/{code}/deactivate")
@@ -201,16 +195,14 @@ class ReferenceDataController {
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun deactivateReferenceDataCode(
     @PathVariable @Parameter(
-      description = "Reference data domain. ${ReferenceDataType.VALIDATION_DESCRIPTION}",
+      description = "Reference data domain.",
       required = true,
-    ) domain: String,
+    ) domain: ReferenceDataType,
     @PathVariable @Parameter(
       description = "Short code of the reference data to be deactivated",
       required = true,
     ) code: String,
-  ): ReferenceData = ReferenceDataType.fromDomain(domain).let {
-    throw NotImplementedError()
-  }
+  ): ReferenceData = throw NotImplementedError()
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/{code}/reactivate")
@@ -244,14 +236,12 @@ class ReferenceDataController {
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun reactivateReferenceDataCode(
     @PathVariable @Parameter(
-      description = "Reference data domain. ${ReferenceDataType.VALIDATION_DESCRIPTION}",
+      description = "Reference data domain.",
       required = true,
-    ) domain: String,
+    ) domain: ReferenceDataType,
     @PathVariable @Parameter(
       description = "Short code of the reference data to be reactivated",
       required = true,
     ) code: String,
-  ): ReferenceData = ReferenceDataType.fromDomain(domain).let {
-    throw NotImplementedError()
-  }
+  ): ReferenceData = throw NotImplementedError()
 }
