@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.HandlerMethodValidationException
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
 
 @RestControllerAdvice
 class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
@@ -116,6 +117,16 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> =
+    ResponseEntity.status(NOT_FOUND).body(
+      ErrorResponse(
+        status = NOT_FOUND,
+        userMessage = "No resource found failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("No resource found exception: {}", e.message) }
+
+  @ExceptionHandler(InvalidDomainException::class)
+  fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(NOT_FOUND).body(
       ErrorResponse(
         status = NOT_FOUND,

@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration
 
-import jakarta.validation.ValidationException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
 
 enum class ReferenceDataType(val domain: String) {
   AreaOfWork("area-of-work"), // Map to NOMIS domain CSIP_FUNC
@@ -20,6 +20,6 @@ enum class ReferenceDataType(val domain: String) {
     private val map = entries.associateBy(ReferenceDataType::domain)
 
     fun fromDomain(domain: String) =
-      map[domain] ?: throw ValidationException("Fail to map $domain to Reference Data Type. $VALIDATION_DESCRIPTION")
+      map[domain] ?: throw InvalidDomainException("Fail to map $domain to Reference Data Type. $VALIDATION_DESCRIPTION")
   }
 }
