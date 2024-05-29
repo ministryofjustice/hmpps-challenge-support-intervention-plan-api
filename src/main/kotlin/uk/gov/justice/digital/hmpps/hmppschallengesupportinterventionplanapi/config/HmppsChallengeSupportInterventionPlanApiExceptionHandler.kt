@@ -43,8 +43,9 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> {
-    if (e.cause?.cause is InvalidDomainException) {
-      return handleInvalidDomainException(e.cause!!.cause as InvalidDomainException)
+    val cause = e.cause?.cause
+    if (cause is InvalidDomainException) {
+      return handleInvalidDomainException(cause)
     }
 
     val type = e.requiredType
