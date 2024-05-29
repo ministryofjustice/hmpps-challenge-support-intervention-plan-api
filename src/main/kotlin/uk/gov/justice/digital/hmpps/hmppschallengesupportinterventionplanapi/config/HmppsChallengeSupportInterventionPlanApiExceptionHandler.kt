@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.HandlerMethodValidationException
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
 
 @RestControllerAdvice
 class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
@@ -42,6 +43,10 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> {
+    if (e.cause?.cause is InvalidDomainException) {
+      return handleInvalidDomainException(e.cause!!.cause as InvalidDomainException)
+    }
+
     val type = e.requiredType
     val message = if (type.isEnum) {
       "Parameter ${e.name} must be one of the following ${StringUtils.join(type.enumConstants, ", ")}"
@@ -118,6 +123,16 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(NOT_FOUND).body(
       ErrorResponse(
+        status = NOT_FOUND,
+        userMessage = "No resource found failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("No resource found exception: {}", e.message) }
+
+  @ExceptionHandler(InvalidDomainException::class)
+  fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+    ResponseEntity.status(NOT_FOUND).body(
+      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
         status = NOT_FOUND,
         userMessage = "No resource found failure: ${e.message}",
         developerMessage = e.message,
