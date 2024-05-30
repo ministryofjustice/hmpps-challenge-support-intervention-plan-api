@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.request.CreateReferenceDataRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.request.UpdateReferenceDataRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.ReferenceDataService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
@@ -35,7 +36,9 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
   name = "7. Reference Data Controller",
   description = "Endpoints for Reference Data operations",
 )
-class ReferenceDataController {
+class ReferenceDataController(
+  private val referenceDataService: ReferenceDataService,
+) {
   @ResponseStatus(HttpStatus.OK)
   @GetMapping
   @Operation(
@@ -71,7 +74,10 @@ class ReferenceDataController {
       description = "Reference data domain.",
       required = true,
     ) domain: ReferenceDataType,
-  ): Collection<ReferenceData> = throw NotImplementedError()
+    @Parameter(
+      description = "Include inactive reference data. Defaults to false",
+    ) includeInactive: Boolean = false,
+  ): Collection<ReferenceData> = referenceDataService.getReferenceDataForDomain(domain, includeInactive)
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
