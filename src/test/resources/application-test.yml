@@ -12,3 +12,20 @@ spring:
     password: csip
   flyway:
     locations: classpath:/migration/common,classpath:/migration/test
+
+api:
+  base:
+    url:
+      hmpps-auth: http://localhost:8090/auth
+      manage-users: http://localhost:8111
+      prisoner-search: http://localhost:8112
+
+manage-users:
+  client:
+    id: alerts-api
+    secret: clientsecret
+
+prisoner-search:
+  client:
+    id: alerts-api
+    secret: clientsecret

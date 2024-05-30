@@ -25,6 +25,9 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql")
   implementation("io.hypersistence:hypersistence-utils-hibernate-62:3.7.5")
 
+  // AWS
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.3")
+
   // Test dependencies
   testImplementation("org.testcontainers:postgresql:1.19.8")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
