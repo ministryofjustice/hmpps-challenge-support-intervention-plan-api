@@ -1,5 +1,3 @@
-TRUNCATE TABLE reference_data RESTART IDENTITY CASCADE;
-
 -- Import inactive reference data
 INSERT INTO reference_data (domain, code, description, list_sequence, created_at, created_by, deactivated_at,
                             deactivated_by)

@@ -10,3 +10,5 @@ spring:
     url: 'jdbc:postgresql://localhost:5432/csip'
     username: csip
     password: csip
+  flyway:
+    locations: classpath:/migration/common,classpath:/migration/test
