@@ -14,6 +14,10 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -67,7 +71,14 @@ data class CsipRecord(
     fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
-  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
+  var referral: Referral? = null
+
+  @OneToOne(
+    mappedBy = "csipRecord",
+    fetch = FetchType.LAZY,
+    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
+  )
+  private var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
 
   fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
@@ -77,6 +88,8 @@ data class CsipRecord(
     actionedAt: LocalDateTime = LocalDateTime.now(),
     actionedBy: String,
     actionedByCapturedName: String,
+    source: Source,
+    reason: Reason,
     isRecordAffected: Boolean? = false,
     isReferralAffected: Boolean? = false,
     isContributoryFactorAffected: Boolean? = false,
@@ -97,6 +110,8 @@ data class CsipRecord(
         actionedAt = actionedAt,
         actionedBy = actionedBy,
         actionedByCapturedName = actionedByCapturedName,
+        source = source,
+        reason = reason,
         isRecordAffected = isRecordAffected,
         isReferralAffected = isReferralAffected,
         isContributoryFactorAffected = isContributoryFactorAffected,
@@ -112,8 +127,20 @@ data class CsipRecord(
     )
   }
 
+  fun saferCustodyScreeningOutcome() = saferCustodyScreeningOutcome
+
   fun addSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
+    if (referral == null) {
+      throw MissingReferralException(recordUuid)
+    }
+    if (saferCustodyScreeningOutcome != null) {
+      throw SaferCustodyScreeningOutcomeAlreadyExistException(recordUuid)
+    }
     saferCustodyScreeningOutcome = screeningOutcome
+  }
+
+  fun addReferral(referral: Referral) = apply {
+    this.referral = referral
   }
 
   fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }

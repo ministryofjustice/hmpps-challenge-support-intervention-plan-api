@@ -2,9 +2,12 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapsId
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import java.time.LocalDate
 import java.time.LocalTime
@@ -12,8 +15,12 @@ import java.time.LocalTime
 @Entity
 @Table
 data class Referral(
-  @ManyToOne
-  @JoinColumn(name = "record_id")
+  @OneToOne(fetch = FetchType.LAZY)
+  @MapsId("record_id")
+  @JoinColumn(
+    name = "record_id",
+    referencedColumnName = "record_id",
+  )
   @Id
   val csipRecord: CsipRecord,
 
@@ -69,19 +76,19 @@ data class Referral(
   val referralCompletedDate: LocalDate? = null,
 
   @ManyToOne
-  @JoinColumn(name = "reference_data_id", insertable = false, updatable = false)
+  @JoinColumn(name = "incident_type_id", referencedColumnName = "reference_data_id")
   val incidentType: ReferenceData,
 
   @ManyToOne
-  @JoinColumn(name = "reference_data_id", insertable = false, updatable = false)
+  @JoinColumn(name = "incident_location_id", referencedColumnName = "reference_data_id")
   val incidentLocation: ReferenceData,
 
   @ManyToOne
-  @JoinColumn(name = "reference_data_id", insertable = false, updatable = false)
+  @JoinColumn(name = "referer_area_of_work_id", referencedColumnName = "reference_data_id")
   val refererAreaOfWork: ReferenceData,
 
   @ManyToOne
-  @JoinColumn(name = "reference_Data_id", insertable = false, updatable = false)
+  @JoinColumn(name = "incident_involvement_id", referencedColumnName = "reference_Data_id")
   val incidentInvolvement: ReferenceData,
 
 )

@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import java.util.*
+import java.util.UUID
 
 @Service
 @Transactional
@@ -36,7 +36,7 @@ class SaferCustodyScreeningOutcomeService(
           recordedByDisplayName = context.userDisplayName,
           source = context.source,
         ),
-      ).saferCustodyScreeningOutcome!!.toModel()
+      ).saferCustodyScreeningOutcome()!!.toModel()
     } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")
   }
 

@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
 
 @Schema(description = "Audit Event of the actions on a CSIP record")
@@ -37,6 +39,16 @@ data class AuditEvent(
     example = "Firstname Lastname",
   )
   val actionedByCapturedName: String,
+
+  @Schema(
+    description = "The source system from which the action came.",
+  )
+  val source: Source,
+
+  @Schema(
+    description = "If the action was taken by a user, or as a result of other reasons",
+  )
+  val reason: Reason,
 
   @Schema(
     description = "If the root CSIP record entity is affected",

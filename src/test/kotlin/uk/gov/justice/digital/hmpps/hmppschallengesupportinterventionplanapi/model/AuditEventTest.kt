@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
 
 class AuditEventTest : ModelTest() {
@@ -17,6 +19,8 @@ class AuditEventTest : ModelTest() {
       actionedAt = originalDateTime,
       actionedBy = "user_name",
       actionedByCapturedName = "User Name",
+      source = Source.DPS,
+      reason = Reason.USER,
       isRecordAffected = true,
       isReviewAffected = false,
       isInterviewAffected = false,

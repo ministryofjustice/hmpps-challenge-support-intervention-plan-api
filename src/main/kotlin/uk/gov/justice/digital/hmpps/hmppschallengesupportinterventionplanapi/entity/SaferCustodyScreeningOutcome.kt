@@ -12,7 +12,6 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDate
@@ -48,7 +47,7 @@ data class SaferCustodyScreeningOutcome(
   val reasonForDecision: String,
 ) : AbstractAggregateRoot<SaferCustodyScreeningOutcome>() {
   fun create(
-    description: String = DomainEventType.CSIP_UPDATED.description,
+    description: String = "Safer custody screening outcome added to referral",
     createdAt: LocalDateTime = LocalDateTime.now(),
     createdBy: String,
     createdByDisplayName: String,
@@ -62,6 +61,8 @@ data class SaferCustodyScreeningOutcome(
       actionedAt = createdAt,
       actionedBy = createdBy,
       actionedByCapturedName = createdByDisplayName,
+      source = source,
+      reason = reason,
       isSaferCustodyScreeningOutcomeAffected = true,
     )
     csipRecord.registerCsipEvent(
