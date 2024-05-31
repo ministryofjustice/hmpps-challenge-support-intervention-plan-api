@@ -10,12 +10,12 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-import uk.gov.justice.digital.hmpps.hmppsalertsapi.utils.LanguageFormatUtils
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.dto.UserDetailsDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.UserService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LanguageFormatUtils
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 
 @Configuration
