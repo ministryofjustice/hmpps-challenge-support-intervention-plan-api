@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -51,6 +52,28 @@ data class CsipAdditionalInformation(
   override val url: String,
   val recordUuid: UUID,
   val prisonNumber: String,
+  @JsonProperty("recordAffected")
+  val isRecordAffected: Boolean,
+  @JsonProperty("referralAffected")
+  val isReferralAffected: Boolean,
+  @JsonProperty("contributoryFactorAffected")
+  val isContributoryFactorAffected: Boolean,
+  @JsonProperty("saferCustodyScreeningOutcomeAffected")
+  val isSaferCustodyScreeningOutcomeAffected: Boolean,
+  @JsonProperty("investigationAffected")
+  val isInvestigationAffected: Boolean,
+  @JsonProperty("interviewAffected")
+  val isInterviewAffected: Boolean,
+  @JsonProperty("decisionAndActionsAffected")
+  val isDecisionAndActionsAffected: Boolean,
+  @JsonProperty("planAffected")
+  val isPlanAffected: Boolean,
+  @JsonProperty("identifiedNeedAffected")
+  val isIdentifiedNeedAffected: Boolean,
+  @JsonProperty("reviewAffected")
+  val isReviewAffected: Boolean,
+  @JsonProperty("attendeeAffected")
+  val isAttendeeAffected: Boolean,
   override val source: Source,
   override val reason: Reason,
 ) : AdditionalInformation() {

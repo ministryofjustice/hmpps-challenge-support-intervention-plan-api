@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 
 abstract class CsipEvent {
   abstract val recordUuid: UUID
@@ -18,13 +18,38 @@ abstract class CsipEvent {
 
   abstract fun toDomainEvent(baseUrl: String): CsipDomainEvent
 
-  protected fun toDomainEvent(type: DomainEventType, baseUrl: String): CsipDomainEvent =
+  protected fun toDomainEvent(
+    type: DomainEventType,
+    baseUrl: String,
+    isRecordAffected: Boolean = false,
+    isReferralAffected: Boolean = false,
+    isContributoryFactorAffected: Boolean = false,
+    isSaferCustodyScreeningOutcomeAffected: Boolean = false,
+    isInvestigationAffected: Boolean = false,
+    isInterviewAffected: Boolean = false,
+    isDecisionAndActionsAffected: Boolean = false,
+    isPlanAffected: Boolean = false,
+    isIdentifiedNeedAffected: Boolean = false,
+    isReviewAffected: Boolean = false,
+    isAttendeeAffected: Boolean = false,
+  ): CsipDomainEvent =
     CsipDomainEvent(
       eventType = type.eventType,
       additionalInformation = CsipAdditionalInformation(
-        url = "$baseUrl/csip/$recordUuid",
+        url = "$baseUrl/csip-records/$recordUuid",
         recordUuid = recordUuid,
         prisonNumber = prisonNumber,
+        isRecordAffected = isRecordAffected,
+        isReferralAffected = isReferralAffected,
+        isContributoryFactorAffected = isContributoryFactorAffected,
+        isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
+        isInvestigationAffected = isInvestigationAffected,
+        isInterviewAffected = isInterviewAffected,
+        isDecisionAndActionsAffected = isDecisionAndActionsAffected,
+        isPlanAffected = isPlanAffected,
+        isIdentifiedNeedAffected = isIdentifiedNeedAffected,
+        isReviewAffected = isReviewAffected,
+        isAttendeeAffected = isAttendeeAffected,
         source = source,
         reason = reason,
       ),
@@ -75,7 +100,21 @@ data class CsipUpdatedEvent(
   }
 
   override fun toDomainEvent(baseUrl: String): CsipDomainEvent =
-    toDomainEvent(DomainEventType.CSIP_UPDATED, baseUrl)
+    toDomainEvent(
+      type = DomainEventType.CSIP_UPDATED,
+      baseUrl = baseUrl,
+      isRecordAffected = isRecordAffected,
+      isReferralAffected = isReferralAffected,
+      isContributoryFactorAffected = isContributoryFactorAffected,
+      isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
+      isInvestigationAffected = isInvestigationAffected,
+      isInterviewAffected = isInterviewAffected,
+      isDecisionAndActionsAffected = isDecisionAndActionsAffected,
+      isPlanAffected = isPlanAffected,
+      isIdentifiedNeedAffected = isIdentifiedNeedAffected,
+      isReviewAffected = isReviewAffected,
+      isAttendeeAffected = isAttendeeAffected,
+    )
 }
 
 fun LocalDateTime.toOffsetString(): String =

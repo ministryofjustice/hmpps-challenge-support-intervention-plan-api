@@ -2,5 +2,4 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 
 enum class Reason {
   USER,
-//  MERGE,
 }
