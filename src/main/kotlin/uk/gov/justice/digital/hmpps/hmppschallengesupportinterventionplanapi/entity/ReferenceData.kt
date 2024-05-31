@@ -17,6 +17,7 @@ import java.time.LocalDateTime
 data class ReferenceData(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "reference_data_id")
   val referenceDataId: Long = 0,
 
   @Enumerated(EnumType.STRING)

@@ -14,18 +14,6 @@ data class UpdateSaferCustodyScreeningOutcomeRequest(
   val outcomeTypeCode: String,
 
   @Schema(
-    description = "The username of the user who recorded the safer custody screening outcome.",
-  )
-  @field:Size(min = 0, max = 100, message = "Recorder username must be <= 100 characters")
-  val recordBy: String,
-
-  @Schema(
-    description = "The displayable name of the user who recorded the safer custody screening outcome.",
-  )
-  @field:Size(min = 0, max = 255, message = "Recorder display name must be <= 255 characters")
-  val recordByDisplayName: String,
-
-  @Schema(
     description = "The date of the safer custody screening outcome.",
     example = "2021-09-27",
   )

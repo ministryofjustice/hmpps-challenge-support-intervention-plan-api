@@ -15,12 +15,12 @@ data class SaferCustodyScreeningOutcome(
   @Schema(
     description = "The username of the user who recorded the safer custody screening outcome.",
   )
-  val recordBy: String,
+  val recordedBy: String,
 
   @Schema(
     description = "The displayable name of the user who recorded the safer custody screening outcome.",
   )
-  val recordByDisplayName: String,
+  val recordedByDisplayName: String,
 
   @Schema(
     description = "The date of the safer custody screening outcome.",

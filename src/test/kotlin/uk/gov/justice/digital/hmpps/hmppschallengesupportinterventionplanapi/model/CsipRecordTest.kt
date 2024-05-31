@@ -80,8 +80,8 @@ class CsipRecordTest : ModelTest() {
         ),
         saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
           outcome = referenceData,
-          recordBy = "cubilia",
-          recordByDisplayName = "Omar Dotson",
+          recordedBy = "cubilia",
+          recordedByDisplayName = "Omar Dotson",
           date = originalDate,
           reasonForDecision = "mazim",
         ),
