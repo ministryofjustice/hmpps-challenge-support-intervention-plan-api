@@ -8,4 +8,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 @Repository
 interface ReferenceDataRepository : JpaRepository<ReferenceData, Long> {
   fun findByDomain(domain: ReferenceDataType): Collection<ReferenceData>
+
+  fun findByDomainAndCode(domain: ReferenceDataType, code: String): ReferenceData?
 }

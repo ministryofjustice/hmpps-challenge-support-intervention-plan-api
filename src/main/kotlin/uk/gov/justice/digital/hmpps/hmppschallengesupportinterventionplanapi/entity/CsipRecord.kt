@@ -12,6 +12,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import java.time.LocalDateTime
 import java.util.UUID
@@ -53,12 +54,22 @@ data class CsipRecord(
   @Column(length = 255)
   val lastModifiedByDisplayName: String? = null,
 ) : AbstractAggregateRoot<CsipRecord>() {
-  @OneToMany(mappedBy = "csipRecord", fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
+  @OneToMany(
+    mappedBy = "csipRecord",
+    fetch = FetchType.EAGER,
+    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
+  )
   @OrderBy("actioned_at DESC")
   private val auditEvents: MutableList<AuditEvent> = mutableListOf()
 
-  @OneToOne(mappedBy = "csipRecord", fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
-  private var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
+  @OneToOne(
+    mappedBy = "csipRecord",
+    fetch = FetchType.LAZY,
+    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
+  )
+  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
+
+  fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
   fun addAuditEvent(
     action: AuditEventAction,
@@ -104,4 +115,6 @@ data class CsipRecord(
   fun addSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
     saferCustodyScreeningOutcome = screeningOutcome
   }
+
+  fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
 }

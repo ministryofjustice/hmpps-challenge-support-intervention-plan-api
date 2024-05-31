@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config
 
+import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -132,6 +133,16 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
 
   @ExceptionHandler(InvalidDomainException::class)
   fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+    ResponseEntity.status(NOT_FOUND).body(
+      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+        status = NOT_FOUND,
+        userMessage = "No resource found failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("No resource found exception: {}", e.message) }
+
+  @ExceptionHandler(EntityNotFoundException::class)
+  fun handleEntityNotFoundException(e: EntityNotFoundException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
     ResponseEntity.status(NOT_FOUND).body(
       uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
         status = NOT_FOUND,

@@ -12,6 +12,7 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDate
@@ -20,18 +21,18 @@ import java.time.LocalDateTime
 @Entity
 @Table
 data class SaferCustodyScreeningOutcome(
-  @Id @Column(name = "record_id") val recordId: Long = 0,
-
-  @MapsId("record_id") @OneToOne(fetch = FetchType.LAZY) @JoinColumn(
+  @Id
+  @MapsId("record_id")
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
     name = "record_id",
     referencedColumnName = "record_id",
   ) val csipRecord: CsipRecord,
 
-  @ManyToOne @JoinColumn(
+  @ManyToOne
+  @JoinColumn(
     name = "outcome_id",
     referencedColumnName = "reference_data_id",
-    insertable = false,
-    updatable = false,
   ) val outcomeType: ReferenceData,
 
   @Column(nullable = false, length = 100)
@@ -47,7 +48,7 @@ data class SaferCustodyScreeningOutcome(
   val reasonForDecision: String,
 ) : AbstractAggregateRoot<SaferCustodyScreeningOutcome>() {
   fun create(
-    description: String = "Safer Custody Screening Outcome created for CSIP record",
+    description: String = DomainEventType.CSIP_UPDATED.description,
     createdAt: LocalDateTime = LocalDateTime.now(),
     createdBy: String,
     createdByDisplayName: String,
@@ -63,7 +64,7 @@ data class SaferCustodyScreeningOutcome(
       actionedByCapturedName = createdByDisplayName,
       isSaferCustodyScreeningOutcomeAffected = true,
     )
-    registerEvent(
+    csipRecord.registerCsipEvent(
       CsipUpdatedEvent(
         recordUuid = csipRecord.recordUuid,
         prisonNumber = csipRecord.prisonNumber,

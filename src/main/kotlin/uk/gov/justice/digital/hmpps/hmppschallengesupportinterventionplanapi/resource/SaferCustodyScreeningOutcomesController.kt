@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -18,10 +19,12 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.SaferCustodyScreeningOutcomeService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
@@ -34,7 +37,9 @@ import java.util.UUID
   name = "5. Safer Custody Screening Outcome Controller",
   description = "Endpoints for Safer Custody Screening Outcome operations",
 )
-class SaferCustodyScreeningOutcomesController {
+class SaferCustodyScreeningOutcomesController(
+  private val screeningOutcomeService: SaferCustodyScreeningOutcomeService,
+) {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   @Operation(
@@ -76,7 +81,12 @@ class SaferCustodyScreeningOutcomesController {
       required = true,
     ) recordUuid: UUID,
     @Valid @RequestBody createSaferCustodyScreeningOutcomeRequest: CreateSaferCustodyScreeningOutcomeRequest,
-  ): SaferCustodyScreeningOutcome = throw NotImplementedError()
+    httpRequest: HttpServletRequest,
+  ): SaferCustodyScreeningOutcome = screeningOutcomeService.createScreeningOutcome(
+    recordUuid,
+    createSaferCustodyScreeningOutcomeRequest,
+    httpRequest.csipRequestContext(),
+  )
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping

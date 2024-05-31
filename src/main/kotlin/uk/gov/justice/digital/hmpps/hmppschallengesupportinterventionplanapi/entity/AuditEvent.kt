@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 data class AuditEvent(
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Id
-  val auditEventId: Long = 0,
+  val id: Long = 0,
 
   @ManyToOne
   @JoinColumn(name = "csip_record_id", referencedColumnName = "record_id", nullable = false)
