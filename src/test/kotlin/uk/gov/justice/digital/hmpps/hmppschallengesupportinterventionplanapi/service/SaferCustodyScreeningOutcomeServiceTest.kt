@@ -36,7 +36,7 @@ class SaferCustodyScreeningOutcomeServiceTest {
     whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
       csipRecord()
         .apply {
-          addSaferCustodyScreeningOutcome(
+          setSaferCustodyScreeningOutcome(
             SaferCustodyScreeningOutcome(
               csipRecord = this,
               outcomeType = referenceData(),
@@ -119,7 +119,7 @@ class SaferCustodyScreeningOutcomeServiceTest {
     lastModifiedBy = null,
     lastModifiedByDisplayName = null,
   ).apply {
-    addReferral(
+    setReferral(
       Referral(
         csipRecord = this,
         incidentDate = LocalDate.now(),

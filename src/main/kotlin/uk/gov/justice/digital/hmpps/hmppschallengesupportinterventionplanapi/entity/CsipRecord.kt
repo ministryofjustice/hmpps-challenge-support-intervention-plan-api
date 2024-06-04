@@ -131,7 +131,7 @@ data class CsipRecord(
 
   fun saferCustodyScreeningOutcome() = saferCustodyScreeningOutcome
 
-  fun addSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
+  fun setSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
     if (referral == null) {
       throw MissingReferralException(recordUuid)
     }
@@ -141,7 +141,7 @@ data class CsipRecord(
     saferCustodyScreeningOutcome = screeningOutcome
   }
 
-  fun addReferral(referral: Referral) = apply {
+  fun setReferral(referral: Referral) = apply {
     this.referral = referral
   }
 

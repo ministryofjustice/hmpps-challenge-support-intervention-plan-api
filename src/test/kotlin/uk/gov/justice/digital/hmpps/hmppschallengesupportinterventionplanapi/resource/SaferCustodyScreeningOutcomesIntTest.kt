@@ -169,7 +169,7 @@ class SaferCustodyScreeningOutcomesIntTest(
     val recordUuid = csipRecord.recordUuid
 
     csipRecordRepository.save(
-      csipRecord.addSaferCustodyScreeningOutcome(
+      csipRecord.setSaferCustodyScreeningOutcome(
         uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome(
           csipRecord = csipRecord,
           outcomeType = outcomeType,
@@ -350,7 +350,7 @@ class SaferCustodyScreeningOutcomesIntTest(
       lastModifiedByDisplayName = null,
     ).let {
       if (withReferral) {
-        it.addReferral(
+        it.setReferral(
           Referral(
             csipRecord = it,
             incidentDate = LocalDate.now(),
