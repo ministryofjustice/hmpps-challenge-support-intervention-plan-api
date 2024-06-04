@@ -10,14 +10,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 
 @Service
-class CsipAlertEventService(
+class CsipEventService(
   private val eventProperties: EventProperties,
   // Will be used for tracking events for metrics
   private val telemetryClient: TelemetryClient,
   private val domainEventPublisher: DomainEventPublisher,
 ) {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  fun handleAlertEvent(event: CsipEvent) {
+  fun handleEvent(event: CsipEvent) {
     log.info(event.toString())
 
     event.toDomainEvent(eventProperties.baseUrl).run {
