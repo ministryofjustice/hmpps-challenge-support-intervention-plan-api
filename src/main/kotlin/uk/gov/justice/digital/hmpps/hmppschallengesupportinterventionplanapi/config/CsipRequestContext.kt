@@ -9,6 +9,7 @@ data class CsipRequestContext(
   val source: Source = Source.DPS,
   val username: String,
   val userDisplayName: String,
+  val activeCaseLoadId: String?,
 )
 
 fun HttpServletRequest.csipRequestContext() =

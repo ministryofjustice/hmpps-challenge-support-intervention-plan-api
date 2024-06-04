@@ -14,6 +14,8 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -67,7 +69,9 @@ data class CsipRecord(
     fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
-  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
+  var referral: Referral? = null
+
+  fun referral() = referral
 
   fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
@@ -77,6 +81,9 @@ data class CsipRecord(
     actionedAt: LocalDateTime = LocalDateTime.now(),
     actionedBy: String,
     actionedByCapturedName: String,
+    source: Source,
+    reason: Reason,
+    activeCaseLoadId: String?,
     isRecordAffected: Boolean? = false,
     isReferralAffected: Boolean? = false,
     isContributoryFactorAffected: Boolean? = false,
@@ -97,6 +104,9 @@ data class CsipRecord(
         actionedAt = actionedAt,
         actionedBy = actionedBy,
         actionedByCapturedName = actionedByCapturedName,
+        source = source,
+        reason = reason,
+        activeCaseLoadId = activeCaseLoadId,
         isRecordAffected = isRecordAffected,
         isReferralAffected = isReferralAffected,
         isContributoryFactorAffected = isContributoryFactorAffected,
@@ -112,8 +122,8 @@ data class CsipRecord(
     )
   }
 
-  fun addSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
-    saferCustodyScreeningOutcome = screeningOutcome
+  fun setReferral(referral: Referral) = apply {
+    this.referral = referral
   }
 
   fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }

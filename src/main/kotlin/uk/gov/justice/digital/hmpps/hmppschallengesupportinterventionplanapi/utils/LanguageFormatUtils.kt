@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsalertsapi.utils
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils
 
 object LanguageFormatUtils {
   fun formatDisplayName(userName: String): String {
