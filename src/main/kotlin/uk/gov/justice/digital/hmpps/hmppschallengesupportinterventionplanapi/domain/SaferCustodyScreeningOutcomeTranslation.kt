@@ -23,6 +23,7 @@ fun CreateSaferCustodyScreeningOutcomeRequest.toCsipRecordEntity(
   recordedBy: String,
   recordedByDisplayName: String,
   source: Source,
+  activeCaseLoadId: String?,
 ) =
   SaferCustodyScreeningOutcome(
     csipRecord = csipRecord,
@@ -36,4 +37,5 @@ fun CreateSaferCustodyScreeningOutcomeRequest.toCsipRecordEntity(
     createdBy = recordedBy,
     createdByDisplayName = recordedByDisplayName,
     source = source,
+    activeCaseLoadId = activeCaseLoadId,
   )

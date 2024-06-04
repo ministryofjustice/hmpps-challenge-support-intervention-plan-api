@@ -47,6 +47,7 @@ class CsipRequestContextInterceptor(
           source = source,
           username = userDetails.username,
           userDisplayName = LanguageFormatUtils.formatDisplayName(userDetails.name),
+          activeCaseLoadId = userDetails.activeCaseLoadId,
         ),
       )
     }
@@ -80,7 +81,7 @@ class CsipRequestContextInterceptor(
     getUsername(source).let {
       userService.getUserDetails(it)
         ?: if (source != Source.DPS) {
-          UserDetailsDto(username = it, active = true, name = it, authSource = it, userId = it, uuid = null)
+          UserDetailsDto(username = it, active = true, name = it, authSource = it, userId = it, uuid = null, activeCaseLoadId = null)
         } else {
           null
         }

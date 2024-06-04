@@ -9,4 +9,5 @@ data class UserDetailsDto(
   val authSource: String,
   val userId: String,
   val uuid: UUID?,
+  val activeCaseLoadId: String?,
 )

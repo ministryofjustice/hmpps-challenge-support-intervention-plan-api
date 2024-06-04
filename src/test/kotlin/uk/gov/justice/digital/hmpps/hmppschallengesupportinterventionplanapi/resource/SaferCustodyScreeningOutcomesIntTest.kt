@@ -233,6 +233,7 @@ class SaferCustodyScreeningOutcomesIntTest(
       assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
       assertThat(source).isEqualTo(Source.DPS)
       assertThat(reason).isEqualTo(Reason.USER)
+      assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
     }
 
     // prisoner-csip.csip-record-updated domain event published
@@ -301,6 +302,7 @@ class SaferCustodyScreeningOutcomesIntTest(
       assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
       assertThat(source).isEqualTo(Source.NOMIS)
       assertThat(reason).isEqualTo(Reason.USER)
+      assertThat(activeCaseLoadId).isNull()
     }
 
     // prisoner-csip.csip-record-updated domain event published

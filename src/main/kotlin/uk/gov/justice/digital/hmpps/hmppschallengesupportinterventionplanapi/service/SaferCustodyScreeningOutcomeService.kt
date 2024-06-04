@@ -35,6 +35,7 @@ class SaferCustodyScreeningOutcomeService(
           recordedBy = context.username,
           recordedByDisplayName = context.userDisplayName,
           source = context.source,
+          activeCaseLoadId = context.activeCaseLoadId,
         ),
       ).saferCustodyScreeningOutcome()!!.toModel()
     } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")

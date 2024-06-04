@@ -39,6 +39,8 @@ data class AuditEvent(
   @Enumerated(EnumType.STRING)
   val reason: Reason,
 
+  val activeCaseLoadId: String?,
+
   @Column(name = "record_affected")
   val isRecordAffected: Boolean? = false,
   @Column(name = "referral_affected")

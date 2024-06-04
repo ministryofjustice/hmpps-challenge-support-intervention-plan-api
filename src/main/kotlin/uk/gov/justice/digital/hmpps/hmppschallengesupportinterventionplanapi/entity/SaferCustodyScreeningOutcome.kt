@@ -53,6 +53,7 @@ data class SaferCustodyScreeningOutcome(
     createdByDisplayName: String,
     source: Source,
     reason: Reason = Reason.USER,
+    activeCaseLoadId: String?,
   ): CsipRecord = let {
     csipRecord.addSaferCustodyScreeningOutcome(this)
     csipRecord.addAuditEvent(
@@ -63,6 +64,7 @@ data class SaferCustodyScreeningOutcome(
       actionedByCapturedName = createdByDisplayName,
       source = source,
       reason = reason,
+      activeCaseLoadId = activeCaseLoadId,
       isSaferCustodyScreeningOutcomeAffected = true,
     )
     csipRecord.registerCsipEvent(
