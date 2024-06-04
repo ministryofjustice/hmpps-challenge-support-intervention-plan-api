@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
@@ -36,15 +35,15 @@ class SaferCustodyScreeningOutcomeServiceTest {
     whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
       csipRecord()
         .apply {
-          setSaferCustodyScreeningOutcome(
-            SaferCustodyScreeningOutcome(
-              csipRecord = this,
-              outcomeType = referenceData(),
-              recordedBy = TEST_USER,
-              recordedByDisplayName = TEST_USER_NAME,
-              date = LocalDate.of(2021, 1, 1),
-              reasonForDecision = "an",
-            ),
+          referral!!.createSaferCustodyScreeningOutcome(
+            outcomeType = referenceData(),
+            date = LocalDate.of(2021, 1, 1),
+            reasonForDecision = "an",
+            actionedAt = LocalDateTime.of(2021, 1, 1, 1, 0),
+            actionedBy = TEST_USER,
+            actionedByDisplayName = TEST_USER_NAME,
+            source = Source.DPS,
+            activeCaseLoadId = PRISON_CODE_LEEDS,
           )
         },
     )

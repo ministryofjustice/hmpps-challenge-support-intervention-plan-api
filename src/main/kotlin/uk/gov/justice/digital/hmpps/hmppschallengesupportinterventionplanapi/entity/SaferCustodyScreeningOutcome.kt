@@ -9,13 +9,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import org.springframework.data.domain.AbstractAggregateRoot
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Entity
 @Table
@@ -26,7 +20,7 @@ data class SaferCustodyScreeningOutcome(
   @JoinColumn(
     name = "record_id",
     referencedColumnName = "record_id",
-  ) val csipRecord: CsipRecord,
+  ) val referral: Referral,
 
   @ManyToOne
   @JoinColumn(
@@ -45,40 +39,4 @@ data class SaferCustodyScreeningOutcome(
 
   @Column(nullable = false)
   val reasonForDecision: String,
-) : AbstractAggregateRoot<SaferCustodyScreeningOutcome>() {
-  fun create(
-    description: String = "Safer custody screening outcome added to referral",
-    createdAt: LocalDateTime = LocalDateTime.now(),
-    createdBy: String,
-    createdByDisplayName: String,
-    source: Source,
-    reason: Reason = Reason.USER,
-    activeCaseLoadId: String?,
-  ): CsipRecord = let {
-    csipRecord.setSaferCustodyScreeningOutcome(this)
-    csipRecord.addAuditEvent(
-      action = AuditEventAction.UPDATED,
-      description = description,
-      actionedAt = createdAt,
-      actionedBy = createdBy,
-      actionedByCapturedName = createdByDisplayName,
-      source = source,
-      reason = reason,
-      activeCaseLoadId = activeCaseLoadId,
-      isSaferCustodyScreeningOutcomeAffected = true,
-    )
-    csipRecord.registerCsipEvent(
-      CsipUpdatedEvent(
-        recordUuid = csipRecord.recordUuid,
-        prisonNumber = csipRecord.prisonNumber,
-        description = description,
-        occurredAt = createdAt,
-        source = source,
-        reason = reason,
-        updatedBy = createdBy,
-        isSaferCustodyScreeningOutcomeAffected = true,
-      ),
-    )
-    return csipRecord
-  }
-}
+)

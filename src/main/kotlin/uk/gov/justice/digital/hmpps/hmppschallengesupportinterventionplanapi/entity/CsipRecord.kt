@@ -16,8 +16,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -73,12 +71,7 @@ data class CsipRecord(
   )
   var referral: Referral? = null
 
-  @OneToOne(
-    mappedBy = "csipRecord",
-    fetch = FetchType.LAZY,
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  private var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
+  fun referral() = referral
 
   fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
@@ -127,18 +120,6 @@ data class CsipRecord(
         isAttendeeAffected = isAttendeeAffected,
       ),
     )
-  }
-
-  fun saferCustodyScreeningOutcome() = saferCustodyScreeningOutcome
-
-  fun setSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
-    if (referral == null) {
-      throw MissingReferralException(recordUuid)
-    }
-    if (saferCustodyScreeningOutcome != null) {
-      throw SaferCustodyScreeningOutcomeAlreadyExistException(recordUuid)
-    }
-    saferCustodyScreeningOutcome = screeningOutcome
   }
 
   fun setReferral(referral: Referral) = apply {

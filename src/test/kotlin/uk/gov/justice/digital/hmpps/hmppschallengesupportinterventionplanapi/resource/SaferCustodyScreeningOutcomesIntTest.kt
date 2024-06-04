@@ -56,29 +56,22 @@ class SaferCustodyScreeningOutcomesIntTest(
   @Test
   fun `403 forbidden - no roles`() {
     webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation())
-      .headers(setCsipRequestContext())
-      .exchange()
-      .expectStatus().isForbidden
+      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation()).headers(setCsipRequestContext())
+      .exchange().expectStatus().isForbidden
   }
 
   @Test
   fun `403 forbidden - incorrect role`() {
     webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
-      .headers(setCsipRequestContext())
-      .exchange().expectStatus().isForbidden
+      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
+      .headers(setCsipRequestContext()).exchange().expectStatus().isForbidden
   }
 
   @Test
   fun `400 bad request - invalid source`() {
     webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
-      .headers { it.set(SOURCE, "INVALID") }
-      .exchange().expectStatus().isBadRequest
+      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
+      .headers { it.set(SOURCE, "INVALID") }.exchange().expectStatus().isBadRequest
   }
 
   @Test
@@ -86,9 +79,7 @@ class SaferCustodyScreeningOutcomesIntTest(
     val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
       .bodyValue(createScreeningOutcomeRequest(outcomeTypeCode = "n".repeat(13)))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext())
-      .exchange().expectStatus().isBadRequest
-      .expectBody(ErrorResponse::class.java)
+      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
 
     with(response!!) {
@@ -107,9 +98,7 @@ class SaferCustodyScreeningOutcomesIntTest(
     val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
       .bodyValue(createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE"))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext())
-      .exchange().expectStatus().isBadRequest
-      .expectBody(ErrorResponse::class.java)
+      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
 
     with(response!!) {
@@ -129,9 +118,7 @@ class SaferCustodyScreeningOutcomesIntTest(
     val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
       .bodyValue(createScreeningOutcomeRequest())
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext())
-      .exchange().expectStatus().isBadRequest
-      .expectBody(ErrorResponse::class.java)
+      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
 
     with(response!!) {
@@ -149,9 +136,7 @@ class SaferCustodyScreeningOutcomesIntTest(
     val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
       .bodyValue(createScreeningOutcomeRequest())
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext())
-      .exchange().expectStatus().isNotFound
-      .expectBody(ErrorResponse::class.java)
+      .headers(setCsipRequestContext()).exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
 
     with(response!!) {
@@ -169,24 +154,26 @@ class SaferCustodyScreeningOutcomesIntTest(
     val recordUuid = csipRecord.recordUuid
 
     csipRecordRepository.save(
-      csipRecord.setSaferCustodyScreeningOutcome(
-        uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome(
-          csipRecord = csipRecord,
+      csipRecord.let {
+        it.referral!!.createSaferCustodyScreeningOutcome(
           outcomeType = outcomeType,
-          recordedBy = "vix",
-          recordedByDisplayName = "Jody Rogers",
           date = LocalDate.now(),
-          reasonForDecision = "eam",
-        ),
-      ),
+          reasonForDecision = "reasonForDecision",
+          actionedAt = LocalDateTime.now(),
+          actionedBy = "actionedBy",
+          actionedByDisplayName = "actionedByDisplayName",
+          source = Source.DPS,
+          reason = Reason.USER,
+          activeCaseLoadId = PRISON_CODE_LEEDS,
+          description = "description",
+        )
+      },
     )
 
     val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
       .bodyValue(createScreeningOutcomeRequest())
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext())
-      .exchange().expectStatus().is4xxClientError
-      .expectBody(ErrorResponse::class.java)
+      .headers(setCsipRequestContext()).exchange().expectStatus().is4xxClientError.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
 
     with(response!!) {
@@ -203,16 +190,12 @@ class SaferCustodyScreeningOutcomesIntTest(
     val recordUuid = createCsipRecord().recordUuid
     val request = createScreeningOutcomeRequest()
 
-    val response = webTestClient.post()
-      .uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext())
-      .exchange()
-      .expectStatus().isCreated
-      .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SaferCustodyScreeningOutcome::class.java)
-      .returnResult().responseBody!!
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening").bodyValue(request)
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
+        .contentType(MediaType.APPLICATION_JSON).expectBody(SaferCustodyScreeningOutcome::class.java)
+        .returnResult().responseBody!!
 
     // Screening Outcome populated with data from request and context
     with(response) {
@@ -272,16 +255,12 @@ class SaferCustodyScreeningOutcomesIntTest(
     val recordUuid = createCsipRecord().recordUuid
     val request = createScreeningOutcomeRequest()
 
-    val response = webTestClient.post()
-      .uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
-      .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER))
-      .exchange()
-      .expectStatus().isCreated
-      .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SaferCustodyScreeningOutcome::class.java)
-      .returnResult().responseBody!!
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening").bodyValue(request)
+        .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
+        .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER)).exchange()
+        .expectStatus().isCreated.expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SaferCustodyScreeningOutcome::class.java).returnResult().responseBody!!
 
     // Screening Outcome populated with data from request and context
     with(response) {

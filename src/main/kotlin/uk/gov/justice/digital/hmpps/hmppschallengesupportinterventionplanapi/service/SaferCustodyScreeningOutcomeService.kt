@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
@@ -27,17 +28,19 @@ class SaferCustodyScreeningOutcomeService(
     val outcomeType = getOutcomeType(request.outcomeTypeCode)
 
     return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
-      csipRecordRepository.saveAndFlush(
-        request.toCsipRecordEntity(
-          csipRecord = it,
-          outcomeType = outcomeType,
-          recordedAt = context.requestAt,
-          recordedBy = context.username,
-          recordedByDisplayName = context.userDisplayName,
-          source = context.source,
-          activeCaseLoadId = context.activeCaseLoadId,
-        ),
-      ).saferCustodyScreeningOutcome()!!.toModel()
+      it.referral?.let { referral ->
+        csipRecordRepository.saveAndFlush(
+          request.toCsipRecordEntity(
+            referral = referral,
+            outcomeType = outcomeType,
+            actionedAt = context.requestAt,
+            actionedBy = context.username,
+            actionedByDisplayName = context.userDisplayName,
+            source = context.source,
+            activeCaseLoadId = context.activeCaseLoadId,
+          ),
+        ).referral()!!.saferCustodyScreeningOutcome()!!.toModel()
+      } ?: throw MissingReferralException(recordUuid)
     } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")
   }
 
