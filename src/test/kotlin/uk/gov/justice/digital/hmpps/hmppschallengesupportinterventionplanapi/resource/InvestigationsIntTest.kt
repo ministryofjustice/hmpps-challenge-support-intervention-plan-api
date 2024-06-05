@@ -27,8 +27,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -37,11 +38,11 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class SaferCustodyScreeningOutcomesIntTest(
+class InvestigationsIntTest(
   @Autowired private val csipRecordRepository: CsipRecordRepository,
   @Autowired private val referenceDataRepository: ReferenceDataRepository,
 ) : IntegrationTestBase() {
-  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first()
+  private val intervieweeRole = referenceDataRepository.findByDomain(ReferenceDataType.INTERVIEWEE_ROLE).first()
   private val incidentType = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first()
   private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first()
   private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first()
@@ -49,35 +50,35 @@ class SaferCustodyScreeningOutcomesIntTest(
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening").exchange()
+    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation").exchange()
       .expectStatus().isUnauthorized
   }
 
   @Test
   fun `403 forbidden - no roles`() {
-    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation()).headers(setCsipRequestContext())
-      .exchange().expectStatus().isForbidden
+    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
+      .bodyValue(investigationRequest()).headers(setAuthorisation()).headers(setCsipRequestContext()).exchange()
+      .expectStatus().isForbidden
   }
 
   @Test
   fun `403 forbidden - incorrect role`() {
-    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
+    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
+      .bodyValue(investigationRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
       .headers(setCsipRequestContext()).exchange().expectStatus().isForbidden
   }
 
   @Test
   fun `400 bad request - invalid source`() {
-    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
+    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
+      .bodyValue(investigationRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
       .headers { it.set(SOURCE, "INVALID") }.exchange().expectStatus().isBadRequest
   }
 
   @Test
   fun `400 bad request - request body validation failure`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest(outcomeTypeCode = "n".repeat(13)))
+    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
+      .bodyValue(investigationRequest(interviewRequest(roleCode = "n".repeat(13))))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
       .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
@@ -85,9 +86,9 @@ class SaferCustodyScreeningOutcomesIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure(s): Outcome Type code must be <= 12 characters")
+      assertThat(userMessage).isEqualTo("Validation failure(s): Interviewee Role Code must be <= 12 characters")
       assertThat(developerMessage).isEqualTo(
-        "Validation failed for argument [1] in public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.SaferCustodyScreeningOutcomesController.createScreeningOutcome(java.util.UUID,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest,jakarta.servlet.http.HttpServletRequest): [Field error in object 'createSaferCustodyScreeningOutcomeRequest' on field 'outcomeTypeCode': rejected value [nnnnnnnnnnnnn]; codes [Size.createSaferCustodyScreeningOutcomeRequest.outcomeTypeCode,Size.outcomeTypeCode,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [createSaferCustodyScreeningOutcomeRequest.outcomeTypeCode,outcomeTypeCode]; arguments []; default message [outcomeTypeCode],12,1]; default message [Outcome Type code must be <= 12 characters]] ",
+        "Validation failed for argument [1] in public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.InvestigationsController.createInvestigation(java.util.UUID,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest,jakarta.servlet.http.HttpServletRequest): [Field error in object 'createInvestigationRequest' on field 'interviews[0].intervieweeRoleCode': rejected value [nnnnnnnnnnnnn]; codes [Size.createInvestigationRequest.interviews[0].intervieweeRoleCode,Size.createInvestigationRequest.interviews.intervieweeRoleCode,Size.interviews[0].intervieweeRoleCode,Size.interviews.intervieweeRoleCode,Size.intervieweeRoleCode,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [createInvestigationRequest.interviews[0].intervieweeRoleCode,interviews[0].intervieweeRoleCode]; arguments []; default message [interviews[0].intervieweeRoleCode],12,1]; default message [Interviewee Role Code must be <= 12 characters]] ",
       )
       assertThat(moreInfo).isNull()
     }
@@ -95,8 +96,8 @@ class SaferCustodyScreeningOutcomesIntTest(
 
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE"))
+    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
+      .bodyValue(investigationRequest(interviewRequest(roleCode = "WRONG_CODE")))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
       .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
@@ -104,8 +105,8 @@ class SaferCustodyScreeningOutcomesIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INTERVIEWEE_ROLE code 'WRONG_CODE' does not exist")
+      assertThat(developerMessage).isEqualTo("INTERVIEWEE_ROLE code 'WRONG_CODE' does not exist")
       assertThat(moreInfo).isNull()
     }
   }
@@ -115,11 +116,11 @@ class SaferCustodyScreeningOutcomesIntTest(
     val csipRecord = createCsipRecord(withReferral = false)
     val recordUuid = csipRecord.recordUuid
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(interviewRequest())
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+        .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
+        .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(400)
@@ -133,11 +134,11 @@ class SaferCustodyScreeningOutcomesIntTest(
   @Test
   fun `404 not found - CSIP record not found`() {
     val recordUuid = UUID.randomUUID()
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(interviewRequest())
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+        .headers(setCsipRequestContext()).exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java)
+        .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(404)
@@ -155,10 +156,12 @@ class SaferCustodyScreeningOutcomesIntTest(
 
     csipRecordRepository.save(
       csipRecord.let {
-        it.referral!!.createSaferCustodyScreeningOutcome(
-          outcomeType = outcomeType,
-          date = LocalDate.now(),
-          reasonForDecision = "reasonForDecision",
+        it.referral!!.createInvestigation(
+          createRequest = investigationRequest(
+            interviewRequest(),
+            interviewRequest(),
+          ),
+          intervieweeRoleMap = mapOf(intervieweeRole.code to intervieweeRole),
           actionedAt = LocalDateTime.now(),
           actionedBy = "actionedBy",
           actionedByDisplayName = "actionedByDisplayName",
@@ -168,47 +171,54 @@ class SaferCustodyScreeningOutcomesIntTest(
       },
     )
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().is4xxClientError.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(investigationRequest())
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+        .headers(setCsipRequestContext()).exchange()
+        .expectStatus().is4xxClientError.expectBody(ErrorResponse::class.java).returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(409)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has a Safer Custody Screening Outcome created.")
-      assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has a Safer Custody Screening Outcome created.")
+      assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has an Investigation created.")
+      assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has an Investigation created.")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
-  fun `create safer custody screening outcome via DPS UI`() {
+  fun `create investigation via DPS UI`() {
     val recordUuid = createCsipRecord().recordUuid
-    val request = createScreeningOutcomeRequest()
+    val request = investigationRequest(
+      interviewRequest(name = "John"),
+      interviewRequest(name = "Jane"),
+    )
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
-        .contentType(MediaType.APPLICATION_JSON).expectBody(SaferCustodyScreeningOutcome::class.java)
-        .returnResult().responseBody!!
+    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(request)
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+      .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
+      .contentType(MediaType.APPLICATION_JSON).expectBody(Investigation::class.java).returnResult().responseBody!!
 
-    // Screening Outcome populated with data from request and context
+    // Investigation populated with data from request and context
     with(response) {
-      assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
-      assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(date).isEqualTo(request.date)
-      assertThat(recordedBy).isEqualTo(TEST_USER)
-      assertThat(recordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(staffInvolved).isEqualTo(request.staffInvolved)
+      assertThat(evidenceSecured).isEqualTo(request.evidenceSecured)
+      assertThat(occurrenceReason).isEqualTo(request.occurrenceReason)
+      assertThat(personsUsualBehaviour).isEqualTo(request.personsUsualBehaviour)
+      assertThat(personsTrigger).isEqualTo(request.personsTrigger)
+      assertThat(protectiveFactors).isEqualTo(request.protectiveFactors)
+
+      assertThat(interviews.map { it.interviewee }).containsExactlyInAnyOrder("John", "Jane")
+      assertThat(interviews.map { it.createdBy }).allMatch { it.equals(TEST_USER) }
+      assertThat(interviews.map { it.createdByDisplayName }).allMatch { it.equals(TEST_USER_NAME) }
     }
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
       assertThat(action).isEqualTo(AuditEventAction.UPDATED)
-      assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
-      assertThat(isSaferCustodyScreeningOutcomeAffected).isTrue()
+      assertThat(description).isEqualTo("Investigation with 2 interviews added to referral")
+      assertThat(isInvestigationAffected).isTrue()
+      assertThat(isInterviewAffected).isTrue()
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(actionedBy).isEqualTo(TEST_USER)
       assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
@@ -230,9 +240,9 @@ class SaferCustodyScreeningOutcomesIntTest(
           isRecordAffected = false,
           isReferralAffected = false,
           isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = true,
-          isInvestigationAffected = false,
-          isInterviewAffected = false,
+          isSaferCustodyScreeningOutcomeAffected = false,
+          isInvestigationAffected = true,
+          isInterviewAffected = true,
           isDecisionAndActionsAffected = false,
           isPlanAffected = false,
           isIdentifiedNeedAffected = false,
@@ -242,38 +252,39 @@ class SaferCustodyScreeningOutcomesIntTest(
           reason = Reason.USER,
         ),
         1,
-        "Safer custody screening outcome added to referral",
+        "Investigation with 2 interviews added to referral",
         event.occurredAt,
       ),
     )
   }
 
   @Test
-  fun `create safer custody screening outcome via NOMIS`() {
+  fun `create investigation via NOMIS`() {
     val recordUuid = createCsipRecord().recordUuid
-    val request = createScreeningOutcomeRequest()
+    val request = investigationRequest()
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
-        .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER)).exchange()
-        .expectStatus().isCreated.expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SaferCustodyScreeningOutcome::class.java).returnResult().responseBody!!
+    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(request)
+      .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
+      .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER)).exchange()
+      .expectStatus().isCreated.expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(Investigation::class.java).returnResult().responseBody!!
 
-    // Screening Outcome populated with data from request and context
+    // Investigation populated with data from request
     with(response) {
-      assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
-      assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(date).isEqualTo(request.date)
-      assertThat(recordedBy).isEqualTo(NOMIS_SYS_USER)
-      assertThat(recordedByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      assertThat(staffInvolved).isEqualTo(request.staffInvolved)
+      assertThat(evidenceSecured).isEqualTo(request.evidenceSecured)
+      assertThat(occurrenceReason).isEqualTo(request.occurrenceReason)
+      assertThat(personsUsualBehaviour).isEqualTo(request.personsUsualBehaviour)
+      assertThat(personsTrigger).isEqualTo(request.personsTrigger)
+      assertThat(protectiveFactors).isEqualTo(request.protectiveFactors)
     }
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
       assertThat(action).isEqualTo(AuditEventAction.UPDATED)
-      assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
-      assertThat(isSaferCustodyScreeningOutcomeAffected).isTrue()
+      assertThat(description).isEqualTo("Investigation with 0 interviews added to referral")
+      assertThat(isInvestigationAffected).isTrue()
+      assertThat(isInterviewAffected).isFalse()
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(actionedBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
@@ -295,8 +306,8 @@ class SaferCustodyScreeningOutcomesIntTest(
           isRecordAffected = false,
           isReferralAffected = false,
           isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = true,
-          isInvestigationAffected = false,
+          isSaferCustodyScreeningOutcomeAffected = false,
+          isInvestigationAffected = true,
           isInterviewAffected = false,
           isDecisionAndActionsAffected = false,
           isPlanAffected = false,
@@ -307,7 +318,7 @@ class SaferCustodyScreeningOutcomesIntTest(
           reason = Reason.USER,
         ),
         1,
-        "Safer custody screening outcome added to referral",
+        "Investigation with 0 interviews added to referral",
         event.occurredAt,
       ),
     )
@@ -353,10 +364,20 @@ class SaferCustodyScreeningOutcomesIntTest(
     },
   )
 
-  private fun createScreeningOutcomeRequest(outcomeTypeCode: String = "CUR") =
-    CreateSaferCustodyScreeningOutcomeRequest(
-      outcomeTypeCode = outcomeTypeCode,
-      date = LocalDate.now(),
-      reasonForDecision = "alia",
-    )
+  private fun interviewRequest(roleCode: String = intervieweeRole.code, name: String = "Joe") = CreateInterviewRequest(
+    interviewee = name,
+    interviewDate = LocalDate.now(),
+    intervieweeRoleCode = roleCode,
+    interviewText = null,
+  )
+
+  private fun investigationRequest(vararg interviews: CreateInterviewRequest) = CreateInvestigationRequest(
+    staffInvolved = "staffInvolved",
+    evidenceSecured = "evidenceSecured",
+    occurrenceReason = "occurrenceReason",
+    personsUsualBehaviour = "personsUsualBehaviour",
+    personsTrigger = "personsTrigger",
+    protectiveFactors = "protectiveFactors",
+    interviews = interviews.takeIf { it.isNotEmpty() }?.toList(),
+  )
 }
