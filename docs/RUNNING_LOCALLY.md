@@ -20,4 +20,5 @@ Run the following commands from the root directory of the project:
 
 1. docker compose -f docker-compose-local.yml pull
 2. docker compose -f docker-compose-local.yml up 
-3. ./run-local.sh
+3. You should check `run-local.sh` for any environment variables it's expecting, such as `$HMPPS_CSIP_MANAGE_USERS_CLIENT_ID` - you should export or set these in the normal way for your environment (e.g. in your `.zprofile`). See the [README](../README.md) for a how to retrieve secrets example.
+4. ./run-local.sh
