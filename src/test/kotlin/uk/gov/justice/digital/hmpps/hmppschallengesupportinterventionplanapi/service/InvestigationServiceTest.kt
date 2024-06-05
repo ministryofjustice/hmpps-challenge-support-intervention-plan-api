@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 class InvestigationServiceTest : BaseServiceTest() {
   private val underTest = InvestigationService(csipRecordRepository, referenceDataRepository)
