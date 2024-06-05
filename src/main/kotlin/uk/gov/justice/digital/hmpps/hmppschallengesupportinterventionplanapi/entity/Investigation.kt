@@ -10,6 +10,10 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import java.time.LocalDateTime
 import java.util.UUID
@@ -44,10 +48,13 @@ data class Investigation(
     actionedAt: LocalDateTime = LocalDateTime.now(),
     actionedBy: String,
     actionedByDisplayName: String,
+    source: Source,
   ) {
+    val uuid = UUID.randomUUID()
+
     interviews.add(
       Interview(
-        interviewUuid = UUID.randomUUID(),
+        interviewUuid = uuid,
         investigation = this,
         interviewee = createRequest.interviewee,
         interviewDate = createRequest.interviewDate,
@@ -56,6 +63,19 @@ data class Investigation(
         createdAt = actionedAt,
         createdBy = actionedBy,
         createdByDisplayName = actionedByDisplayName,
+      ),
+    )
+
+    referral.csipRecord.registerEntityEvent(
+      InterviewCreatedEvent(
+        interviewUuid = uuid,
+        recordUuid = referral.csipRecord.recordUuid,
+        prisonNumber = referral.csipRecord.prisonNumber,
+        description = DomainEventType.INTERVIEW_CREATED.description,
+        occurredAt = actionedAt,
+        source = source,
+        reason = Reason.USER,
+        updatedBy = actionedBy,
       ),
     )
   }

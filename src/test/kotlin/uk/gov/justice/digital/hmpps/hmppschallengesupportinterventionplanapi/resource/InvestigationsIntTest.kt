@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewAdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -215,7 +217,7 @@ class InvestigationsIntTest(
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
-      assertThat(action).isEqualTo(AuditEventAction.UPDATED)
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Investigation with 2 interviews added to referral")
       assertThat(isInvestigationAffected).isTrue()
       assertThat(isInterviewAffected).isTrue()
@@ -228,9 +230,12 @@ class InvestigationsIntTest(
     }
 
     // prisoner-csip.csip-record-updated domain event published
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
-    val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
-    assertThat(event).usingRecursiveComparison().isEqualTo(
+    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 3 }
+
+    val domainEvents = hmppsEventsQueue.receiveDomainEventsOnQueue()
+
+    val csipEvent = domainEvents.find { it is CsipDomainEvent }!!
+    assertThat(csipEvent).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
         DomainEventType.CSIP_UPDATED.eventType,
         CsipAdditionalInformation(
@@ -253,7 +258,25 @@ class InvestigationsIntTest(
         ),
         1,
         "Investigation with 2 interviews added to referral",
-        event.occurredAt,
+        csipEvent.occurredAt,
+      ),
+    )
+
+    val interviewEvents = domainEvents.filterIsInstance<InterviewDomainEvent>()
+    assertThat(interviewEvents).hasSize(2)
+    assertThat(interviewEvents[0]).usingRecursiveComparison().ignoringFields("additionalInformation.interviewUuid").isEqualTo(
+      InterviewDomainEvent(
+        eventType = DomainEventType.INTERVIEW_CREATED.eventType,
+        additionalInformation = InterviewAdditionalInformation(
+          url = "http://localhost:8080/csip-records/$recordUuid",
+          interviewUuid = recordUuid,
+          recordUuid = recordUuid,
+          prisonNumber = PRISON_NUMBER,
+          source = Source.DPS,
+          reason = Reason.USER,
+        ),
+        description = DomainEventType.INTERVIEW_CREATED.description,
+        occurredAt = interviewEvents[0].occurredAt,
       ),
     )
   }
@@ -281,7 +304,7 @@ class InvestigationsIntTest(
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
-      assertThat(action).isEqualTo(AuditEventAction.UPDATED)
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Investigation with 0 interviews added to referral")
       assertThat(isInvestigationAffected).isTrue()
       assertThat(isInterviewAffected).isFalse()

@@ -206,7 +206,7 @@ class SaferCustodyScreeningOutcomesIntTest(
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
-      assertThat(action).isEqualTo(AuditEventAction.UPDATED)
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
       assertThat(isSaferCustodyScreeningOutcomeAffected).isTrue()
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
@@ -271,7 +271,7 @@ class SaferCustodyScreeningOutcomesIntTest(
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
-      assertThat(action).isEqualTo(AuditEventAction.UPDATED)
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
       assertThat(isSaferCustodyScreeningOutcomeAffected).isTrue()
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))

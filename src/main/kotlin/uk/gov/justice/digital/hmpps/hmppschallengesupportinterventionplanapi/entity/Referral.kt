@@ -129,7 +129,7 @@ data class Referral(
 
     with(csipRecord) {
       addAuditEvent(
-        action = AuditEventAction.UPDATED,
+        action = AuditEventAction.CREATED,
         description = description,
         actionedAt = actionedAt,
         actionedBy = actionedBy,
@@ -139,7 +139,7 @@ data class Referral(
         activeCaseLoadId = activeCaseLoadId,
         isSaferCustodyScreeningOutcomeAffected = true,
       )
-      registerCsipEvent(
+      registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
@@ -188,6 +188,7 @@ data class Referral(
         actionedAt = actionedAt,
         actionedBy = actionedBy,
         actionedByDisplayName = actionedByDisplayName,
+        source = source,
       )
     }
 
@@ -195,7 +196,7 @@ data class Referral(
 
     with(csipRecord) {
       addAuditEvent(
-        action = AuditEventAction.UPDATED,
+        action = AuditEventAction.CREATED,
         description = description,
         actionedAt = actionedAt,
         actionedBy = actionedBy,
@@ -206,7 +207,7 @@ data class Referral(
         isInvestigationAffected = true,
         isInterviewAffected = isInterviewAffected,
       )
-      registerCsipEvent(
+      registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
