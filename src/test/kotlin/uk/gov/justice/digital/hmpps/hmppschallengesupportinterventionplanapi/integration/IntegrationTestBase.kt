@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,10 +15,14 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
@@ -64,6 +69,19 @@ abstract class IntegrationTestBase {
       .let { objectMapper.readValue<MsgBody>(it.body()) }
       .let { objectMapper.readValue<CsipDomainEvent>(it.Message) }
 
+  internal fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): Collection<DomainEvent<AdditionalInformation>> =
+    sqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build()).get().messages()
+      .map { objectMapper.readValue<MsgBody>(it.body()) }
+      .map {
+        if (it.Message.contains("prisoner-csip.csip-record-")) {
+          objectMapper.readValue<CsipDomainEvent>(it.Message)
+        } else if (it.Message.contains("prisoner-csip.interview-")) {
+          objectMapper.readValue<InterviewDomainEvent>(it.Message)
+        } else {
+          throw Exception("unidentified Domain Event")
+        }
+      }
+
   @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)
   private data class MsgBody(val Message: String)
 
@@ -84,6 +102,11 @@ abstract class IntegrationTestBase {
 
       localStackContainer?.also { setLocalStackProperties(it, registry) }
     }
+  }
+
+  @BeforeEach
+  fun `clear queues`() {
+    hmppsEventsQueue.sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).build()).get()
   }
 
   internal fun setAuthorisation(

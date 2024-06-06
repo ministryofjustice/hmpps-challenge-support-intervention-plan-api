@@ -11,6 +11,8 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
 
 @Entity
@@ -31,6 +33,13 @@ data class AuditEvent(
   val actionedAt: LocalDateTime,
   val actionedBy: String,
   val actionedByCapturedName: String,
+
+  @Enumerated(EnumType.STRING)
+  val source: Source,
+  @Enumerated(EnumType.STRING)
+  val reason: Reason,
+
+  val activeCaseLoadId: String?,
 
   @Column(name = "record_affected")
   val isRecordAffected: Boolean? = false,

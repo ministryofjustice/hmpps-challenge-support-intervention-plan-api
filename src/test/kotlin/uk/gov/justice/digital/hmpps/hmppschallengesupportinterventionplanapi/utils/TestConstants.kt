@@ -74,7 +74,7 @@ fun createContributoryFactorRequest(factorTypeCode: String = "D") =
   CreateContributoryFactorRequest(factorTypeCode, "comment")
 
 fun csipRequestContext() =
-  CsipRequestContext(username = "USERNAME", userDisplayName = "USER DISPLAY NAME")
+  CsipRequestContext(username = "USERNAME", userDisplayName = "USER DISPLAY NAME", activeCaseLoadId = PRISON_NUMBER)
 
 fun prisoner() =
   PrisonerDto(

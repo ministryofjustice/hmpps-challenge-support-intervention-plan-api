@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
@@ -19,6 +20,8 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPrerequisiteResourceException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 
 @RestControllerAdvice
 class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
@@ -150,6 +153,26 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
         developerMessage = e.message,
       ),
     ).also { log.info("No resource found exception: {}", e.message) }
+
+  @ExceptionHandler(ResourceAlreadyExistException::class)
+  fun handleResourceAlreadyExistException(e: ResourceAlreadyExistException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+    ResponseEntity.status(CONFLICT).body(
+      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+        status = CONFLICT,
+        userMessage = "Conflict failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Conflict failure: {}", e.message) }
+
+  @ExceptionHandler(MissingPrerequisiteResourceException::class)
+  fun handleMissingPrerequisiteResourceException(e: MissingPrerequisiteResourceException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+    ResponseEntity.status(BAD_REQUEST).body(
+      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Invalid request: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Invalid request: {}", e.message) }
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse> =

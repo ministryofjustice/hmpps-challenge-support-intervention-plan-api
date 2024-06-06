@@ -10,12 +10,12 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-import uk.gov.justice.digital.hmpps.hmppsalertsapi.utils.LanguageFormatUtils
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.dto.UserDetailsDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.UserService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LanguageFormatUtils
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 
 @Configuration
@@ -47,6 +47,7 @@ class CsipRequestContextInterceptor(
           source = source,
           username = userDetails.username,
           userDisplayName = LanguageFormatUtils.formatDisplayName(userDetails.name),
+          activeCaseLoadId = userDetails.activeCaseLoadId,
         ),
       )
     }
@@ -80,7 +81,7 @@ class CsipRequestContextInterceptor(
     getUsername(source).let {
       userService.getUserDetails(it)
         ?: if (source != Source.DPS) {
-          UserDetailsDto(username = it, active = true, name = it, authSource = it, userId = it, uuid = null)
+          UserDetailsDto(username = it, active = true, name = it, authSource = it, userId = it, uuid = null, activeCaseLoadId = null)
         } else {
           null
         }

@@ -11,16 +11,19 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
-import jdk.jfr.internal.SecuritySupport.registerEvent
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import java.io.Serializable
 import java.time.LocalDateTime
@@ -76,14 +79,9 @@ data class CsipRecord(
     fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
-  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
-
-  @OneToOne(
-    mappedBy = "csipRecord",
-    fetch = FetchType.LAZY,
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
   var referral: Referral? = null
+
+  fun referral() = referral
 
   @OneToMany(
     mappedBy = "csipRecord",
@@ -99,6 +97,9 @@ data class CsipRecord(
     actionedAt: LocalDateTime = LocalDateTime.now(),
     actionedBy: String,
     actionedByCapturedName: String,
+    source: Source,
+    reason: Reason,
+    activeCaseLoadId: String?,
     isRecordAffected: Boolean? = false,
     isReferralAffected: Boolean? = false,
     isContributoryFactorAffected: Boolean? = false,
@@ -119,6 +120,9 @@ data class CsipRecord(
         actionedAt = actionedAt,
         actionedBy = actionedBy,
         actionedByCapturedName = actionedByCapturedName,
+        source = source,
+        reason = reason,
+        activeCaseLoadId = activeCaseLoadId,
         isRecordAffected = isRecordAffected,
         isReferralAffected = isReferralAffected,
         isContributoryFactorAffected = isContributoryFactorAffected,
@@ -134,9 +138,11 @@ data class CsipRecord(
     )
   }
 
-  fun addSaferCustodyScreeningOutcome(screeningOutcome: SaferCustodyScreeningOutcome) = apply {
-    saferCustodyScreeningOutcome = screeningOutcome
+  fun setReferral(referral: Referral) = apply {
+    this.referral = referral
   }
+
+  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) = apply { registerEvent(entityEvent) }
 
   fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
 

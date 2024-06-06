@@ -53,6 +53,7 @@ class ManageUsersServer : WireMockServer(8111) {
                   authSource = "nomis",
                   userId = "123",
                   uuid = UUID.randomUUID(),
+                  activeCaseLoadId = PRISON_CODE_LEEDS,
                 ),
               ),
             )
