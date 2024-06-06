@@ -8,15 +8,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-abstract class CsipEvent {
+abstract class CsipEvent : BaseEntityEvent<CsipDomainEvent>() {
   abstract val recordUuid: UUID
   abstract val prisonNumber: String
-  abstract val description: String
-  abstract val occurredAt: LocalDateTime
-  abstract val source: Source
-  abstract val reason: Reason
-
-  abstract fun toDomainEvent(baseUrl: String): CsipDomainEvent
 
   protected fun toDomainEvent(
     type: DomainEventType,

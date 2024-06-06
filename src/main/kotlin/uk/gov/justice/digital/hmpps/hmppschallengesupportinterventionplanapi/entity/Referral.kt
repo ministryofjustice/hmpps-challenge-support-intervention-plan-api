@@ -15,7 +15,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvestigationAlreadyExistsException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -89,7 +91,16 @@ data class Referral(
   )
   private var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
 
+  @OneToOne(
+    mappedBy = "referral",
+    fetch = FetchType.LAZY,
+    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
+  )
+  private var investigation: Investigation? = null
+
   fun saferCustodyScreeningOutcome() = saferCustodyScreeningOutcome
+
+  fun investigation() = investigation
 
   fun createSaferCustodyScreeningOutcome(
     outcomeType: ReferenceData,
@@ -99,13 +110,13 @@ data class Referral(
     actionedBy: String,
     actionedByDisplayName: String,
     source: Source,
-    reason: Reason = Reason.USER,
     activeCaseLoadId: String?,
-    description: String = "Safer custody screening outcome added to referral",
   ): CsipRecord {
     if (saferCustodyScreeningOutcome != null) {
       throw SaferCustodyScreeningOutcomeAlreadyExistException(csipRecord.recordUuid)
     }
+    val reason = Reason.USER
+    val description = "Safer custody screening outcome added to referral"
 
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
@@ -118,7 +129,7 @@ data class Referral(
 
     with(csipRecord) {
       addAuditEvent(
-        action = AuditEventAction.UPDATED,
+        action = AuditEventAction.CREATED,
         description = description,
         actionedAt = actionedAt,
         actionedBy = actionedBy,
@@ -128,7 +139,7 @@ data class Referral(
         activeCaseLoadId = activeCaseLoadId,
         isSaferCustodyScreeningOutcomeAffected = true,
       )
-      registerCsipEvent(
+      registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
@@ -138,6 +149,75 @@ data class Referral(
           reason = reason,
           updatedBy = actionedBy,
           isSaferCustodyScreeningOutcomeAffected = true,
+        ),
+      )
+    }
+
+    return csipRecord
+  }
+
+  fun createInvestigation(
+    createRequest: CreateInvestigationRequest,
+    intervieweeRoleMap: Map<String, ReferenceData>,
+    actionedAt: LocalDateTime = LocalDateTime.now(),
+    actionedBy: String,
+    actionedByDisplayName: String,
+    activeCaseLoadId: String?,
+    source: Source,
+  ): CsipRecord {
+    if (investigation != null) {
+      throw InvestigationAlreadyExistsException(csipRecord.recordUuid)
+    }
+    val reason = Reason.USER
+    val description = "Investigation with ${createRequest.interviews?.size ?: 0} interviews added to referral"
+
+    investigation = Investigation(
+      referral = this,
+      staffInvolved = createRequest.staffInvolved,
+      evidenceSecured = createRequest.evidenceSecured,
+      occurrenceReason = createRequest.occurrenceReason,
+      personsUsualBehaviour = createRequest.personsUsualBehaviour,
+      personsTrigger = createRequest.personsTrigger,
+      protectiveFactors = createRequest.protectiveFactors,
+    )
+
+    createRequest.interviews?.forEach { interview ->
+      investigation!!.addInterview(
+        createRequest = interview,
+        intervieweeRole = intervieweeRoleMap.get(interview.intervieweeRoleCode)!!,
+        actionedAt = actionedAt,
+        actionedBy = actionedBy,
+        actionedByDisplayName = actionedByDisplayName,
+        source = source,
+      )
+    }
+
+    val isInterviewAffected = (investigation?.interviews()?.size ?: 0) > 0
+
+    with(csipRecord) {
+      addAuditEvent(
+        action = AuditEventAction.CREATED,
+        description = description,
+        actionedAt = actionedAt,
+        actionedBy = actionedBy,
+        actionedByCapturedName = actionedByDisplayName,
+        source = source,
+        reason = reason,
+        activeCaseLoadId = activeCaseLoadId,
+        isInvestigationAffected = true,
+        isInterviewAffected = isInterviewAffected,
+      )
+      registerEntityEvent(
+        CsipUpdatedEvent(
+          recordUuid = csipRecord.recordUuid,
+          prisonNumber = csipRecord.prisonNumber,
+          description = description,
+          occurredAt = actionedAt,
+          source = source,
+          reason = reason,
+          updatedBy = actionedBy,
+          isInvestigationAffected = true,
+          isInterviewAffected = isInterviewAffected,
         ),
       )
     }

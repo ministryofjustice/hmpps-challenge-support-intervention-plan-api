@@ -12,7 +12,9 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -126,5 +128,5 @@ data class CsipRecord(
     this.referral = referral
   }
 
-  fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
+  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) = apply { registerEvent(entityEvent) }
 }

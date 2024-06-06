@@ -26,6 +26,7 @@ abstract class DomainEvent<T : AdditionalInformation> {
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
   JsonSubTypes.Type(value = CsipAdditionalInformation::class, name = "csip"),
+  JsonSubTypes.Type(value = InterviewAdditionalInformation::class, name = "interview"),
   JsonSubTypes.Type(value = ReferenceDataAdditionalInformation::class, name = "csipReferenceData"),
 )
 abstract class AdditionalInformation {
@@ -79,6 +80,48 @@ data class CsipAdditionalInformation(
 ) : AdditionalInformation() {
   override fun asString(): String =
     "for CSIP record with UUID '$recordUuid' " +
+      "for prison number '$prisonNumber' " +
+      "from source '$source' " +
+      "with reason '$reason'. " +
+      "Properties updated: " +
+      "record: $isRecordAffected, " +
+      "referral: $isReferralAffected, " +
+      "contributoryFactor: $isContributoryFactorAffected, " +
+      "saferCustodyScreeningOutcome: $isSaferCustodyScreeningOutcomeAffected, " +
+      "investigation: $isInvestigationAffected, " +
+      "interview: $isInterviewAffected, " +
+      "decisionAndActions: $isDecisionAndActionsAffected, " +
+      "plan: $isPlanAffected, " +
+      "identifiedNeed: $isIdentifiedNeedAffected, " +
+      "review: $isReviewAffected, " +
+      "attendee: $isAttendeeAffected."
+
+  override fun identifier(): String = recordUuid.toString()
+}
+
+data class InterviewDomainEvent(
+  override val eventType: String,
+  override val additionalInformation: AdditionalInformation,
+  override val version: Int = 1,
+  override val description: String,
+  override val occurredAt: String,
+) : DomainEvent<AdditionalInformation>() {
+  override fun toString(): String {
+    return "v$version Interview domain event '$eventType' " + additionalInformation.asString()
+  }
+}
+
+data class InterviewAdditionalInformation(
+  override val url: String,
+  val interviewUuid: UUID,
+  val recordUuid: UUID,
+  val prisonNumber: String,
+  override val source: Source,
+  override val reason: Reason,
+) : AdditionalInformation() {
+  override fun asString(): String =
+    "for Interview with UUID '$interviewUuid' " +
+      "of CSIP Record with UUID '$recordUuid' " +
       "for prison number '$prisonNumber' " +
       "from source '$source' " +
       "with reason '$reason'"
