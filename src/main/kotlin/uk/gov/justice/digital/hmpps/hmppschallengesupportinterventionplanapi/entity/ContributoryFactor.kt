@@ -19,7 +19,7 @@ data class ContributoryFactor(
   val contributoryFactorId: Long = 0,
 
   @Column(unique = true, nullable = false)
-  val contributoryFactorUuid: UUID,
+  val contributoryFactorUuid: UUID = UUID.randomUUID(),
 
   val comment: String? = null,
 
@@ -45,6 +45,6 @@ data class ContributoryFactor(
   val csipRecord: CsipRecord,
 
   @ManyToOne
-  @JoinColumn(name = "reference_data_id", insertable = false, updatable = false)
+  @JoinColumn(name = "contributory_factor_type_id", insertable = false, updatable = false)
   val contributoryFactorType: ReferenceData,
 )

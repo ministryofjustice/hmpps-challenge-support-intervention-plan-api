@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class CsipRecordsIntTest : IntegrationTestBase() {
+class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `403 forbidden - no required role`() {
     val response = webTestClient.get()

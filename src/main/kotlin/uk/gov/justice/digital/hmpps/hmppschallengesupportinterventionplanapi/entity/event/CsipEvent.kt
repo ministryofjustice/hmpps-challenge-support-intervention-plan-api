@@ -116,6 +116,63 @@ data class CsipUpdatedEvent(
       isAttendeeAffected = isAttendeeAffected,
     )
 }
+data class CsipCreatedEvent(
+  override val recordUuid: UUID,
+  override val prisonNumber: String,
+  override val description: String,
+  override val occurredAt: LocalDateTime,
+  override val source: Source,
+  override val reason: Reason,
+  val createdBy: String,
+  val isRecordAffected: Boolean = false,
+  val isReferralAffected: Boolean = false,
+  val isContributoryFactorAffected: Boolean = false,
+  val isSaferCustodyScreeningOutcomeAffected: Boolean = false,
+  val isInvestigationAffected: Boolean = false,
+  val isInterviewAffected: Boolean = false,
+  val isDecisionAndActionsAffected: Boolean = false,
+  val isPlanAffected: Boolean = false,
+  val isIdentifiedNeedAffected: Boolean = false,
+  val isReviewAffected: Boolean = false,
+  val isAttendeeAffected: Boolean = false,
+) : CsipEvent() {
 
+  override fun toDomainEvent(baseUrl: String): CsipDomainEvent =
+    toDomainEvent(
+      type = DomainEventType.CSIP_CREATED,
+      baseUrl = baseUrl,
+      isRecordAffected = isRecordAffected,
+      isReferralAffected = isReferralAffected,
+      isContributoryFactorAffected = isContributoryFactorAffected,
+      isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
+      isInvestigationAffected = isInvestigationAffected,
+      isInterviewAffected = isInterviewAffected,
+      isDecisionAndActionsAffected = isDecisionAndActionsAffected,
+      isPlanAffected = isPlanAffected,
+      isIdentifiedNeedAffected = isIdentifiedNeedAffected,
+      isReviewAffected = isReviewAffected,
+      isAttendeeAffected = isAttendeeAffected,
+    )
+  override fun toString(): String {
+    return "Created CSIP record with UUID '$recordUuid' " +
+      "for prison number '$prisonNumber' " +
+      "at '$occurredAt' " +
+      "by '$createdBy' " +
+      "from source '$source' " +
+      "with reason '$reason'. " +
+      "Properties updated: " +
+      "record: $isRecordAffected, " +
+      "referral: $isReferralAffected, " +
+      "contributoryFactor: $isContributoryFactorAffected, " +
+      "saferCustodyScreeningOutcome: $isSaferCustodyScreeningOutcomeAffected, " +
+      "investigation: $isInvestigationAffected, " +
+      "interview: $isInterviewAffected, " +
+      "decisionAndActions: $isDecisionAndActionsAffected, " +
+      "plan: $isPlanAffected, " +
+      "identifiedNeed: $isIdentifiedNeedAffected, " +
+      "review: $isReviewAffected, " +
+      "attendee: $isAttendeeAffected."
+  }
+}
 fun LocalDateTime.toOffsetString(): String =
   DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(this.atOffset(ZoneId.of("Europe/London").rules.getOffset(this)))

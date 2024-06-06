@@ -23,12 +23,12 @@ data class CsipRecord(
   @Schema(
     description = "The prison code where the person was resident at the time the CSIP record was created.",
   )
-  val prisonCodeWhenRecorded: String,
+  val prisonCodeWhenRecorded: String?,
 
   @Schema(
     description = "User entered identifier for the CSIP record. Defaults to the prison code.",
   )
-  val logNumber: String,
+  val logNumber: String?,
 
   @Schema(
     description = "The date and time the CSIP Record was created",

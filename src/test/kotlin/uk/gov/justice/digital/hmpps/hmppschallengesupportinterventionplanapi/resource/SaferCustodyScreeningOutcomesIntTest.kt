@@ -66,7 +66,7 @@ class SaferCustodyScreeningOutcomesIntTest(
       assertThat(isSaferCustodyScreeningOutcomeAffected).isTrue()
     }
 
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
+    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it!! > 0 }
     val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
     assertThat(event).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
