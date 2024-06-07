@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
@@ -25,7 +25,7 @@ fun DecisionAndActions.toModel() =
     actionCsraOrRsraReview,
     actionServiceReferral,
     actionSimReferral,
-    actionOther
+    actionOther,
   )
 
 fun CreateDecisionAndActionsRequest.toCsipRecordEntity(
@@ -49,25 +49,24 @@ fun CreateDecisionAndActionsRequest.toCsipRecordEntity(
   source: Source,
   activeCaseLoadId: String?,
   reason: Reason = Reason.USER,
-  ) =
-  referral.createDecisionAndActions(
-    decisionOutcome,
-    decisionOutcomeSignedOffBy,
-    decisionConclusion,
-    decisionOutcomeRecordedBy,
-    decisionOutcomeRecordedByDisplayName,
-    decisionOutcomeDate,
-    nextSteps,
-    actionOther,
-    actionedAt,
-    source,
-    activeCaseLoadId,
-    reason,
-    actionOpenCsipAlert,
-    actionNonAssociationsUpdated,
-    actionObservationBook,
-    actionUnitOrCellMove,
-    actionCsraOrRsraReview,
-    actionServiceReferral,
-    actionSimReferral,
-  )
+) = referral.createDecisionAndActions(
+  decisionOutcome,
+  decisionOutcomeSignedOffBy,
+  decisionConclusion,
+  decisionOutcomeRecordedBy,
+  decisionOutcomeRecordedByDisplayName,
+  decisionOutcomeDate,
+  nextSteps,
+  actionOther,
+  actionedAt,
+  source,
+  activeCaseLoadId,
+  reason,
+  actionOpenCsipAlert,
+  actionNonAssociationsUpdated,
+  actionObservationBook,
+  actionUnitOrCellMove,
+  actionCsraOrRsraReview,
+  actionServiceReferral,
+  actionSimReferral,
+)

@@ -56,8 +56,8 @@ class DecisionActionsIntTest(
   @Test
   fun `403 forbidden - no roles`() {
     webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest()).headers(setAuthorisation()).headers(setCsipRequestContext())
-      .exchange().expectStatus().isForbidden
+      .bodyValue(createDecisionActionsRequest()).headers(setAuthorisation()).headers(setCsipRequestContext()).exchange()
+      .expectStatus().isForbidden
   }
 
   @Test
@@ -386,22 +386,21 @@ class DecisionActionsIntTest(
     },
   )
 
-  private fun createDecisionActionsRequest(outcomeTypeCode: String = "CUR") =
-    CreateDecisionAndActionsRequest(
-      conclusion = null,
-      outcomeTypeCode = outcomeTypeCode,
-      outcomeSignedOffByRoleCode = null,
-      outcomeRecordedBy = null,
-      outcomeRecordedByDisplayName = null,
-      outcomeDate = null,
-      nextSteps = null,
-      isActionOpenCsipAlert = null,
-      isActionNonAssociationsUpdated = null,
-      isActionObservationBook = null,
-      isActionUnitOrCellMove = null,
-      isActionCsraOrRsraReview = null,
-      isActionServiceReferral = null,
-      isActionSimReferral = null,
-      actionOther = null,
-    )
+  private fun createDecisionActionsRequest(outcomeTypeCode: String = "CUR") = CreateDecisionAndActionsRequest(
+    conclusion = null,
+    outcomeTypeCode = outcomeTypeCode,
+    outcomeSignedOffByRoleCode = null,
+    outcomeRecordedBy = null,
+    outcomeRecordedByDisplayName = null,
+    outcomeDate = null,
+    nextSteps = null,
+    isActionOpenCsipAlert = null,
+    isActionNonAssociationsUpdated = null,
+    isActionObservationBook = null,
+    isActionUnitOrCellMove = null,
+    isActionCsraOrRsraReview = null,
+    isActionServiceReferral = null,
+    isActionSimReferral = null,
+    actionOther = null,
+  )
 }

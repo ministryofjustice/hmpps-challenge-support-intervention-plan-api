@@ -39,7 +39,7 @@ import java.util.UUID
   description = "Endpoints for Decision And Actions operations",
 )
 class DecisionAndActionsController(
-  private val decisionActionsService: DecisionActionsService
+  private val decisionActionsService: DecisionActionsService,
 ) {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
@@ -82,11 +82,11 @@ class DecisionAndActionsController(
       required = true,
     ) recordUuid: UUID,
     @Valid @RequestBody createDecisionAndActionsRequest: CreateDecisionAndActionsRequest,
-    httpRequest: HttpServletRequest
+    httpRequest: HttpServletRequest,
   ): DecisionAndActions = decisionActionsService.createDecisionAndActionsRequest(
     recordUuid,
     createDecisionAndActionsRequest,
-    httpRequest.csipRequestContext()
+    httpRequest.csipRequestContext(),
   )
 
   @ResponseStatus(HttpStatus.OK)

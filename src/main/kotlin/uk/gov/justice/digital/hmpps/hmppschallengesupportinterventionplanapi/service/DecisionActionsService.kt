@@ -5,16 +5,14 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toCsipRecordEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.Companion.getOutcomeType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import java.util.UUID
+import java.util.*
 
 @Service
 @Transactional
@@ -28,7 +26,10 @@ class DecisionActionsService(
     context: CsipRequestContext,
   ): DecisionAndActions {
     val decisionOutcome = getOutcomeType(request.outcomeTypeCode, referenceDataRepository)
-    val decisionOutcomeSignedOffBy = if (request.outcomeSignedOffByRoleCode != null) getOutcomeType(request.outcomeSignedOffByRoleCode, referenceDataRepository) else null
+    val decisionOutcomeSignedOffBy = if (request.outcomeSignedOffByRoleCode != null) getOutcomeType(
+      request.outcomeSignedOffByRoleCode,
+      referenceDataRepository,
+    ) else null
 
     return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
       it.referral?.let { referral ->

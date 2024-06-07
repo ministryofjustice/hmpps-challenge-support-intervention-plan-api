@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import java.time.LocalDate
@@ -33,32 +32,33 @@ class DecisionActionsServiceTest {
   @Test
   fun `create Screening Outcome`() {
     whenever(referenceDataRepository.findByDomainAndCode(any(), eq("CODE"))).thenReturn(referenceDataDecisionOutcome())
-    whenever(referenceDataRepository.findByDomainAndCode(any(), eq("SIGNEDOFF"))).thenReturn(referenceDataDecisionOutcomeSignedOffBy())
+    whenever(referenceDataRepository.findByDomainAndCode(any(), eq("SIGNEDOFF"))).thenReturn(
+      referenceDataDecisionOutcomeSignedOffBy(),
+    )
     whenever(csipRecordRepository.findByRecordUuid(any())).thenReturn(csipRecord())
     whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
-      csipRecord()
-        .apply {
-          referral!!.createDecisionAndActions(
-            decisionOutcome = referenceDataDecisionOutcome(),
-            decisionOutcomeSignedOffBy = referenceDataDecisionOutcomeSignedOffBy(),
-            decisionConclusion = "yes",
-            decisionOutcomeRecordedBy = TEST_USER,
-            decisionOutcomeRecordedByDisplayName = TEST_USER_NAME,
-            decisionOutcomeDate = LocalDate.of(2021, 1, 1),
-            nextSteps = "next",
-            actionOpenCsipAlert = true,
-            actionNonAssociationsUpdated = true,
-            actionObservationBook = true,
-            actionUnitOrCellMove = true,
-            actionCsraOrRsraReview = true,
-            actionServiceReferral = true,
-            actionSimReferral = true,
-            actionOther = "other",
-            actionedAt = LocalDateTime.of(2021, 1, 1, 0, 0, 0),
-            source = Source.DPS,
-            activeCaseLoadId = PRISON_CODE_LEEDS,
-          )
-        },
+      csipRecord().apply {
+        referral!!.createDecisionAndActions(
+          decisionOutcome = referenceDataDecisionOutcome(),
+          decisionOutcomeSignedOffBy = referenceDataDecisionOutcomeSignedOffBy(),
+          decisionConclusion = "yes",
+          decisionOutcomeRecordedBy = TEST_USER,
+          decisionOutcomeRecordedByDisplayName = TEST_USER_NAME,
+          decisionOutcomeDate = LocalDate.of(2021, 1, 1),
+          nextSteps = "next",
+          actionOpenCsipAlert = true,
+          actionNonAssociationsUpdated = true,
+          actionObservationBook = true,
+          actionUnitOrCellMove = true,
+          actionCsraOrRsraReview = true,
+          actionServiceReferral = true,
+          actionSimReferral = true,
+          actionOther = "other",
+          actionedAt = LocalDateTime.of(2021, 1, 1, 0, 0, 0),
+          source = Source.DPS,
+          activeCaseLoadId = PRISON_CODE_LEEDS,
+        )
+      },
     )
 
     val result = underTest.createDecisionAndActionsRequest(
@@ -104,7 +104,9 @@ class DecisionActionsServiceTest {
 
   @Test
   fun `create Screening Outcome with invalid OutcomeType code`() {
-    whenever(referenceDataRepository.findByDomainAndCode(any(), eq("SIGNEDOFF"))).thenReturn(referenceDataDecisionOutcomeSignedOffBy())
+    whenever(referenceDataRepository.findByDomainAndCode(any(), eq("SIGNEDOFF"))).thenReturn(
+      referenceDataDecisionOutcomeSignedOffBy(),
+    )
     val error = assertThrows<IllegalArgumentException> {
       underTest.createDecisionAndActionsRequest(
         UUID.randomUUID(),
@@ -166,7 +168,9 @@ class DecisionActionsServiceTest {
   fun `create Screening Outcome with invalid Csip Record UUID`() {
     val recordUuid = UUID.randomUUID()
     whenever(referenceDataRepository.findByDomainAndCode(any(), eq("CODE"))).thenReturn(referenceDataDecisionOutcome())
-    whenever(referenceDataRepository.findByDomainAndCode(any(), eq("SIGNEDOFF"))).thenReturn(referenceDataDecisionOutcomeSignedOffBy())
+    whenever(referenceDataRepository.findByDomainAndCode(any(), eq("SIGNEDOFF"))).thenReturn(
+      referenceDataDecisionOutcomeSignedOffBy(),
+    )
 
     val error = assertThrows<CsipRecordNotFoundException> {
       underTest.createDecisionAndActionsRequest(

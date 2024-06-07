@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvestigationAlreadyExistsException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DecisionAndActionsAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvestigationAlreadyExistsException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
@@ -119,7 +119,6 @@ data class Referral(
     actionServiceReferral: Boolean? = false,
     actionSimReferral: Boolean? = false,
     description: String = "Decision and actions added to referral",
-
   ): CsipRecord {
     if (decisionAndActions != null) {
       throw DecisionAndActionsAlreadyExistException(csipRecord.recordUuid)
@@ -156,7 +155,7 @@ data class Referral(
         activeCaseLoadId,
         isDecisionAndActionsAffected = true,
       )
-      registerCsipEvent(
+      registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
