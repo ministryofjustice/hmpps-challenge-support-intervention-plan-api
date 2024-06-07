@@ -1,0 +1,1 @@
+alter table decisions_and_actions rename to decision_and_actions;

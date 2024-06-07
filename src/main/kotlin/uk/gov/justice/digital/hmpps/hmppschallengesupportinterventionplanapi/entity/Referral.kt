@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvestigationAlreadyExistsException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DecisionAndActionsAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
@@ -88,6 +89,90 @@ data class Referral(
     referencedColumnName = "reference_Data_id",
   ) val incidentInvolvement: ReferenceData,
 ) : AbstractAggregateRoot<Referral>() {
+  @OneToOne(
+    mappedBy = "referral",
+    fetch = FetchType.LAZY,
+    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
+  )
+  private var decisionAndActions: DecisionAndActions? = null
+
+  fun decisionAndActions() = decisionAndActions
+
+  fun createDecisionAndActions(
+    decisionOutcome: ReferenceData,
+    decisionOutcomeSignedOffBy: ReferenceData?,
+    decisionConclusion: String?,
+    decisionOutcomeRecordedBy: String,
+    decisionOutcomeRecordedByDisplayName: String,
+    decisionOutcomeDate: LocalDate?,
+    nextSteps: String?,
+    actionOther: String?,
+    actionedAt: LocalDateTime = LocalDateTime.now(),
+    source: Source,
+    activeCaseLoadId: String?,
+    reason: Reason = Reason.USER,
+    actionOpenCsipAlert: Boolean? = false,
+    actionNonAssociationsUpdated: Boolean? = false,
+    actionObservationBook: Boolean? = false,
+    actionUnitOrCellMove: Boolean? = false,
+    actionCsraOrRsraReview: Boolean? = false,
+    actionServiceReferral: Boolean? = false,
+    actionSimReferral: Boolean? = false,
+    description: String = "Decision and actions added to referral",
+
+  ): CsipRecord {
+    if (decisionAndActions != null) {
+      throw DecisionAndActionsAlreadyExistException(csipRecord.recordUuid)
+    }
+
+    decisionAndActions = DecisionAndActions(
+      referral = this,
+      decisionOutcome,
+      decisionOutcomeSignedOffBy,
+      decisionConclusion,
+      decisionOutcomeRecordedBy,
+      decisionOutcomeRecordedByDisplayName,
+      decisionOutcomeDate,
+      nextSteps,
+      actionOpenCsipAlert,
+      actionNonAssociationsUpdated,
+      actionObservationBook,
+      actionUnitOrCellMove,
+      actionCsraOrRsraReview,
+      actionServiceReferral,
+      actionSimReferral,
+      actionOther,
+    )
+
+    with(csipRecord) {
+      addAuditEvent(
+        action = AuditEventAction.UPDATED,
+        description,
+        actionedAt,
+        actionedBy = decisionOutcomeRecordedBy,
+        actionedByCapturedName = decisionOutcomeRecordedByDisplayName,
+        source,
+        reason,
+        activeCaseLoadId,
+        isDecisionAndActionsAffected = true,
+      )
+      registerCsipEvent(
+        CsipUpdatedEvent(
+          recordUuid = csipRecord.recordUuid,
+          prisonNumber = csipRecord.prisonNumber,
+          description = description,
+          occurredAt = actionedAt,
+          source = source,
+          reason = reason,
+          updatedBy = decisionOutcomeRecordedBy,
+          isDecisionAndActionsAffected = true,
+        ),
+      )
+    }
+
+    return csipRecord
+  }
+
   @OneToOne(
     mappedBy = "referral",
     fetch = FetchType.LAZY,

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 
 @Schema(
   type = "String",
@@ -34,5 +35,10 @@ enum class ReferenceDataType(val domain: String) {
 
     fun fromDomain(domain: String) =
       map[domain] ?: throw InvalidDomainException("Fail to map $domain to Reference Data Type. $VALIDATION_DESCRIPTION")
+
+    fun getOutcomeType(code: String, referenceDataRepository: ReferenceDataRepository) =
+      referenceDataRepository.findByDomainAndCode(OUTCOME_TYPE, code)?.also {
+        require(it.isActive()) { "OUTCOME_TYPE code '$code' is inactive" }
+      } ?: throw IllegalArgumentException("OUTCOME_TYPE code '$code' does not exist")
   }
 }

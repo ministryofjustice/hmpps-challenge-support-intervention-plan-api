@@ -6,40 +6,55 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toCsipRecordEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.Companion.getOutcomeType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import java.util.UUID
 
 @Service
 @Transactional
-class SaferCustodyScreeningOutcomeService(
+class DecisionActionsService(
   private val csipRecordRepository: CsipRecordRepository,
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
-  fun createScreeningOutcome(
+  fun createDecisionAndActionsRequest(
     recordUuid: UUID,
-    request: CreateSaferCustodyScreeningOutcomeRequest,
+    request: CreateDecisionAndActionsRequest,
     context: CsipRequestContext,
-  ): SaferCustodyScreeningOutcome {
-    val outcomeType = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
+  ): DecisionAndActions {
+    val decisionOutcome = getOutcomeType(request.outcomeTypeCode, referenceDataRepository)
+    val decisionOutcomeSignedOffBy = if (request.outcomeSignedOffByRoleCode != null) getOutcomeType(request.outcomeSignedOffByRoleCode, referenceDataRepository) else null
 
     return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
       it.referral?.let { referral ->
         csipRecordRepository.saveAndFlush(
           request.toCsipRecordEntity(
             referral = referral,
-            outcomeType = outcomeType,
+            decisionOutcome,
+            decisionOutcomeSignedOffBy = decisionOutcomeSignedOffBy,
+            decisionConclusion = request.conclusion,
+            decisionOutcomeRecordedBy = context.username,
+            decisionOutcomeRecordedByDisplayName = context.userDisplayName,
+            decisionOutcomeDate = context.requestAt.toLocalDate(),
+            nextSteps = request.nextSteps,
+            actionOpenCsipAlert = request.isActionOpenCsipAlert,
+            actionNonAssociationsUpdated = request.isActionNonAssociationsUpdated,
+            actionObservationBook = request.isActionObservationBook,
+            actionUnitOrCellMove = request.isActionUnitOrCellMove,
+            actionCsraOrRsraReview = request.isActionCsraOrRsraReview,
+            actionServiceReferral = request.isActionServiceReferral,
+            actionSimReferral = request.isActionSimReferral,
+            actionOther = request.actionOther,
             actionedAt = context.requestAt,
-            actionedBy = context.username,
-            actionedByDisplayName = context.userDisplayName,
             source = context.source,
             activeCaseLoadId = context.activeCaseLoadId,
           ),
-        ).referral()!!.saferCustodyScreeningOutcome()!!.toModel()
+        ).referral()!!.decisionAndActions()!!.toModel()
       } ?: throw MissingReferralException(recordUuid)
     } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")
   }
