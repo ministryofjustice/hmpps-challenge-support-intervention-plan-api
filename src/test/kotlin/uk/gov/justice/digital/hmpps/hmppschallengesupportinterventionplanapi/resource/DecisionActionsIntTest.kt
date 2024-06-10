@@ -96,7 +96,24 @@ class DecisionActionsIntTest(
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
     val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE"))
+      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE", outcomeSignedOffByRoleCode = "CUR"))
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody
+
+    with(response!!) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - invalid Outcome signed off by role code`() {
+    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
+      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE"))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
       .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
@@ -386,7 +403,10 @@ class DecisionActionsIntTest(
     },
   )
 
-  private fun createDecisionActionsRequest(outcomeTypeCode: String = "CUR") = CreateDecisionAndActionsRequest(
+  private fun createDecisionActionsRequest(
+    outcomeTypeCode: String = "CUR",
+    outcomeSignedOffByRoleCode: String = "CUR",
+  ) = CreateDecisionAndActionsRequest(
     conclusion = null,
     outcomeTypeCode = outcomeTypeCode,
     outcomeSignedOffByRoleCode = null,

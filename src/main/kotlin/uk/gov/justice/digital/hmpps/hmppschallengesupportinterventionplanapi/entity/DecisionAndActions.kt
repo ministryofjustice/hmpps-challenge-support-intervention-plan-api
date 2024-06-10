@@ -5,9 +5,11 @@ import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import java.time.LocalDate
 
 @Entity
@@ -18,13 +20,13 @@ data class DecisionAndActions(
     referencedColumnName = "record_id",
   ) val referral: Referral,
 
-  @OneToOne @JoinColumn(
+  @ManyToOne @JoinColumn(
     name = "decision_outcome_id",
     referencedColumnName = "reference_data_id",
     nullable = false,
   ) val decisionOutcome: ReferenceData,
 
-  @OneToOne @JoinColumn(
+  @ManyToOne @JoinColumn(
     name = "decision_outcome_signed_off_by_role_id",
     referencedColumnName = "reference_data_id",
   ) val decisionOutcomeSignedOffBy: ReferenceData?,
@@ -55,3 +57,22 @@ data class DecisionAndActions(
 
   @Column(length = 4000) val actionOther: String?,
 )
+
+fun DecisionAndActions.toModel() =
+  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions(
+    decisionConclusion,
+    decisionOutcome.toReferenceDataModel(),
+    decisionOutcomeSignedOffBy?.toReferenceDataModel(),
+    decisionOutcomeRecordedBy,
+    decisionOutcomeRecordedByDisplayName,
+    decisionOutcomeDate,
+    nextSteps,
+    actionOpenCsipAlert,
+    actionNonAssociationsUpdated,
+    actionObservationBook,
+    actionUnitOrCellMove,
+    actionCsraOrRsraReview,
+    actionServiceReferral,
+    actionSimReferral,
+    actionOther,
+  )
