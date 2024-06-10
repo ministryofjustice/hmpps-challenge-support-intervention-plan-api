@@ -83,7 +83,7 @@ fun Referral.toModel() =
     saferCustodyScreeningOutcome = null,
     decisionAndActions = null,
     investigation = null,
-    contributoryFactors = csipRecord.contributoryFactors.map { it.toModel() },
+    contributoryFactors = contributoryFactors().map { it.toModel() },
   )
 
 fun CsipRecord.toModel() =
@@ -100,18 +100,4 @@ fun CsipRecord.toModel() =
     lastModifiedByDisplayName = lastModifiedByDisplayName,
     referral = referral!!.toModel(),
     plan = null,
-  )
-
-fun ReferenceData.toContributoryFactor(
-  csipRecord: CsipRecord,
-  comment: String,
-  requestContext: CsipRequestContext,
-): ContributoryFactor =
-  ContributoryFactor(
-    comment = comment,
-    contributoryFactorType = this,
-    createdAt = requestContext.requestAt,
-    createdBy = requestContext.username,
-    createdByDisplayName = requestContext.userDisplayName,
-    csipRecord = csipRecord,
   )

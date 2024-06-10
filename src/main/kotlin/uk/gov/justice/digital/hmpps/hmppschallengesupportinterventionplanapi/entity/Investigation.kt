@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Entity
 @Table
@@ -49,26 +48,20 @@ data class Investigation(
     actionedBy: String,
     actionedByDisplayName: String,
     source: Source,
-  ) {
-    val uuid = UUID.randomUUID()
-
-    interviews.add(
-      Interview(
-        interviewUuid = uuid,
-        investigation = this,
-        interviewee = createRequest.interviewee,
-        interviewDate = createRequest.interviewDate,
-        intervieweeRole = intervieweeRole,
-        interviewText = createRequest.interviewText,
-        createdAt = actionedAt,
-        createdBy = actionedBy,
-        createdByDisplayName = actionedByDisplayName,
-      ),
-    )
-
+  ) = Interview(
+    investigation = this,
+    interviewee = createRequest.interviewee,
+    interviewDate = createRequest.interviewDate,
+    intervieweeRole = intervieweeRole,
+    interviewText = createRequest.interviewText,
+    createdAt = actionedAt,
+    createdBy = actionedBy,
+    createdByDisplayName = actionedByDisplayName,
+  ).apply {
+    interviews.add(this)
     referral.csipRecord.registerEntityEvent(
       InterviewCreatedEvent(
-        interviewUuid = uuid,
+        interviewUuid = interviewUuid,
         recordUuid = referral.csipRecord.recordUuid,
         prisonNumber = referral.csipRecord.prisonNumber,
         description = DomainEventType.INTERVIEW_CREATED.description,

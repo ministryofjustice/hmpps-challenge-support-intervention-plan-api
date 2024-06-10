@@ -7,7 +7,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
@@ -68,7 +71,19 @@ fun referral(csipRecord: CsipRecord = csipRecord()) =
     incidentLocation(),
     areaOfWork(),
     incidentInvolvement(),
-  )
+  ).apply {
+    addContributoryFactor(
+      createRequest = CreateContributoryFactorRequest(
+        factorTypeCode = "D",
+        comment = "comment",
+      ),
+      factorType = contributoryFactorType(),
+      actionedAt = LocalDateTime.now(),
+      actionedBy = TEST_USER,
+      actionedByDisplayName = TEST_USER_NAME,
+      source = Source.DPS,
+    )
+  }
 
 fun createContributoryFactorRequest(factorTypeCode: String = "D") =
   CreateContributoryFactorRequest(factorTypeCode, "comment")
@@ -139,7 +154,7 @@ fun contributoryFactorType() =
 fun contributoryFactor() =
   ContributoryFactor(
     contributoryFactorType = contributoryFactorType(),
-    csipRecord = csipRecord(),
+    referral = referral(),
     createdAt = LocalDateTime.now(),
     createdBy = "USER",
     createdByDisplayName = "USER DISPLAY NAME",

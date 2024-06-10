@@ -179,8 +179,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Incident type code A could not be found")
-      assertThat(developerMessage).isEqualTo("Incident type code A could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_TYPE code 'A' does not exist")
+      assertThat(developerMessage).isEqualTo("INCIDENT_TYPE code 'A' does not exist")
       assertThat(moreInfo).isNull()
     }
   }
@@ -197,8 +197,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Incident location code B could not be found")
-      assertThat(developerMessage).isEqualTo("Incident location code B could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_LOCATION code 'B' does not exist")
+      assertThat(developerMessage).isEqualTo("INCIDENT_LOCATION code 'B' does not exist")
       assertThat(moreInfo).isNull()
     }
   }
@@ -215,8 +215,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Area of work code C could not be found")
-      assertThat(developerMessage).isEqualTo("Area of work code C could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK code 'C' does not exist")
+      assertThat(developerMessage).isEqualTo("AREA_OF_WORK code 'C' does not exist")
       assertThat(moreInfo).isNull()
     }
   }
@@ -234,8 +234,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Incident involvement code D could not be found")
-      assertThat(developerMessage).isEqualTo("Incident involvement code D could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_INVOLVEMENT code 'D' does not exist")
+      assertThat(developerMessage).isEqualTo("INCIDENT_INVOLVEMENT code 'D' does not exist")
       assertThat(moreInfo).isNull()
     }
   }
@@ -257,8 +257,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Contributory factor type code D could not be found")
-      assertThat(developerMessage).isEqualTo("Contributory factor type code D could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
+      assertThat(developerMessage).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
       assertThat(moreInfo).isNull()
     }
   }

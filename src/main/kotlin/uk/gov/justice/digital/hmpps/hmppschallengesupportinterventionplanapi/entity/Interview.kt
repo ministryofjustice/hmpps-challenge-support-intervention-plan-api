@@ -18,7 +18,7 @@ import java.util.UUID
 data class Interview(
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "interview_id") val interviewId: Long = 0,
 
-  @Column(unique = true, nullable = false) val interviewUuid: UUID,
+  @Column(unique = true, nullable = false) val interviewUuid: UUID = UUID.randomUUID(),
 
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(
     name = "record_id",

@@ -8,15 +8,19 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
+import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvestigationAlreadyExistsException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -98,9 +102,18 @@ data class Referral(
   )
   private var investigation: Investigation? = null
 
+  @OneToMany(
+    mappedBy = "referral",
+    fetch = FetchType.LAZY,
+    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
+  )
+  private var contributoryFactors: MutableList<ContributoryFactor> = mutableListOf()
+
   fun saferCustodyScreeningOutcome() = saferCustodyScreeningOutcome
 
   fun investigation() = investigation
+
+  fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.contributoryFactorId }
 
   fun createSaferCustodyScreeningOutcome(
     outcomeType: ReferenceData,
@@ -223,5 +236,35 @@ data class Referral(
     }
 
     return csipRecord
+  }
+
+  fun addContributoryFactor(
+    createRequest: CreateContributoryFactorRequest,
+    factorType: ReferenceData,
+    actionedAt: LocalDateTime = LocalDateTime.now(),
+    actionedBy: String,
+    actionedByDisplayName: String,
+    source: Source,
+  ) = ContributoryFactor(
+    referral = this,
+    comment = createRequest.comment,
+    contributoryFactorType = factorType,
+    createdAt = actionedAt,
+    createdBy = actionedBy,
+    createdByDisplayName = actionedByDisplayName,
+  ).apply {
+    contributoryFactors.add(this)
+    csipRecord.registerEntityEvent(
+      ContributoryFactorCreatedEvent(
+        contributoryFactorUuid = contributoryFactorUuid,
+        recordUuid = csipRecord.recordUuid,
+        prisonNumber = csipRecord.prisonNumber,
+        description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
+        occurredAt = actionedAt,
+        source = source,
+        reason = Reason.USER,
+        updatedBy = actionedBy,
+      ),
+    )
   }
 }

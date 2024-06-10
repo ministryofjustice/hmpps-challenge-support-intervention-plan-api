@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.areaOfWork
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.contributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.contributoryFactorType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.csipRecord
@@ -81,7 +80,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("Incident type code A could not be found")
+    assertThat(exception.message).isEqualTo("INCIDENT_TYPE code 'A' does not exist")
   }
 
   @Test
@@ -92,7 +91,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("Incident location code B could not be found")
+    assertThat(exception.message).isEqualTo("INCIDENT_LOCATION code 'B' does not exist")
   }
 
   @Test
@@ -106,7 +105,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("Area of work code C could not be found")
+    assertThat(exception.message).isEqualTo("AREA_OF_WORK code 'C' does not exist")
   }
 
   @Test
@@ -121,7 +120,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("Area of work code C could not be found")
+    assertThat(exception.message).isEqualTo("AREA_OF_WORK code 'C' does not exist")
   }
 
   @Test
@@ -135,11 +134,10 @@ class CsipRecordServiceTest {
     whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_INVOLVEMENT), anyString())).thenReturn(
       incidentInvolvement(),
     )
-    whenever(referenceDataRepository.findByDomainAndCode(eq(CONTRIBUTORY_FACTOR_TYPE), anyString())).thenReturn(null)
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("Contributory factor type code D could not be found")
+    assertThat(exception.message).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
   }
 
   @Test
@@ -153,13 +151,12 @@ class CsipRecordServiceTest {
     whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_INVOLVEMENT), anyString())).thenReturn(
       incidentInvolvement(),
     )
-    whenever(referenceDataRepository.findByDomainAndCode(eq(CONTRIBUTORY_FACTOR_TYPE), anyString())).thenReturn(
-      contributoryFactorType(),
+    whenever(referenceDataRepository.findByDomain(eq(CONTRIBUTORY_FACTOR_TYPE))).thenReturn(
+      listOf(contributoryFactorType()),
     )
     whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
       csipRecord().apply {
         referral = referral(csipRecord())
-        contributoryFactors = listOf(contributoryFactor())
       },
     )
     csipRecordService.createCsipRecord(createCsipRecordRequest(), PRISON_NUMBER, csipRequestContext())

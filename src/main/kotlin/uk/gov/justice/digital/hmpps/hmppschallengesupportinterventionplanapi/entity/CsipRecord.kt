@@ -13,7 +13,6 @@ import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import java.io.Serializable
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -65,7 +63,7 @@ data class CsipRecord(
 
   @Column(length = 255)
   val lastModifiedByDisplayName: String? = null,
-) : Serializable, AbstractAggregateRoot<CsipRecord>() {
+) : AbstractAggregateRoot<CsipRecord>() {
   @OneToMany(
     mappedBy = "csipRecord",
     fetch = FetchType.EAGER,
@@ -83,12 +81,6 @@ data class CsipRecord(
 
   fun referral() = referral
 
-  @OneToMany(
-    mappedBy = "csipRecord",
-    fetch = FetchType.LAZY,
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  var contributoryFactors: Collection<ContributoryFactor> = emptyList()
   fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
   fun addAuditEvent(
@@ -142,7 +134,8 @@ data class CsipRecord(
     this.referral = referral
   }
 
-  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) = apply { registerEvent(entityEvent) }
+  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) =
+    apply { registerEvent(entityEvent) }
 
   fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
 
@@ -153,29 +146,30 @@ data class CsipRecord(
     incidentLocation: ReferenceData,
     referrerAreaOfWork: ReferenceData,
     incidentInvolvement: ReferenceData,
-    contributoryFactors: List<ReferenceData>,
+    contributoryFactors: Map<String, ReferenceData>,
     reason: Reason = Reason.USER,
     description: String = DomainEventType.CSIP_CREATED.description,
-  ): CsipRecord = let {
-    val referral = createCsipRecordRequest.toInitialReferralEntity(
+  ): CsipRecord = apply {
+    referral = createCsipRecordRequest.toInitialReferralEntity(
       this,
       csipRequestContext,
       incidentType,
       incidentLocation,
       referrerAreaOfWork,
       incidentInvolvement,
-    )
-    it.referral = referral
-    it.contributoryFactors = contributoryFactors.map { referenceData ->
-      val contributoryFactor =
-        createCsipRecordRequest.referral.contributoryFactors.first { factor -> factor.factorTypeCode == referenceData.code }
-      referenceData.toContributoryFactor(
-        this,
-        contributoryFactor.comment!!,
-        csipRequestContext,
-      )
+    ).apply {
+      createCsipRecordRequest.referral.contributoryFactors.forEach { factor ->
+        this.addContributoryFactor(
+          createRequest = factor,
+          factorType = contributoryFactors[factor.factorTypeCode]!!,
+          actionedAt = createdAt,
+          actionedBy = createdBy,
+          actionedByDisplayName = createdByDisplayName,
+          source = csipRequestContext.source,
+        )
+      }
     }
-    it.registerCsipEvent(
+    registerEntityEvent(
       CsipCreatedEvent(
         recordUuid = this.recordUuid,
         prisonNumber = this.prisonNumber,
@@ -187,6 +181,5 @@ data class CsipRecord(
         isSaferCustodyScreeningOutcomeAffected = false,
       ),
     )
-    return this
   }
 }

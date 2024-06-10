@@ -7,8 +7,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation as InvestigationModel
 
-fun Investigation.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation(
+fun Investigation.toModel() = InvestigationModel(
   staffInvolved = staffInvolved,
   evidenceSecured = evidenceSecured,
   occurrenceReason = occurrenceReason,

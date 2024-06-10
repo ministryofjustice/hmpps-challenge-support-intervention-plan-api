@@ -99,6 +99,36 @@ data class CsipAdditionalInformation(
   override fun identifier(): String = recordUuid.toString()
 }
 
+data class ContributoryFactorDomainEvent(
+  override val eventType: String,
+  override val additionalInformation: AdditionalInformation,
+  override val version: Int = 1,
+  override val description: String,
+  override val occurredAt: String,
+) : DomainEvent<AdditionalInformation>() {
+  override fun toString(): String {
+    return "v$version Contributory Factor domain event '$eventType' " + additionalInformation.asString()
+  }
+}
+
+data class ContributoryFactorAdditionalInformation(
+  override val url: String,
+  val contributoryFactorUuid: UUID,
+  val recordUuid: UUID,
+  val prisonNumber: String,
+  override val source: Source,
+  override val reason: Reason,
+) : AdditionalInformation() {
+  override fun asString(): String =
+    "for Contributory Factor with UUID '$contributoryFactorUuid' " +
+      "of CSIP Record with UUID '$recordUuid' " +
+      "for prison number '$prisonNumber' " +
+      "from source '$source' " +
+      "with reason '$reason'"
+
+  override fun identifier(): String = recordUuid.toString()
+}
+
 data class InterviewDomainEvent(
   override val eventType: String,
   override val additionalInformation: AdditionalInformation,
