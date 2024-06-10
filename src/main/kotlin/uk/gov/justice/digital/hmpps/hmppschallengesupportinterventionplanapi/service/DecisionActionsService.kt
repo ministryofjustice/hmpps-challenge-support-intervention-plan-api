@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getOutcomeType
 import java.util.*
 
 @Service
@@ -24,13 +25,8 @@ class DecisionActionsService(
     context: CsipRequestContext,
   ): DecisionAndActions {
     val decisionOutcome = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
-    val decisionOutcomeSignedOffBy = if (request.outcomeSignedOffByRoleCode != null) {
-      referenceDataRepository.getOutcomeType(
-        request.outcomeSignedOffByRoleCode,
-      )
-    } else {
-      null
-    }
+    val decisionOutcomeSignedOffBy =
+      referenceDataRepository.getOutcomeType(request.outcomeSignedOffByRoleCode.orEmpty())
 
     return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
       it.referral?.let { referral ->

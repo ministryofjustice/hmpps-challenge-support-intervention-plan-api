@@ -409,7 +409,7 @@ class DecisionActionsIntTest(
   ) = CreateDecisionAndActionsRequest(
     conclusion = null,
     outcomeTypeCode = outcomeTypeCode,
-    outcomeSignedOffByRoleCode = null,
+    outcomeSignedOffByRoleCode = outcomeSignedOffByRoleCode,
     outcomeRecordedBy = null,
     outcomeRecordedByDisplayName = null,
     outcomeDate = null,
