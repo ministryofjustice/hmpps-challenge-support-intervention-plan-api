@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
@@ -376,7 +377,12 @@ class CreateCsipRecordsIntTest(
       contributoryFactorTypeCode = "AFL",
     )
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = NOMIS, user = NOMIS_SYS_USER)
+    val response = webTestClient.createCsipResponseSpec(
+      request = request,
+      prisonNumber = PRISON_NUMBER,
+      source = NOMIS,
+      user = NOMIS_SYS_USER,
+    )
       .expectStatus().isCreated
       .expectBody(CsipRecord::class.java)
       .returnResult().responseBody
@@ -464,7 +470,19 @@ class CreateCsipRecordsIntTest(
     post()
       .uri("/prisoners/$prisonNumber/csip-records")
       .bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI)))
+      .headers(
+        setAuthorisation(
+          roles = listOf(
+            source.let {
+              if (it == NOMIS) {
+                ROLE_NOMIS
+              } else {
+                ROLE_CSIP_UI
+              }
+            },
+          ),
+        ),
+      )
       .headers(setCsipRequestContext(source = source, username = user))
       .exchange()
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
