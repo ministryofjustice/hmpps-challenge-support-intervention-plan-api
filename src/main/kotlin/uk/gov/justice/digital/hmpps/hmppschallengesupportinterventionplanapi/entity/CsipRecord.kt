@@ -169,6 +169,19 @@ data class CsipRecord(
         )
       }
     }
+    addAuditEvent(
+      action = AuditEventAction.CREATED,
+      description = "CSIP record created via referral with ${referral!!.contributoryFactors().size} contributory factors",
+      actionedAt = createdAt,
+      actionedBy = createdBy,
+      actionedByCapturedName = createdByDisplayName,
+      source = csipRequestContext.source,
+      reason = reason,
+      activeCaseLoadId = csipRequestContext.activeCaseLoadId,
+      isRecordAffected = true,
+      isReferralAffected = referral != null,
+      isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
+    )
     registerEntityEvent(
       CsipCreatedEvent(
         recordUuid = this.recordUuid,
@@ -178,7 +191,9 @@ data class CsipRecord(
         source = csipRequestContext.source,
         reason = reason,
         createdBy = createdBy,
-        isSaferCustodyScreeningOutcomeAffected = false,
+        isRecordAffected = true,
+        isReferralAffected = referral != null,
+        isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
       ),
     )
   }

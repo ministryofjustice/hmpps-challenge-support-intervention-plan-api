@@ -26,6 +26,7 @@ abstract class DomainEvent<T : AdditionalInformation> {
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
   JsonSubTypes.Type(value = CsipAdditionalInformation::class, name = "csip"),
+  JsonSubTypes.Type(value = ContributoryFactorAdditionalInformation::class, name = "contributoryFactor"),
   JsonSubTypes.Type(value = InterviewAdditionalInformation::class, name = "interview"),
   JsonSubTypes.Type(value = ReferenceDataAdditionalInformation::class, name = "csipReferenceData"),
 )

@@ -2,32 +2,46 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorAdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_NOT_FOUND
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class CreateCsipRecordsIntTest : IntegrationTestBase() {
+class CreateCsipRecordsIntTest(
+  @Autowired private val csipRecordRepository: CsipRecordRepository,
+) : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no required role`() {
@@ -264,7 +278,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - CSIP record created`() {
+  fun `201 created - CSIP record created via DPS`() {
     val request = createCsipRecordRequest(
       incidentTypeCode = "ATO",
       incidentLocationCode = "EDU",
@@ -273,7 +287,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       contributoryFactorTypeCode = "AFL",
     )
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
       .expectStatus().isCreated
       .expectBody(CsipRecord::class.java)
       .returnResult().responseBody
@@ -287,18 +301,34 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdByDisplayName).isEqualTo("Test User")
     }
 
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it!! > 0 }
-    val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
-    assertThat(event).usingRecursiveComparison().isEqualTo(
+    with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
+      assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
+      assertThat(isRecordAffected).isTrue()
+      assertThat(isReferralAffected).isTrue()
+      assertThat(isContributoryFactorAffected).isTrue()
+      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(actionedBy).isEqualTo(TEST_USER)
+      assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
+      assertThat(source).isEqualTo(DPS)
+      assertThat(reason).isEqualTo(Reason.USER)
+      assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
+    }
+
+    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 2 }
+    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
+    val csipDomainEvent = events.find { it is CsipDomainEvent }!!
+
+    assertThat(csipDomainEvent).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
         DomainEventType.CSIP_CREATED.eventType,
         CsipAdditionalInformation(
           url = "http://localhost:8080/csip-records/${response.recordUuid}",
           recordUuid = response.recordUuid,
           prisonNumber = "A1234AA",
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
+          isRecordAffected = true,
+          isReferralAffected = true,
+          isContributoryFactorAffected = true,
           isSaferCustodyScreeningOutcomeAffected = false,
           isInvestigationAffected = false,
           isInterviewAffected = false,
@@ -312,13 +342,122 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
         ),
         1,
         DomainEventType.CSIP_CREATED.description,
-        event.occurredAt,
+        csipDomainEvent.occurredAt,
+      ),
+    )
+
+    val contributoryFactoryDomainEvent = events.find { it is ContributoryFactorDomainEvent }!!
+
+    assertThat(contributoryFactoryDomainEvent).usingRecursiveComparison().isEqualTo(
+      ContributoryFactorDomainEvent(
+        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
+        ContributoryFactorAdditionalInformation(
+          url = "http://localhost:8080/csip-records/${response.recordUuid}",
+          contributoryFactorUuid = response.referral.contributoryFactors.first().factorUuid,
+          recordUuid = response.recordUuid,
+          prisonNumber = "A1234AA",
+          source = DPS,
+          reason = Reason.USER,
+        ),
+        1,
+        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
+        contributoryFactoryDomainEvent.occurredAt,
+      ),
+    )
+  }
+
+  @Test
+  fun `201 created - CSIP record created via NOMIS`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = "AFL",
+    )
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = NOMIS, user = NOMIS_SYS_USER)
+      .expectStatus().isCreated
+      .expectBody(CsipRecord::class.java)
+      .returnResult().responseBody
+
+    with(response!!) {
+      assertThat(logNumber).isEqualTo(LOG_NUMBER)
+      assertThat(recordUuid).isNotNull()
+      assertThat(referral).isNotNull()
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))
+      assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
+      assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+    }
+
+    with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
+      assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
+      assertThat(isRecordAffected).isTrue()
+      assertThat(isReferralAffected).isTrue()
+      assertThat(isContributoryFactorAffected).isTrue()
+      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(actionedBy).isEqualTo(NOMIS_SYS_USER)
+      assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      assertThat(source).isEqualTo(NOMIS)
+      assertThat(reason).isEqualTo(Reason.USER)
+      assertThat(activeCaseLoadId).isNull()
+    }
+
+    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 2 }
+    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
+    val csipDomainEvent = events.find { it is CsipDomainEvent }!!
+
+    assertThat(csipDomainEvent).usingRecursiveComparison().isEqualTo(
+      CsipDomainEvent(
+        DomainEventType.CSIP_CREATED.eventType,
+        CsipAdditionalInformation(
+          url = "http://localhost:8080/csip-records/${response.recordUuid}",
+          recordUuid = response.recordUuid,
+          prisonNumber = "A1234AA",
+          isRecordAffected = true,
+          isReferralAffected = true,
+          isContributoryFactorAffected = true,
+          isSaferCustodyScreeningOutcomeAffected = false,
+          isInvestigationAffected = false,
+          isInterviewAffected = false,
+          isDecisionAndActionsAffected = false,
+          isPlanAffected = false,
+          isIdentifiedNeedAffected = false,
+          isReviewAffected = false,
+          isAttendeeAffected = false,
+          source = NOMIS,
+          reason = Reason.USER,
+        ),
+        1,
+        DomainEventType.CSIP_CREATED.description,
+        csipDomainEvent.occurredAt,
+      ),
+    )
+
+    val contributoryFactoryDomainEvent = events.find { it is ContributoryFactorDomainEvent }!!
+
+    assertThat(contributoryFactoryDomainEvent).usingRecursiveComparison().isEqualTo(
+      ContributoryFactorDomainEvent(
+        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
+        ContributoryFactorAdditionalInformation(
+          url = "http://localhost:8080/csip-records/${response.recordUuid}",
+          contributoryFactorUuid = response.referral.contributoryFactors.first().factorUuid,
+          recordUuid = response.recordUuid,
+          prisonNumber = "A1234AA",
+          source = NOMIS,
+          reason = Reason.USER,
+        ),
+        1,
+        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
+        contributoryFactoryDomainEvent.occurredAt,
       ),
     )
   }
 
   private fun WebTestClient.createCsipResponseSpec(
     source: Source = DPS,
+    user: String = TEST_USER,
     request: CreateCsipRecordRequest,
     prisonNumber: String = "AB123456",
   ) =
@@ -326,16 +465,17 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       .uri("/prisoners/$prisonNumber/csip-records")
       .bodyValue(request)
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI)))
-      .headers(setCsipRequestContext(source = source))
+      .headers(setCsipRequestContext(source = source, username = user))
       .exchange()
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
 
   private fun WebTestClient.createCsip(
     source: Source = DPS,
+    user: String = TEST_USER,
     request: CreateCsipRecordRequest,
     prisonNumber: String = "AB123456",
   ) =
-    createCsipResponseSpec(source, request, prisonNumber)
+    createCsipResponseSpec(source, user, request, prisonNumber)
       .expectStatus().isCreated
       .expectBody(CsipRecord::class.java)
       .returnResult().responseBody!!
