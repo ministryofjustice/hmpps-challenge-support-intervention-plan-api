@@ -35,7 +35,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
+import java.util.UUID
 
 class SaferCustodyScreeningOutcomesIntTest(
   @Autowired private val csipRecordRepository: CsipRecordRepository,
