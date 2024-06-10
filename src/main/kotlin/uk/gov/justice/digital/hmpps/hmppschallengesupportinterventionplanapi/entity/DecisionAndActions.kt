@@ -10,6 +10,7 @@ import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions as DecisionAndActionsModel
 import java.time.LocalDate
 
 @Entity
@@ -59,7 +60,7 @@ data class DecisionAndActions(
 )
 
 fun DecisionAndActions.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions(
+  DecisionAndActionsModel(
     decisionConclusion,
     decisionOutcome.toReferenceDataModel(),
     decisionOutcomeSignedOffBy?.toReferenceDataModel(),

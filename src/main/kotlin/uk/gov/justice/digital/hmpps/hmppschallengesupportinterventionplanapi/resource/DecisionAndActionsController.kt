@@ -73,6 +73,11 @@ class DecisionAndActionsController(
         description = "The CSIP referral associated with this identifier was not found.",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
+      ApiResponse(
+        responseCode = "409",
+        description = "The CSIP referral associated with this identifier already has a decision and actions",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))]
+      )
     ],
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
