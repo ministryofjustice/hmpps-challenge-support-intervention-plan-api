@@ -4,6 +4,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.0"
   kotlin("plugin.spring") version "2.0.0"
   kotlin("plugin.jpa") version "2.0.0"
+  jacoco
 }
 
 configurations {
@@ -35,6 +36,8 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.6.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
   testImplementation("org.testcontainers:localstack:1.19.8")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {
@@ -44,5 +47,16 @@ kotlin {
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
+  }
+}
+
+tasks.named("test") {
+  finalizedBy("jacocoTestReport")
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+  reports {
+    html.required.set(true)
+    xml.required.set(true)
   }
 }
