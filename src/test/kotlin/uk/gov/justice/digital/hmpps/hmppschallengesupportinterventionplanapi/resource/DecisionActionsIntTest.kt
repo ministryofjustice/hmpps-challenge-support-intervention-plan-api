@@ -80,7 +80,7 @@ class DecisionActionsIntTest(
     val request = createDecisionActionsRequest()
 
     val response =
-      webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions").bodyValue(request)
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
         .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(Source.DPS, null))
         .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
 
@@ -99,7 +99,7 @@ class DecisionActionsIntTest(
     val request = createDecisionActionsRequest()
 
     val response =
-      webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions").bodyValue(request)
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
         .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = "UNKNOWN", isUserToken = true))
         .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
         .returnResult().responseBody
