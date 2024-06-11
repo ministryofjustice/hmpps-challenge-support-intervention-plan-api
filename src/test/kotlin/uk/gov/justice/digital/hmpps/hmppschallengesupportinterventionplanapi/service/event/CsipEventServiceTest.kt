@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.toOffsetString
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
@@ -30,7 +31,7 @@ class CsipEventServiceTest {
   @Test
   fun `handle event - publish enabled`() {
     val eventProperties = EventProperties(true, baseUrl)
-    val csipEventService = CsipEventService(eventProperties, telemetryClient, domainEventPublisher)
+    val csipEventService = EntityEventService<CsipEvent>(eventProperties, telemetryClient, domainEventPublisher)
     val csipEvent = csipUpdatedEvent()
 
     csipEventService.handleEvent(csipEvent)
@@ -67,7 +68,7 @@ class CsipEventServiceTest {
   @Test
   fun `handle event - publish disabled`() {
     val eventProperties = EventProperties(false, baseUrl)
-    val csipEventService = CsipEventService(eventProperties, telemetryClient, domainEventPublisher)
+    val csipEventService = EntityEventService<CsipEvent>(eventProperties, telemetryClient, domainEventPublisher)
     val csipEvent = csipUpdatedEvent()
 
     csipEventService.handleEvent(csipEvent)

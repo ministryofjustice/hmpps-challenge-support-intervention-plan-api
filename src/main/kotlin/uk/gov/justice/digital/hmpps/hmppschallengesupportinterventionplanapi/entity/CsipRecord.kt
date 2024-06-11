@@ -12,12 +12,18 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -30,7 +36,7 @@ data class CsipRecord(
   val recordId: Long = 0,
 
   @Column(unique = true, nullable = false)
-  val recordUuid: UUID,
+  val recordUuid: UUID = UUID.randomUUID(),
 
   @Column(nullable = false, length = 10)
   val prisonNumber: String,
@@ -128,5 +134,67 @@ data class CsipRecord(
     this.referral = referral
   }
 
-  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) = apply { registerEvent(entityEvent) }
+  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) =
+    apply { registerEvent(entityEvent) }
+
+  fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
+
+  fun create(
+    createCsipRecordRequest: CreateCsipRecordRequest,
+    csipRequestContext: CsipRequestContext,
+    incidentType: ReferenceData,
+    incidentLocation: ReferenceData,
+    referrerAreaOfWork: ReferenceData,
+    incidentInvolvement: ReferenceData,
+    contributoryFactors: Map<String, ReferenceData>,
+    reason: Reason = Reason.USER,
+    description: String = DomainEventType.CSIP_CREATED.description,
+  ): CsipRecord = apply {
+    referral = createCsipRecordRequest.toInitialReferralEntity(
+      this,
+      csipRequestContext,
+      incidentType,
+      incidentLocation,
+      referrerAreaOfWork,
+      incidentInvolvement,
+    ).apply {
+      createCsipRecordRequest.referral.contributoryFactors.forEach { factor ->
+        this.addContributoryFactor(
+          createRequest = factor,
+          factorType = contributoryFactors[factor.factorTypeCode]!!,
+          actionedAt = createdAt,
+          actionedBy = createdBy,
+          actionedByDisplayName = createdByDisplayName,
+          source = csipRequestContext.source,
+        )
+      }
+    }
+    addAuditEvent(
+      action = AuditEventAction.CREATED,
+      description = "CSIP record created via referral with ${referral!!.contributoryFactors().size} contributory factors",
+      actionedAt = createdAt,
+      actionedBy = createdBy,
+      actionedByCapturedName = createdByDisplayName,
+      source = csipRequestContext.source,
+      reason = reason,
+      activeCaseLoadId = csipRequestContext.activeCaseLoadId,
+      isRecordAffected = true,
+      isReferralAffected = referral != null,
+      isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
+    )
+    registerEntityEvent(
+      CsipCreatedEvent(
+        recordUuid = this.recordUuid,
+        prisonNumber = this.prisonNumber,
+        description = description,
+        occurredAt = createdAt,
+        source = csipRequestContext.source,
+        reason = reason,
+        createdBy = createdBy,
+        isRecordAffected = true,
+        isReferralAffected = referral != null,
+        isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
+      ),
+    )
+  }
 }

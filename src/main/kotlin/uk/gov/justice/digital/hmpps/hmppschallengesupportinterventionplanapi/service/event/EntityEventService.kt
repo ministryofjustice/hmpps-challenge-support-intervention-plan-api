@@ -7,17 +7,17 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
 
 @Service
-class CsipEventService(
+class EntityEventService<T : BaseEntityEvent<*>>(
   private val eventProperties: EventProperties,
   // Will be used for tracking events for metrics
   private val telemetryClient: TelemetryClient,
   private val domainEventPublisher: DomainEventPublisher,
 ) {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  fun handleEvent(event: CsipEvent) {
+  fun handleEvent(event: T) {
     log.info(event.toString())
 
     event.toDomainEvent(eventProperties.baseUrl).run {
@@ -27,11 +27,10 @@ class CsipEventService(
         log.info("$eventType event publishing is disabled")
       }
     }
-
     // TODO: Track event for metrics
   }
 
-  private companion object {
+  protected companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 }

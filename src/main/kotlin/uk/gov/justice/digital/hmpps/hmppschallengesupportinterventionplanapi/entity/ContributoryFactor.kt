@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -19,7 +20,7 @@ data class ContributoryFactor(
   val contributoryFactorId: Long = 0,
 
   @Column(unique = true, nullable = false)
-  val contributoryFactorUuid: UUID,
+  val contributoryFactorUuid: UUID = UUID.randomUUID(),
 
   val comment: String? = null,
 
@@ -40,11 +41,13 @@ data class ContributoryFactor(
   @Column(length = 255)
   val lastModifiedByDisplayName: String? = null,
 
-  @ManyToOne
-  @JoinColumn(name = "record_id")
-  val csipRecord: CsipRecord,
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(
+    name = "record_id",
+    referencedColumnName = "record_id",
+  )
+  val referral: Referral,
 
   @ManyToOne
-  @JoinColumn(name = "reference_data_id", insertable = false, updatable = false)
+  @JoinColumn(name = "contributory_factor_type_id", insertable = false, updatable = false)
   val contributoryFactorType: ReferenceData,
 )

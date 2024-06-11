@@ -6,15 +6,15 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome as ScreeningOutcomeModel
 
-fun SaferCustodyScreeningOutcome.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome(
-    outcome = outcomeType.toReferenceDataModel(),
-    recordedBy = recordedBy,
-    recordedByDisplayName = recordedByDisplayName,
-    date = date,
-    reasonForDecision = reasonForDecision,
-  )
+fun SaferCustodyScreeningOutcome.toModel() = ScreeningOutcomeModel(
+  outcome = outcomeType.toReferenceDataModel(),
+  recordedBy = recordedBy,
+  recordedByDisplayName = recordedByDisplayName,
+  date = date,
+  reasonForDecision = reasonForDecision,
+)
 
 fun CreateSaferCustodyScreeningOutcomeRequest.toCsipRecordEntity(
   referral: Referral,
@@ -24,14 +24,13 @@ fun CreateSaferCustodyScreeningOutcomeRequest.toCsipRecordEntity(
   actionedByDisplayName: String,
   source: Source,
   activeCaseLoadId: String?,
-) =
-  referral.createSaferCustodyScreeningOutcome(
-    outcomeType = outcomeType,
-    date = date,
-    reasonForDecision = reasonForDecision,
-    actionedAt = actionedAt,
-    actionedBy = actionedBy,
-    actionedByDisplayName = actionedByDisplayName,
-    source = source,
-    activeCaseLoadId = activeCaseLoadId,
-  )
+) = referral.createSaferCustodyScreeningOutcome(
+  outcomeType = outcomeType,
+  date = date,
+  reasonForDecision = reasonForDecision,
+  actionedAt = actionedAt,
+  actionedBy = actionedBy,
+  actionedByDisplayName = actionedByDisplayName,
+  source = source,
+  activeCaseLoadId = activeCaseLoadId,
+)

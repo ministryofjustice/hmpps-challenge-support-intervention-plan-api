@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Page
@@ -26,10 +27,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CsipRecordService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -37,7 +41,7 @@ import java.util.UUID
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "1. CSIP Record Controller", description = "Endpoints for CSIP Record operations")
-class CsipRecordsController {
+class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/prisoners/{prisonNumber}/csip-records")
   @Operation(
@@ -128,7 +132,7 @@ class CsipRecordsController {
     @ParameterObject @PageableDefault(sort = ["createdAt"], direction = Direction.DESC) pageable: Pageable,
   ): Page<CsipRecord> = throw NotImplementedError()
 
-  @ResponseStatus(HttpStatus.OK)
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/prisoners/{prisonNumber}/csip-records")
   @Operation(
     summary = "Create a CSIP record for a prisoner.",
@@ -137,7 +141,7 @@ class CsipRecordsController {
   @ApiResponses(
     value = [
       ApiResponse(
-        responseCode = "200",
+        responseCode = "201",
         description = "CSIP record created",
       ),
       ApiResponse(
@@ -157,14 +161,15 @@ class CsipRecordsController {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createCsipRecord(
     @PathVariable @Parameter(
       description = "Prison Number of the prisoner",
       required = true,
     ) prisonNumber: String,
     @Valid @RequestBody createCsipRecordRequest: CreateCsipRecordRequest,
-  ): CsipRecord = throw NotImplementedError()
+    httpRequest: HttpServletRequest,
+  ): CsipRecord = csipRecordService.createCsipRecord(createCsipRecordRequest, prisonNumber, httpRequest.csipRequestContext())
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/csip-records/{recordUuid}")
