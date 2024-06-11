@@ -184,23 +184,6 @@ class DecisionActionsIntTest(
   }
 
   @Test
-  fun `400 bad request - missing Outcome signed off by role code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = null))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
-
-    with(response!!) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code '' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code '' does not exist")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
   fun `400 bad request - CSIP record missing a referral`() {
     val csipRecord = createCsipRecord(withReferral = false)
     val recordUuid = csipRecord.recordUuid
@@ -282,6 +265,38 @@ class DecisionActionsIntTest(
       assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has a Decision and Actions created.")
       assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has a Decision and Actions created.")
       assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `create decision and actions no signed off by role`() {
+    val recordUuid = createCsipRecord().recordUuid
+    val request = createDecisionActionsRequest("CUR", null)
+
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
+        .contentType(MediaType.APPLICATION_JSON).expectBody(DecisionAndActions::class.java)
+        .returnResult().responseBody!!
+
+    // Decisions Actions entry populated with data from request and context
+    with(response) {
+      assertThat(conclusion).isEqualTo(request.conclusion)
+      assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
+      assertThat(outcomeSignedOffByRole).isNull()
+      assertThat(outcomeRecordedBy).isEqualTo(TEST_USER)
+      assertThat(outcomeRecordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(outcomeDate).isEqualTo(LocalDate.now())
+      assertThat(nextSteps).isEqualTo(nextSteps)
+      assertThat(isActionOpenCsipAlert).isEqualTo(false)
+      assertThat(isActionNonAssociationsUpdated).isEqualTo(false)
+      assertThat(isActionObservationBook).isEqualTo(false)
+      assertThat(isActionUnitOrCellMove).isEqualTo(false)
+      assertThat(isActionCsraOrRsraReview).isEqualTo(false)
+      assertThat(isActionServiceReferral).isEqualTo(false)
+      assertThat(isActionSimReferral).isEqualTo(false)
+      assertThat(actionOther).isEqualTo(actionOther)
     }
   }
 

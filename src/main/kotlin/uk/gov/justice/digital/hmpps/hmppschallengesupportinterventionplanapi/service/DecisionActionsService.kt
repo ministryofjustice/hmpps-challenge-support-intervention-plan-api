@@ -25,8 +25,11 @@ class DecisionActionsService(
     context: CsipRequestContext,
   ): DecisionAndActions {
     val decisionOutcome = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
-    val decisionOutcomeSignedOffBy =
-      referenceDataRepository.getOutcomeType(request.outcomeSignedOffByRoleCode.orEmpty())
+    val decisionOutcomeSignedOffBy = if (request.outcomeSignedOffByRoleCode != null) {
+      referenceDataRepository.getOutcomeType(request.outcomeSignedOffByRoleCode)
+    } else {
+      null
+    }
 
     return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
       it.referral?.let { referral ->
