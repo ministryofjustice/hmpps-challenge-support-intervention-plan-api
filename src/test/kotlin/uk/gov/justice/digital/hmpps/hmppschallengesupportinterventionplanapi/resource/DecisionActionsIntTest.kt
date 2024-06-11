@@ -150,6 +150,23 @@ class DecisionActionsIntTest(
   }
 
   @Test
+  fun `400 bad request - inactive Outcome signed off by role code`() {
+    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
+      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "ACC"))
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody
+
+    with(response!!) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'ACC' is inactive")
+      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'ACC' is inactive")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `400 bad request - invalid Outcome signed off by role code`() {
     val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
       .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE"))
@@ -162,6 +179,23 @@ class DecisionActionsIntTest(
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
       assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - missing Outcome signed off by role code`() {
+    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
+      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = null))
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody
+
+    with(response!!) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code '' does not exist")
+      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code '' does not exist")
       assertThat(moreInfo).isNull()
     }
   }
@@ -248,6 +282,48 @@ class DecisionActionsIntTest(
       assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has a Decision and Actions created.")
       assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has a Decision and Actions created.")
       assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `create decision and actions all actions true`() {
+    val recordUuid = createCsipRecord().recordUuid
+    val request = createDecisionActionsRequest(
+        "CUR",
+        "CUR",
+        isActionOpenCsipAlert = true,
+        isActionNonAssociationsUpdated = true,
+        isActionObservationBook = true,
+        isActionUnitOrCellMove = true,
+        isActionCsraOrRsraReview = true,
+        isActionServiceReferral = true,
+        isActionSimReferral = true,
+    )
+
+    val response =
+      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
+        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
+        .contentType(MediaType.APPLICATION_JSON).expectBody(DecisionAndActions::class.java)
+        .returnResult().responseBody!!
+
+    // Decisions Actions entry populated with data from request and context
+    with(response) {
+      assertThat(conclusion).isEqualTo(request.conclusion)
+      assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
+      assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
+      assertThat(outcomeRecordedBy).isEqualTo(TEST_USER)
+      assertThat(outcomeRecordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(outcomeDate).isEqualTo(LocalDate.now())
+      assertThat(nextSteps).isEqualTo(nextSteps)
+      assertThat(isActionOpenCsipAlert).isEqualTo(true)
+      assertThat(isActionNonAssociationsUpdated).isEqualTo(true)
+      assertThat(isActionObservationBook).isEqualTo(true)
+      assertThat(isActionUnitOrCellMove).isEqualTo(true)
+      assertThat(isActionCsraOrRsraReview).isEqualTo(true)
+      assertThat(isActionServiceReferral).isEqualTo(true)
+      assertThat(isActionSimReferral).isEqualTo(true)
+      assertThat(actionOther).isEqualTo(actionOther)
     }
   }
 
@@ -444,7 +520,14 @@ class DecisionActionsIntTest(
 
   private fun createDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
-    outcomeSignedOffByRoleCode: String = "CUR",
+    outcomeSignedOffByRoleCode: String? = "CUR",
+    isActionOpenCsipAlert: Boolean = false,
+    isActionNonAssociationsUpdated: Boolean = false,
+    isActionObservationBook: Boolean = false,
+    isActionUnitOrCellMove: Boolean = false,
+    isActionCsraOrRsraReview: Boolean = false,
+    isActionServiceReferral: Boolean = false,
+    isActionSimReferral: Boolean = false,
   ) = CreateDecisionAndActionsRequest(
     conclusion = null,
     outcomeTypeCode = outcomeTypeCode,
@@ -453,13 +536,13 @@ class DecisionActionsIntTest(
     outcomeRecordedByDisplayName = null,
     outcomeDate = null,
     nextSteps = null,
-    isActionOpenCsipAlert = null,
-    isActionNonAssociationsUpdated = null,
-    isActionObservationBook = null,
-    isActionUnitOrCellMove = null,
-    isActionCsraOrRsraReview = null,
-    isActionServiceReferral = null,
-    isActionSimReferral = null,
+    isActionOpenCsipAlert,
+    isActionNonAssociationsUpdated,
+    isActionObservationBook,
+    isActionUnitOrCellMove,
+    isActionCsraOrRsraReview,
+    isActionServiceReferral,
+    isActionSimReferral,
     actionOther = null,
   )
 }

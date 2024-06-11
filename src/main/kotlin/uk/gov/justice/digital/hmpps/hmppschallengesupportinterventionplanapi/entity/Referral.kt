@@ -107,7 +107,7 @@ data class Referral(
     decisionOutcomeDate: LocalDate?,
     nextSteps: String?,
     actionOther: String?,
-    actionedAt: LocalDateTime = LocalDateTime.now(),
+    actionedAt: LocalDateTime,
     source: Source,
     activeCaseLoadId: String?,
     reason: Reason = Reason.USER,

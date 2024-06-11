@@ -24,7 +24,7 @@ data class CreateDecisionAndActionsRequest(
   @Schema(
     description = "The role of the person making the outcome decision.",
   )
-  @field:Size(min = 1, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
+  @field:Size(min = 0, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
   val outcomeSignedOffByRoleCode: String?,
 
   @Schema(
