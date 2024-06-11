@@ -289,15 +289,15 @@ class DecisionActionsIntTest(
   fun `create decision and actions all actions true`() {
     val recordUuid = createCsipRecord().recordUuid
     val request = createDecisionActionsRequest(
-        "CUR",
-        "CUR",
-        isActionOpenCsipAlert = true,
-        isActionNonAssociationsUpdated = true,
-        isActionObservationBook = true,
-        isActionUnitOrCellMove = true,
-        isActionCsraOrRsraReview = true,
-        isActionServiceReferral = true,
-        isActionSimReferral = true,
+      "CUR",
+      "CUR",
+      isActionOpenCsipAlert = true,
+      isActionNonAssociationsUpdated = true,
+      isActionObservationBook = true,
+      isActionUnitOrCellMove = true,
+      isActionCsraOrRsraReview = true,
+      isActionServiceReferral = true,
+      isActionSimReferral = true,
     )
 
     val response =
