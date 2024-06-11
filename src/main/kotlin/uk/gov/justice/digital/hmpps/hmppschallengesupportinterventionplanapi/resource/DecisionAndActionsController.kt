@@ -76,8 +76,8 @@ class DecisionAndActionsController(
       ApiResponse(
         responseCode = "409",
         description = "The CSIP referral associated with this identifier already has a decision and actions",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))]
-      )
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
     ],
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
