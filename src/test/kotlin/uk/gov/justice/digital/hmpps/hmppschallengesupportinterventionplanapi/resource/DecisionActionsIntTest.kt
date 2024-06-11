@@ -75,6 +75,44 @@ class DecisionActionsIntTest(
   }
 
   @Test
+  fun `400 bad request - username not supplied`() {
+    val recordUuid = createCsipRecord().recordUuid
+    val request = createDecisionActionsRequest()
+
+    val response = webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions")
+      .bodyValue(request)
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(Source.DPS, null))
+      .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+
+    with(response!!) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
+      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - username was not found`() {
+    val recordUuid = createCsipRecord().recordUuid
+    val request = createDecisionActionsRequest()
+
+    val response = webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions")
+      .bodyValue(request)
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = "UNKNOWN", isUserToken = true)).headers(setCsipRequestContext())
+      .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+
+    with(response!!) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: User details for supplied username not found")
+      assertThat(developerMessage).isEqualTo("User details for supplied username not found")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `400 bad request - request body validation failure`() {
     val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
       .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "n".repeat(13)))
