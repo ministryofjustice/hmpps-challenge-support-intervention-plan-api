@@ -79,10 +79,10 @@ class DecisionActionsIntTest(
     val recordUuid = createCsipRecord().recordUuid
     val request = createDecisionActionsRequest()
 
-    val response = webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions")
-      .bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(Source.DPS, null))
-      .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response =
+      webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions").bodyValue(request)
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(Source.DPS, null))
+        .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(400)
@@ -98,10 +98,11 @@ class DecisionActionsIntTest(
     val recordUuid = createCsipRecord().recordUuid
     val request = createDecisionActionsRequest()
 
-    val response = webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions")
-      .bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = "UNKNOWN", isUserToken = true)).headers(setCsipRequestContext())
-      .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response =
+      webTestClient.post().uri("/csip-records/${recordUuid}/referral/decision-and-actions").bodyValue(request)
+        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = "UNKNOWN", isUserToken = true))
+        .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
+        .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(400)
