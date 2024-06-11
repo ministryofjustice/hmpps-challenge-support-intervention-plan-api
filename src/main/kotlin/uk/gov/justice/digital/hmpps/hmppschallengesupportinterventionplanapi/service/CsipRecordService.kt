@@ -13,20 +13,23 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidReferenceCodeType.DOES_NOT_EXIST
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidReferenceCodeType.IS_INACTIVE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidReferenceDataCodeException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.associateByAndHandleException
 
 @Service
+@Transactional
 class CsipRecordService(
   val referenceDataRepository: ReferenceDataRepository,
   val csipRecordRepository: CsipRecordRepository,
   val prisonerSearchClient: PrisonerSearchClient,
 ) {
-
-  @Transactional
   fun createCsipRecord(
     request: CreateCsipRecordRequest,
     prisonNumber: String,
@@ -34,14 +37,20 @@ class CsipRecordService(
   ): CsipRecord {
     val prisoner = prisonerSearchClient.getPrisoner(prisonNumber)
     require(prisoner != null) { "Prisoner with prison number $prisonNumber could not be found" }
-    val incidentType = getReferenceData(INCIDENT_TYPE, request.referral.incidentTypeCode)
-    val incidentLocation = getReferenceData(INCIDENT_LOCATION, request.referral.incidentLocationCode)
-    val referrerAreaOfWork = getReferenceData(AREA_OF_WORK, request.referral.refererAreaCode)
-    val incidentInvolvement = getReferenceData(INCIDENT_INVOLVEMENT, request.referral.incidentInvolvementCode)
+    val incidentType = referenceDataRepository.getReferenceData(INCIDENT_TYPE, request.referral.incidentTypeCode)
+    val incidentLocation =
+      referenceDataRepository.getReferenceData(INCIDENT_LOCATION, request.referral.incidentLocationCode)
+    val referrerAreaOfWork = referenceDataRepository.getReferenceData(AREA_OF_WORK, request.referral.refererAreaCode)
+    val incidentInvolvement =
+      referenceDataRepository.getReferenceData(INCIDENT_INVOLVEMENT, request.referral.incidentInvolvementCode)
 
-    val contributoryFactors: Map<String, ReferenceData> = request.referral.contributoryFactors.let { factors ->
+    val contributoryFactors = request.referral.contributoryFactors.let { factors ->
       val factorTypes = referenceDataRepository.findByDomain(CONTRIBUTORY_FACTOR_TYPE)
-      factors.associateBy({ it.factorTypeCode }, { it.getFactorType(factorTypes) })
+      factors.associateByAndHandleException(
+        { it.factorTypeCode },
+        { it.getFactorType(factorTypes) },
+        InvalidReferenceDataCodeException::combineToIllegalArgumentException,
+      )
     }
 
     val record = request.toCsipRecord(prisonNumber, requestContext).create(
@@ -56,14 +65,14 @@ class CsipRecordService(
     return csipRecordRepository.saveAndFlush(record).toModel()
   }
 
-  private fun getReferenceData(type: ReferenceDataType, code: String) =
-    referenceDataRepository.findByDomainAndCode(type, code)?.also {
+  private fun ReferenceDataRepository.getReferenceData(type: ReferenceDataType, code: String) =
+    findByDomainAndCode(type, code)?.also {
       require(it.isActive()) { "$type code '$code' is inactive" }
     } ?: throw IllegalArgumentException("$type code '$code' does not exist")
 
   private fun CreateContributoryFactorRequest.getFactorType(roles: Collection<ReferenceData>): ReferenceData {
-    return roles.find { it.code.equals(factorTypeCode) }?.also {
-      require(it.isActive()) { "CONTRIBUTORY_FACTOR_TYPE code '$factorTypeCode' is inactive" }
-    } ?: throw IllegalArgumentException("CONTRIBUTORY_FACTOR_TYPE code '$factorTypeCode' does not exist")
+    return roles.find { it.code == factorTypeCode }?.also {
+      if (!it.isActive()) throw InvalidReferenceDataCodeException(IS_INACTIVE, CONTRIBUTORY_FACTOR_TYPE, factorTypeCode)
+    } ?: throw InvalidReferenceDataCodeException(DOES_NOT_EXIST, CONTRIBUTORY_FACTOR_TYPE, factorTypeCode)
   }
 }

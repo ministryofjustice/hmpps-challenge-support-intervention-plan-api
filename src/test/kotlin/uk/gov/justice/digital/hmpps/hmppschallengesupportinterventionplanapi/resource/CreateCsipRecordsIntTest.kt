@@ -279,13 +279,37 @@ class CreateCsipRecordsIntTest(
   }
 
   @Test
+  fun `400 bad request - multiple contributory factor not found`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = listOf("D", "E", "F"),
+    )
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
+      .expectStatus().isBadRequest
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody
+
+    with(response!!) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE code(s) 'D', 'E', 'F' does not exist")
+      assertThat(developerMessage).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code(s) 'D', 'E', 'F' does not exist")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `201 created - CSIP record created via DPS`() {
     val request = createCsipRecordRequest(
       incidentTypeCode = "ATO",
       incidentLocationCode = "EDU",
       refererAreaCode = "ACT",
       incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = "AFL",
+      contributoryFactorTypeCode = listOf("AFL"),
     )
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
@@ -374,7 +398,7 @@ class CreateCsipRecordsIntTest(
       incidentLocationCode = "EDU",
       refererAreaCode = "ACT",
       incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = "AFL",
+      contributoryFactorTypeCode = listOf("AFL"),
     )
 
     val response = webTestClient.createCsipResponseSpec(

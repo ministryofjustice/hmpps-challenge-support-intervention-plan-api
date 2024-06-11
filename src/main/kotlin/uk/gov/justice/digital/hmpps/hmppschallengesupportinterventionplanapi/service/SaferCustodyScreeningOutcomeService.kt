@@ -25,7 +25,7 @@ class SaferCustodyScreeningOutcomeService(
     request: CreateSaferCustodyScreeningOutcomeRequest,
     context: CsipRequestContext,
   ): SaferCustodyScreeningOutcome {
-    val outcomeType = getOutcomeType(request.outcomeTypeCode)
+    val outcomeType = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
 
     return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
       it.referral?.let { referral ->
@@ -44,8 +44,8 @@ class SaferCustodyScreeningOutcomeService(
     } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")
   }
 
-  private fun getOutcomeType(code: String) =
-    referenceDataRepository.findByDomainAndCode(ReferenceDataType.OUTCOME_TYPE, code)?.also {
+  private fun ReferenceDataRepository.getOutcomeType(code: String) =
+    findByDomainAndCode(ReferenceDataType.OUTCOME_TYPE, code)?.also {
       require(it.isActive()) { "OUTCOME_TYPE code '$code' is inactive" }
     } ?: throw IllegalArgumentException("OUTCOME_TYPE code '$code' does not exist")
 }

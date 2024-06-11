@@ -23,7 +23,7 @@ fun createCsipRecordRequest(
   incidentLocationCode: String = "B",
   refererAreaCode: String = "C",
   incidentInvolvementCode: String = "D",
-  contributoryFactorTypeCode: String = "D",
+  contributoryFactorTypeCode: Collection<String> = listOf("D"),
 ) =
   CreateCsipRecordRequest(
     LOG_NUMBER,
@@ -41,7 +41,7 @@ fun createReferralRequest(
   incidentLocationCode: String = "B",
   refererAreaCode: String = "C",
   incidentInvolvementCode: String = "D",
-  contributoryFactorTypeCode: String = "D",
+  contributoryFactorTypeCode: Collection<String> = listOf("D"),
 ) =
   CreateReferralRequest(
     LocalDate.now(),
@@ -60,7 +60,7 @@ fun createReferralRequest(
     "",
     false,
     null,
-    listOf(createContributoryFactorRequest(contributoryFactorTypeCode)),
+    contributoryFactorTypeCode.map { createContributoryFactorRequest(it) },
   )
 
 fun referral(csipRecord: CsipRecord = csipRecord()) =
