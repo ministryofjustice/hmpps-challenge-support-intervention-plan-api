@@ -179,7 +179,7 @@ data class CsipRecord(
       reason = reason,
       activeCaseLoadId = csipRequestContext.activeCaseLoadId,
       isRecordAffected = true,
-      isReferralAffected = referral != null,
+      isReferralAffected = true,
       isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
     )
     registerEntityEvent(
@@ -192,7 +192,7 @@ data class CsipRecord(
         reason = reason,
         createdBy = createdBy,
         isRecordAffected = true,
-        isReferralAffected = referral != null,
+        isReferralAffected = true,
         isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
       ),
     )
