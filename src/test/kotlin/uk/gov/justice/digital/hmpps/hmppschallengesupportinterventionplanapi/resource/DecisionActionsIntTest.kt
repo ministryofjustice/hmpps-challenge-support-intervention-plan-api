@@ -375,7 +375,7 @@ class DecisionActionsIntTest(
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
-      assertThat(action).isEqualTo(AuditEventAction.UPDATED)
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Decision and actions added to referral")
       assertThat(isDecisionAndActionsAffected).isTrue()
       assertThat(isSaferCustodyScreeningOutcomeAffected).isFalse()
@@ -451,7 +451,7 @@ class DecisionActionsIntTest(
 
     // Audit event saved
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
-      assertThat(action).isEqualTo(AuditEventAction.UPDATED)
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Decision and actions added to referral")
       assertThat(isSaferCustodyScreeningOutcomeAffected).isFalse()
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))

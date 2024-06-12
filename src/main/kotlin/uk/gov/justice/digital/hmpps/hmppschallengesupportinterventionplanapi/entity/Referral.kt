@@ -145,7 +145,7 @@ data class Referral(
 
     with(csipRecord) {
       addAuditEvent(
-        action = AuditEventAction.UPDATED,
+        action = AuditEventAction.CREATED,
         description,
         actionedAt,
         actionedBy = decisionOutcomeRecordedBy,
