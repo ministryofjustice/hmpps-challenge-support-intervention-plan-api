@@ -24,7 +24,7 @@ data class CreateDecisionAndActionsRequest(
   @Schema(
     description = "The role of the person making the outcome decision.",
   )
-  @field:Size(min = 1, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
+  @field:Size(min = 0, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
   val outcomeSignedOffByRoleCode: String?,
 
   @Schema(
@@ -55,37 +55,37 @@ data class CreateDecisionAndActionsRequest(
   @Schema(
     description = "If a recommended action is to open a CSIP alert.",
   )
-  val isActionOpenCsipAlert: Boolean?,
+  val isActionOpenCsipAlert: Boolean,
 
   @Schema(
     description = "If a recommended action is to update the non associations for the person.",
   )
-  val isActionNonAssociationsUpdated: Boolean?,
+  val isActionNonAssociationsUpdated: Boolean,
 
   @Schema(
     description = "If a recommended action is to add the person to the observation book.",
   )
-  val isActionObservationBook: Boolean?,
+  val isActionObservationBook: Boolean,
 
   @Schema(
     description = "If a recommended action is to move the person.",
   )
-  val isActionUnitOrCellMove: Boolean?,
+  val isActionUnitOrCellMove: Boolean,
 
   @Schema(
     description = "If a recommended action is to perform a CSRA/RSRA review.",
   )
-  val isActionCsraOrRsraReview: Boolean?,
+  val isActionCsraOrRsraReview: Boolean,
 
   @Schema(
     description = "If a recommended action is to refer the person to another service.",
   )
-  val isActionServiceReferral: Boolean?,
+  val isActionServiceReferral: Boolean,
 
   @Schema(
     description = "If a recommended action is to refer the person to SIM.",
   )
-  val isActionSimReferral: Boolean?,
+  val isActionSimReferral: Boolean,
 
   @Schema(
     description = "Any other actions that are recommended to be considered.",

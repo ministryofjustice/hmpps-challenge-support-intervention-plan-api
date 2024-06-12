@@ -11,3 +11,8 @@ interface ReferenceDataRepository : JpaRepository<ReferenceData, Long> {
 
   fun findByDomainAndCode(domain: ReferenceDataType, code: String): ReferenceData?
 }
+
+fun ReferenceDataRepository.getOutcomeType(code: String) =
+  findByDomainAndCode(ReferenceDataType.OUTCOME_TYPE, code)?.also {
+    require(it.isActive()) { "OUTCOME_TYPE code '$code' is inactive" }
+  } ?: throw IllegalArgumentException("OUTCOME_TYPE code '$code' does not exist")
