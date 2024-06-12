@@ -42,19 +42,19 @@ data class DecisionAndActions(
 
   @Column(length = 4000) val nextSteps: String?,
 
-  @Column(nullable = false) val actionOpenCsipAlert: Boolean? = false,
+  @Column(nullable = false) val actionOpenCsipAlert: Boolean = false,
 
-  @Column(nullable = false) val actionNonAssociationsUpdated: Boolean? = false,
+  @Column(nullable = false) val actionNonAssociationsUpdated: Boolean = false,
 
-  @Column(nullable = false) val actionObservationBook: Boolean? = false,
+  @Column(nullable = false) val actionObservationBook: Boolean = false,
 
-  @Column(nullable = false) val actionUnitOrCellMove: Boolean? = false,
+  @Column(nullable = false) val actionUnitOrCellMove: Boolean = false,
 
-  @Column(nullable = false) val actionCsraOrRsraReview: Boolean? = false,
+  @Column(nullable = false) val actionCsraOrRsraReview: Boolean = false,
 
-  @Column(nullable = false) val actionServiceReferral: Boolean? = false,
+  @Column(nullable = false) val actionServiceReferral: Boolean = false,
 
-  @Column(nullable = false) val actionSimReferral: Boolean? = false,
+  @Column(nullable = false) val actionSimReferral: Boolean = false,
 
   @Column(length = 4000) val actionOther: String?,
 )
