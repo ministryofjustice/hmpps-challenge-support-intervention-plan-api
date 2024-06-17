@@ -35,7 +35,8 @@ erDiagram
     }
 
     referral {
-        bigserial record_id PK "not null. Shared primary key with csip_record"
+        bigserial referral_id PK "not null"
+        bigserial record_id FK "not null. FK to csip_record"
         date incident_date "not null. The date the incident that motivated the CSIP referral occurred. Maps to RFR_INCIDENT_DATE"
         time incident_time "The time the incident that motivated the CSIP referral occurred. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME"
         int incident_type_id FK "not null. FK to reference_data. The type of incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE"
@@ -62,7 +63,7 @@ erDiagram
     contributory_factor {
         bigserial contributory_factor_id PK "not null"
         uuid contributory_factor_uuid "not null unique. Mapped to OFFENDER_CSIP_FACTORS"
-        bigserial record_id FK "not null"
+        bigserial referral_id FK "not null"
         bigserial contributory_factor_type_id FK "not null. FK to reference_data. The type of contributory factor to the incident or motivation for CSIP referral. Mapped to OFFENDER_CSIP_FACTORS.CSIP_FACTOR"
         text comment "Additional information about the contributory factor to the incident or motivation for CSIP referral. Maps to OFFENDER_CSIP_FACTORS.COMMENTS"
         timestamp created_at "not null. The date and time the contributory factor was created. Maps to OFFENDER_CSIP_FACTORS.CREATE_DATETIME"
@@ -74,7 +75,8 @@ erDiagram
     }
 
     safer_custody_screening_outcome {
-        bigserial record_id PK "not null. Shared primary key with csip_record"
+        bigserial safer_custody_screening_outcome_id PK "not null."
+        bigserial record_id FK "not null. FK to csip_record"
         int outcome_id "not null. FK to reference_data. The type of outcome of the safer custody screening. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME"
         varchar(100) recorded_by "not null. The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY"
         varchar(255) recorded_by_display_name "not null. The displayable name of the user who recorded the safer custody screening outcome. Not mapped"
@@ -83,7 +85,8 @@ erDiagram
     }
 
     investigation {
-        bigserial record_id PK "not null. Shared primary key with csip_record"
+        bigserial investigation_id PK "not null."
+        bigserial record_id FK "not null. FK to csip_record"
         text staff_involved "The names of the staff involved in the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_STAFF_INVOLVED. 4000 character limit"
         text evidence_secured "Any evidence that was secured as part of the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_EVIDENCE_SECURED. 4000 character limit"
         text occurrence_reason "The reasons why the incident occurred. Maps to OFFENDER_CSIP_REPORTS.INV_OCCURRENCE_REASON. 4000 character limit"
@@ -95,7 +98,7 @@ erDiagram
     interview {
         bigserial interview_id PK "not null"
         uuid interview_uuid "not null unique. Mapped to OFFENDER_CSIP_INTVW"
-        bigserial record_id FK "not null"
+        bigserial investigation_id FK "not null"
         varchar(100) interviewee "not null. Name of the person being interviewed. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE"
         date interview_date "not null. The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE"
         int interviewee_role_id FK "not null. FK to reference_data. What role the interviewee played in the incident or referral. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE"
@@ -108,8 +111,9 @@ erDiagram
         varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the interview. Not mapped"
     }
 
-    decisions_and_actions {
-        bigserial record_id PK "not null. Shared primary key with csip_record"
+    decision_and_actions {
+        bigserial decision_and_actions_id PK "not null."
+        bigserial record_id FK "not null. FK to csip_record"
         text decision_conclusion "The conclusion of the referral and reasons for the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_CONCLUSION. 4000 character limit"
         int decision_outcome_id "not null. FK to reference_data. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME"
         int decision_outcome_signed_off_by_role_id "FK to reference_data. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY"
@@ -128,7 +132,8 @@ erDiagram
     }
 
     plan {
-        bigserial record_id PK "not null. Shared primary key with csip_record"
+        bigserial plan_id PK "not null."
+        bigserial record_id FK "not null. FK to csip_record"
         varchar(100) case_manager "not null. The case manager assigned to the CSIP plan. Maps to OFFENDER_CSIP_REPORTS.CASE_MANAGER"
         varchar(240) reason_for_plan "not null. The reasons motivating the creation of a CSIP plan. Maps to OFFENDER_CSIP_REPORTS.REASON"
         date first_case_review_date "not null. The first date the CSIP plan should be reviewed. Maps to OFFENDER_CSIP_REPORTS.CASE_REV_DATE"
@@ -137,7 +142,7 @@ erDiagram
     identified_need {
         bigserial identified_need_id PK "not null"
         uuid identified_need_uuid "not null unique. Mapped to OFFENDER_CSIP_PLANS"
-        bigserial record_id FK "not null"
+        bigserial plan_id FK "not null"
         text identified_need "not null. Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED. 1000 character limit"
         varchar(100) need_identified_by "not null. The name of the person who identified the need. Maps to OFFENDER_CSIP_PLANS.BY_WHOM. Who identified the need (free text)"
         date created_date "not null. The date the need was identified. Maps to OFFENDER_CSIP_PLANS.CREATE_DATE. Date the need was identified"
@@ -156,7 +161,7 @@ erDiagram
     review {
         bigserial review_id PK "not null"
         uuid review_uuid "not null unique. Mapped to OFFENDER_CSIP_REVIEWS"
-        bigserial record_id FK "not null"
+        bigserial plan_id FK "not null"
         int review_sequence "not null. The review number. Maps to OFFENDER_CSIP_REVIEWS.REVIEW_SEQ"
         date review_date "The date of the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATE"
         varchar(32) recorded_by "not null. The username of the person who recorded the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_USER"
