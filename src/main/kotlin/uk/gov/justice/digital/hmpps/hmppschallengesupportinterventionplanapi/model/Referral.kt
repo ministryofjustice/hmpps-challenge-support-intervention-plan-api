@@ -69,17 +69,17 @@ data class Referral(
   @Schema(
     description = "The type of involvement the person had in the incident",
   )
-  val incidentInvolvement: ReferenceData,
+  val incidentInvolvement: ReferenceData?,
 
   @Schema(
     description = "The reasons why there is cause for concern.",
   )
-  val descriptionOfConcern: String,
+  val descriptionOfConcern: String?,
 
   @Schema(
     description = "The reasons already known about the causes of the incident or motivation for CSIP referral.",
   )
-  val knownReasons: String,
+  val knownReasons: String?,
 
   @Schema(
     description = "Any other information about the incident or reasons for CSIP referral.",

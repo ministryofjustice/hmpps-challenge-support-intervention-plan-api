@@ -13,6 +13,15 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
   }
 
   @Test
+  fun `valid request with null logNumber`() {
+    val request = UpdateCsipRecordRequest(
+      logNumber = null,
+
+    )
+    assertThat(validator.validate(request)).isEmpty()
+  }
+
+  @Test
   fun `validation fails if size constraints are not met`() {
     val request = UpdateCsipRecordRequest(
       logNumber = "n".repeat(11),

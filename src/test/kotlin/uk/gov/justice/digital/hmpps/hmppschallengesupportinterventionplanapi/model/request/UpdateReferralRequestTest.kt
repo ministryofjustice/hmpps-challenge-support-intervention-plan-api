@@ -29,6 +29,29 @@ class UpdateReferralRequestTest : RequestValidationTest() {
   }
 
   @Test
+  fun `valid request with incident fields null`() {
+    val request = UpdateReferralRequest(
+      incidentDate = LocalDate.now(),
+      incidentTime = null,
+      incidentTypeCode = "wisi",
+      incidentLocationCode = "fugit",
+      referredBy = "sociosqu",
+      refererAreaCode = "eu",
+      referralSummary = null,
+      isProactiveReferral = null,
+      isStaffAssaulted = null,
+      assaultedStaffName = null,
+      incidentInvolvementCode = null,
+      descriptionOfConcern = null,
+      knownReasons = null,
+      otherInformation = null,
+      isSaferCustodyTeamInformed = null,
+      isReferralComplete = null,
+    )
+    assertThat(validator.validate(request)).isEmpty()
+  }
+
+  @Test
   fun `validation fails if size constraints are not met`() {
     val request = UpdateReferralRequest(
       incidentDate = LocalDate.now(),

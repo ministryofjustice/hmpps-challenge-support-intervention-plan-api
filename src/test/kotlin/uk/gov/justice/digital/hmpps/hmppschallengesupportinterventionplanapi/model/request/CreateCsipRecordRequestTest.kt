@@ -71,6 +71,38 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
   }
 
   @Test
+  fun `Log number can be null`() {
+    val request = CreateCsipRecordRequest(
+      logNumber = null,
+      referral = CreateReferralRequest(
+        incidentDate = LocalDate.now(),
+        incidentTime = LocalTime.now(),
+        incidentTypeCode = "idque",
+        incidentLocationCode = "ridiculus",
+        referredBy = "maximus",
+        refererAreaCode = "intellegat",
+        referralSummary = null,
+        isProactiveReferral = null,
+        isStaffAssaulted = null,
+        assaultedStaffName = null,
+        incidentInvolvementCode = "vidisse",
+        descriptionOfConcern = "molestie",
+        knownReasons = "dicat",
+        otherInformation = null,
+        isSaferCustodyTeamInformed = null,
+        isReferralComplete = null,
+        contributoryFactors = listOf(
+          CreateContributoryFactorRequest(
+            factorTypeCode = "pericula",
+            comment = null,
+          ),
+        ),
+      ),
+    )
+    assertThat(validator.validate(request)).isEmpty()
+  }
+
+  @Test
   fun `child nested object validation`() {
     val request = CreateCsipRecordRequest(
       logNumber = "na",

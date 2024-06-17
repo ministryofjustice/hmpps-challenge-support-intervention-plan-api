@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.incidentInvolvement
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -389,6 +390,35 @@ class CreateCsipRecordsIntTest(
         contributoryFactoryDomainEvent.occurredAt,
       ),
     )
+  }
+
+  @Test
+  fun `201 created - CSIP record created via DPS with empty incident involvement`() {
+    val request = createCsipRecordRequest(incidentInvolvementCode = null)
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
+      .expectStatus().isCreated
+      .expectBody(CsipRecord::class.java)
+      .returnResult().responseBody
+
+    with(response!!) {
+      assertThat(referral).isNotNull()
+      assertThat(referral.incidentInvolvement).isNull()
+    }
+
+    with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
+      assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
+      assertThat(isRecordAffected).isTrue()
+      assertThat(isReferralAffected).isTrue()
+      assertThat(isContributoryFactorAffected).isTrue()
+      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(actionedBy).isEqualTo(TEST_USER)
+      assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
+      assertThat(source).isEqualTo(DPS)
+      assertThat(reason).isEqualTo(Reason.USER)
+      assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
+    }
   }
 
   @Test

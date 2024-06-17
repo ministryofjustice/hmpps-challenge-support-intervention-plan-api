@@ -22,7 +22,7 @@ fun createCsipRecordRequest(
   incidentTypeCode: String = "A",
   incidentLocationCode: String = "B",
   refererAreaCode: String = "C",
-  incidentInvolvementCode: String = "D",
+  incidentInvolvementCode: String? = "D",
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
 ) =
   CreateCsipRecordRequest(
@@ -40,7 +40,7 @@ fun createReferralRequest(
   incidentTypeCode: String = "A",
   incidentLocationCode: String = "B",
   refererAreaCode: String = "C",
-  incidentInvolvementCode: String = "D",
+  incidentInvolvementCode: String? = "D",
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
 ) =
   CreateReferralRequest(
