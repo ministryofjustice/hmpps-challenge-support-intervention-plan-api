@@ -26,7 +26,7 @@ fun createCsipRecordRequest(
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
   logNumber: String? = LOG_NUMBER,
 ) = CreateCsipRecordRequest(
-  LOG_NUMBER,
+  logNumber,
   createReferralRequest(
     incidentTypeCode,
     incidentLocationCode,
