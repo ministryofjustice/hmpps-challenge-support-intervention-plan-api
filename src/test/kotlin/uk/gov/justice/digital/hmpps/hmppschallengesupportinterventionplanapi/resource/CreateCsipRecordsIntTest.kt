@@ -349,8 +349,9 @@ class CreateCsipRecordsIntTest(
       incidentTypeCode = "ATO",
       incidentLocationCode = "EDU",
       refererAreaCode = "ACT",
-      incidentInvolvementCode = null,
+      incidentInvolvementCode = "OTH",
       contributoryFactorTypeCode = listOf("AFL"),
+      logNumber = null
     )
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
