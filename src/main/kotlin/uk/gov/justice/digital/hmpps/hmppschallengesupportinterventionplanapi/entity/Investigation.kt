@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.MapsId
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
@@ -20,9 +22,14 @@ import java.time.LocalDateTime
 @Entity
 @Table
 data class Investigation(
-  @Id @MapsId("record_id") @OneToOne(fetch = FetchType.LAZY) @JoinColumn(
-    name = "record_id",
-    referencedColumnName = "record_id",
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "investigation_id")
+  val investigationId: Long = 0,
+
+  @OneToOne(fetch = FetchType.LAZY) @JoinColumn(
+    name = "referral_id",
+    referencedColumnName = "referral_id",
   ) val referral: Referral,
 
   var staffInvolved: String?,

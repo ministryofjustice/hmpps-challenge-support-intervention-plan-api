@@ -3,10 +3,11 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import java.time.LocalDate
@@ -15,11 +16,14 @@ import java.time.LocalDate
 @Table
 data class SaferCustodyScreeningOutcome(
   @Id
-  @MapsId("record_id")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "safer_custody_screening_outcome_id")
+  val saferCustodyScreeningOutcomeId: Long = 0,
+
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(
-    name = "record_id",
-    referencedColumnName = "record_id",
+    name = "referral_id",
+    referencedColumnName = "referral_id",
   ) val referral: Referral,
 
   @ManyToOne

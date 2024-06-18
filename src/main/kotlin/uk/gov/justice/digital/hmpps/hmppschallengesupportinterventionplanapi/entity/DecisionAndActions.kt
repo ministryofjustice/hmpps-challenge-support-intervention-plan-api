@@ -3,10 +3,11 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
@@ -16,9 +17,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 @Entity
 @Table
 data class DecisionAndActions(
-  @Id @MapsId("record_id") @OneToOne(fetch = FetchType.LAZY) @JoinColumn(
-    name = "record_id",
-    referencedColumnName = "record_id",
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "decision_and_actions_id")
+  val decisionAndActionsId: Long = 0,
+
+  @OneToOne(fetch = FetchType.LAZY) @JoinColumn(
+    name = "referral_id",
+    referencedColumnName = "referral_id",
   ) val referral: Referral,
 
   @ManyToOne @JoinColumn(

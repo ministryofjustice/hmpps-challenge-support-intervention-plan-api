@@ -42,8 +42,8 @@ data class ContributoryFactor(
   val lastModifiedByDisplayName: String? = null,
 
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(
-    name = "record_id",
-    referencedColumnName = "record_id",
+    name = "referral_id",
+    referencedColumnName = "referral_id",
   )
   val referral: Referral,
 
