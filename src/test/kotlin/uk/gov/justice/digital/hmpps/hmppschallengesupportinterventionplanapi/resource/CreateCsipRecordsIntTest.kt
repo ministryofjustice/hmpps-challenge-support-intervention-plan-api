@@ -344,7 +344,7 @@ class CreateCsipRecordsIntTest(
   }
 
   @Test
-  fun `201 created - CSIP record created via DPS with empty incident involvement`() {
+  fun `201 created - CSIP record created via DPS with empty logNumber`() {
     val request = createCsipRecordRequest(
       incidentTypeCode = "ATO",
       incidentLocationCode = "EDU",
