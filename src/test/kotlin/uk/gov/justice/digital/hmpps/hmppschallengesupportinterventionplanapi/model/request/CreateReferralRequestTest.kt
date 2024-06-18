@@ -36,6 +36,35 @@ class CreateReferralRequestTest : RequestValidationTest() {
   }
 
   @Test
+  fun `valid request with incident fields null`() {
+    val request = CreateReferralRequest(
+      incidentDate = LocalDate.now(),
+      incidentTime = LocalTime.now(),
+      incidentTypeCode = "idque",
+      incidentLocationCode = "ridiculus",
+      referredBy = "maximus",
+      refererAreaCode = "intellegat",
+      referralSummary = null,
+      isProactiveReferral = null,
+      isStaffAssaulted = null,
+      assaultedStaffName = null,
+      incidentInvolvementCode = null,
+      descriptionOfConcern = null,
+      knownReasons = null,
+      otherInformation = null,
+      isSaferCustodyTeamInformed = null,
+      isReferralComplete = null,
+      contributoryFactors = listOf(
+        CreateContributoryFactorRequest(
+          factorTypeCode = "pericula",
+          comment = null,
+        ),
+      ),
+    )
+    assertThat(validator.validate(request)).isEmpty()
+  }
+
+  @Test
   fun `validation fails if size constraints are not met`() {
     val request = CreateReferralRequest(
       incidentDate = LocalDate.now(),

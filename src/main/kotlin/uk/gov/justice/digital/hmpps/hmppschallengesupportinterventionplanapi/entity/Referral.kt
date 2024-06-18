@@ -53,9 +53,9 @@ data class Referral(
 
   @Column val releaseDate: LocalDate? = null,
 
-  @Column(nullable = false) val descriptionOfConcern: String,
+  @Column val descriptionOfConcern: String?,
 
-  @Column(nullable = false) val knownReasons: String,
+  @Column val knownReasons: String?,
 
   @Column val otherInformation: String? = null,
 
@@ -87,7 +87,7 @@ data class Referral(
   @ManyToOne @JoinColumn(
     name = "incident_involvement_id",
     referencedColumnName = "reference_Data_id",
-  ) val incidentInvolvement: ReferenceData,
+  ) val incidentInvolvement: ReferenceData?,
 ) : AbstractAggregateRoot<Referral>() {
   @OneToOne(
     mappedBy = "referral",
