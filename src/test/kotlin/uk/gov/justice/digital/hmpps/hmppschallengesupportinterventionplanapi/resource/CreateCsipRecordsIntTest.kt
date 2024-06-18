@@ -345,7 +345,13 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `201 created - CSIP record created via DPS with empty incident involvement`() {
-    val request = createCsipRecordRequest(incidentInvolvementCode = null)
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = null,
+      contributoryFactorTypeCode = listOf("AFL"),
+    )
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
       .expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody
