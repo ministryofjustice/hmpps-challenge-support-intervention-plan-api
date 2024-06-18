@@ -15,8 +15,8 @@ CREATE INDEX idx_investigation_record_id ON investigation(record_id);
 CREATE INDEX idx_interview_record_id ON interview(record_id);
 CREATE INDEX idx_interview_interviewee_role_id ON interview(interviewee_role_id);
 
-CREATE INDEX idx_decisions_and_actions_decision_outcome_id ON decisions_and_actions(decision_outcome_id);
-CREATE INDEX idx_decisions_and_actions_decision_outcome_signed_off_role_id ON decisions_and_actions(decision_outcome_signed_off_by_role_id);
+CREATE INDEX idx_decision_and_actions_decision_outcome_id ON decision_and_actions(decision_outcome_id);
+CREATE INDEX idx_decision_and_actions_decision_outcome_signed_off_role_id ON decision_and_actions(decision_outcome_signed_off_by_role_id);
 
 CREATE INDEX idx_plan_record_id ON plan(record_id);
 

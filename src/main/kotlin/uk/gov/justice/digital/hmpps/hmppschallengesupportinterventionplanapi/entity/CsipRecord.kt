@@ -145,7 +145,7 @@ data class CsipRecord(
     incidentType: ReferenceData,
     incidentLocation: ReferenceData,
     referrerAreaOfWork: ReferenceData,
-    incidentInvolvement: ReferenceData,
+    incidentInvolvement: ReferenceData?,
     contributoryFactors: Map<String, ReferenceData>,
     reason: Reason = Reason.USER,
     description: String = DomainEventType.CSIP_CREATED.description,

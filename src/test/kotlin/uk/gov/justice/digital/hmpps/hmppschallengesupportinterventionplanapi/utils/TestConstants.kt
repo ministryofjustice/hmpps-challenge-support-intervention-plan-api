@@ -22,68 +22,66 @@ fun createCsipRecordRequest(
   incidentTypeCode: String = "A",
   incidentLocationCode: String = "B",
   refererAreaCode: String = "C",
-  incidentInvolvementCode: String = "D",
+  incidentInvolvementCode: String? = "D",
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
-) =
-  CreateCsipRecordRequest(
-    LOG_NUMBER,
-    createReferralRequest(
-      incidentTypeCode,
-      incidentLocationCode,
-      refererAreaCode,
-      incidentInvolvementCode,
-      contributoryFactorTypeCode,
-    ),
-  )
+  logNumber: String? = LOG_NUMBER,
+) = CreateCsipRecordRequest(
+  logNumber,
+  createReferralRequest(
+    incidentTypeCode,
+    incidentLocationCode,
+    refererAreaCode,
+    incidentInvolvementCode,
+    contributoryFactorTypeCode,
+  ),
+)
 
 fun createReferralRequest(
   incidentTypeCode: String = "A",
   incidentLocationCode: String = "B",
   refererAreaCode: String = "C",
-  incidentInvolvementCode: String = "D",
+  incidentInvolvementCode: String? = "D",
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
-) =
-  CreateReferralRequest(
-    LocalDate.now(),
-    LocalTime.now(),
-    incidentTypeCode,
-    incidentLocationCode,
-    "REFERRER",
-    refererAreaCode,
-    "summary",
-    false,
-    false,
-    "",
-    incidentInvolvementCode,
-    "concern description",
-    "known reasons",
-    "",
-    false,
-    null,
-    contributoryFactorTypeCode.map { createContributoryFactorRequest(it) },
-  )
+) = CreateReferralRequest(
+  LocalDate.now(),
+  LocalTime.now(),
+  incidentTypeCode,
+  incidentLocationCode,
+  "REFERRER",
+  refererAreaCode,
+  "summary",
+  false,
+  false,
+  "",
+  incidentInvolvementCode,
+  "concern description",
+  "known reasons",
+  "",
+  false,
+  null,
+  contributoryFactorTypeCode.map { createContributoryFactorRequest(it) },
+)
 
-fun referral(csipRecord: CsipRecord = csipRecord()) =
-  createCsipRecordRequest().toInitialReferralEntity(
-    csipRecord,
-    csipRequestContext(),
-    incidentType(),
-    incidentLocation(),
-    areaOfWork(),
-    incidentInvolvement(),
-  ).apply {
-    addContributoryFactor(
-      createRequest = CreateContributoryFactorRequest(
-        factorTypeCode = "D",
-        comment = "comment",
-      ),
-      factorType = contributoryFactorType(),
-      actionedAt = LocalDateTime.now(),
-      actionedBy = TEST_USER,
-      actionedByDisplayName = TEST_USER_NAME,
-      source = Source.DPS,
-    )
-  }
+fun referral(csipRecord: CsipRecord = csipRecord()) = createCsipRecordRequest().toInitialReferralEntity(
+  csipRecord,
+  csipRequestContext(),
+  incidentType(),
+  incidentLocation(),
+  areaOfWork(),
+  incidentInvolvement(),
+).apply {
+  addContributoryFactor(
+    createRequest = CreateContributoryFactorRequest(
+      factorTypeCode = "D",
+      comment = "comment",
+    ),
+    factorType = contributoryFactorType(),
+    actionedAt = LocalDateTime.now(),
+    actionedBy = TEST_USER,
+    actionedByDisplayName = TEST_USER_NAME,
+    source = Source.DPS,
+  )
+}
 
 fun createContributoryFactorRequest(factorTypeCode: String = "D") =
   CreateContributoryFactorRequest(factorTypeCode, "comment")
@@ -91,74 +89,67 @@ fun createContributoryFactorRequest(factorTypeCode: String = "D") =
 fun csipRequestContext() =
   CsipRequestContext(username = "USERNAME", userDisplayName = "USER DISPLAY NAME", activeCaseLoadId = PRISON_NUMBER)
 
-fun prisoner() =
-  PrisonerDto(
-    prisonerNumber = PRISON_NUMBER,
-    bookingId = 1234,
-    "First",
-    "Middle",
-    "Last",
-    LocalDate.of(1988, 4, 3),
-  )
+fun prisoner() = PrisonerDto(
+  prisonerNumber = PRISON_NUMBER,
+  bookingId = 1234,
+  "First",
+  "Middle",
+  "Last",
+  LocalDate.of(1988, 4, 3),
+)
 
-fun incidentType() =
-  ReferenceData(
-    domain = ReferenceDataType.INCIDENT_TYPE,
-    code = "A",
-    description = "incident type",
-    listSequence = 1,
-    createdAt = LocalDateTime.now(),
-    createdBy = "USER",
-  )
+fun incidentType() = ReferenceData(
+  domain = ReferenceDataType.INCIDENT_TYPE,
+  code = "A",
+  description = "incident type",
+  listSequence = 1,
+  createdAt = LocalDateTime.now(),
+  createdBy = "USER",
+)
 
-fun incidentLocation() =
-  ReferenceData(
-    domain = ReferenceDataType.INCIDENT_LOCATION,
-    code = "B",
-    description = "incident location",
-    listSequence = 1,
-    createdAt = LocalDateTime.now(),
-    createdBy = "USER",
-  )
+fun incidentLocation() = ReferenceData(
+  domain = ReferenceDataType.INCIDENT_LOCATION,
+  code = "B",
+  description = "incident location",
+  listSequence = 1,
+  createdAt = LocalDateTime.now(),
+  createdBy = "USER",
+)
 
-fun areaOfWork() =
-  ReferenceData(
-    domain = ReferenceDataType.AREA_OF_WORK,
-    code = "C",
-    description = "area of work",
-    listSequence = 1,
-    createdAt = LocalDateTime.now(),
-    createdBy = "USER",
-  )
+fun areaOfWork() = ReferenceData(
+  domain = ReferenceDataType.AREA_OF_WORK,
+  code = "C",
+  description = "area of work",
+  listSequence = 1,
+  createdAt = LocalDateTime.now(),
+  createdBy = "USER",
+)
 
-fun incidentInvolvement() =
-  ReferenceData(
-    domain = ReferenceDataType.INCIDENT_INVOLVEMENT,
-    code = "B",
-    description = "incident involvement",
-    listSequence = 1,
-    createdAt = LocalDateTime.now(),
-    createdBy = "USER",
-  )
+fun incidentInvolvement() = ReferenceData(
+  domain = ReferenceDataType.INCIDENT_INVOLVEMENT,
+  code = "B",
+  description = "incident involvement",
+  listSequence = 1,
+  createdAt = LocalDateTime.now(),
+  createdBy = "USER",
+)
 
-fun contributoryFactorType() =
-  ReferenceData(
-    domain = ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
-    code = "D",
-    description = "contributory factor type",
-    listSequence = 1,
-    createdAt = LocalDateTime.now(),
-    createdBy = "USER",
-  )
+fun contributoryFactorType() = ReferenceData(
+  domain = ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
+  code = "D",
+  description = "contributory factor type",
+  listSequence = 1,
+  createdAt = LocalDateTime.now(),
+  createdBy = "USER",
+)
 
-fun contributoryFactor() =
-  ContributoryFactor(
-    contributoryFactorType = contributoryFactorType(),
-    referral = referral(),
-    createdAt = LocalDateTime.now(),
-    createdBy = "USER",
-    createdByDisplayName = "USER DISPLAY NAME",
-  )
+fun contributoryFactor() = ContributoryFactor(
+  contributoryFactorType = contributoryFactorType(),
+  referral = referral(),
+  createdAt = LocalDateTime.now(),
+  createdBy = "USER",
+  createdByDisplayName = "USER DISPLAY NAME",
+)
 
 fun csipRecord(): CsipRecord {
   val csipRecord = CsipRecord(

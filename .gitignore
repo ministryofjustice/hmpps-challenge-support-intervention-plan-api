@@ -6,6 +6,7 @@
 .idea/
 .gradle/
 build/
+codecov_reports/
 
 # CMake
 cmake-build-debug/

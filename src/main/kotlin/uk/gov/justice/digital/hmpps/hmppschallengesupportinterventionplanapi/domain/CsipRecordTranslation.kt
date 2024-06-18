@@ -27,7 +27,7 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
   incidentType: ReferenceData,
   incidentLocation: ReferenceData,
   referrerAreaOfWork: ReferenceData,
-  incidentInvolvement: ReferenceData,
+  incidentInvolvement: ReferenceData?,
 ) =
   Referral(
     csipRecord = csipRecord,
@@ -68,7 +68,7 @@ fun Referral.toModel() =
     incidentTime = incidentTime,
     incidentType = incidentType.toReferenceDataModel(),
     incidentLocation = incidentLocation.toReferenceDataModel(),
-    incidentInvolvement = incidentInvolvement.toReferenceDataModel(),
+    incidentInvolvement = incidentInvolvement?.toReferenceDataModel(),
     refererArea = refererAreaOfWork.toReferenceDataModel(),
     referredBy = referredBy,
     referralSummary = referralSummary,

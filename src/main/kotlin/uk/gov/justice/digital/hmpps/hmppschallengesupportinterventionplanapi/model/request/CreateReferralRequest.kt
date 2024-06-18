@@ -77,17 +77,17 @@ data class CreateReferralRequest(
     description = "The type of involvement the person had in the incident",
   )
   @field:Size(min = 1, max = 12, message = "Involvement code must be <= 12 characters")
-  val incidentInvolvementCode: String,
+  val incidentInvolvementCode: String?,
 
   @Schema(
     description = "The reasons why there is cause for concern.",
   )
-  val descriptionOfConcern: String,
+  val descriptionOfConcern: String?,
 
   @Schema(
     description = "The reasons already known about the causes of the incident or motivation for CSIP referral.",
   )
-  val knownReasons: String,
+  val knownReasons: String?,
 
   @Schema(
     description = "Any other information about the incident or reasons for CSIP referral.",
