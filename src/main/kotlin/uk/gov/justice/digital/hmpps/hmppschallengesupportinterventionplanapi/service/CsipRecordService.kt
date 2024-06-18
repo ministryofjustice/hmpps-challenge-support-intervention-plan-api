@@ -43,8 +43,8 @@ class CsipRecordService(
     val referrerAreaOfWork = referenceDataRepository.getReferenceData(AREA_OF_WORK, request.referral.refererAreaCode)
     val incidentInvolvement = request.referral.incidentInvolvementCode?.let {
       referenceDataRepository.getReferenceData(
-          INCIDENT_INVOLVEMENT,
-          it,
+        INCIDENT_INVOLVEMENT,
+        it,
       )
     }
 
