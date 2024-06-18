@@ -21,8 +21,8 @@ data class Interview(
   @Column(unique = true, nullable = false) val interviewUuid: UUID = UUID.randomUUID(),
 
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(
-    name = "record_id",
-    referencedColumnName = "record_id",
+    name = "investigation_id",
+    referencedColumnName = "investigation_id",
   ) val investigation: Investigation,
 
   @Column(length = 100)

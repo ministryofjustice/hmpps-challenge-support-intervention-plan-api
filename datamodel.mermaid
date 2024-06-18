@@ -76,7 +76,7 @@ erDiagram
 
     safer_custody_screening_outcome {
         bigserial safer_custody_screening_outcome_id PK "not null."
-        bigserial record_id FK "not null. FK to csip_record"
+        bigserial referral_id FK "not null. FK to referral"
         int outcome_id "not null. FK to reference_data. The type of outcome of the safer custody screening. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME"
         varchar(100) recorded_by "not null. The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY"
         varchar(255) recorded_by_display_name "not null. The displayable name of the user who recorded the safer custody screening outcome. Not mapped"
@@ -86,7 +86,7 @@ erDiagram
 
     investigation {
         bigserial investigation_id PK "not null."
-        bigserial record_id FK "not null. FK to csip_record"
+        bigserial referral_id FK "not null. FK to referral"
         text staff_involved "The names of the staff involved in the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_STAFF_INVOLVED. 4000 character limit"
         text evidence_secured "Any evidence that was secured as part of the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_EVIDENCE_SECURED. 4000 character limit"
         text occurrence_reason "The reasons why the incident occurred. Maps to OFFENDER_CSIP_REPORTS.INV_OCCURRENCE_REASON. 4000 character limit"
@@ -113,7 +113,7 @@ erDiagram
 
     decision_and_actions {
         bigserial decision_and_actions_id PK "not null."
-        bigserial record_id FK "not null. FK to csip_record"
+        bigserial referral_id FK "not null. FK to referral"
         text decision_conclusion "The conclusion of the referral and reasons for the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_CONCLUSION. 4000 character limit"
         int decision_outcome_id "not null. FK to reference_data. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME"
         int decision_outcome_signed_off_by_role_id "FK to reference_data. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY"
