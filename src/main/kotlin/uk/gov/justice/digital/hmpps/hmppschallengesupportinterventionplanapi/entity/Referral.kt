@@ -53,9 +53,9 @@ data class Referral(
 
   @Column val releaseDate: LocalDate? = null,
 
-  @Column(nullable = false) val descriptionOfConcern: String?,
+  @Column val descriptionOfConcern: String?,
 
-  @Column(nullable = false) val knownReasons: String?,
+  @Column val knownReasons: String?,
 
   @Column val otherInformation: String? = null,
 
