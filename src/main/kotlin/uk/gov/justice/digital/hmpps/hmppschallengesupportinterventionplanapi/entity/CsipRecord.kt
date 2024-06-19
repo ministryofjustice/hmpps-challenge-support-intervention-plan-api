@@ -148,7 +148,7 @@ data class CsipRecord(
     referrerAreaOfWork: ReferenceData,
     incidentInvolvement: ReferenceData?,
     contributoryFactors: Map<String, ReferenceData>,
-    releaseDate: LocalDate?,
+    releaseDate: LocalDate? = null,
     reason: Reason = Reason.USER,
     description: String = DomainEventType.CSIP_CREATED.description,
   ): CsipRecord = apply {

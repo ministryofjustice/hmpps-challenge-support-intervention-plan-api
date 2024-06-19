@@ -65,7 +65,6 @@ class CsipRecordService(
       referrerAreaOfWork = referrerAreaOfWork,
       incidentInvolvement = incidentInvolvement,
       contributoryFactors = contributoryFactors,
-      releaseDate = prisoner.releaseDate,
     )
     return csipRecordRepository.saveAndFlush(record).toModel()
   }

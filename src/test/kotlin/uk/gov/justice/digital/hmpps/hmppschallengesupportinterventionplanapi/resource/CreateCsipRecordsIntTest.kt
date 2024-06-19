@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -278,7 +277,7 @@ class CreateCsipRecordsIntTest(
       assertThat(createdBy).isEqualTo("TEST_USER")
       assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
-      assertThat(referral.releaseDate).isEqualTo(LocalDate.of(2030, 12, 25))
+      assertThat(referral.releaseDate).isNull()
     }
 
     with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
