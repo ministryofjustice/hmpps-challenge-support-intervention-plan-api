@@ -9,4 +9,6 @@ data class PrisonerDto(
   val middleNames: String?,
   val lastName: String,
   val dateOfBirth: LocalDate,
+  val prisonId: String?,
+  val releaseDate: LocalDate?,
 )

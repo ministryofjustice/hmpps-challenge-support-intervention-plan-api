@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
@@ -69,6 +70,7 @@ fun referral(csipRecord: CsipRecord = csipRecord()) = createCsipRecordRequest().
   incidentLocation(),
   areaOfWork(),
   incidentInvolvement(),
+  LocalDate.of(2030, 12, 25),
 ).apply {
   addContributoryFactor(
     createRequest = CreateContributoryFactorRequest(
@@ -96,6 +98,8 @@ fun prisoner() = PrisonerDto(
   "Middle",
   "Last",
   LocalDate.of(1988, 4, 3),
+  PRISON_CODE_LEEDS,
+  LocalDate.of(2030, 12, 25),
 )
 
 fun incidentType() = ReferenceData(

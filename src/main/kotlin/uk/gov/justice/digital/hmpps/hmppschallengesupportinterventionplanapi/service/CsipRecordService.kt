@@ -57,7 +57,7 @@ class CsipRecordService(
       )
     }
 
-    val record = request.toCsipRecord(prisonNumber, requestContext).create(
+    val record = request.toCsipRecord(prisonNumber, prisoner.prisonId, requestContext).create(
       createCsipRecordRequest = request,
       csipRequestContext = requestContext,
       incidentType = incidentType,
@@ -65,6 +65,7 @@ class CsipRecordService(
       referrerAreaOfWork = referrerAreaOfWork,
       incidentInvolvement = incidentInvolvement,
       contributoryFactors = contributoryFactors,
+      releaseDate = prisoner.releaseDate,
     )
     return csipRecordRepository.saveAndFlush(record).toModel()
   }

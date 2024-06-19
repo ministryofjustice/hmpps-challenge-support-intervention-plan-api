@@ -47,6 +47,8 @@ class PrisonerSearchServer : WireMockServer(8112) {
                   "Middle",
                   "Last",
                   LocalDate.of(1988, 4, 3),
+                  PRISON_CODE_LEEDS,
+                  LocalDate.of(2030, 12, 25),
                 ),
               ),
             )
