@@ -47,6 +47,7 @@ class CsipRecordTest : ModelTest() {
         descriptionOfConcern = "",
         incidentInvolvement = referenceData,
         assaultedStaffName = "staff name 1, staff name 2",
+        releaseDate = LocalDate.of(2021, 11, 1),
         otherInformation = "",
         contributoryFactors = listOf(
           ContributoryFactor(

@@ -6,15 +6,18 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor as ContributoryFactorModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipRecordModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Referral as ReferralModel
 
 fun CreateCsipRecordRequest.toCsipRecord(
   prisonNumber: String,
+  prisonCode: String?,
   csipRequestContext: CsipRequestContext,
 ) = CsipRecord(
   prisonNumber = prisonNumber,
+  prisonCodeWhenRecorded = prisonCode,
   logNumber = logNumber,
   createdAt = csipRequestContext.requestAt,
   createdBy = csipRequestContext.username,
@@ -28,6 +31,7 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
   incidentLocation: ReferenceData,
   referrerAreaOfWork: ReferenceData,
   incidentInvolvement: ReferenceData?,
+  releaseDate: LocalDate?,
 ) =
   Referral(
     csipRecord = csipRecord,
@@ -47,6 +51,7 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
     incidentLocation = incidentLocation,
     refererAreaOfWork = referrerAreaOfWork,
     incidentInvolvement = incidentInvolvement,
+    releaseDate = releaseDate,
   )
 
 fun ContributoryFactor.toModel() =
@@ -76,6 +81,7 @@ fun Referral.toModel() =
     knownReasons = knownReasons,
     descriptionOfConcern = descriptionOfConcern,
     assaultedStaffName = assaultedStaffName,
+    releaseDate = releaseDate,
     isProactiveReferral = proactiveReferral,
     isStaffAssaulted = staffAssaulted,
     isReferralComplete = referralComplete,

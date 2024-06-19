@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -147,6 +148,7 @@ data class CsipRecord(
     referrerAreaOfWork: ReferenceData,
     incidentInvolvement: ReferenceData?,
     contributoryFactors: Map<String, ReferenceData>,
+    releaseDate: LocalDate? = null,
     reason: Reason = Reason.USER,
     description: String = DomainEventType.CSIP_CREATED.description,
   ): CsipRecord = apply {
@@ -157,6 +159,7 @@ data class CsipRecord(
       incidentLocation,
       referrerAreaOfWork,
       incidentInvolvement,
+      releaseDate,
     ).apply {
       createCsipRecordRequest.referral.contributoryFactors.forEach { factor ->
         this.addContributoryFactor(
