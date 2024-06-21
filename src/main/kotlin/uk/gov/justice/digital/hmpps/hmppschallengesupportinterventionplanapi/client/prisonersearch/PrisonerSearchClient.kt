@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.retryNetworkExceptions
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.retryIdempotentRequestOnTransientException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 
 @Component
@@ -17,7 +17,7 @@ class PrisonerSearchClient(@Qualifier("prisonerSearchWebClient") private val web
         .uri("/prisoner/{prisonerId}", prisonerId)
         .retrieve()
         .bodyToMono(PrisonerDto::class.java)
-        .retryNetworkExceptions()
+        .retryIdempotentRequestOnTransientException()
         .block()
     } catch (e: WebClientResponseException.NotFound) {
       null

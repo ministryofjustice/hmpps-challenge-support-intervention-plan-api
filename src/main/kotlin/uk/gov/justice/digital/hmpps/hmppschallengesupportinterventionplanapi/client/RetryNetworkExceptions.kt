@@ -6,7 +6,7 @@ import reactor.util.retry.Retry
 import java.io.IOException
 import java.time.Duration
 
-fun <T> Mono<T>.retryNetworkExceptions(): Mono<T> =
+fun <T> Mono<T>.retryIdempotentRequestOnTransientException(): Mono<T> =
   retryWhen(
     Retry.backoff(3, Duration.ofMillis(250))
       .filter {
