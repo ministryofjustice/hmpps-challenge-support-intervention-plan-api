@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch
 
+import com.github.tomakehurst.wiremock.client.WireMock.exactly
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -44,6 +47,7 @@ class PrisonerSearchClientTest {
         PRISON_CODE_LEEDS,
       ),
     )
+    server.verify(exactly(1), getRequestedFor(urlEqualTo("/prisoner/$PRISON_NUMBER")))
   }
 
   @Test
@@ -51,6 +55,7 @@ class PrisonerSearchClientTest {
     val result = client.getPrisoner(PRISON_NUMBER_NOT_FOUND)
 
     assertThat(result).isNull()
+    server.verify(exactly(1), getRequestedFor(urlEqualTo("/prisoner/$PRISON_NUMBER_NOT_FOUND")))
   }
 
   @Test
@@ -63,6 +68,7 @@ class PrisonerSearchClientTest {
       assertThat(this).isInstanceOf(WebClientResponseException::class.java)
       assertThat(this!!.message).isEqualTo("500 Internal Server Error from GET http://localhost:8112/prisoner/${PRISON_NUMBER_THROW_EXCEPTION}")
     }
+    server.verify(exactly(4), getRequestedFor(urlEqualTo("/prisoner/$PRISON_NUMBER_THROW_EXCEPTION")))
   }
 
   companion object {
