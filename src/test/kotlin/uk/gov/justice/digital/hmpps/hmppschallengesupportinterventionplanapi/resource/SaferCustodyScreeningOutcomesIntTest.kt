@@ -41,11 +41,11 @@ class SaferCustodyScreeningOutcomesIntTest(
   @Autowired private val csipRecordRepository: CsipRecordRepository,
   @Autowired private val referenceDataRepository: ReferenceDataRepository,
 ) : IntegrationTestBase() {
-  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first()
-  private val incidentType = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first()
-  private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first()
-  private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first()
-  private val refererAreaOfWork = referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first()
+  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first { it.isActive() }
+  private val incidentType = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
+  private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
+  private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
+  private val refererAreaOfWork = referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
 
   @Test
   fun `401 unauthorised`() {
