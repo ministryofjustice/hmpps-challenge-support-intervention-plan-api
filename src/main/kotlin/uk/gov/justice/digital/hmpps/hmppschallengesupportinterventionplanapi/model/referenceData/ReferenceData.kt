@@ -43,13 +43,13 @@ data class ReferenceData(
     example = "2022-07-15T15:24:56",
   )
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val modifiedAt: LocalDateTime?,
+  val lastModifiedAt: LocalDateTime?,
 
   @Schema(
     description = "The username of the user who last modified the code",
     example = "USER1234",
   )
-  val modifiedBy: String?,
+  val lastModifiedBy: String?,
 
   @Schema(
     description = "The date and time the code was deactivated",

@@ -28,11 +28,8 @@ data class ReferenceData(
   val createdAt: LocalDateTime,
   val createdBy: String,
 ) : AbstractAggregateRoot<ReferenceData>() {
-  @Column(name = "last_modified_at")
-  var modifiedAt: LocalDateTime? = null
-
-  @Column(name = "last_modified_by")
-  var modifiedBy: String? = null
+  var lastModifiedAt: LocalDateTime? = null
+  var lastModifiedBy: String? = null
   var deactivatedAt: LocalDateTime? = null
   var deactivatedBy: String? = null
 

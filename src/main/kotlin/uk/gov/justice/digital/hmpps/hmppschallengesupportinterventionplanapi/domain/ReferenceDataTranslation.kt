@@ -9,8 +9,8 @@ fun ReferenceData.toReferenceDataModel() = ReferenceDataModel(
   listSequence = listSequence,
   createdAt = createdAt,
   createdBy = createdBy,
-  modifiedAt = modifiedAt,
-  modifiedBy = modifiedBy,
+  lastModifiedAt = lastModifiedAt,
+  lastModifiedBy = lastModifiedBy,
   deactivatedAt = deactivatedAt,
   deactivatedBy = deactivatedBy,
 )

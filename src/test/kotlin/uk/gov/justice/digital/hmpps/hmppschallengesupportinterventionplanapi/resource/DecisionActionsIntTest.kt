@@ -41,11 +41,11 @@ class DecisionActionsIntTest(
   @Autowired private val csipRecordRepository: CsipRecordRepository,
   @Autowired private val referenceDataRepository: ReferenceDataRepository,
 ) : IntegrationTestBase() {
-  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first()
-  private val decisionSignerRole = referenceDataRepository.findByDomain(ReferenceDataType.DECISION_SIGNER_ROLE).first()
-  private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first()
-  private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first()
-  private val refererAreaOfWork = referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first()
+  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first { it.isActive() }
+  private val decisionSignerRole = referenceDataRepository.findByDomain(ReferenceDataType.DECISION_SIGNER_ROLE).first { it.isActive() }
+  private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
+  private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
+  private val refererAreaOfWork = referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
 
   @Test
   fun `401 unauthorised`() {
@@ -152,7 +152,7 @@ class DecisionActionsIntTest(
   @Test
   fun `400 bad request - inactive Outcome signed off by role code`() {
     val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "ACC"))
+      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "OT_INACT"))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
       .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
@@ -160,8 +160,8 @@ class DecisionActionsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'ACC' is inactive")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'ACC' is inactive")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'OT_INACT' is inactive")
+      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'OT_INACT' is inactive")
       assertThat(moreInfo).isNull()
     }
   }
