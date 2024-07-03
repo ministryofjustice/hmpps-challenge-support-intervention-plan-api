@@ -50,8 +50,8 @@ generic-service:
 
   allowlist:
     groups:
-      - internal
-      - prisons
+      - digital_staff_and_mojo
+      - moj_cloud_platform
 
 generic-prometheus-alerts:
   targetApplication: hmpps-challenge-support-intervention-plan-api
