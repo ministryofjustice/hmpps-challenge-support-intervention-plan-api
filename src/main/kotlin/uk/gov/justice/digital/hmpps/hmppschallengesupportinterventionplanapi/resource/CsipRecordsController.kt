@@ -136,7 +136,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @PostMapping("/prisoners/{prisonNumber}/csip-records")
   @Operation(
     summary = "Create a CSIP record for a prisoner.",
-    description = "Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes prisoner-csip.csip-record-created and prisoner-csip.contributory-factor-created events",
+    description = "Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes person.csip.record.created and person.csip.contributory-factor.created events",
   )
   @ApiResponses(
     value = [
@@ -212,7 +212,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @PatchMapping("/csip-records/{recordUuid}/log-number")
   @Operation(
     summary = "Update the log number for a CSIP record.",
-    description = "Update the log number for a CSIP record. Publishes prisoner-csip.csip-record-updated event with recordAffected = true",
+    description = "Update the log number for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true",
   )
   @ApiResponses(
     value = [

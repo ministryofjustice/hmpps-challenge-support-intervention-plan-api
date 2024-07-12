@@ -43,7 +43,7 @@ class PlansController {
   @PostMapping("/{recordUuid}/plan")
   @Operation(
     summary = "Create the CSIP plan and identified needs.",
-    description = "Create the CSIP plan and identified needs. Publishes prisoner-csip.csip-record-updated event with planAffected = true and prisoner-csip.identified-need-created event",
+    description = "Create the CSIP plan and identified needs. Publishes person.csip.record.updated event with planAffected = true and prisoner-csip.identified-need-created event",
   )
   @ApiResponses(
     value = [
@@ -86,7 +86,7 @@ class PlansController {
   @PatchMapping("/{recordUuid}/plan")
   @Operation(
     summary = "Update the CSIP plan.",
-    description = "Update the plan only. Cannot update identified needs with this endpoint. Publishes prisoner-csip.csip-record-updated event with planAffected = true",
+    description = "Update the plan only. Cannot update identified needs with this endpoint. Publishes person.csip.record.updated event with planAffected = true",
   )
   @ApiResponses(
     value = [

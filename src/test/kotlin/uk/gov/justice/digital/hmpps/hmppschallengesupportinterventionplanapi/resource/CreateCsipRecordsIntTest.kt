@@ -12,10 +12,11 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorAdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -296,15 +297,13 @@ class CreateCsipRecordsIntTest(
 
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 2 }
     val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
-    val csipDomainEvent = events.find { it is CsipDomainEvent }!!
+    val csipDomainEvent = events.find { it is CsipDomainEvent } as CsipDomainEvent
 
     assertThat(csipDomainEvent).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
-        DomainEventType.CSIP_CREATED.eventType,
-        CsipAdditionalInformation(
-          url = "http://localhost:8080/csip-records/${response.recordUuid}",
+        eventType = DomainEventType.CSIP_CREATED.eventType,
+        additionalInformation = CsipAdditionalInformation(
           recordUuid = response.recordUuid,
-          prisonNumber = "A1234AA",
           isRecordAffected = true,
           isReferralAffected = true,
           isContributoryFactorAffected = true,
@@ -317,30 +316,30 @@ class CreateCsipRecordsIntTest(
           isReviewAffected = false,
           isAttendeeAffected = false,
           source = DPS,
-          reason = Reason.USER,
         ),
-        1,
-        DomainEventType.CSIP_CREATED.description,
-        csipDomainEvent.occurredAt,
+        version = 1,
+        description = DomainEventType.CSIP_CREATED.description,
+        occurredAt = csipDomainEvent.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
 
-    val contributoryFactoryDomainEvent = events.find { it is ContributoryFactorDomainEvent }!!
+    val contributoryFactoryDomainEvent = events.find { it is CsipBasicDomainEvent } as CsipBasicDomainEvent
 
     assertThat(contributoryFactoryDomainEvent).usingRecursiveComparison().isEqualTo(
-      ContributoryFactorDomainEvent(
-        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
-        ContributoryFactorAdditionalInformation(
-          url = "http://localhost:8080/csip-records/${response.recordUuid}",
-          contributoryFactorUuid = response.referral.contributoryFactors.first().factorUuid,
+      CsipBasicDomainEvent(
+        eventType = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
+        additionalInformation = CsipBasicInformation(
+          entityUuid = response.referral.contributoryFactors.first().factorUuid,
           recordUuid = response.recordUuid,
-          prisonNumber = "A1234AA",
           source = DPS,
-          reason = Reason.USER,
         ),
-        1,
-        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
-        contributoryFactoryDomainEvent.occurredAt,
+        version = 1,
+        description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
+        occurredAt = contributoryFactoryDomainEvent.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
   }
@@ -421,15 +420,13 @@ class CreateCsipRecordsIntTest(
 
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 2 }
     val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
-    val csipDomainEvent = events.find { it is CsipDomainEvent }!!
+    val csipDomainEvent = events.find { it is CsipDomainEvent } as CsipDomainEvent
 
     assertThat(csipDomainEvent).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
-        DomainEventType.CSIP_CREATED.eventType,
-        CsipAdditionalInformation(
-          url = "http://localhost:8080/csip-records/${response.recordUuid}",
+        eventType = DomainEventType.CSIP_CREATED.eventType,
+        additionalInformation = CsipAdditionalInformation(
           recordUuid = response.recordUuid,
-          prisonNumber = "A1234AA",
           isRecordAffected = true,
           isReferralAffected = true,
           isContributoryFactorAffected = true,
@@ -442,30 +439,30 @@ class CreateCsipRecordsIntTest(
           isReviewAffected = false,
           isAttendeeAffected = false,
           source = NOMIS,
-          reason = Reason.USER,
         ),
-        1,
-        DomainEventType.CSIP_CREATED.description,
-        csipDomainEvent.occurredAt,
+        version = 1,
+        description = DomainEventType.CSIP_CREATED.description,
+        occurredAt = csipDomainEvent.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
 
-    val contributoryFactoryDomainEvent = events.find { it is ContributoryFactorDomainEvent }!!
+    val contributoryFactoryDomainEvent = events.find { it is CsipBasicDomainEvent } as CsipBasicDomainEvent
 
     assertThat(contributoryFactoryDomainEvent).usingRecursiveComparison().isEqualTo(
-      ContributoryFactorDomainEvent(
-        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
-        ContributoryFactorAdditionalInformation(
-          url = "http://localhost:8080/csip-records/${response.recordUuid}",
-          contributoryFactorUuid = response.referral.contributoryFactors.first().factorUuid,
+      CsipBasicDomainEvent(
+        eventType = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
+        additionalInformation = CsipBasicInformation(
+          entityUuid = response.referral.contributoryFactors.first().factorUuid,
           recordUuid = response.recordUuid,
-          prisonNumber = "A1234AA",
           source = NOMIS,
-          reason = Reason.USER,
         ),
-        1,
-        DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
-        contributoryFactoryDomainEvent.occurredAt,
+        version = 1,
+        description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
+        occurredAt = contributoryFactoryDomainEvent.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
   }

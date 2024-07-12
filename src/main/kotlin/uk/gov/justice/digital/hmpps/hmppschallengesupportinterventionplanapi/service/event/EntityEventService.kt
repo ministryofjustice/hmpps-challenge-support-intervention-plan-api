@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseEvent
 
 @Service
-class EntityEventService<T : BaseEntityEvent<*>>(
+class EntityEventService<T : CsipBaseEvent<*>>(
   private val eventProperties: EventProperties,
   // Will be used for tracking events for metrics
   private val telemetryClient: TelemetryClient,

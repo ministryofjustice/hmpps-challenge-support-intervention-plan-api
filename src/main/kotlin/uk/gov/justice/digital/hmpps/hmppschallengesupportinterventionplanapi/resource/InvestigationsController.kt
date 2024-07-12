@@ -49,7 +49,7 @@ class InvestigationsController(
   @PostMapping("/{recordUuid}/referral/investigation")
   @Operation(
     summary = "Add investigation and any interviews to the referral.",
-    description = "Create the investigation and any interviews. Publishes prisoner-csip.csip-record-updated event with investigationAffected = true and prisoner-csip.interview-created event",
+    description = "Create the investigation and any interviews. Publishes person.csip.record.updated event with investigationAffected = true and person.csip.interview.updated event",
   )
   @ApiResponses(
     value = [
@@ -102,7 +102,7 @@ class InvestigationsController(
   @PatchMapping("/{recordUuid}/referral/investigation")
   @Operation(
     summary = "Update the investigation.",
-    description = "Update the investigation only. Cannot update interviews with this endpoint. Publishes prisoner-csip.csip-record-updated event with investigationAffected = true",
+    description = "Update the investigation only. Cannot update interviews with this endpoint. Publishes person.csip.record.updated event with investigationAffected = true",
   )
   @ApiResponses(
     value = [
@@ -145,7 +145,7 @@ class InvestigationsController(
   @PostMapping("/{recordUuid}/referral/investigation/interviews")
   @Operation(
     summary = "Add an interview to the investigation.",
-    description = "Add an interview to the investigation. Publishes prisoner-csip.interview-created event",
+    description = "Add an interview to the investigation. Publishes person.csip.interview.updated event",
   )
   @ApiResponses(
     value = [

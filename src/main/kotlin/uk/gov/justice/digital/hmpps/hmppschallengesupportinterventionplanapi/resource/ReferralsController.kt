@@ -36,7 +36,7 @@ class ReferralsController {
   @PatchMapping("/csip-records/{recordUuid}/referral")
   @Operation(
     summary = "Update the CSIP referral",
-    description = "Update the CSIP referral only. Cannot update contributory factors with this endpoint. Publishes prisoner-csip.csip-record-created event with referralAffected = true",
+    description = "Update the CSIP referral only. Cannot update contributory factors with this endpoint. Publishes person.csip.record.created event with referralAffected = true",
   )
   @ApiResponses(
     value = [
@@ -79,7 +79,7 @@ class ReferralsController {
   @PostMapping("/csip-records/{recordUuid}/referral/contributory-factors")
   @Operation(
     summary = "Add a contributory factor to the referral.",
-    description = "Add a contributory factor to the referral. Publishes prisoner-csip.contributory-factor-created event",
+    description = "Add a contributory factor to the referral. Publishes person.csip.contributory-factor.created event",
   )
   @ApiResponses(
     value = [

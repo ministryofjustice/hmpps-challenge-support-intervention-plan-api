@@ -45,7 +45,7 @@ class DecisionAndActionsController(
   @PostMapping
   @Operation(
     summary = "Add decision and actions to the referral.",
-    description = "Create the decision and actions. Publishes prisoner-csip.csip-record-updated event with decisionAndActionsAffected = true",
+    description = "Create the decision and actions. Publishes person.csip.record.updated event with decisionAndActionsAffected = true",
   )
   @ApiResponses(
     value = [
@@ -98,7 +98,7 @@ class DecisionAndActionsController(
   @PatchMapping
   @Operation(
     summary = "Update the decision and actions.",
-    description = "Update the decision and actions. Publishes prisoner-csip.csip-record-updated event with decisionAndActionsAffected = true",
+    description = "Update the decision and actions. Publishes person.csip.record.updated event with decisionAndActionsAffected = true",
   )
   @ApiResponses(
     value = [
