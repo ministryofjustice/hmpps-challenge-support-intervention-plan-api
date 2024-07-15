@@ -1,0 +1,58 @@
+asyncapi: 3.0.0
+info:
+  title: HMPPS Challenge Support Intervention Plan
+  version: 1.0.0
+  description: Reflect changes to Challenge Support Intervention Plans
+
+servers:
+  development:
+    host: "hmpps-domain-events-dev.live-1.cloud-platform.service.justice.gov.uk"
+    protocol: sqs
+    description: Development Environment
+  preproduction:
+    host: "hmpps-domain-events-preprod.live-1.cloud-platform.service.justice.gov.uk"
+    protocol: sqs
+    description: Pre-production Environment
+  production:
+    host: "hmpps-domain-events-prod.live-1.cloud-platform.service.justice.gov.uk"
+    protocol: sqs
+    description: Production Environment
+
+components:
+  messages:
+    csip.record.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-created.yaml
+    csip.record.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-updated.yaml
+    csip.contributory-factor.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-contributory-factor-created.yaml
+    csip.interview.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-updated.yaml
+
+
+channels:
+  hmpps-domain-events:
+    description: HMPPS domain events SNS topic
+    bindings:
+      sns:
+        name: domainevents
+    messages:
+      csip.record.created:
+        $ref: '#/components/messages/csip.record.created'
+      csip.record.updated:
+        $ref: '#/components/messages/csip.record.updated'
+      csip.contributory-factor.created:
+        $ref: '#/components/messages/csip.contributory-factor.created'
+      csip.interview.created:
+        $ref: '#/components/messages/csip.interview.created'
+
+operations:
+  publish-event:
+    action: send
+    channel:
+      $ref: '#/channels/hmpps-domain-events'
+    messages:
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.record.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.record.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.contributory-factor.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.interview.created'

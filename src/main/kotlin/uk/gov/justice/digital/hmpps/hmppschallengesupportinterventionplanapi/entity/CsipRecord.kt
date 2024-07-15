@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AffectedComponents
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -137,8 +136,6 @@ data class CsipRecord(
 
   fun <T : AdditionalInformation> registerEntityEvent(entityEvent: CsipBaseEvent<T>) =
     apply { registerEvent(entityEvent) }
-
-  fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
 
   fun create(
     createCsipRecordRequest: CreateCsipRecordRequest,

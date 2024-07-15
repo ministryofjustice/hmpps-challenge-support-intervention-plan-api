@@ -49,7 +49,7 @@ class InvestigationsController(
   @PostMapping("/{recordUuid}/referral/investigation")
   @Operation(
     summary = "Add investigation and any interviews to the referral.",
-    description = "Create the investigation and any interviews. Publishes person.csip.record.updated event with investigationAffected = true and person.csip.interview.updated event",
+    description = "Create the investigation and any interviews. Publishes person.csip.record.updated event with investigationAffected = true and person.csip.interview.created event",
   )
   @ApiResponses(
     value = [
@@ -145,7 +145,7 @@ class InvestigationsController(
   @PostMapping("/{recordUuid}/referral/investigation/interviews")
   @Operation(
     summary = "Add an interview to the investigation.",
-    description = "Add an interview to the investigation. Publishes person.csip.interview.updated event",
+    description = "Add an interview to the investigation. Publishes person.csip.interview.created event",
   )
   @ApiResponses(
     value = [

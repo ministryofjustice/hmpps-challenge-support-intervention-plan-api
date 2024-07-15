@@ -5,13 +5,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import java.time.ZonedDateTime
 import java.util.UUID
 
-interface DomainEvent<T : AdditionalInformation> {
+interface DomainEvent {
   val eventType: String
   val version: Int
   val detailUrl: String?
   val occurredAt: ZonedDateTime
   val description: String
-  val additionalInformation: T
+  val additionalInformation: AdditionalInformation
   val personReference: PersonReference?
 }
 
@@ -29,7 +29,7 @@ data class PersonReference(val identifiers: List<Identifier> = listOf()) {
 
 interface AdditionalInformation
 
-interface CsipBaseInformation : AdditionalInformation {
+sealed interface CsipBaseInformation : AdditionalInformation {
   val source: Source
   val recordUuid: UUID
 }
@@ -42,7 +42,7 @@ data class CsipDomainEvent(
   override val additionalInformation: CsipAdditionalInformation,
   override val personReference: PersonReference,
   override val version: Int = 1,
-) : DomainEvent<CsipAdditionalInformation>
+) : DomainEvent
 
 data class CsipAdditionalInformation(
   override val recordUuid: UUID,
@@ -85,4 +85,4 @@ data class CsipBasicDomainEvent(
   override val additionalInformation: CsipBasicInformation,
   override val personReference: PersonReference,
   override val version: Int = 1,
-) : DomainEvent<CsipBasicInformation>
+) : DomainEvent

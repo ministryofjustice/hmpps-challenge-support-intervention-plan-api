@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import java.time.LocalDateTime
 import java.util.UUID
 
-interface CsipBasicEvent : CsipBaseEvent<CsipBasicInformation> {
+sealed interface CsipBasicEvent : CsipBaseEvent<CsipBasicInformation> {
   val entityUuid: UUID
   val prisonNumber: String
   override fun detailPath(): String = "/csip-records/$recordUuid"

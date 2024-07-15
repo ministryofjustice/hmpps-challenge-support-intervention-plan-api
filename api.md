@@ -21,24 +21,24 @@ Contains primary retrieval endpoints
 - POST /prisoners/{prisonNumber}/csip-records - Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes person.csip.record.created and person.csip.contributory-factor.created events
 - GET /csip-records/{recordUuid} - Retrieve a complete CSIP record by its unique id
 - PATCH /csip-records/{recordUuid}/log-number - Update the log number for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true
-- DELETE /csip-records/{recordUuid} - (Soft) delete a complete CSIP record. Requires admin permissions. Publishes prisoner-csip.csip-record-deleted event
+- DELETE /csip-records/{recordUuid} - (Soft) delete a complete CSIP record. Requires admin permissions. Publishes person.csip.record.deleted event
 
 ### Referral controller
 - PATCH /csip-records/{recordUuid}/referral - Update the CSIP referral only. Cannot update contributory factors with this endpoint. Publishes person.csip.record.created event with referralAffected = true
 - POST /csip-records/{recordUuid}/referral/contributory-factors - Add a contributory factor to the referral. Publishes person.csip.contributory-factor.created event
-- PATCH /csip-records/referral/contributory-factors/{contributoryFactorUuid} - Update a contributory factor on the referral. Publishes prisoner-csip.contributory-factor-updated event
-- DELETE /csip-records/referral/contributory-factors/{contributoryFactorUuid} - Remove a contributory factor from the referral. Publishes prisoner-csip.contributory-factor-deleted event
+- PATCH /csip-records/referral/contributory-factors/{contributoryFactorUuid} - Update a contributory factor on the referral. Publishes person.csip.contributory-factor.updated event
+- DELETE /csip-records/referral/contributory-factors/{contributoryFactorUuid} - Remove a contributory factor from the referral. Publishes person.csip.contributory-factor.deleted event
 
 ### Screening controller
 - POST /csip-records/{recordUuid}/referral/safer-custody-screening - Create the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true
 - PATCH /csip-records/{recordUuid}/referral/safer-custody-screening - Update the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true
 
 ### Investigation controller
-- POST /csip-records/{recordUuid}/referral/investigation - Create the investigation and any interviews. Publishes person.csip.record.updated event with investigationAffected = true and person.csip.interview.updated event
+- POST /csip-records/{recordUuid}/referral/investigation - Create the investigation and any interviews. Publishes person.csip.record.updated event with investigationAffected = true and person.csip.interview.created event
 - PATCH /csip-records/{recordUuid}/referral/investigation - Update the investigation only. Cannot update interviews with this endpoint. Publishes person.csip.record.updated event with investigationAffected = true
-- POST /csip-records/{recordUuid}/referral/investigation/interviews - Add an interview to the investigation. Publishes person.csip.interview.updated event
-- PATCH /csip-records/referral/investigation/interviews/{interviewUuid} - Update an interview on the investigation. Publishes prisoner-csip.interview-updated event
-- DELETE /csip-records/referral/investigation/interviews/{interviewUuid} - Remove an interview from the investigation. Publishes prisoner-csip.interview-deleted event
+- POST /csip-records/{recordUuid}/referral/investigation/interviews - Add an interview to the investigation. Publishes person.csip.interview.created event
+- PATCH /csip-records/referral/investigation/interviews/{interviewUuid} - Update an interview on the investigation. Publishes person.csip.interview.updated event
+- DELETE /csip-records/referral/investigation/interviews/{interviewUuid} - Remove an interview from the investigation. Publishes person.csip.interview.deleted event
 
 ### Decision and actions controller
 - POST /csip-records/{recordUuid}/referral/decision-and-actions - Create the decision and actions. Publishes person.csip.record.updated event with decisionAndActionsAffected = true

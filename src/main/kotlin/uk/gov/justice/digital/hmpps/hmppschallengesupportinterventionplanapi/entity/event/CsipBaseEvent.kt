@@ -5,13 +5,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import java.time.LocalDateTime
 import java.util.UUID
 
-sealed interface DomainEventable<T : AdditionalInformation> {
+sealed interface DomainEventable {
   val type: DomainEventType
   fun detailPath(): String
-  fun toDomainEvent(baseUrl: String): DomainEvent<T>
+  fun toDomainEvent(baseUrl: String): DomainEvent
 }
 
-interface CsipBaseEvent<T : AdditionalInformation> : DomainEventable<T> {
+sealed interface CsipBaseEvent<T : AdditionalInformation> : DomainEventable {
   val recordUuid: UUID
   val description: String
   val occurredAt: LocalDateTime

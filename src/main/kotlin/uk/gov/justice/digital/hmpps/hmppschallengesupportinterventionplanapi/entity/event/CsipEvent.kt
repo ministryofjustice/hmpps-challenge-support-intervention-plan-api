@@ -20,14 +20,14 @@ data class AffectedComponents(
   val isAttendeeAffected: Boolean = false,
 )
 
-interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
+sealed interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
   val prisonNumber: String
   val affectedComponents: AffectedComponents
 
-  override fun toDomainEvent(baseUrl: String): DomainEvent<CsipAdditionalInformation> =
+  override fun toDomainEvent(baseUrl: String): DomainEvent =
     toDomainEvent(baseUrl, affectedComponents)
 
-  fun toDomainEvent(baseUrl: String, affectedComponents: AffectedComponents): DomainEvent<CsipAdditionalInformation> =
+  fun toDomainEvent(baseUrl: String, affectedComponents: AffectedComponents): DomainEvent =
     CsipDomainEvent(
       eventType = type.eventType,
       additionalInformation = CsipAdditionalInformation(
