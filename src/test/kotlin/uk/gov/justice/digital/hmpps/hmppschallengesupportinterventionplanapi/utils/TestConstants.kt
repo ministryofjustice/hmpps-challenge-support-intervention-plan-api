@@ -25,9 +25,9 @@ fun createCsipRecordRequest(
   refererAreaCode: String = "C",
   incidentInvolvementCode: String? = "D",
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
-  logNumber: String? = LOG_NUMBER,
+  logCode: String? = LOG_CODE,
 ) = CreateCsipRecordRequest(
-  logNumber,
+  logCode,
   createReferralRequest(
     incidentTypeCode,
     incidentLocationCode,
@@ -157,7 +157,7 @@ fun contributoryFactor() = ContributoryFactor(
 fun csipRecord(): CsipRecord {
   val csipRecord = CsipRecord(
     prisonNumber = PRISON_NUMBER,
-    logNumber = LOG_NUMBER,
+    logCode = LOG_CODE,
     createdAt = LocalDateTime.now(),
     createdBy = "USER",
     createdByDisplayName = "USER",
@@ -165,4 +165,4 @@ fun csipRecord(): CsipRecord {
   return csipRecord
 }
 
-const val LOG_NUMBER = "ZXY987"
+const val LOG_CODE = "ZXY987"

@@ -16,11 +16,11 @@
 
 Contains primary retrieval endpoints
 
-- GET /prisoners/{prisonNumber}/csip-records?filterParams=values - Retrieve and filter all CSIP records for prisoner. Supports log number filtering. Returns CSIP record summaries
-- GET /prisons/{prisonCode}/csip-records?filterParams=values - Retrieve and filter all CSIP records for prisoners resident in the prison. Supports log number filtering. Returns CSIP record summaries
+- GET /prisoners/{prisonNumber}/csip-records?filterParams=values - Retrieve and filter all CSIP records for prisoner. Supports log code filtering. Returns CSIP record summaries
+- GET /prisons/{prisonCode}/csip-records?filterParams=values - Retrieve and filter all CSIP records for prisoners resident in the prison. Supports log code filtering. Returns CSIP record summaries
 - POST /prisoners/{prisonNumber}/csip-records - Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes person.csip.record.created and person.csip.contributory-factor.created events
 - GET /csip-records/{recordUuid} - Retrieve a complete CSIP record by its unique id
-- PATCH /csip-records/{recordUuid}/log-number - Update the log number for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true
+- PATCH /csip-records/{recordUuid}/log-number - Update the log code for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true
 - DELETE /csip-records/{recordUuid} - (Soft) delete a complete CSIP record. Requires admin permissions. Publishes person.csip.record.deleted event
 
 ### Referral controller
