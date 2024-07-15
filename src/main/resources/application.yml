@@ -64,6 +64,9 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
 
+sentry:
+  exception-resolver-order: -2147483647
+
 server:
   port: 8080
   servlet:
