@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 @Entity
 @Table
-data class SaferCustodyScreeningOutcome(
+class SaferCustodyScreeningOutcome(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "safer_custody_screening_outcome_id")

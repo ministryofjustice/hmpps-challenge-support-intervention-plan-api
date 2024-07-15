@@ -147,8 +147,8 @@ class SaferCustodyScreeningOutcomesIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(404)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("No resource found failure: Could not find CSIP record with UUID $recordUuid")
-      assertThat(developerMessage).isEqualTo("Could not find CSIP record with UUID $recordUuid")
+      assertThat(userMessage).isEqualTo("Not found: CSIP Record not found")
+      assertThat(developerMessage).isEqualTo("CSIP Record not found with identifier $recordUuid")
       assertThat(moreInfo).isNull()
     }
   }
@@ -182,8 +182,8 @@ class SaferCustodyScreeningOutcomesIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(409)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has a Safer Custody Screening Outcome created.")
-      assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has a Safer Custody Screening Outcome created.")
+      assertThat(userMessage).isEqualTo("Conflict failure: Referral already has a Safer Custody Screening Outcome")
+      assertThat(developerMessage).isEqualTo("Referral already has a Safer Custody Screening Outcome")
       assertThat(moreInfo).isNull()
     }
   }
@@ -316,7 +316,7 @@ class SaferCustodyScreeningOutcomesIntTest(
     )
   }
 
-  private fun createCsipRecord(withReferral: Boolean = true) = csipRecordRepository.saveAndFlush(
+  private fun createCsipRecord(withReferral: Boolean = true) = csipRecordRepository.save(
     CsipRecord(
       recordUuid = UUID.randomUUID(),
       prisonNumber = PRISON_NUMBER,

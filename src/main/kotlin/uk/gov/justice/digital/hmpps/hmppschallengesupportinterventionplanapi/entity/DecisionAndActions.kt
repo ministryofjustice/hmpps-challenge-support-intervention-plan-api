@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 
 @Entity
 @Table
-data class DecisionAndActions(
+class DecisionAndActions(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "decision_and_actions_id")

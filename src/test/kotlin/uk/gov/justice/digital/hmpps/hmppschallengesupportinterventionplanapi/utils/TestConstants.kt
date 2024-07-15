@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ut
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -144,14 +143,6 @@ fun contributoryFactorType() = ReferenceData(
   listSequence = 1,
   createdAt = LocalDateTime.now(),
   createdBy = "USER",
-)
-
-fun contributoryFactor() = ContributoryFactor(
-  contributoryFactorType = contributoryFactorType(),
-  referral = referral(),
-  createdAt = LocalDateTime.now(),
-  createdBy = "USER",
-  createdByDisplayName = "USER DISPLAY NAME",
 )
 
 fun csipRecord(): CsipRecord {

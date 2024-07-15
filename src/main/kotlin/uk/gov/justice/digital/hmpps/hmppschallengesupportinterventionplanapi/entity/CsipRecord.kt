@@ -29,7 +29,7 @@ import java.util.UUID
 
 @Entity
 @Table
-data class CsipRecord(
+class CsipRecord(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "record_id")
@@ -74,7 +74,6 @@ data class CsipRecord(
 
   @OneToOne(
     mappedBy = "csipRecord",
-    fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
   var referral: Referral? = null

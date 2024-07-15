@@ -43,7 +43,6 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
 
-  @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   lateinit var webTestClient: WebTestClient
 
@@ -59,11 +58,6 @@ abstract class IntegrationTestBase {
   internal val hmppsEventsQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
       ?: throw MissingQueueException("hmppseventtestqueue queue not found")
-  }
-
-  internal val hmppsEventTopic by lazy {
-    hmppsQueueService.findByTopicId("hmppseventtopic")
-      ?: throw MissingQueueException("HmppsTopic hmpps event topic not found")
   }
 
   internal fun HmppsQueue.countAllMessagesOnQueue() =

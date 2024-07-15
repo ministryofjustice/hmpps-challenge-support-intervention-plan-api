@@ -21,17 +21,6 @@ internal const val PRISON_NUMBER_THROW_EXCEPTION = "THROW"
 class PrisonerSearchServer : WireMockServer(8112) {
   private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
-  fun stubHealthPing(status: Int) {
-    stubFor(
-      get("/health/ping").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(if (status == 200) """{"status":"UP"}""" else """{"status":"DOWN"}""")
-          .withStatus(status),
-      ),
-    )
-  }
-
   fun stubGetPrisoner(prisonNumber: String = PRISON_NUMBER): StubMapping =
     stubFor(
       get("/prisoner/$prisonNumber")

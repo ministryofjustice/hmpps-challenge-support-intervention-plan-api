@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
@@ -12,6 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
@@ -143,8 +143,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Prisoner with prison number NOT_FOUND could not be found")
-      assertThat(developerMessage).isEqualTo("Prisoner with prison number NOT_FOUND could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: Prisoner number invalid")
+      assertThat(developerMessage).isEqualTo("Prisoner number invalid")
       assertThat(moreInfo).isNull()
     }
   }
@@ -159,8 +159,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_TYPE code 'A' does not exist")
-      assertThat(developerMessage).isEqualTo("INCIDENT_TYPE code 'A' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INCIDENT_TYPE:A")
       assertThat(moreInfo).isNull()
     }
   }
@@ -175,8 +175,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_LOCATION code 'B' does not exist")
-      assertThat(developerMessage).isEqualTo("INCIDENT_LOCATION code 'B' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_LOCATION is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INCIDENT_LOCATION:B")
       assertThat(moreInfo).isNull()
     }
   }
@@ -191,8 +191,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK code 'C' does not exist")
-      assertThat(developerMessage).isEqualTo("AREA_OF_WORK code 'C' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK is invalid")
+      assertThat(developerMessage).isEqualTo("Details => AREA_OF_WORK:C")
       assertThat(moreInfo).isNull()
     }
   }
@@ -208,8 +208,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_INVOLVEMENT code 'D' does not exist")
-      assertThat(developerMessage).isEqualTo("INCIDENT_INVOLVEMENT code 'D' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_INVOLVEMENT is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INCIDENT_INVOLVEMENT:D")
       assertThat(moreInfo).isNull()
     }
   }
@@ -274,7 +274,7 @@ class CreateCsipRecordsIntTest(
       assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo("TEST_USER")
       assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
@@ -399,7 +399,7 @@ class CreateCsipRecordsIntTest(
       assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
@@ -486,16 +486,4 @@ class CreateCsipRecordsIntTest(
     ),
   ).headers(setCsipRequestContext(source = source, username = user)).exchange().expectHeader()
     .contentType(MediaType.APPLICATION_JSON)
-
-  private fun WebTestClient.createCsip(
-    source: Source = DPS,
-    user: String = TEST_USER,
-    request: CreateCsipRecordRequest,
-    prisonNumber: String = "AB123456",
-  ) = createCsipResponseSpec(
-    source,
-    user,
-    request,
-    prisonNumber,
-  ).expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody!!
 }

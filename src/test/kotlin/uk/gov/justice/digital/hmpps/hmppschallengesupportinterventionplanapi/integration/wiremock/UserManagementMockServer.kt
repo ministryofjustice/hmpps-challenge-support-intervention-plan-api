@@ -17,26 +17,13 @@ import java.util.UUID
 internal const val TEST_USER = "TEST_USER"
 internal const val TEST_USER_NAME = "Test User"
 internal const val USER_NOT_FOUND = "USER_NOT_FOUND"
-internal const val USER_NOT_FOUND_DISPLAY_NAME = "User Not Found"
 internal const val USER_THROW_EXCEPTION = "USER_THROW_EXCEPTION"
 internal const val NOMIS_SYS_USER = "SYS"
 internal const val NOMIS_SYS_USER_DISPLAY_NAME = "Sys"
 internal const val PRISON_CODE_LEEDS = "LEI"
-internal const val PRISON_CODE_MOORLANDS = "MDI"
 
 class ManageUsersServer : WireMockServer(8111) {
   private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
-
-  fun stubHealthPing(status: Int) {
-    stubFor(
-      get("/health/ping").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(if (status == 200) """{"status":"UP"}""" else """{"status":"DOWN"}""")
-          .withStatus(status),
-      ),
-    )
-  }
 
   fun stubGetUserDetails(username: String = TEST_USER, name: String = TEST_USER_NAME): StubMapping =
     stubFor(

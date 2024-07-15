@@ -7,11 +7,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidReferenceCodeType.DOES_NOT_EXIST
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidReferenceCodeType.IS_INACTIVE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidReferenceDataCodeException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
@@ -40,25 +41,25 @@ class InvestigationService(
       )
     } ?: emptyMap()
 
-    return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
-      it.referral?.let { referral ->
-        csipRecordRepository.saveAndFlush(
-          request.toCsipRecordEntity(
-            referral = referral,
-            intervieweeRoleMap = intervieweeRoleMap,
-            actionedAt = context.requestAt,
-            actionedBy = context.username,
-            actionedByDisplayName = context.userDisplayName,
-            source = context.source,
-            activeCaseLoadId = context.activeCaseLoadId,
-          ),
-        ).referral()!!.investigation()!!.toModel()
-      } ?: throw MissingReferralException(recordUuid)
-    } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")
+    val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
+
+    return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
+      csipRecordRepository.save(
+        request.toCsipRecordEntity(
+          referral = this,
+          intervieweeRoleMap = intervieweeRoleMap,
+          actionedAt = context.requestAt,
+          actionedBy = context.username,
+          actionedByDisplayName = context.userDisplayName,
+          source = context.source,
+          activeCaseLoadId = context.activeCaseLoadId,
+        ),
+      ).referral()!!.investigation()!!.toModel()
+    }
   }
 
   private fun CreateInterviewRequest.getInterviewRole(roles: Collection<ReferenceData>): ReferenceData {
-    return roles.find { it.code.equals(intervieweeRoleCode) }?.also {
+    return roles.find { it.code == intervieweeRoleCode }?.also {
       if (!it.isActive()) throw InvalidReferenceDataCodeException(IS_INACTIVE, INTERVIEWEE_ROLE, intervieweeRoleCode)
     } ?: throw InvalidReferenceDataCodeException(DOES_NOT_EXIST, INTERVIEWEE_ROLE, intervieweeRoleCode)
   }

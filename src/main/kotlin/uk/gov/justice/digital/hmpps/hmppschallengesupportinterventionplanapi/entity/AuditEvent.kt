@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table
-data class AuditEvent(
+class AuditEvent(
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Id
   val id: Long = 0,
