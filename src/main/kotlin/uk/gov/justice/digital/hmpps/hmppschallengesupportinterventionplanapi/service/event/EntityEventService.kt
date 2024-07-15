@@ -7,27 +7,33 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseEvent
 
 @Service
-class EntityEventService<T : BaseEntityEvent<*>>(
+class EntityEventService<T : CsipBaseEvent<*>>(
   private val eventProperties: EventProperties,
-  // Will be used for tracking events for metrics
   private val telemetryClient: TelemetryClient,
   private val domainEventPublisher: DomainEventPublisher,
 ) {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   fun handleEvent(event: T) {
-    log.info(event.toString())
-
-    event.toDomainEvent(eventProperties.baseUrl).run {
-      if (eventProperties.publish) {
-        domainEventPublisher.publish(this)
-      } else {
-        log.info("$eventType event publishing is disabled")
-      }
+    if (eventProperties.publish) {
+      val domainEvent = event.toDomainEvent(eventProperties.baseUrl)
+      domainEventPublisher.publish(domainEvent)
+      telemetryClient.trackEvent(
+        event.type.eventType,
+        listOfNotNull(
+          domainEvent.personReference?.findNomsNumber()?.let { "prisonNumber" to it },
+          "recordUuid" to event.recordUuid.toString(),
+          "detailPath" to event.detailPath(),
+          "source" to event.source.toString(),
+          "occurredAt" to event.occurredAt.toString(),
+        ).toMap(),
+        mapOf(),
+      )
+    } else {
+      log.info("${event.type.eventType} publishing is disabled")
     }
-    // TODO: Track event for metrics
   }
 
   protected companion object {

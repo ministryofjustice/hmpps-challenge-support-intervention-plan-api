@@ -13,6 +13,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AffectedComponents
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
@@ -168,9 +169,8 @@ data class Referral(
           description = description,
           occurredAt = actionedAt,
           source = source,
-          reason = reason,
           updatedBy = decisionOutcomeRecordedBy,
-          isDecisionAndActionsAffected = true,
+          AffectedComponents(isDecisionAndActionsAffected = true),
         ),
       )
     }
@@ -249,9 +249,8 @@ data class Referral(
           description = description,
           occurredAt = actionedAt,
           source = source,
-          reason = reason,
           updatedBy = actionedBy,
-          isSaferCustodyScreeningOutcomeAffected = true,
+          AffectedComponents(isSaferCustodyScreeningOutcomeAffected = true),
         ),
       )
     }
@@ -317,10 +316,11 @@ data class Referral(
           description = description,
           occurredAt = actionedAt,
           source = source,
-          reason = reason,
           updatedBy = actionedBy,
-          isInvestigationAffected = true,
-          isInterviewAffected = isInterviewAffected,
+          AffectedComponents(
+            isInvestigationAffected = true,
+            isInterviewAffected = isInterviewAffected,
+          ),
         ),
       )
     }
@@ -346,13 +346,12 @@ data class Referral(
     contributoryFactors.add(this)
     csipRecord.registerEntityEvent(
       ContributoryFactorCreatedEvent(
-        contributoryFactorUuid = contributoryFactorUuid,
+        entityUuid = contributoryFactorUuid,
         recordUuid = csipRecord.recordUuid,
         prisonNumber = csipRecord.prisonNumber,
         description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
         occurredAt = actionedAt,
         source = source,
-        reason = Reason.USER,
         updatedBy = actionedBy,
       ),
     )

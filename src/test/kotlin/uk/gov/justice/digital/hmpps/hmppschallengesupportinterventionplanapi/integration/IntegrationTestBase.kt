@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -21,11 +19,10 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.Notification
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
@@ -59,9 +56,15 @@ abstract class IntegrationTestBase {
   @SpyBean
   lateinit var hmppsQueueService: HmppsQueueService
 
-  internal val hmppsEventsQueue by lazy { hmppsQueueService.findByQueueId("hmppseventtestqueue") ?: throw MissingQueueException("hmppseventtestqueue queue not found") }
+  internal val hmppsEventsQueue by lazy {
+    hmppsQueueService.findByQueueId("hmppseventtestqueue")
+      ?: throw MissingQueueException("hmppseventtestqueue queue not found")
+  }
 
-  internal val hmppsEventTopic by lazy { hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingQueueException("HmppsTopic hmpps event topic not found") }
+  internal val hmppsEventTopic by lazy {
+    hmppsQueueService.findByTopicId("hmppseventtopic")
+      ?: throw MissingQueueException("HmppsTopic hmpps event topic not found")
+  }
 
   internal fun HmppsQueue.countAllMessagesOnQueue() =
     sqsClient.countAllMessagesOnQueue(queueUrl).get()
@@ -71,26 +74,25 @@ abstract class IntegrationTestBase {
 
   internal fun HmppsQueue.receiveCsipDomainEventOnQueue() =
     receiveMessageOnQueue()
-      .let { objectMapper.readValue<MsgBody>(it.body()) }
-      .let { objectMapper.readValue<CsipDomainEvent>(it.Message) }
+      .let { objectMapper.readValue<Notification>(it.body()) }
+      .let { objectMapper.readValue<CsipDomainEvent>(it.message) }
 
-  internal fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): Collection<DomainEvent<AdditionalInformation>> =
-    sqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build()).get().messages()
-      .map { objectMapper.readValue<MsgBody>(it.body()) }
+  fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<Any> =
+    sqsClient.receiveMessage(
+      ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
+    ).get().messages()
+      .map { objectMapper.readValue<Notification>(it.body()) }
       .map {
-        if (it.Message.contains("prisoner-csip.csip-record-")) {
-          objectMapper.readValue<CsipDomainEvent>(it.Message)
-        } else if (it.Message.contains("prisoner-csip.interview-")) {
-          objectMapper.readValue<InterviewDomainEvent>(it.Message)
-        } else if (it.Message.contains("prisoner-csip.contributory-factor-")) {
-          objectMapper.readValue<ContributoryFactorDomainEvent>(it.Message)
-        } else {
-          throw Exception("unidentified Domain Event")
+        when (it.eventType) {
+          DomainEventType.CSIP_UPDATED.eventType, DomainEventType.CSIP_CREATED.eventType ->
+            objectMapper.readValue<CsipDomainEvent>(it.message)
+
+          DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType, DomainEventType.INTERVIEW_CREATED.eventType ->
+            objectMapper.readValue<CsipBasicDomainEvent>(it.message)
+
+          else -> throw IllegalArgumentException("Unknown Message Type : ${it.eventType}")
         }
       }
-
-  @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)
-  private data class MsgBody(val Message: String)
 
   companion object {
     private val pgContainer = PostgresContainer.instance

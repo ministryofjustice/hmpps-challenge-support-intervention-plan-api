@@ -45,7 +45,7 @@ class SaferCustodyScreeningOutcomesController(
   @PostMapping
   @Operation(
     summary = "Add safer custody screening outcome to the referral.",
-    description = "Create the safer custody screening outcome. Publishes prisoner-csip.csip-record-updated event with saferCustodyScreeningOutcomeAffected = true",
+    description = "Create the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true",
   )
   @ApiResponses(
     value = [
@@ -98,7 +98,7 @@ class SaferCustodyScreeningOutcomesController(
   @PatchMapping
   @Operation(
     summary = "Update the safer custody screening outcome.",
-    description = "Update the safer custody screening outcome. Publishes prisoner-csip.csip-record-updated event with saferCustodyScreeningOutcomeAffected = true",
+    description = "Update the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true",
   )
   @ApiResponses(
     value = [

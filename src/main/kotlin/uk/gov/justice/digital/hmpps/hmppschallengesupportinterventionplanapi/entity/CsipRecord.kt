@@ -15,10 +15,9 @@ import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.BaseEntityEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AffectedComponents
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -135,10 +134,8 @@ data class CsipRecord(
     this.referral = referral
   }
 
-  fun <T : DomainEvent<AdditionalInformation>> registerEntityEvent(entityEvent: BaseEntityEvent<T>) =
+  fun <T : AdditionalInformation> registerEntityEvent(entityEvent: CsipBaseEvent<T>) =
     apply { registerEvent(entityEvent) }
-
-  fun registerCsipEvent(domainEvent: CsipEvent) = apply { registerEvent(domainEvent) }
 
   fun create(
     createCsipRecordRequest: CreateCsipRecordRequest,
@@ -192,11 +189,12 @@ data class CsipRecord(
         description = description,
         occurredAt = createdAt,
         source = csipRequestContext.source,
-        reason = reason,
         createdBy = createdBy,
-        isRecordAffected = true,
-        isReferralAffected = true,
-        isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
+        AffectedComponents(
+          isRecordAffected = true,
+          isReferralAffected = true,
+          isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
+        ),
       ),
     )
   }

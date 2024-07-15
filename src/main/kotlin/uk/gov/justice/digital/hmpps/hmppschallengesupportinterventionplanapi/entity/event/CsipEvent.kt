@@ -1,54 +1,54 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-abstract class CsipEvent : BaseEntityEvent<CsipDomainEvent>() {
-  abstract val recordUuid: UUID
-  abstract val prisonNumber: String
+data class AffectedComponents(
+  val isRecordAffected: Boolean = false,
+  val isReferralAffected: Boolean = false,
+  val isContributoryFactorAffected: Boolean = false,
+  val isSaferCustodyScreeningOutcomeAffected: Boolean = false,
+  val isInvestigationAffected: Boolean = false,
+  val isInterviewAffected: Boolean = false,
+  val isDecisionAndActionsAffected: Boolean = false,
+  val isPlanAffected: Boolean = false,
+  val isIdentifiedNeedAffected: Boolean = false,
+  val isReviewAffected: Boolean = false,
+  val isAttendeeAffected: Boolean = false,
+)
 
-  protected fun toDomainEvent(
-    type: DomainEventType,
-    baseUrl: String,
-    isRecordAffected: Boolean = false,
-    isReferralAffected: Boolean = false,
-    isContributoryFactorAffected: Boolean = false,
-    isSaferCustodyScreeningOutcomeAffected: Boolean = false,
-    isInvestigationAffected: Boolean = false,
-    isInterviewAffected: Boolean = false,
-    isDecisionAndActionsAffected: Boolean = false,
-    isPlanAffected: Boolean = false,
-    isIdentifiedNeedAffected: Boolean = false,
-    isReviewAffected: Boolean = false,
-    isAttendeeAffected: Boolean = false,
-  ): CsipDomainEvent =
+sealed interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
+  val prisonNumber: String
+  val affectedComponents: AffectedComponents
+
+  override fun toDomainEvent(baseUrl: String): DomainEvent =
+    toDomainEvent(baseUrl, affectedComponents)
+
+  fun toDomainEvent(baseUrl: String, affectedComponents: AffectedComponents): DomainEvent =
     CsipDomainEvent(
       eventType = type.eventType,
       additionalInformation = CsipAdditionalInformation(
-        url = "$baseUrl/csip-records/$recordUuid",
         recordUuid = recordUuid,
-        prisonNumber = prisonNumber,
-        isRecordAffected = isRecordAffected,
-        isReferralAffected = isReferralAffected,
-        isContributoryFactorAffected = isContributoryFactorAffected,
-        isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
-        isInvestigationAffected = isInvestigationAffected,
-        isInterviewAffected = isInterviewAffected,
-        isDecisionAndActionsAffected = isDecisionAndActionsAffected,
-        isPlanAffected = isPlanAffected,
-        isIdentifiedNeedAffected = isIdentifiedNeedAffected,
-        isReviewAffected = isReviewAffected,
-        isAttendeeAffected = isAttendeeAffected,
+        isRecordAffected = affectedComponents.isRecordAffected,
+        isReferralAffected = affectedComponents.isReferralAffected,
+        isContributoryFactorAffected = affectedComponents.isContributoryFactorAffected,
+        isSaferCustodyScreeningOutcomeAffected = affectedComponents.isSaferCustodyScreeningOutcomeAffected,
+        isInvestigationAffected = affectedComponents.isInvestigationAffected,
+        isInterviewAffected = affectedComponents.isInterviewAffected,
+        isDecisionAndActionsAffected = affectedComponents.isDecisionAndActionsAffected,
+        isPlanAffected = affectedComponents.isPlanAffected,
+        isIdentifiedNeedAffected = affectedComponents.isIdentifiedNeedAffected,
+        isReviewAffected = affectedComponents.isReviewAffected,
+        isAttendeeAffected = affectedComponents.isAttendeeAffected,
         source = source,
-        reason = reason,
       ),
       description = description,
-      occurredAt = occurredAt.toOffsetString(),
+      occurredAt = occurredAt.toZoneDateTime(),
+      detailUrl = "$baseUrl${detailPath()}",
+      personReference = PersonReference.withPrisonNumber(prisonNumber),
     )
 }
 
@@ -58,115 +58,20 @@ data class CsipUpdatedEvent(
   override val description: String,
   override val occurredAt: LocalDateTime,
   override val source: Source,
-  override val reason: Reason,
   val updatedBy: String,
-  val isRecordAffected: Boolean = false,
-  val isReferralAffected: Boolean = false,
-  val isContributoryFactorAffected: Boolean = false,
-  val isSaferCustodyScreeningOutcomeAffected: Boolean = false,
-  val isInvestigationAffected: Boolean = false,
-  val isInterviewAffected: Boolean = false,
-  val isDecisionAndActionsAffected: Boolean = false,
-  val isPlanAffected: Boolean = false,
-  val isIdentifiedNeedAffected: Boolean = false,
-  val isReviewAffected: Boolean = false,
-  val isAttendeeAffected: Boolean = false,
-) : CsipEvent() {
-  override fun toString(): String {
-    return "Updated CSIP record with UUID '$recordUuid' " +
-      "for prison number '$prisonNumber' " +
-      "at '$occurredAt' " +
-      "by '$updatedBy' " +
-      "from source '$source' " +
-      "with reason '$reason'. " +
-      "Properties updated: " +
-      "record: $isRecordAffected, " +
-      "referral: $isReferralAffected, " +
-      "contributoryFactor: $isContributoryFactorAffected, " +
-      "saferCustodyScreeningOutcome: $isSaferCustodyScreeningOutcomeAffected, " +
-      "investigation: $isInvestigationAffected, " +
-      "interview: $isInterviewAffected, " +
-      "decisionAndActions: $isDecisionAndActionsAffected, " +
-      "plan: $isPlanAffected, " +
-      "identifiedNeed: $isIdentifiedNeedAffected, " +
-      "review: $isReviewAffected, " +
-      "attendee: $isAttendeeAffected."
-  }
-
-  override fun toDomainEvent(baseUrl: String): CsipDomainEvent =
-    toDomainEvent(
-      type = DomainEventType.CSIP_UPDATED,
-      baseUrl = baseUrl,
-      isRecordAffected = isRecordAffected,
-      isReferralAffected = isReferralAffected,
-      isContributoryFactorAffected = isContributoryFactorAffected,
-      isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
-      isInvestigationAffected = isInvestigationAffected,
-      isInterviewAffected = isInterviewAffected,
-      isDecisionAndActionsAffected = isDecisionAndActionsAffected,
-      isPlanAffected = isPlanAffected,
-      isIdentifiedNeedAffected = isIdentifiedNeedAffected,
-      isReviewAffected = isReviewAffected,
-      isAttendeeAffected = isAttendeeAffected,
-    )
+  override val affectedComponents: AffectedComponents,
+) : CsipEvent {
+  override val type: DomainEventType = DomainEventType.CSIP_UPDATED
 }
+
 data class CsipCreatedEvent(
   override val recordUuid: UUID,
   override val prisonNumber: String,
   override val description: String,
   override val occurredAt: LocalDateTime,
   override val source: Source,
-  override val reason: Reason,
   val createdBy: String,
-  val isRecordAffected: Boolean = false,
-  val isReferralAffected: Boolean = false,
-  val isContributoryFactorAffected: Boolean = false,
-  val isSaferCustodyScreeningOutcomeAffected: Boolean = false,
-  val isInvestigationAffected: Boolean = false,
-  val isInterviewAffected: Boolean = false,
-  val isDecisionAndActionsAffected: Boolean = false,
-  val isPlanAffected: Boolean = false,
-  val isIdentifiedNeedAffected: Boolean = false,
-  val isReviewAffected: Boolean = false,
-  val isAttendeeAffected: Boolean = false,
-) : CsipEvent() {
-
-  override fun toDomainEvent(baseUrl: String): CsipDomainEvent =
-    toDomainEvent(
-      type = DomainEventType.CSIP_CREATED,
-      baseUrl = baseUrl,
-      isRecordAffected = isRecordAffected,
-      isReferralAffected = isReferralAffected,
-      isContributoryFactorAffected = isContributoryFactorAffected,
-      isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
-      isInvestigationAffected = isInvestigationAffected,
-      isInterviewAffected = isInterviewAffected,
-      isDecisionAndActionsAffected = isDecisionAndActionsAffected,
-      isPlanAffected = isPlanAffected,
-      isIdentifiedNeedAffected = isIdentifiedNeedAffected,
-      isReviewAffected = isReviewAffected,
-      isAttendeeAffected = isAttendeeAffected,
-    )
-  override fun toString(): String {
-    return "Created CSIP record with UUID '$recordUuid' " +
-      "for prison number '$prisonNumber' " +
-      "at '$occurredAt' " +
-      "by '$createdBy' " +
-      "from source '$source' " +
-      "with reason '$reason'. " +
-      "Properties updated: " +
-      "record: $isRecordAffected, " +
-      "referral: $isReferralAffected, " +
-      "contributoryFactor: $isContributoryFactorAffected, " +
-      "saferCustodyScreeningOutcome: $isSaferCustodyScreeningOutcomeAffected, " +
-      "investigation: $isInvestigationAffected, " +
-      "interview: $isInterviewAffected, " +
-      "decisionAndActions: $isDecisionAndActionsAffected, " +
-      "plan: $isPlanAffected, " +
-      "identifiedNeed: $isIdentifiedNeedAffected, " +
-      "review: $isReviewAffected, " +
-      "attendee: $isAttendeeAffected."
-  }
+  override val affectedComponents: AffectedComponents,
+) : CsipEvent {
+  override val type: DomainEventType = DomainEventType.CSIP_CREATED
 }
-fun LocalDateTime.toOffsetString(): String =
-  DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(this.atOffset(ZoneId.of("Europe/London").rules.getOffset(this)))

@@ -1,59 +1,51 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason.USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import java.time.ZonedDateTime
 import java.util.UUID
 
-abstract class DomainEvent<T : AdditionalInformation> {
-  abstract val eventType: String
-  abstract val additionalInformation: T
-  abstract val version: Int
-  abstract val description: String
-  abstract val occurredAt: String
-
-  override fun toString(): String {
-    return "v$version domain event '$eventType' " +
-      "for resource '${additionalInformation.url}' " +
-      "from source '${additionalInformation.source}' " +
-      "with reason '${additionalInformation.reason}'"
-  }
+interface DomainEvent {
+  val eventType: String
+  val version: Int
+  val detailUrl: String?
+  val occurredAt: ZonedDateTime
+  val description: String
+  val additionalInformation: AdditionalInformation
+  val personReference: PersonReference?
 }
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes(
-  JsonSubTypes.Type(value = CsipAdditionalInformation::class, name = "csip"),
-  JsonSubTypes.Type(value = ContributoryFactorAdditionalInformation::class, name = "contributoryFactor"),
-  JsonSubTypes.Type(value = InterviewAdditionalInformation::class, name = "interview"),
-  JsonSubTypes.Type(value = ReferenceDataAdditionalInformation::class, name = "csipReferenceData"),
-)
-abstract class AdditionalInformation {
-  abstract val url: String
-  abstract val source: Source
-  abstract val reason: Reason
-  abstract fun asString(): String
-  abstract fun identifier(): String
+data class PersonReference(val identifiers: List<Identifier> = listOf()) {
+  operator fun get(key: String) = identifiers.find { it.type == key }?.value
+  fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
+
+  companion object {
+    const val NOMS_NUMBER_TYPE = "NOMS"
+    fun withPrisonNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
+  }
+
+  data class Identifier(val type: String, val value: String)
+}
+
+interface AdditionalInformation
+
+sealed interface CsipBaseInformation : AdditionalInformation {
+  val source: Source
+  val recordUuid: UUID
 }
 
 data class CsipDomainEvent(
+  override val occurredAt: ZonedDateTime,
   override val eventType: String,
-  override val additionalInformation: AdditionalInformation,
-  override val version: Int = 1,
+  override val detailUrl: String?,
   override val description: String,
-  override val occurredAt: String,
-) : DomainEvent<AdditionalInformation>() {
-  override fun toString(): String {
-    return "v$version CSIP domain event '$eventType' " + additionalInformation.asString()
-  }
-}
+  override val additionalInformation: CsipAdditionalInformation,
+  override val personReference: PersonReference,
+  override val version: Int = 1,
+) : DomainEvent
 
 data class CsipAdditionalInformation(
-  override val url: String,
-  val recordUuid: UUID,
-  val prisonNumber: String,
+  override val recordUuid: UUID,
   @JsonProperty("recordAffected")
   val isRecordAffected: Boolean,
   @JsonProperty("referralAffected")
@@ -77,100 +69,20 @@ data class CsipAdditionalInformation(
   @JsonProperty("attendeeAffected")
   val isAttendeeAffected: Boolean,
   override val source: Source,
-  override val reason: Reason,
-) : AdditionalInformation() {
-  override fun asString(): String =
-    "for CSIP record with UUID '$recordUuid' " +
-      "for prison number '$prisonNumber' " +
-      "from source '$source' " +
-      "with reason '$reason'. " +
-      "Properties updated: " +
-      "record: $isRecordAffected, " +
-      "referral: $isReferralAffected, " +
-      "contributoryFactor: $isContributoryFactorAffected, " +
-      "saferCustodyScreeningOutcome: $isSaferCustodyScreeningOutcomeAffected, " +
-      "investigation: $isInvestigationAffected, " +
-      "interview: $isInterviewAffected, " +
-      "decisionAndActions: $isDecisionAndActionsAffected, " +
-      "plan: $isPlanAffected, " +
-      "identifiedNeed: $isIdentifiedNeedAffected, " +
-      "review: $isReviewAffected, " +
-      "attendee: $isAttendeeAffected."
+) : CsipBaseInformation
 
-  override fun identifier(): String = recordUuid.toString()
-}
+data class CsipBasicInformation(
+  val entityUuid: UUID,
+  override val recordUuid: UUID,
+  override val source: Source,
+) : CsipBaseInformation
 
-data class ContributoryFactorDomainEvent(
+data class CsipBasicDomainEvent(
+  override val occurredAt: ZonedDateTime,
   override val eventType: String,
-  override val additionalInformation: AdditionalInformation,
-  override val version: Int = 1,
+  override val detailUrl: String?,
   override val description: String,
-  override val occurredAt: String,
-) : DomainEvent<AdditionalInformation>() {
-  override fun toString(): String {
-    return "v$version Contributory Factor domain event '$eventType' " + additionalInformation.asString()
-  }
-}
-
-data class ContributoryFactorAdditionalInformation(
-  override val url: String,
-  val contributoryFactorUuid: UUID,
-  val recordUuid: UUID,
-  val prisonNumber: String,
-  override val source: Source,
-  override val reason: Reason,
-) : AdditionalInformation() {
-  override fun asString(): String =
-    "for Contributory Factor with UUID '$contributoryFactorUuid' " +
-      "of CSIP Record with UUID '$recordUuid' " +
-      "for prison number '$prisonNumber' " +
-      "from source '$source' " +
-      "with reason '$reason'"
-
-  override fun identifier(): String = recordUuid.toString()
-}
-
-data class InterviewDomainEvent(
-  override val eventType: String,
-  override val additionalInformation: AdditionalInformation,
+  override val additionalInformation: CsipBasicInformation,
+  override val personReference: PersonReference,
   override val version: Int = 1,
-  override val description: String,
-  override val occurredAt: String,
-) : DomainEvent<AdditionalInformation>() {
-  override fun toString(): String {
-    return "v$version Interview domain event '$eventType' " + additionalInformation.asString()
-  }
-}
-
-data class InterviewAdditionalInformation(
-  override val url: String,
-  val interviewUuid: UUID,
-  val recordUuid: UUID,
-  val prisonNumber: String,
-  override val source: Source,
-  override val reason: Reason,
-) : AdditionalInformation() {
-  override fun asString(): String =
-    "for Interview with UUID '$interviewUuid' " +
-      "of CSIP Record with UUID '$recordUuid' " +
-      "for prison number '$prisonNumber' " +
-      "from source '$source' " +
-      "with reason '$reason'"
-
-  override fun identifier(): String = recordUuid.toString()
-}
-
-data class ReferenceDataAdditionalInformation(
-  override val url: String,
-  val domain: String,
-  val code: String,
-  override val source: Source,
-  override val reason: Reason = USER,
-) : AdditionalInformation() {
-  override fun identifier(): String = "$domain-$code"
-
-  override fun asString(): String =
-    "for reference code '$code' in domain '$domain'" +
-      "from source '$source' " +
-      "with reason '$reason'"
-}
+) : DomainEvent

@@ -14,7 +14,6 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import java.time.LocalDateTime
@@ -68,13 +67,12 @@ data class Investigation(
     interviews.add(this)
     referral.csipRecord.registerEntityEvent(
       InterviewCreatedEvent(
-        interviewUuid = interviewUuid,
+        entityUuid = interviewUuid,
         recordUuid = referral.csipRecord.recordUuid,
         prisonNumber = referral.csipRecord.prisonNumber,
         description = DomainEventType.INTERVIEW_CREATED.description,
         occurredAt = actionedAt,
         source = source,
-        reason = Reason.USER,
         updatedBy = actionedBy,
       ),
     )

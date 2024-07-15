@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -11,12 +12,12 @@ import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.toOffsetString
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason.USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -27,7 +28,7 @@ class DomainEventPublisherTest {
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val domainEventsTopic = mock<HmppsTopic>()
   private val domainEventsSnsClient = mock<SnsAsyncClient>()
-  private val objectMapper = jacksonMapperBuilder().build()
+  private val objectMapper = jacksonMapperBuilder().addModule(JavaTimeModule()).build()
 
   private val domainEventsTopicArn = "arn:aws:sns:eu-west-2:000000000000:${UUID.randomUUID()}"
   private val baseUrl = "http://localhost:8080"
@@ -51,11 +52,8 @@ class DomainEventPublisherTest {
     val domainEvent = CsipDomainEvent(
       eventType = CSIP_CREATED.eventType,
       additionalInformation = CsipAdditionalInformation(
-        url = "$baseUrl/csip-records/$recordUuid",
         recordUuid = recordUuid,
-        prisonNumber = PRISON_NUMBER,
         source = NOMIS,
-        reason = USER,
         isRecordAffected = true,
         isReferralAffected = false,
         isContributoryFactorAffected = false,
@@ -69,7 +67,9 @@ class DomainEventPublisherTest {
         isAttendeeAffected = false,
       ),
       description = CSIP_CREATED.description,
-      occurredAt = occurredAt.toOffsetString(),
+      occurredAt = occurredAt.toZoneDateTime(),
+      detailUrl = "$baseUrl/csip-records/$recordUuid",
+      personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
     )
 
     domainEventPublisher.publish(domainEvent)
@@ -78,7 +78,12 @@ class DomainEventPublisherTest {
       PublishRequest.builder()
         .topicArn(domainEventsTopic.arn)
         .message(objectMapper.writeValueAsString(domainEvent))
-        .messageAttributes(mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue(domainEvent.eventType).build()))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(domainEvent.eventType)
+              .build(),
+          ),
+        )
         .build(),
     )
   }

@@ -15,9 +15,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewAdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -44,11 +45,16 @@ class InvestigationsIntTest(
   @Autowired private val csipRecordRepository: CsipRecordRepository,
   @Autowired private val referenceDataRepository: ReferenceDataRepository,
 ) : IntegrationTestBase() {
-  private val intervieweeRole = referenceDataRepository.findByDomain(ReferenceDataType.INTERVIEWEE_ROLE).first { it.isActive() }
-  private val incidentType = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
-  private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
-  private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
-  private val refererAreaOfWork = referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
+  private val intervieweeRole =
+    referenceDataRepository.findByDomain(ReferenceDataType.INTERVIEWEE_ROLE).first { it.isActive() }
+  private val incidentType =
+    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
+  private val incidentLocation =
+    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
+  private val incidentInvolvement =
+    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
+  private val refererAreaOfWork =
+    referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
 
   @Test
   fun `401 unauthorised`() {
@@ -229,19 +235,17 @@ class InvestigationsIntTest(
       assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
     }
 
-    // prisoner-csip.csip-record-updated domain event published
+    // person.csip.record.updated domain event published
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 3 }
 
     val domainEvents = hmppsEventsQueue.receiveDomainEventsOnQueue()
 
-    val csipEvent = domainEvents.find { it is CsipDomainEvent }!!
+    val csipEvent = domainEvents.find { it is CsipDomainEvent } as CsipDomainEvent
     assertThat(csipEvent).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
-        DomainEventType.CSIP_UPDATED.eventType,
-        CsipAdditionalInformation(
-          url = "http://localhost:8080/csip-records/$recordUuid",
+        eventType = DomainEventType.CSIP_UPDATED.eventType,
+        additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          prisonNumber = PRISON_NUMBER,
           isRecordAffected = false,
           isReferralAffected = false,
           isContributoryFactorAffected = false,
@@ -254,31 +258,34 @@ class InvestigationsIntTest(
           isReviewAffected = false,
           isAttendeeAffected = false,
           source = Source.DPS,
-          reason = Reason.USER,
         ),
-        1,
-        "Investigation with 2 interviews added to referral",
-        csipEvent.occurredAt,
+        version = 1,
+        description = "Investigation with 2 interviews added to referral",
+        occurredAt = csipEvent.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
 
-    val interviewEvents = domainEvents.filterIsInstance<InterviewDomainEvent>()
+    val interviewEvents = domainEvents.filterIsInstance<CsipBasicDomainEvent>()
+      .filter { it.eventType == DomainEventType.INTERVIEW_CREATED.eventType }
+
     assertThat(interviewEvents).hasSize(2)
-    assertThat(interviewEvents[0]).usingRecursiveComparison().ignoringFields("additionalInformation.interviewUuid").isEqualTo(
-      InterviewDomainEvent(
-        eventType = DomainEventType.INTERVIEW_CREATED.eventType,
-        additionalInformation = InterviewAdditionalInformation(
-          url = "http://localhost:8080/csip-records/$recordUuid",
-          interviewUuid = recordUuid,
-          recordUuid = recordUuid,
-          prisonNumber = PRISON_NUMBER,
-          source = Source.DPS,
-          reason = Reason.USER,
+    assertThat(interviewEvents[0]).usingRecursiveComparison().ignoringFields("additionalInformation.entityUuid")
+      .isEqualTo(
+        CsipBasicDomainEvent(
+          eventType = DomainEventType.INTERVIEW_CREATED.eventType,
+          additionalInformation = CsipBasicInformation(
+            entityUuid = recordUuid,
+            recordUuid = recordUuid,
+            source = Source.DPS,
+          ),
+          description = DomainEventType.INTERVIEW_CREATED.description,
+          occurredAt = interviewEvents[0].occurredAt,
+          detailUrl = "http://localhost:8080/csip-records/$recordUuid",
+          personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
         ),
-        description = DomainEventType.INTERVIEW_CREATED.description,
-        occurredAt = interviewEvents[0].occurredAt,
-      ),
-    )
+      )
   }
 
   @Test
@@ -316,16 +323,14 @@ class InvestigationsIntTest(
       assertThat(activeCaseLoadId).isNull()
     }
 
-    // prisoner-csip.csip-record-updated domain event published
+    // person.csip.record.updated domain event published
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
     val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
     assertThat(event).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
-        DomainEventType.CSIP_UPDATED.eventType,
-        CsipAdditionalInformation(
-          url = "http://localhost:8080/csip-records/$recordUuid",
+        eventType = DomainEventType.CSIP_UPDATED.eventType,
+        additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          prisonNumber = PRISON_NUMBER,
           isRecordAffected = false,
           isReferralAffected = false,
           isContributoryFactorAffected = false,
@@ -338,11 +343,12 @@ class InvestigationsIntTest(
           isReviewAffected = false,
           isAttendeeAffected = false,
           source = Source.NOMIS,
-          reason = Reason.USER,
         ),
-        1,
-        "Investigation with 0 interviews added to referral",
-        event.occurredAt,
+        version = 1,
+        description = "Investigation with 0 interviews added to referral",
+        occurredAt = event.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
   }

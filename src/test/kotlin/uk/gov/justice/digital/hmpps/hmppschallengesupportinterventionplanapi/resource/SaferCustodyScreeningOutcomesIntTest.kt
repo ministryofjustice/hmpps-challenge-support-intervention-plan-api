@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
@@ -42,10 +43,14 @@ class SaferCustodyScreeningOutcomesIntTest(
   @Autowired private val referenceDataRepository: ReferenceDataRepository,
 ) : IntegrationTestBase() {
   private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first { it.isActive() }
-  private val incidentType = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
-  private val incidentLocation = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
-  private val incidentInvolvement = referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
-  private val refererAreaOfWork = referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
+  private val incidentType =
+    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
+  private val incidentLocation =
+    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
+  private val incidentInvolvement =
+    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
+  private val refererAreaOfWork =
+    referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
 
   @Test
   fun `401 unauthorised`() {
@@ -217,16 +222,14 @@ class SaferCustodyScreeningOutcomesIntTest(
       assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
     }
 
-    // prisoner-csip.csip-record-updated domain event published
+    // person.csip.record.updated domain event published
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
     val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
     assertThat(event).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
-        DomainEventType.CSIP_UPDATED.eventType,
-        CsipAdditionalInformation(
-          url = "http://localhost:8080/csip-records/$recordUuid",
+        eventType = DomainEventType.CSIP_UPDATED.eventType,
+        additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          prisonNumber = PRISON_NUMBER,
           isRecordAffected = false,
           isReferralAffected = false,
           isContributoryFactorAffected = false,
@@ -239,11 +242,12 @@ class SaferCustodyScreeningOutcomesIntTest(
           isReviewAffected = false,
           isAttendeeAffected = false,
           source = Source.DPS,
-          reason = Reason.USER,
         ),
-        1,
-        "Safer custody screening outcome added to referral",
-        event.occurredAt,
+        description = "Safer custody screening outcome added to referral",
+        version = 1,
+        occurredAt = event.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
   }
@@ -282,16 +286,14 @@ class SaferCustodyScreeningOutcomesIntTest(
       assertThat(activeCaseLoadId).isNull()
     }
 
-    // prisoner-csip.csip-record-updated domain event published
+    // person.csip.record.updated domain event published
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
     val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
     assertThat(event).usingRecursiveComparison().isEqualTo(
       CsipDomainEvent(
-        DomainEventType.CSIP_UPDATED.eventType,
-        CsipAdditionalInformation(
-          url = "http://localhost:8080/csip-records/$recordUuid",
+        eventType = DomainEventType.CSIP_UPDATED.eventType,
+        additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          prisonNumber = PRISON_NUMBER,
           isRecordAffected = false,
           isReferralAffected = false,
           isContributoryFactorAffected = false,
@@ -304,11 +306,12 @@ class SaferCustodyScreeningOutcomesIntTest(
           isReviewAffected = false,
           isAttendeeAffected = false,
           source = Source.NOMIS,
-          reason = Reason.USER,
         ),
-        1,
-        "Safer custody screening outcome added to referral",
-        event.occurredAt,
+        description = "Safer custody screening outcome added to referral",
+        version = 1,
+        occurredAt = event.occurredAt,
+        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
+        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
       ),
     )
   }
