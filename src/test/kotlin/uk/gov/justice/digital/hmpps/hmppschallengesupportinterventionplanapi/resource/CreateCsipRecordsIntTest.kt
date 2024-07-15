@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -271,7 +271,7 @@ class CreateCsipRecordsIntTest(
       .expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody
 
     with(response!!) {
-      assertThat(logNumber).isEqualTo(LOG_NUMBER)
+      assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))
@@ -345,14 +345,14 @@ class CreateCsipRecordsIntTest(
   }
 
   @Test
-  fun `201 created - CSIP record created via DPS with empty logNumber`() {
+  fun `201 created - CSIP record created via DPS with empty logCode`() {
     val request = createCsipRecordRequest(
       incidentTypeCode = "ATO",
       incidentLocationCode = "EDU",
       refererAreaCode = "ACT",
       incidentInvolvementCode = "OTH",
       contributoryFactorTypeCode = listOf("AFL"),
-      logNumber = null,
+      logCode = null,
     )
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
@@ -360,7 +360,7 @@ class CreateCsipRecordsIntTest(
 
     with(response!!) {
       assertThat(referral).isNotNull()
-      assertThat(logNumber).isNull()
+      assertThat(logCode).isNull()
     }
 
     with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
@@ -396,7 +396,7 @@ class CreateCsipRecordsIntTest(
     ).expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody
 
     with(response!!) {
-      assertThat(logNumber).isEqualTo(LOG_NUMBER)
+      assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))

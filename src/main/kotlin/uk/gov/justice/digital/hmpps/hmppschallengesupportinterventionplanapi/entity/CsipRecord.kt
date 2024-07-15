@@ -45,7 +45,7 @@ data class CsipRecord(
   val prisonCodeWhenRecorded: String? = null,
 
   @Column(length = 10)
-  val logNumber: String? = null,
+  val logCode: String? = null,
 
   @Column(nullable = false)
   val createdAt: LocalDateTime,

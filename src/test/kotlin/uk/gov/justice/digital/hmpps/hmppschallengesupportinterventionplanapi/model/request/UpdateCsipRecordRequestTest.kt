@@ -7,15 +7,15 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
     val request = UpdateCsipRecordRequest(
-      logNumber = "menandri",
+      logCode = "menandri",
     )
     assertThat(validator.validate(request)).isEmpty()
   }
 
   @Test
-  fun `valid request with null logNumber`() {
+  fun `valid request with null logCode`() {
     val request = UpdateCsipRecordRequest(
-      logNumber = null,
+      logCode = null,
 
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -24,11 +24,11 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
   @Test
   fun `validation fails if size constraints are not met`() {
     val request = UpdateCsipRecordRequest(
-      logNumber = "n".repeat(11),
+      logCode = "n".repeat(11),
     )
     assertValidationErrors(
       validator.validate(request),
-      Pair("logNumber", "Log number must be <= 10 characters"),
+      Pair("logCode", "Log code must be <= 10 characters"),
     )
   }
 }

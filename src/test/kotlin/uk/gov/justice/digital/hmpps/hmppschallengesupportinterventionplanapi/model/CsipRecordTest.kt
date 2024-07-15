@@ -24,7 +24,7 @@ class CsipRecordTest : ModelTest() {
       recordUuid = UUID.randomUUID(),
       prisonNumber = "ABC12345",
       prisonCodeWhenRecorded = "ABC",
-      logNumber = "LOG001",
+      logCode = "LOG001",
       createdAt = originalDateTime,
       createdBy = "user_name",
       createdByDisplayName = "User Name",

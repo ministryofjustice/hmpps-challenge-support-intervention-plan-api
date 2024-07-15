@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.areaOfWork
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.contributoryFactorType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
@@ -163,7 +163,7 @@ class CsipRecordServiceTest {
     verify(csipRecordRepository).saveAndFlush(csipRecordArgumentCaptor.capture())
 
     with(csipRecordArgumentCaptor.value) {
-      assertThat(logNumber).isEqualTo(LOG_NUMBER)
+      assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(prisonNumber).isEqualTo(PRISON_NUMBER)
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     }

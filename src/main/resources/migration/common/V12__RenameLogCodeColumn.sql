@@ -1,0 +1,1 @@
+ALTER TABLE csip_record RENAME log_number TO log_code;

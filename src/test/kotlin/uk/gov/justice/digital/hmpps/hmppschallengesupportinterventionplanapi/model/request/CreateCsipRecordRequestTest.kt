@@ -9,7 +9,7 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
     val request = CreateCsipRecordRequest(
-      logNumber = "tamquam",
+      logCode = "tamquam",
       referral = CreateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = LocalTime.now(),
@@ -39,9 +39,9 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
   }
 
   @Test
-  fun `Log number must be no more than 10 characters`() {
+  fun `Log code must be no more than 10 characters`() {
     val request = CreateCsipRecordRequest(
-      logNumber = "n".repeat(11),
+      logCode = "n".repeat(11),
       referral = CreateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = LocalTime.now(),
@@ -67,13 +67,13 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         ),
       ),
     )
-    assertSingleValidationError(validator.validate(request), "logNumber", "Log number must be <= 10 characters")
+    assertSingleValidationError(validator.validate(request), "logCode", "Log code must be <= 10 characters")
   }
 
   @Test
-  fun `Log number can be null`() {
+  fun `Log code can be null`() {
     val request = CreateCsipRecordRequest(
-      logNumber = null,
+      logCode = null,
       referral = CreateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = LocalTime.now(),
@@ -105,7 +105,7 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
   @Test
   fun `child nested object validation`() {
     val request = CreateCsipRecordRequest(
-      logNumber = "na",
+      logCode = "na",
       referral = CreateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = LocalTime.now(),

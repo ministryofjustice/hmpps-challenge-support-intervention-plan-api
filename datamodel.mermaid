@@ -25,7 +25,7 @@ erDiagram
         uuid record_uuid "not null unique. Mapped to OFFENDER_CSIP_REPORTS"
         varchar(10) prison_number "not null. The prison number of the person the CSIP record is for"
         varchar(6) prison_code_when_recorded "The prison code where the person was resident at the time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.AGY_LOC_ID"
-        varchar(10) log_number "User entered identifier for the CSIP record. Defaults to the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ"
+        varchar(10) log_code "User entered identifier for the CSIP record. Defaults to the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ"
         timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
         varchar(32) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
         varchar(255) created_by_display_name "not null. The displayable name of the user who created the CSIP record. Not mapped"

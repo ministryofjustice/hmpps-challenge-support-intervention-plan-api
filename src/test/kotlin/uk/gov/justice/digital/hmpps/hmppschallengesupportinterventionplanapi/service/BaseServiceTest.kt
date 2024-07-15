@@ -26,7 +26,7 @@ abstract class BaseServiceTest {
     recordUuid = UUID.randomUUID(),
     prisonNumber = "quisque",
     prisonCodeWhenRecorded = null,
-    logNumber = null,
+    logCode = null,
     createdAt = LocalDateTime.now(),
     createdBy = "ornatus",
     createdByDisplayName = "Belinda Drake",

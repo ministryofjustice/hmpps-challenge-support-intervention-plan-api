@@ -46,7 +46,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @GetMapping("/prisoners/{prisonNumber}/csip-records")
   @Operation(
     summary = "Retrieve and filter all CSIP records for a prisoner.",
-    description = "Returns the CSIP records for a prisoner. Supports log number filtering.",
+    description = "Returns the CSIP records for a prisoner. Supports log code filtering.",
   )
   @ApiResponses(
     value = [
@@ -73,9 +73,9 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
       required = true,
     ) prisonNumber: String,
     @RequestParam @Parameter(
-      description = "Filter CSIP records that contain the search text in their Log Number. The search is case insensitive.",
+      description = "Filter CSIP records that contain the search text in their Log Code. The search is case insensitive.",
       example = "Search text",
-    ) logNumber: String?,
+    ) logCode: String?,
     @RequestParam @Parameter(
       description = "Filter CSIP records that have a created timestamp at or after the supplied time.",
       example = "2021-09-27T14:19:25",
@@ -91,7 +91,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @GetMapping("/prisons/{prisonCode}/csip-records")
   @Operation(
     summary = "Retrieve and filter all CSIP records for prisoners resident in the prison.",
-    description = "Returns the CSIP records for prisoners resident in the prison. Supports log number filtering.",
+    description = "Returns the CSIP records for prisoners resident in the prison. Supports log code filtering.",
   )
   @ApiResponses(
     value = [
@@ -118,9 +118,9 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
       required = true,
     ) prisonCode: String,
     @RequestParam @Parameter(
-      description = "Filter CSIP records that contain the search text in their Log Number. The search is case insensitive.",
+      description = "Filter CSIP records that contain the search text in their Log Code. The search is case insensitive.",
       example = "Search text",
-    ) logNumber: String?,
+    ) logCode: String?,
     @RequestParam @Parameter(
       description = "Filter CSIP records that have a created timestamp at or after the supplied time.",
       example = "2021-09-27T14:19:25",
@@ -211,8 +211,8 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/csip-records/{recordUuid}/log-number")
   @Operation(
-    summary = "Update the log number for a CSIP record.",
-    description = "Update the log number for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true",
+    summary = "Update the log code for a CSIP record.",
+    description = "Update the log code for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true",
   )
   @ApiResponses(
     value = [

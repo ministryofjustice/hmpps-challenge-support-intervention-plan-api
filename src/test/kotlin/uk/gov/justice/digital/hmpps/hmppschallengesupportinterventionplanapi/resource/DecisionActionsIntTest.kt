@@ -501,7 +501,7 @@ class DecisionActionsIntTest(
       recordUuid = UUID.randomUUID(),
       prisonNumber = PRISON_NUMBER,
       prisonCodeWhenRecorded = PRISON_CODE_LEEDS,
-      logNumber = "LOG",
+      logCode = "LOG",
       createdAt = LocalDateTime.now(),
       createdBy = "te",
       createdByDisplayName = "Bobbie Shepard",

@@ -18,7 +18,7 @@ fun CreateCsipRecordRequest.toCsipRecord(
 ) = CsipRecord(
   prisonNumber = prisonNumber,
   prisonCodeWhenRecorded = prisonCode,
-  logNumber = logNumber,
+  logCode = logCode,
   createdAt = csipRequestContext.requestAt,
   createdBy = csipRequestContext.username,
   createdByDisplayName = csipRequestContext.userDisplayName,
@@ -97,7 +97,7 @@ fun CsipRecord.toModel() =
     recordUuid = recordUuid,
     prisonNumber = prisonNumber,
     prisonCodeWhenRecorded = prisonCodeWhenRecorded,
-    logNumber = logNumber,
+    logCode = logCode,
     createdAt = createdAt,
     createdBy = createdBy,
     createdByDisplayName = createdByDisplayName,
