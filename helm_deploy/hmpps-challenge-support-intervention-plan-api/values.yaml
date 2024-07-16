@@ -1,6 +1,5 @@
 generic-service:
   nameOverride: hmpps-challenge-support-intervention-plan-api
-  fullnameOverride: hmpps-csip-api
   productId: "DPS094" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
 
   replicaCount: 4
