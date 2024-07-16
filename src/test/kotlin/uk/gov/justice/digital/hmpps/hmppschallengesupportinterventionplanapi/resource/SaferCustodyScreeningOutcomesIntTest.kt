@@ -109,8 +109,8 @@ class SaferCustodyScreeningOutcomesIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }

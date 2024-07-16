@@ -47,7 +47,7 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `403 forbidden - no required role`() {
-    val response = webTestClient.get().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.get().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE"))).exchange().expectStatus().isForbidden.expectBody(
         ErrorResponse::class.java,
       ).returnResult().responseBody
@@ -63,18 +63,18 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri("/prisoners/AB123456/csip-records").exchange().expectStatus().isUnauthorized
+    webTestClient.post().uri("/prisoners/A1234BC/csip-records").exchange().expectStatus().isUnauthorized
   }
 
   @Test
   fun `403 forbidden - no roles`() {
-    webTestClient.post().uri("/prisoners/AB123456/csip-records").bodyValue(createCsipRecordRequest())
+    webTestClient.post().uri("/prisoners/A1234BC/csip-records").bodyValue(createCsipRecordRequest())
       .headers(setAuthorisation()).headers(setCsipRequestContext()).exchange().expectStatus().isForbidden
   }
 
   @Test
   fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }.exchange()
       .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
 
@@ -89,7 +89,7 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange().expectStatus().isBadRequest.expectBody(
         ErrorResponse::class.java,
       ).returnResult().responseBody
@@ -105,7 +105,7 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `400 bad request - username not found`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records").bodyValue(createCsipRecordRequest())
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records").bodyValue(createCsipRecordRequest())
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(username = USER_NOT_FOUND))
       .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
 
@@ -120,7 +120,7 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `400 bad request - no body`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext()).exchange()
       .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
 
@@ -229,8 +229,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
-      assertThat(developerMessage).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:D")
       assertThat(moreInfo).isNull()
     }
   }
@@ -251,8 +251,8 @@ class CreateCsipRecordsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE code(s) 'D', 'E', 'F' does not exist")
-      assertThat(developerMessage).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code(s) 'D', 'E', 'F' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: Multiple invalid CONTRIBUTORY_FACTOR_TYPE")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:[D,E,F]")
       assertThat(moreInfo).isNull()
     }
   }
@@ -471,19 +471,21 @@ class CreateCsipRecordsIntTest(
     source: Source = DPS,
     user: String = TEST_USER,
     request: CreateCsipRecordRequest,
-    prisonNumber: String = "AB123456",
-  ) = post().uri("/prisoners/$prisonNumber/csip-records").bodyValue(request).headers(
-    setAuthorisation(
-      roles = listOf(
-        source.let {
-          if (it == NOMIS) {
-            ROLE_NOMIS
-          } else {
-            ROLE_CSIP_UI
-          }
-        },
+    prisonNumber: String = PRISON_NUMBER,
+  ) = post()
+    .uri("/prisoners/$prisonNumber/csip-records")
+    .bodyValue(request).headers(
+      setAuthorisation(
+        roles = listOf(
+          source.let {
+            if (it == NOMIS) {
+              ROLE_NOMIS
+            } else {
+              ROLE_CSIP_UI
+            }
+          },
+        ),
       ),
-    ),
-  ).headers(setCsipRequestContext(source = source, username = user)).exchange().expectHeader()
+    ).headers(setCsipRequestContext(source = source, username = user)).exchange().expectHeader()
     .contentType(MediaType.APPLICATION_JSON)
 }

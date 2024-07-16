@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.anySet
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Captor
 import org.mockito.InjectMocks
@@ -137,7 +138,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
+    assertThat(exception.message).isEqualTo("CONTRIBUTORY_FACTOR_TYPE is invalid")
   }
 
   @Test
@@ -151,7 +152,7 @@ class CsipRecordServiceTest {
     whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_INVOLVEMENT), anyString())).thenReturn(
       incidentInvolvement(),
     )
-    whenever(referenceDataRepository.findByDomain(eq(CONTRIBUTORY_FACTOR_TYPE))).thenReturn(
+    whenever(referenceDataRepository.findByDomainAndCodeIn(eq(CONTRIBUTORY_FACTOR_TYPE), anySet())).thenReturn(
       listOf(contributoryFactorType()),
     )
     whenever(csipRecordRepository.save(any())).thenReturn(

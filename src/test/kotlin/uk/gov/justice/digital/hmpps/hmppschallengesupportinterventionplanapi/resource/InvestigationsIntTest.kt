@@ -113,8 +113,8 @@ class InvestigationsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INTERVIEWEE_ROLE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("INTERVIEWEE_ROLE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INTERVIEWEE_ROLE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INTERVIEWEE_ROLE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }

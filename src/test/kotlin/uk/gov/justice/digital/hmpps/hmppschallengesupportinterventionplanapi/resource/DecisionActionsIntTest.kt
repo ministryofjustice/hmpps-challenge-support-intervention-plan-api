@@ -148,8 +148,8 @@ class DecisionActionsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
@@ -165,8 +165,8 @@ class DecisionActionsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'OT_INACT' is inactive")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'OT_INACT' is inactive")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is not active")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:OT_INACT")
       assertThat(moreInfo).isNull()
     }
   }
@@ -182,8 +182,8 @@ class DecisionActionsIntTest(
     with(response!!) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
