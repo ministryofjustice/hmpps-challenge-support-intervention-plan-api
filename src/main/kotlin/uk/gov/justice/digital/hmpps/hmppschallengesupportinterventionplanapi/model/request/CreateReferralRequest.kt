@@ -107,7 +107,6 @@ data class CreateReferralRequest(
   @Schema(
     description = "Contributory factors to the incident that motivated the referral.",
   )
-  @field:Size(min = 1, message = "A referral must have >=1 contributory factor(s).")
   @field:Valid
   val contributoryFactors: Collection<CreateContributoryFactorRequest>,
 )

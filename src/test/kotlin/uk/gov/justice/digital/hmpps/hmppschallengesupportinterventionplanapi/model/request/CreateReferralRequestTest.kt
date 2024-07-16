@@ -101,32 +101,4 @@ class CreateReferralRequestTest : RequestValidationTest() {
       Pair("assaultedStaffName", "Name or names must be <= 1000 characters"),
     )
   }
-
-  @Test
-  fun `validation fails if referral request does not have at least one contributory factor`() {
-    val request = CreateReferralRequest(
-      incidentDate = LocalDate.now(),
-      incidentTime = LocalTime.now(),
-      incidentTypeCode = "idque",
-      incidentLocationCode = "ridiculus",
-      referredBy = "maximus",
-      refererAreaCode = "intellegat",
-      referralSummary = null,
-      isProactiveReferral = null,
-      isStaffAssaulted = null,
-      assaultedStaffName = null,
-      incidentInvolvementCode = "vidisse",
-      descriptionOfConcern = "molestie",
-      knownReasons = "dicat",
-      otherInformation = null,
-      isSaferCustodyTeamInformed = null,
-      isReferralComplete = null,
-      contributoryFactors = listOf(),
-    )
-    assertSingleValidationError(
-      validator.validate(request),
-      "contributoryFactors",
-      "A referral must have >=1 contributory factor(s).",
-    )
-  }
 }

@@ -25,6 +25,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
@@ -161,6 +163,45 @@ class CsipRecordServiceTest {
       },
     )
     csipRecordService.createCsipRecord(createCsipRecordRequest(), PRISON_NUMBER, csipRequestContext())
+    verify(csipRecordRepository).save(csipRecordArgumentCaptor.capture())
+
+    with(csipRecordArgumentCaptor.value) {
+      assertThat(logCode).isEqualTo(LOG_CODE)
+      assertThat(prisonNumber).isEqualTo(PRISON_NUMBER)
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+    }
+  }
+
+  @Test
+  fun `throws exception if contributory factors is empty and source is DPS`() {
+    whenever(prisonerSearchClient.getPrisoner(anyString())).thenReturn(prisoner())
+    val exception = assertThrows<IllegalArgumentException> {
+      csipRecordService.createCsipRecord(
+        createCsipRecordRequest(contributoryFactorTypeCode = listOf()),
+        "A1234BC",
+        csipRequestContext(),
+      )
+    }
+    assertThat(exception.message).isEqualTo("A referral must have >=1 contributory factor(s).")
+  }
+
+  @Test
+  fun `should save all elements if contributory factors is empty and source is NOMIS`() {
+    whenever(prisonerSearchClient.getPrisoner(anyString())).thenReturn(prisoner())
+    whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_TYPE), anyString())).thenReturn(incidentType())
+    whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_LOCATION), anyString())).thenReturn(
+      incidentLocation(),
+    )
+    whenever(referenceDataRepository.findByDomainAndCode(eq(AREA_OF_WORK), anyString())).thenReturn(areaOfWork())
+    whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_INVOLVEMENT), anyString())).thenReturn(
+      incidentInvolvement(),
+    )
+    whenever(csipRecordRepository.save(any())).thenReturn(csipRecord().apply { referral = referral(csipRecord()) })
+    csipRecordService.createCsipRecord(
+      createCsipRecordRequest(contributoryFactorTypeCode = listOf()),
+      PRISON_NUMBER,
+      csipRequestContext().copy(source = Source.NOMIS, username = NOMIS_SYS_USER),
+    )
     verify(csipRecordRepository).save(csipRecordArgumentCaptor.capture())
 
     with(csipRecordArgumentCaptor.value) {
