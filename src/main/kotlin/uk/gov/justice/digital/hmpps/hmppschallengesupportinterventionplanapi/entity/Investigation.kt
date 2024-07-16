@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -37,7 +36,7 @@ class Investigation(
   var personsUsualBehaviour: String?,
   var personsTrigger: String?,
   var protectiveFactors: String?,
-) : AbstractAggregateRoot<Investigation>() {
+) {
   @OneToMany(
     mappedBy = "investigation",
     fetch = FetchType.LAZY,

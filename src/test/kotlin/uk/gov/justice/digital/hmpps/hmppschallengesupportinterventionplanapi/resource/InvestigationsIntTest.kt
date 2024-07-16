@@ -10,6 +10,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
@@ -213,30 +214,25 @@ class InvestigationsIntTest : IntegrationTestBase() {
     val domainEvents = hmppsEventsQueue.receiveDomainEventsOnQueue()
 
     val csipEvent = domainEvents.find { it is CsipDomainEvent } as CsipDomainEvent
-    assertThat(csipEvent).usingRecursiveComparison().isEqualTo(
-      CsipDomainEvent(
-        eventType = DomainEventType.CSIP_UPDATED.eventType,
-        additionalInformation = CsipAdditionalInformation(
-          recordUuid = recordUuid,
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = false,
-          isInvestigationAffected = true,
-          isInterviewAffected = true,
-          isDecisionAndActionsAffected = false,
-          isPlanAffected = false,
-          isIdentifiedNeedAffected = false,
-          isReviewAffected = false,
-          isAttendeeAffected = false,
-          source = Source.DPS,
+    assertThat(csipEvent).usingRecursiveComparison().ignoringFields("additionalInformation.affectedComponents")
+      .isEqualTo(
+        CsipDomainEvent(
+          eventType = DomainEventType.CSIP_UPDATED.eventType,
+          additionalInformation = CsipAdditionalInformation(
+            recordUuid = recordUuid,
+            affectedComponents = setOf(),
+            source = Source.DPS,
+          ),
+          version = 1,
+          description = "Investigation with 2 interviews added to referral",
+          occurredAt = csipEvent.occurredAt,
+          detailUrl = "http://localhost:8080/csip-records/$recordUuid",
+          personReference = PersonReference.withPrisonNumber(prisonNumber),
         ),
-        version = 1,
-        description = "Investigation with 2 interviews added to referral",
-        occurredAt = csipEvent.occurredAt,
-        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(prisonNumber),
-      ),
+      )
+    assertThat(csipEvent.additionalInformation.affectedComponents).containsExactlyInAnyOrder(
+      AffectedComponent.Investigation,
+      AffectedComponent.Interview,
     )
 
     val interviewEvents = domainEvents.filterIsInstance<CsipBasicDomainEvent>()
@@ -248,7 +244,7 @@ class InvestigationsIntTest : IntegrationTestBase() {
         CsipBasicDomainEvent(
           eventType = DomainEventType.INTERVIEW_CREATED.eventType,
           additionalInformation = CsipBasicInformation(
-            entityUuid = recordUuid,
+            entityUuid = UUID.randomUUID(),
             recordUuid = recordUuid,
             source = Source.DPS,
           ),
@@ -301,17 +297,7 @@ class InvestigationsIntTest : IntegrationTestBase() {
         eventType = DomainEventType.CSIP_UPDATED.eventType,
         additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = false,
-          isInvestigationAffected = true,
-          isInterviewAffected = false,
-          isDecisionAndActionsAffected = false,
-          isPlanAffected = false,
-          isIdentifiedNeedAffected = false,
-          isReviewAffected = false,
-          isAttendeeAffected = false,
+          affectedComponents = setOf(AffectedComponent.Investigation),
           source = Source.NOMIS,
         ),
         version = 1,

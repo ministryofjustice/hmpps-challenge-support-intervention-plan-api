@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
@@ -204,17 +205,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
         eventType = DomainEventType.CSIP_UPDATED.eventType,
         additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = true,
-          isInvestigationAffected = false,
-          isInterviewAffected = false,
-          isDecisionAndActionsAffected = false,
-          isPlanAffected = false,
-          isIdentifiedNeedAffected = false,
-          isReviewAffected = false,
-          isAttendeeAffected = false,
+          affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome),
           source = Source.DPS,
         ),
         description = "Safer custody screening outcome added to referral",
@@ -265,17 +256,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
         eventType = DomainEventType.CSIP_UPDATED.eventType,
         additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = true,
-          isInvestigationAffected = false,
-          isInterviewAffected = false,
-          isDecisionAndActionsAffected = false,
-          isPlanAffected = false,
-          isIdentifiedNeedAffected = false,
-          isReviewAffected = false,
-          isAttendeeAffected = false,
+          affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome),
           source = Source.NOMIS,
         ),
         description = "Safer custody screening outcome added to referral",
