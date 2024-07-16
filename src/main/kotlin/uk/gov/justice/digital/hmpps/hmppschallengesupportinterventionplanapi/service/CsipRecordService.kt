@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidInputException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotActiveException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
@@ -36,6 +37,10 @@ class CsipRecordService(
   ): CsipRecord {
     val prisoner = requireNotNull(prisonerSearchClient.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
     val referral = request.referral
+    if (requestContext.source != Source.NOMIS) {
+      require(referral.contributoryFactors.isNotEmpty()) { "A referral must have >=1 contributory factor(s)." }
+    }
+
     val incidentType = referenceDataRepository.getReferenceData(INCIDENT_TYPE, referral.incidentTypeCode)
     val incidentLocation = referenceDataRepository.getReferenceData(INCIDENT_LOCATION, referral.incidentLocationCode)
     val referrerAreaOfWork = referenceDataRepository.getReferenceData(AREA_OF_WORK, referral.refererAreaCode)
