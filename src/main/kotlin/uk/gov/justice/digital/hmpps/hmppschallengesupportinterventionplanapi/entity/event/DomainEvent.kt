@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -46,28 +46,7 @@ data class CsipDomainEvent(
 
 data class CsipAdditionalInformation(
   override val recordUuid: UUID,
-  @JsonProperty("recordAffected")
-  val isRecordAffected: Boolean,
-  @JsonProperty("referralAffected")
-  val isReferralAffected: Boolean,
-  @JsonProperty("contributoryFactorAffected")
-  val isContributoryFactorAffected: Boolean,
-  @JsonProperty("saferCustodyScreeningOutcomeAffected")
-  val isSaferCustodyScreeningOutcomeAffected: Boolean,
-  @JsonProperty("investigationAffected")
-  val isInvestigationAffected: Boolean,
-  @JsonProperty("interviewAffected")
-  val isInterviewAffected: Boolean,
-  @JsonProperty("decisionAndActionsAffected")
-  val isDecisionAndActionsAffected: Boolean,
-  @JsonProperty("planAffected")
-  val isPlanAffected: Boolean,
-  @JsonProperty("identifiedNeedAffected")
-  val isIdentifiedNeedAffected: Boolean,
-  @JsonProperty("reviewAffected")
-  val isReviewAffected: Boolean,
-  @JsonProperty("attendeeAffected")
-  val isAttendeeAffected: Boolean,
+  val affectedComponents: Set<AffectedComponent>,
   override val source: Source,
 ) : CsipBaseInformation
 

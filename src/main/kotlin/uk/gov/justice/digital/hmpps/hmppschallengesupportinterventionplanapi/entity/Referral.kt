@@ -12,8 +12,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import org.springframework.data.domain.AbstractAggregateRoot
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AffectedComponents
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
@@ -94,7 +93,7 @@ class Referral(
     name = "incident_involvement_id",
     referencedColumnName = "reference_Data_id",
   ) val incidentInvolvement: ReferenceData?,
-) : AbstractAggregateRoot<Referral>() {
+) {
   @OneToOne(
     mappedBy = "referral",
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
@@ -158,7 +157,7 @@ class Referral(
         activeCaseLoadId,
         isDecisionAndActionsAffected = true,
       )
-      registerEntityEvent(
+      csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
@@ -166,7 +165,7 @@ class Referral(
           occurredAt = actionedAt,
           source = source,
           updatedBy = decisionOutcomeRecordedBy,
-          AffectedComponents(isDecisionAndActionsAffected = true),
+          affectedComponents = setOf(AffectedComponent.DecisionAndActions),
         ),
       )
     }
@@ -234,7 +233,7 @@ class Referral(
         activeCaseLoadId = activeCaseLoadId,
         isSaferCustodyScreeningOutcomeAffected = true,
       )
-      registerEntityEvent(
+      csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
@@ -242,7 +241,7 @@ class Referral(
           occurredAt = actionedAt,
           source = source,
           updatedBy = actionedBy,
-          AffectedComponents(isSaferCustodyScreeningOutcomeAffected = true),
+          setOf(AffectedComponent.SaferCustodyScreeningOutcome),
         ),
       )
     }
@@ -299,7 +298,7 @@ class Referral(
         isInvestigationAffected = true,
         isInterviewAffected = isInterviewAffected,
       )
-      registerEntityEvent(
+      csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
@@ -307,10 +306,10 @@ class Referral(
           occurredAt = actionedAt,
           source = source,
           updatedBy = actionedBy,
-          AffectedComponents(
-            isInvestigationAffected = true,
-            isInterviewAffected = isInterviewAffected,
-          ),
+          affectedComponents = buildSet {
+            add(AffectedComponent.Investigation)
+            if (isInterviewAffected) add(AffectedComponent.Interview)
+          },
         ),
       )
     }

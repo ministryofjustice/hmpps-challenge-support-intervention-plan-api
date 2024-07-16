@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
@@ -54,17 +55,7 @@ class DomainEventPublisherTest {
       additionalInformation = CsipAdditionalInformation(
         recordUuid = recordUuid,
         source = NOMIS,
-        isRecordAffected = true,
-        isReferralAffected = false,
-        isContributoryFactorAffected = false,
-        isSaferCustodyScreeningOutcomeAffected = false,
-        isInvestigationAffected = false,
-        isInterviewAffected = false,
-        isDecisionAndActionsAffected = false,
-        isPlanAffected = false,
-        isIdentifiedNeedAffected = false,
-        isReviewAffected = false,
-        isAttendeeAffected = false,
+        affectedComponents = setOf(AffectedComponent.Record),
       ),
       description = CSIP_CREATED.description,
       occurredAt = occurredAt.toZoneDateTime(),

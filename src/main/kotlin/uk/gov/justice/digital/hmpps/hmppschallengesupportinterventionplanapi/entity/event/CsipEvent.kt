@@ -1,48 +1,25 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class AffectedComponents(
-  val isRecordAffected: Boolean = false,
-  val isReferralAffected: Boolean = false,
-  val isContributoryFactorAffected: Boolean = false,
-  val isSaferCustodyScreeningOutcomeAffected: Boolean = false,
-  val isInvestigationAffected: Boolean = false,
-  val isInterviewAffected: Boolean = false,
-  val isDecisionAndActionsAffected: Boolean = false,
-  val isPlanAffected: Boolean = false,
-  val isIdentifiedNeedAffected: Boolean = false,
-  val isReviewAffected: Boolean = false,
-  val isAttendeeAffected: Boolean = false,
-)
-
 sealed interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
   val prisonNumber: String
-  val affectedComponents: AffectedComponents
+  val affectedComponents: Set<AffectedComponent>
 
   override fun toDomainEvent(baseUrl: String): DomainEvent =
     toDomainEvent(baseUrl, affectedComponents)
 
-  fun toDomainEvent(baseUrl: String, affectedComponents: AffectedComponents): DomainEvent =
+  fun toDomainEvent(baseUrl: String, affectedComponents: Set<AffectedComponent>): DomainEvent =
     CsipDomainEvent(
       eventType = type.eventType,
       additionalInformation = CsipAdditionalInformation(
         recordUuid = recordUuid,
-        isRecordAffected = affectedComponents.isRecordAffected,
-        isReferralAffected = affectedComponents.isReferralAffected,
-        isContributoryFactorAffected = affectedComponents.isContributoryFactorAffected,
-        isSaferCustodyScreeningOutcomeAffected = affectedComponents.isSaferCustodyScreeningOutcomeAffected,
-        isInvestigationAffected = affectedComponents.isInvestigationAffected,
-        isInterviewAffected = affectedComponents.isInterviewAffected,
-        isDecisionAndActionsAffected = affectedComponents.isDecisionAndActionsAffected,
-        isPlanAffected = affectedComponents.isPlanAffected,
-        isIdentifiedNeedAffected = affectedComponents.isIdentifiedNeedAffected,
-        isReviewAffected = affectedComponents.isReviewAffected,
-        isAttendeeAffected = affectedComponents.isAttendeeAffected,
+        affectedComponents = affectedComponents,
         source = source,
       ),
       description = description,
@@ -59,7 +36,7 @@ data class CsipUpdatedEvent(
   override val occurredAt: LocalDateTime,
   override val source: Source,
   val updatedBy: String,
-  override val affectedComponents: AffectedComponents,
+  override val affectedComponents: Set<AffectedComponent>,
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_UPDATED
 }
@@ -71,7 +48,7 @@ data class CsipCreatedEvent(
   override val occurredAt: LocalDateTime,
   override val source: Source,
   val createdBy: String,
-  override val affectedComponents: AffectedComponents,
+  override val affectedComponents: Set<AffectedComponent>,
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_CREATED
 }
