@@ -31,3 +31,6 @@ generic-service:
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
   alertSeverity: hmpps-alerts-api-prod
+
+generic-data-analytics-extractor:
+  cronJobSchedule: "0 1 * * 1-5"

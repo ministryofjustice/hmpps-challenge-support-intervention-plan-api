@@ -26,3 +26,6 @@ generic-service:
 generic-prometheus-alerts:
   alertSeverity: hmpps-alerts-api-non-prod
   businessHoursOnly: true
+
+generic-data-analytics-extractor:
+  cronJobSchedule: "0 21 * * 1-5"
