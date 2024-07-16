@@ -249,6 +249,48 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - single contributory factor not found`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = listOf("D"),
+    )
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:D")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - single contributory factor not active`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = listOf("CFT_INACT"),
+    )
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is not active")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:CFT_INACT")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `201 created - CSIP record created via DPS`() {
     val request = createCsipRecordRequest(
       incidentTypeCode = "ATO",
