@@ -6,14 +6,10 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
@@ -25,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -33,28 +30,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class InvestigationsIntTest(
-  @Autowired private val csipRecordRepository: CsipRecordRepository,
-  @Autowired private val referenceDataRepository: ReferenceDataRepository,
-) : IntegrationTestBase() {
-  private val intervieweeRole =
-    referenceDataRepository.findByDomain(ReferenceDataType.INTERVIEWEE_ROLE).first { it.isActive() }
-  private val incidentType =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
-  private val incidentLocation =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
-  private val incidentInvolvement =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
-  private val refererAreaOfWork =
-    referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
+class InvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
@@ -85,13 +68,11 @@ class InvestigationsIntTest(
 
   @Test
   fun `400 bad request - request body validation failure`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
-      .bodyValue(investigationRequest(interviewRequest(roleCode = "n".repeat(13))))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val recordUuid = UUID.randomUUID()
+    val request = investigationRequest(interviewRequest(roleCode = "n".repeat(13)))
+    val response = createInvestigationResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure(s): Interviewee Role Code must be <= 12 characters")
@@ -104,13 +85,11 @@ class InvestigationsIntTest(
 
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/investigation")
-      .bodyValue(investigationRequest(interviewRequest(roleCode = "WRONG_CODE")))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val recordUuid = UUID.randomUUID()
+    val request = investigationRequest(interviewRequest(roleCode = "WRONG_CODE"))
+    val response = createInvestigationResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: INTERVIEWEE_ROLE is invalid")
@@ -121,16 +100,13 @@ class InvestigationsIntTest(
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val csipRecord = createCsipRecord(withReferral = false)
+    val prisonNumber = givenValidPrisonNumber("I2234MR")
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(interviewRequest())
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-        .returnResult().responseBody
+    val response = createInvestigationResponseSpec(recordUuid, investigationRequest(interviewRequest())).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record with UUID: $recordUuid is missing a referral.")
@@ -142,11 +118,10 @@ class InvestigationsIntTest(
   @Test
   fun `404 not found - CSIP record not found`() {
     val recordUuid = UUID.randomUUID()
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(interviewRequest())
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java)
-        .returnResult().responseBody
+    val response = createInvestigationResponseSpec(recordUuid, investigationRequest(interviewRequest()))
+      .expectStatus().isNotFound
+      .expectBody<ErrorResponse>()
+      .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(404)
@@ -159,31 +134,29 @@ class InvestigationsIntTest(
 
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
-    val csipRecord = createCsipRecord()
+    val prisonNumber = givenValidPrisonNumber("S1234AC")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
+    val intervieweeRole = givenRandom(ReferenceDataType.INTERVIEWEE_ROLE)
 
-    csipRecordRepository.save(
-      csipRecord.let {
-        it.referral!!.createInvestigation(
-          createRequest = investigationRequest(
-            interviewRequest(),
-            interviewRequest(),
-          ),
-          intervieweeRoleMap = mapOf(intervieweeRole.code to intervieweeRole),
-          actionedAt = LocalDateTime.now(),
-          actionedBy = "actionedBy",
-          actionedByDisplayName = "actionedByDisplayName",
-          source = Source.DPS,
-          activeCaseLoadId = PRISON_CODE_LEEDS,
-        )
-      },
+    csipRecord.referral!!.createInvestigation(
+      createRequest = investigationRequest(
+        interviewRequest(intervieweeRole.code),
+        interviewRequest(intervieweeRole.code),
+      ),
+      intervieweeRoleMap = mapOf(intervieweeRole.code to intervieweeRole),
+      actionedAt = LocalDateTime.now(),
+      actionedBy = "actionedBy",
+      actionedByDisplayName = "actionedByDisplayName",
+      source = Source.DPS,
+      activeCaseLoadId = PRISON_CODE_LEEDS,
     )
+    csipRecordRepository.save(csipRecord)
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(investigationRequest())
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange()
-        .expectStatus().is4xxClientError.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = createInvestigationResponseSpec(recordUuid, investigationRequest())
+      .expectStatus().is4xxClientError
+      .expectBody<ErrorResponse>()
+      .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(409)
@@ -196,16 +169,15 @@ class InvestigationsIntTest(
 
   @Test
   fun `create investigation via DPS UI`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("I1234DS")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = investigationRequest(
       interviewRequest(name = "John"),
       interviewRequest(name = "Jane"),
     )
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
-      .contentType(MediaType.APPLICATION_JSON).expectBody(Investigation::class.java).returnResult().responseBody!!
+    val response = createInvestigation(recordUuid, request)
 
     // Investigation populated with data from request and context
     with(response) {
@@ -263,7 +235,7 @@ class InvestigationsIntTest(
         description = "Investigation with 2 interviews added to referral",
         occurredAt = csipEvent.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
 
@@ -283,21 +255,19 @@ class InvestigationsIntTest(
           description = DomainEventType.INTERVIEW_CREATED.description,
           occurredAt = interviewEvents[0].occurredAt,
           detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-          personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+          personReference = PersonReference.withPrisonNumber(prisonNumber),
         ),
       )
   }
 
   @Test
   fun `create investigation via NOMIS`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("I1234NS")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = investigationRequest()
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(request)
-      .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
-      .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER)).exchange()
-      .expectStatus().isCreated.expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(Investigation::class.java).returnResult().responseBody!!
+    val response = createInvestigation(recordUuid, request, source = Source.NOMIS, username = NOMIS_SYS_USER)
 
     // Investigation populated with data from request
     with(response) {
@@ -348,57 +318,18 @@ class InvestigationsIntTest(
         description = "Investigation with 0 interviews added to referral",
         occurredAt = event.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
 
-  private fun createCsipRecord(withReferral: Boolean = true) = csipRecordRepository.save(
-    CsipRecord(
-      recordUuid = UUID.randomUUID(),
-      prisonNumber = PRISON_NUMBER,
-      prisonCodeWhenRecorded = PRISON_CODE_LEEDS,
-      logCode = "LOG",
-      createdAt = LocalDateTime.now(),
-      createdBy = "te",
-      createdByDisplayName = "Bobbie Shepard",
-      lastModifiedAt = null,
-      lastModifiedBy = null,
-      lastModifiedByDisplayName = null,
-    ).let {
-      if (withReferral) {
-        it.setReferral(
-          Referral(
-            csipRecord = it,
-            incidentDate = LocalDate.now(),
-            referredBy = "referredBy",
-            referralDate = LocalDate.now(),
-            descriptionOfConcern = "descriptionOfConcern",
-            knownReasons = "knownReasons",
-            otherInformation = "otherInformation",
-            saferCustodyTeamInformed = false,
-            referralComplete = true,
-            referralCompletedBy = "referralCompletedBy",
-            referralCompletedByDisplayName = "referralCompletedByDisplayName",
-            referralCompletedDate = LocalDate.now(),
-            incidentType = incidentType,
-            incidentLocation = incidentLocation,
-            refererAreaOfWork = refererAreaOfWork,
-            incidentInvolvement = incidentInvolvement,
-          ),
-        )
-      } else {
-        it
-      }
-    },
-  )
-
-  private fun interviewRequest(roleCode: String = intervieweeRole.code, name: String = "Joe") = CreateInterviewRequest(
-    interviewee = name,
-    interviewDate = LocalDate.now(),
-    intervieweeRoleCode = roleCode,
-    interviewText = null,
-  )
+  private fun interviewRequest(roleCode: String = "OTHER", name: String = "Joe") =
+    CreateInterviewRequest(
+      interviewee = name,
+      interviewDate = LocalDate.now(),
+      intervieweeRoleCode = roleCode,
+      interviewText = null,
+    )
 
   private fun investigationRequest(vararg interviews: CreateInterviewRequest) = CreateInvestigationRequest(
     staffInvolved = "staffInvolved",
@@ -409,4 +340,23 @@ class InvestigationsIntTest(
     protectiveFactors = "protectiveFactors",
     interviews = interviews.takeIf { it.isNotEmpty() }?.toList(),
   )
+
+  private fun createInvestigationResponseSpec(
+    recordUuid: UUID,
+    request: CreateInvestigationRequest,
+    source: Source = Source.DPS,
+    username: String = TEST_USER,
+  ) = webTestClient.post().uri("/csip-records/$recordUuid/referral/investigation").bodyValue(request)
+    .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
+    .headers(setCsipRequestContext(source = source, username = username)).exchange()
+
+  private fun createInvestigation(
+    recordUuid: UUID,
+    request: CreateInvestigationRequest,
+    source: Source = Source.DPS,
+    username: String = TEST_USER,
+  ) = createInvestigationResponseSpec(recordUuid, request, source, username)
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody<Investigation>()
+    .returnResult().responseBody!!
 }

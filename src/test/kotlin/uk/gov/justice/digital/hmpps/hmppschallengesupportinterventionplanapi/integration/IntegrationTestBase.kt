@@ -15,14 +15,20 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.SqlMergeMode
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
@@ -30,7 +36,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.ManageUsersExtension
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.withReferral
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
@@ -54,6 +65,12 @@ abstract class IntegrationTestBase {
 
   @SpyBean
   lateinit var hmppsQueueService: HmppsQueueService
+
+  @Autowired
+  lateinit var csipRecordRepository: CsipRecordRepository
+
+  @Autowired
+  lateinit var referenceDataRepository: ReferenceDataRepository
 
   internal val hmppsEventsQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
@@ -87,6 +104,22 @@ abstract class IntegrationTestBase {
           else -> throw IllegalArgumentException("Unknown Message Type : ${it.eventType}")
         }
       }
+
+  fun givenRandom(type: ReferenceDataType) = referenceDataRepository.findByDomain(type).random()
+
+  fun givenValidPrisonNumber(prisonNumber: String): String {
+    prisonerSearch.stubGetPrisoner(prisonNumber)
+    return prisonNumber
+  }
+
+  fun givenCsipRecord(csipRecord: CsipRecord) = csipRecordRepository.save(csipRecord)
+  fun givenCsipRecordWithReferral(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(
+    csipRecord.withReferral(
+      incidentType = { givenRandom(INCIDENT_TYPE) },
+      incidentLocation = { givenRandom(INCIDENT_LOCATION) },
+      refererAreaOfWork = { givenRandom(AREA_OF_WORK) },
+    ),
+  )
 
   companion object {
     private val pgContainer = PostgresContainer.instance
@@ -127,3 +160,7 @@ abstract class IntegrationTestBase {
     it.set(USERNAME, username)
   }
 }
+
+internal fun WebTestClient.ResponseSpec.badRequest() = expectStatus().isBadRequest
+  .expectBody<ErrorResponse>()
+  .returnResult().responseBody!!
