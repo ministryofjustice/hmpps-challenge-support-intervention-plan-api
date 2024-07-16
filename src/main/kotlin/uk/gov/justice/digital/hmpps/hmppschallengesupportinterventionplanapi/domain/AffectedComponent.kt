@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain
 
-enum class AffectedComponent : Comparable<AffectedComponent> {
+enum class AffectedComponent {
   Record,
   Referral,
   ContributoryFactor,
