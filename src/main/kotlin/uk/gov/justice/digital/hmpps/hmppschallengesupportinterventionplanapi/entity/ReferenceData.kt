@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table
-data class ReferenceData(
+class ReferenceData(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "reference_data_id")

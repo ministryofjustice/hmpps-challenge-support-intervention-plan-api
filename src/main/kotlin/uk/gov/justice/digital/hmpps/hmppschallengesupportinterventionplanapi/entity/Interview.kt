@@ -15,7 +15,7 @@ import java.util.UUID
 
 @Entity
 @Table
-data class Interview(
+class Interview(
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "interview_id") val interviewId: Long = 0,
 
   @Column(unique = true, nullable = false) val interviewUuid: UUID = UUID.randomUUID(),

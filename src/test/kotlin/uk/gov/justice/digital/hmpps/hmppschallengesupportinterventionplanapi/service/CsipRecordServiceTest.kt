@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.anySet
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Captor
 import org.mockito.InjectMocks
@@ -70,7 +71,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("Prisoner with prison number ABC12345 could not be found")
+    assertThat(exception.message).isEqualTo("Prisoner number invalid")
   }
 
   @Test
@@ -80,7 +81,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("INCIDENT_TYPE code 'A' does not exist")
+    assertThat(exception.message).isEqualTo("INCIDENT_TYPE is invalid")
   }
 
   @Test
@@ -91,7 +92,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("INCIDENT_LOCATION code 'B' does not exist")
+    assertThat(exception.message).isEqualTo("INCIDENT_LOCATION is invalid")
   }
 
   @Test
@@ -105,7 +106,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("AREA_OF_WORK code 'C' does not exist")
+    assertThat(exception.message).isEqualTo("AREA_OF_WORK is invalid")
   }
 
   @Test
@@ -120,7 +121,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("AREA_OF_WORK code 'C' does not exist")
+    assertThat(exception.message).isEqualTo("AREA_OF_WORK is invalid")
   }
 
   @Test
@@ -137,7 +138,7 @@ class CsipRecordServiceTest {
     val exception = assertThrows<IllegalArgumentException> {
       csipRecordService.createCsipRecord(createCsipRecordRequest(), "ABC12345", csipRequestContext())
     }
-    assertThat(exception.message).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
+    assertThat(exception.message).isEqualTo("CONTRIBUTORY_FACTOR_TYPE is invalid")
   }
 
   @Test
@@ -151,16 +152,16 @@ class CsipRecordServiceTest {
     whenever(referenceDataRepository.findByDomainAndCode(eq(INCIDENT_INVOLVEMENT), anyString())).thenReturn(
       incidentInvolvement(),
     )
-    whenever(referenceDataRepository.findByDomain(eq(CONTRIBUTORY_FACTOR_TYPE))).thenReturn(
+    whenever(referenceDataRepository.findByDomainAndCodeIn(eq(CONTRIBUTORY_FACTOR_TYPE), anySet())).thenReturn(
       listOf(contributoryFactorType()),
     )
-    whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
+    whenever(csipRecordRepository.save(any())).thenReturn(
       csipRecord().apply {
         referral = referral(csipRecord())
       },
     )
     csipRecordService.createCsipRecord(createCsipRecordRequest(), PRISON_NUMBER, csipRequestContext())
-    verify(csipRecordRepository).saveAndFlush(csipRecordArgumentCaptor.capture())
+    verify(csipRecordRepository).save(csipRecordArgumentCaptor.capture())
 
     with(csipRecordArgumentCaptor.value) {
       assertThat(logCode).isEqualTo(LOG_CODE)

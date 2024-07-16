@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config
 
-import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.CONFLICT
@@ -20,33 +18,36 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidUserRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPrerequisiteResourceException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestControllerAdvice
 class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
   @ExceptionHandler(AccessDeniedException::class)
-  fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+  fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = HttpStatus.FORBIDDEN.value(),
         userMessage = "Authentication problem. Check token and roles - ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("Access denied exception: {}", e.message) }
+    )
 
   @ExceptionHandler(MissingServletRequestParameterException::class)
-  fun handleMissingServletRequestParameterException(e: MissingServletRequestParameterException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+  fun handleMissingServletRequestParameterException(e: MissingServletRequestParameterException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("Missing servlet request parameter exception: {}", e.message) }
+    )
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> {
+  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
     val cause = e.cause?.cause
     if (cause is InvalidDomainException) {
       return handleInvalidDomainException(cause)
@@ -60,68 +61,86 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
     }
 
     return ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure: $message",
         developerMessage = e.message,
       ),
-    ).also { log.info("Method argument type mismatch exception: {}", e.message) }
+    )
   }
 
   @ExceptionHandler(HttpMessageNotReadableException::class)
-  fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+  fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure: Couldn't read request body",
         developerMessage = e.message,
       ),
-    ).also { log.info("HTTP message not readable exception: {}", e.message) }
+    )
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
-  fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
-    ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+  fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure(s): ${
-          e.allErrors.map { it.defaultMessage }.distinct().sorted().joinToString("\n")
+          e.allErrors.map { it.defaultMessage }.distinct().sorted().joinToString(System.lineSeparator())
         }",
         developerMessage = e.message,
       ),
-    ).also { log.info("Validation exception: {}", e.message) }
+    )
 
-  @ExceptionHandler(IllegalArgumentException::class)
-  fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
-    ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+  @ExceptionHandler(IllegalArgumentException::class, IllegalStateException::class)
+  fun handleIllegalArgumentOrStateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure: ${e.message}",
-        developerMessage = e.message,
+        developerMessage = e.devMessage(),
       ),
-    ).also { log.info("Illegal argument exception: {}", e.message) }
+    )
+
+  private fun RuntimeException.devMessage(): String = when (this) {
+    is InvalidUserRequest -> "Details => $name:$value"
+    else -> message ?: "${this::class.simpleName}: ${cause?.message ?: ""}"
+  }
 
   @ExceptionHandler(ValidationException::class)
-  fun handleValidationException(e: ValidationException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
-    ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+  fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure: ${e.message}",
-        developerMessage = e.message,
+        developerMessage = e.devMessage(),
       ),
-    ).also { log.info("Validation exception: {}", e.message) }
+    )
 
   @ExceptionHandler(HandlerMethodValidationException::class)
-  fun handleHandlerMethodValidationException(e: HandlerMethodValidationException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
-    e.allErrors.map { it.toString() }.distinct().sorted().joinToString("\n").let { validationErrors ->
-      ResponseEntity.status(BAD_REQUEST).body(
-        uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Validation failure(s): ${
-            e.allErrors.map { it.defaultMessage }.distinct().sorted().joinToString("\n")
-          }",
-          developerMessage = "${e.message} $validationErrors",
-        ),
-      ).also { log.info("Validation exception: $validationErrors\n {}", e.message) }
+  fun handleHandlerMethodValidationException(e: HandlerMethodValidationException): ResponseEntity<ErrorResponse> =
+    e.allErrors.map { it.defaultMessage }.distinct().sorted().let {
+      val validationFailure = "Validation failure"
+      val message = if (it.size > 1) {
+        """
+              |${validationFailure}s: 
+              |${it.joinToString(System.lineSeparator())}
+              |
+        """.trimMargin()
+      } else {
+        "$validationFailure: ${it.joinToString(System.lineSeparator())}"
+      }
+      ResponseEntity
+        .status(BAD_REQUEST)
+        .body(
+          ErrorResponse(
+            status = BAD_REQUEST,
+            userMessage = message,
+            developerMessage = "400 BAD_REQUEST $message",
+          ),
+        )
     }
 
   @ExceptionHandler(NoResourceFoundException::class)
@@ -132,47 +151,49 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
         userMessage = "No resource found failure: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("No resource found exception: {}", e.message) }
+    )
 
   @ExceptionHandler(InvalidDomainException::class)
-  fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+  fun handleInvalidDomainException(e: InvalidDomainException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(NOT_FOUND).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = NOT_FOUND,
         userMessage = "No resource found failure: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("No resource found exception: {}", e.message) }
+    )
 
-  @ExceptionHandler(EntityNotFoundException::class)
-  fun handleEntityNotFoundException(e: EntityNotFoundException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
-    ResponseEntity.status(NOT_FOUND).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
-        status = NOT_FOUND,
-        userMessage = "No resource found failure: ${e.message}",
-        developerMessage = e.message,
-      ),
-    ).also { log.info("No resource found exception: {}", e.message) }
+  @ExceptionHandler(NotFoundException::class)
+  fun handleNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> =
+    ResponseEntity
+      .status(NOT_FOUND)
+      .body(
+        ErrorResponse(
+          status = NOT_FOUND.value(),
+          userMessage = "Not found: ${e.message}",
+          developerMessage = "${e.resource} not found with identifier ${e.identifier}",
+        ),
+      )
 
   @ExceptionHandler(ResourceAlreadyExistException::class)
-  fun handleResourceAlreadyExistException(e: ResourceAlreadyExistException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+  fun handleResourceAlreadyExistException(e: ResourceAlreadyExistException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(CONFLICT).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = CONFLICT,
         userMessage = "Conflict failure: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("Conflict failure: {}", e.message) }
+    )
 
   @ExceptionHandler(MissingPrerequisiteResourceException::class)
-  fun handleMissingPrerequisiteResourceException(e: MissingPrerequisiteResourceException): ResponseEntity<uk.gov.justice.hmpps.kotlin.common.ErrorResponse> =
+  fun handleMissingPrerequisiteResourceException(e: MissingPrerequisiteResourceException): ResponseEntity<ErrorResponse> =
     ResponseEntity.status(BAD_REQUEST).body(
-      uk.gov.justice.hmpps.kotlin.common.ErrorResponse(
+      ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Invalid request: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("Invalid request: {}", e.message) }
+    )
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse> =
@@ -182,25 +203,5 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
         userMessage = "Unexpected error: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.error("Unexpected exception", e) }
-
-  private companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
-}
-
-data class ErrorResponse(
-  val status: Int,
-  val errorCode: Int? = null,
-  val userMessage: String? = null,
-  val developerMessage: String? = null,
-  val moreInfo: String? = null,
-) {
-  constructor(
-    status: HttpStatus,
-    errorCode: Int? = null,
-    userMessage: String? = null,
-    developerMessage: String? = null,
-    moreInfo: String? = null,
-  ) : this(status.value(), errorCode, userMessage, developerMessage, moreInfo)
+    )
 }

@@ -3,11 +3,12 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.anySet
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.REFERENCE_DATA_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
@@ -24,9 +25,9 @@ class InvestigationServiceTest : BaseServiceTest() {
   fun `create Investigation with interview`() {
     val createRequest = createRequest()
 
-    whenever(referenceDataRepository.findByDomain(any())).thenReturn(listOf(referenceData()))
+    whenever(referenceDataRepository.findByDomainAndCodeIn(any(), anySet())).thenReturn(listOf(referenceData()))
     whenever(csipRecordRepository.findByRecordUuid(any())).thenReturn(csipRecord())
-    whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
+    whenever(csipRecordRepository.save(any())).thenReturn(
       csipRecord().apply {
         referral!!.createInvestigation(
           createRequest = createRequest,
@@ -69,7 +70,7 @@ class InvestigationServiceTest : BaseServiceTest() {
     val createRequest = createRequest(withInterview = false)
 
     whenever(csipRecordRepository.findByRecordUuid(any())).thenReturn(csipRecord())
-    whenever(csipRecordRepository.saveAndFlush(any())).thenReturn(
+    whenever(csipRecordRepository.save(any())).thenReturn(
       csipRecord().apply {
         referral!!.createInvestigation(
           createRequest = createRequest,
@@ -105,7 +106,7 @@ class InvestigationServiceTest : BaseServiceTest() {
     val recordUuid = UUID.randomUUID()
     val createRequest = createRequest(withInterview = false)
 
-    val error = assertThrows<CsipRecordNotFoundException> {
+    val error = assertThrows<NotFoundException> {
       underTest.createInvestigation(
         recordUuid,
         createRequest,
@@ -113,7 +114,7 @@ class InvestigationServiceTest : BaseServiceTest() {
       )
     }
 
-    assertThat(error.message).isEqualTo("Could not find CSIP record with UUID $recordUuid")
+    assertThat(error.message).isEqualTo("CSIP Record not found")
   }
 
   @Test
@@ -128,7 +129,7 @@ class InvestigationServiceTest : BaseServiceTest() {
       )
     }
 
-    assertThat(error.message).isEqualTo("INTERVIEWEE_ROLE code '$REFERENCE_DATA_CODE' does not exist")
+    assertThat(error.message).isEqualTo("INTERVIEWEE_ROLE is invalid")
   }
 
   private fun createRequest(withInterview: Boolean = true) = CreateInvestigationRequest(

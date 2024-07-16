@@ -1,56 +1,42 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
+import com.sun.tools.javac.code.Type.moreInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_SIGNER_ROLE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class DecisionActionsIntTest(
-  @Autowired private val csipRecordRepository: CsipRecordRepository,
-  @Autowired private val referenceDataRepository: ReferenceDataRepository,
-) : IntegrationTestBase() {
-  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first { it.isActive() }
-  private val decisionSignerRole =
-    referenceDataRepository.findByDomain(ReferenceDataType.DECISION_SIGNER_ROLE).first { it.isActive() }
-  private val incidentLocation =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
-  private val incidentInvolvement =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
-  private val refererAreaOfWork =
-    referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
+class DecisionActionsIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
@@ -81,15 +67,13 @@ class DecisionActionsIntTest(
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(PRISON_NUMBER))
+    val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest()
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(Source.DPS, null))
-        .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = createDecisionResponseSpec(recordUuid, request, username = null).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
@@ -100,14 +84,14 @@ class DecisionActionsIntTest(
 
   @Test
   fun `400 bad request - username was not found`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val recordUuid = UUID.randomUUID()
     val request = createDecisionActionsRequest()
 
     val response =
       webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
         .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = "UNKNOWN", isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-        .returnResult().responseBody
+        .headers(setCsipRequestContext())
+        .exchange().badRequest()
 
     with(response!!) {
       assertThat(status).isEqualTo(400)
@@ -120,13 +104,11 @@ class DecisionActionsIntTest(
 
   @Test
   fun `400 bad request - request body validation failure`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "n".repeat(13)))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val recordUuid = UUID.randomUUID()
+    val request = createDecisionActionsRequest(outcomeTypeCode = "n".repeat(13))
+    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure(s): Outcome Type code must be <= 12 characters")
@@ -139,67 +121,59 @@ class DecisionActionsIntTest(
 
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE", outcomeSignedOffByRoleCode = "CUR"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val recordUuid = UUID.randomUUID()
+    val request = createDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE", outcomeSignedOffByRoleCode = "CUR")
+    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `400 bad request - inactive Outcome signed off by role code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "OT_INACT"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val recordUuid = UUID.randomUUID()
+    val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "OT_INACT")
+    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'OT_INACT' is inactive")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'OT_INACT' is inactive")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is not active")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:OT_INACT")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `400 bad request - invalid Outcome signed off by role code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val recordUuid = UUID.randomUUID()
+    val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE")
+    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val csipRecord = createCsipRecord(withReferral = false)
+    val prisonNumber = givenValidPrisonNumber("M1234RF")
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
+    val request = createDecisionActionsRequest()
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record with UUID: $recordUuid is missing a referral.")
@@ -211,79 +185,75 @@ class DecisionActionsIntTest(
   @Test
   fun `404 not found - CSIP record not found`() {
     val recordUuid = UUID.randomUUID()
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java)
+    val request = createDecisionActionsRequest()
+    val response = createDecisionResponseSpec(recordUuid, request)
+      .expectStatus().isNotFound
+      .expectBody<ErrorResponse>()
       .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(404)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("No resource found failure: Could not find CSIP record with UUID $recordUuid")
-      assertThat(developerMessage).isEqualTo("Could not find CSIP record with UUID $recordUuid")
+      assertThat(userMessage).isEqualTo("Not found: CSIP Record not found")
+      assertThat(developerMessage).isEqualTo("CSIP Record not found with identifier $recordUuid")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
-    val csipRecord = createCsipRecord()
+    val prisonNumber = givenValidPrisonNumber("E1234CP")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
+    val outcomeType = givenRandom(OUTCOME_TYPE)
+    val decisionSignerRole = givenRandom(DECISION_SIGNER_ROLE)
 
-    csipRecordRepository.save(
-      csipRecord.let {
-        it.referral!!.createDecisionAndActions(
-          decisionOutcome = outcomeType,
-          decisionOutcomeSignedOffBy = decisionSignerRole,
-          decisionOutcomeDate = LocalDate.now(),
-          actionedAt = LocalDateTime.now(),
-          decisionOutcomeRecordedBy = "actionedBy",
-          decisionOutcomeRecordedByDisplayName = "actionedByDisplayName",
-          source = Source.DPS,
-          reason = Reason.USER,
-          activeCaseLoadId = PRISON_CODE_LEEDS,
-          description = "description",
-          decisionConclusion = null,
-          actionOther = null,
-          actionObservationBook = false,
-          actionServiceReferral = false,
-          actionOpenCsipAlert = false,
-          actionSimReferral = false,
-          actionUnitOrCellMove = false,
-          nextSteps = null,
-          actionCsraOrRsraReview = false,
-          actionNonAssociationsUpdated = false,
-        )
-      },
+    csipRecord.referral!!.createDecisionAndActions(
+      decisionOutcome = outcomeType,
+      decisionOutcomeSignedOffBy = decisionSignerRole,
+      decisionOutcomeDate = LocalDate.now(),
+      actionedAt = LocalDateTime.now(),
+      decisionOutcomeRecordedBy = "actionedBy",
+      decisionOutcomeRecordedByDisplayName = "actionedByDisplayName",
+      source = Source.DPS,
+      reason = Reason.USER,
+      activeCaseLoadId = PRISON_CODE_LEEDS,
+      description = "description",
+      decisionConclusion = null,
+      actionOther = null,
+      actionObservationBook = false,
+      actionServiceReferral = false,
+      actionOpenCsipAlert = false,
+      actionSimReferral = false,
+      actionUnitOrCellMove = false,
+      nextSteps = null,
+      actionCsraOrRsraReview = false,
+      actionNonAssociationsUpdated = false,
     )
+    csipRecordRepository.save(csipRecord)
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions")
-      .bodyValue(createDecisionActionsRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().is4xxClientError.expectBody(ErrorResponse::class.java)
+    val response = createDecisionResponseSpec(recordUuid, createDecisionActionsRequest())
+      .expectStatus().is4xxClientError
+      .expectBody<ErrorResponse>()
       .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(409)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has a Decision and Actions created.")
-      assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has a Decision and Actions created.")
+      assertThat(userMessage).isEqualTo("Conflict failure: Referral already has a Decision and Actions")
+      assertThat(developerMessage).isEqualTo("Referral already has a Decision and Actions")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `create decision and actions no signed off by role`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("D1234NS")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest("CUR", null)
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
-        .contentType(MediaType.APPLICATION_JSON).expectBody(DecisionAndActions::class.java)
-        .returnResult().responseBody!!
+    val response = createDecisionActions(recordUuid, request)
 
     // Decisions Actions entry populated with data from request and context
     with(response) {
@@ -307,7 +277,10 @@ class DecisionActionsIntTest(
 
   @Test
   fun `create decision and actions all actions true`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("D1234AT")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
+
     val request = createDecisionActionsRequest(
       "CUR",
       "CUR",
@@ -320,12 +293,7 @@ class DecisionActionsIntTest(
       isActionSimReferral = true,
     )
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
-        .contentType(MediaType.APPLICATION_JSON).expectBody(DecisionAndActions::class.java)
-        .returnResult().responseBody!!
+    val response = createDecisionActions(recordUuid, request)
 
     // Decisions Actions entry populated with data from request and context
     with(response) {
@@ -349,15 +317,12 @@ class DecisionActionsIntTest(
 
   @Test
   fun `create decision and actions via DPS UI`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("D1234DU")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest()
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
-        .contentType(MediaType.APPLICATION_JSON).expectBody(DecisionAndActions::class.java)
-        .returnResult().responseBody!!
+    val response = createDecisionActions(recordUuid, request)
 
     // Decisions Actions entry populated with data from request and context
     with(response) {
@@ -417,22 +382,19 @@ class DecisionActionsIntTest(
         description = "Decision and actions added to referral",
         occurredAt = event.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
 
   @Test
   fun `create decision and actions via NOMIS`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("D1234NS")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest()
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
-        .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER)).exchange()
-        .expectStatus().isCreated.expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(DecisionAndActions::class.java).returnResult().responseBody!!
+    val response = createDecisionActions(recordUuid, request, source = Source.NOMIS, username = NOMIS_SYS_USER)
 
     // Screening Outcome populated with data from request and context
     with(response) {
@@ -491,50 +453,10 @@ class DecisionActionsIntTest(
         description = "Decision and actions added to referral",
         occurredAt = event.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
-
-  private fun createCsipRecord(withReferral: Boolean = true) = csipRecordRepository.saveAndFlush(
-    CsipRecord(
-      recordUuid = UUID.randomUUID(),
-      prisonNumber = PRISON_NUMBER,
-      prisonCodeWhenRecorded = PRISON_CODE_LEEDS,
-      logCode = "LOG",
-      createdAt = LocalDateTime.now(),
-      createdBy = "te",
-      createdByDisplayName = "Bobbie Shepard",
-      lastModifiedAt = null,
-      lastModifiedBy = null,
-      lastModifiedByDisplayName = null,
-    ).let {
-      if (withReferral) {
-        it.setReferral(
-          Referral(
-            csipRecord = it,
-            incidentDate = LocalDate.now(),
-            referredBy = "referredBy",
-            referralDate = LocalDate.now(),
-            descriptionOfConcern = "descriptionOfConcern",
-            knownReasons = "knownReasons",
-            otherInformation = "otherInformation",
-            saferCustodyTeamInformed = false,
-            referralComplete = true,
-            referralCompletedBy = "referralCompletedBy",
-            referralCompletedByDisplayName = "referralCompletedByDisplayName",
-            referralCompletedDate = LocalDate.now(),
-            incidentType = outcomeType,
-            incidentLocation = incidentLocation,
-            refererAreaOfWork = refererAreaOfWork,
-            incidentInvolvement = incidentInvolvement,
-          ),
-        )
-      } else {
-        it
-      }
-    },
-  )
 
   private fun createDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
@@ -563,4 +485,23 @@ class DecisionActionsIntTest(
     isActionSimReferral,
     actionOther = null,
   )
+
+  fun createDecisionResponseSpec(
+    recordUuid: UUID,
+    request: CreateDecisionAndActionsRequest,
+    source: Source = Source.DPS,
+    username: String? = TEST_USER,
+  ) = webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
+    .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), isUserToken = true))
+    .headers(setCsipRequestContext(source = source, username = username)).exchange()
+
+  fun createDecisionActions(
+    recordUuid: UUID,
+    request: CreateDecisionAndActionsRequest,
+    source: Source = Source.DPS,
+    username: String = TEST_USER,
+  ) = createDecisionResponseSpec(recordUuid, request, source, username)
+    .expectStatus().isCreated
+    .expectBody<DecisionAndActions>()
+    .returnResult().responseBody!!
 }

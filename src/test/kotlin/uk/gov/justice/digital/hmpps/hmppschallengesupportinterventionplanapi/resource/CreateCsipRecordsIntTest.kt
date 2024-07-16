@@ -1,17 +1,17 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -34,20 +35,17 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class CreateCsipRecordsIntTest(
-  @Autowired private val csipRecordRepository: CsipRecordRepository,
-) : IntegrationTestBase() {
+class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no required role`() {
-    val response = webTestClient.get().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.get().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE"))).exchange().expectStatus().isForbidden.expectBody(
         ErrorResponse::class.java,
       ).returnResult().responseBody
@@ -63,22 +61,22 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri("/prisoners/AB123456/csip-records").exchange().expectStatus().isUnauthorized
+    webTestClient.post().uri("/prisoners/A1234BC/csip-records").exchange().expectStatus().isUnauthorized
   }
 
   @Test
   fun `403 forbidden - no roles`() {
-    webTestClient.post().uri("/prisoners/AB123456/csip-records").bodyValue(createCsipRecordRequest())
+    webTestClient.post().uri("/prisoners/A1234BC/csip-records").bodyValue(createCsipRecordRequest())
       .headers(setAuthorisation()).headers(setCsipRequestContext()).exchange().expectStatus().isForbidden
   }
 
   @Test
   fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }.exchange()
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+      .badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
@@ -89,12 +87,11 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records")
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange().expectStatus().isBadRequest.expectBody(
-        ErrorResponse::class.java,
-      ).returnResult().responseBody
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange()
+      .badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
@@ -105,11 +102,11 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `400 bad request - username not found`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records").bodyValue(createCsipRecordRequest())
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records").bodyValue(createCsipRecordRequest())
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(username = USER_NOT_FOUND))
-      .exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+      .exchange().badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: User details for supplied username not found")
@@ -120,11 +117,11 @@ class CreateCsipRecordsIntTest(
 
   @Test
   fun `400 bad request - no body`() {
-    val response = webTestClient.post().uri("/prisoners/AB123456/csip-records")
+    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext()).exchange()
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+      .badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: Couldn't read request body")
@@ -138,13 +135,13 @@ class CreateCsipRecordsIntTest(
     val request = createCsipRecordRequest()
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER_NOT_FOUND)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+      .badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Prisoner with prison number NOT_FOUND could not be found")
-      assertThat(developerMessage).isEqualTo("Prisoner with prison number NOT_FOUND could not be found")
+      assertThat(userMessage).isEqualTo("Validation failure: Prisoner number invalid")
+      assertThat(developerMessage).isEqualTo("Prisoner number invalid")
       assertThat(moreInfo).isNull()
     }
   }
@@ -153,14 +150,13 @@ class CreateCsipRecordsIntTest(
   fun `400 bad request - incident type not found`() {
     val request = createCsipRecordRequest()
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_TYPE code 'A' does not exist")
-      assertThat(developerMessage).isEqualTo("INCIDENT_TYPE code 'A' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INCIDENT_TYPE:A")
       assertThat(moreInfo).isNull()
     }
   }
@@ -169,14 +165,13 @@ class CreateCsipRecordsIntTest(
   fun `400 bad request - incident location not found`() {
     val request = createCsipRecordRequest(incidentTypeCode = "ATO")
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_LOCATION code 'B' does not exist")
-      assertThat(developerMessage).isEqualTo("INCIDENT_LOCATION code 'B' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_LOCATION is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INCIDENT_LOCATION:B")
       assertThat(moreInfo).isNull()
     }
   }
@@ -185,14 +180,13 @@ class CreateCsipRecordsIntTest(
   fun `400 bad request - area of work not found`() {
     val request = createCsipRecordRequest(incidentTypeCode = "ATO", incidentLocationCode = "EDU")
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK code 'C' does not exist")
-      assertThat(developerMessage).isEqualTo("AREA_OF_WORK code 'C' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK is invalid")
+      assertThat(developerMessage).isEqualTo("Details => AREA_OF_WORK:C")
       assertThat(moreInfo).isNull()
     }
   }
@@ -202,14 +196,13 @@ class CreateCsipRecordsIntTest(
     val request =
       createCsipRecordRequest(incidentTypeCode = "ATO", incidentLocationCode = "EDU", refererAreaCode = "ACT")
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_INVOLVEMENT code 'D' does not exist")
-      assertThat(developerMessage).isEqualTo("INCIDENT_INVOLVEMENT code 'D' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_INVOLVEMENT is invalid")
+      assertThat(developerMessage).isEqualTo("Details => INCIDENT_INVOLVEMENT:D")
       assertThat(moreInfo).isNull()
     }
   }
@@ -223,14 +216,13 @@ class CreateCsipRecordsIntTest(
       incidentInvolvementCode = "OTH",
     )
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
-      assertThat(developerMessage).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code 'D' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:D")
       assertThat(moreInfo).isNull()
     }
   }
@@ -245,14 +237,55 @@ class CreateCsipRecordsIntTest(
       contributoryFactorTypeCode = listOf("D", "E", "F"),
     )
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .expectStatus().isBadRequest.expectBody(ErrorResponse::class.java).returnResult().responseBody
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE code(s) 'D', 'E', 'F' does not exist")
-      assertThat(developerMessage).isEqualTo("CONTRIBUTORY_FACTOR_TYPE code(s) 'D', 'E', 'F' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: Multiple invalid CONTRIBUTORY_FACTOR_TYPE")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:[D,E,F]")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - single contributory factor not found`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = listOf("D"),
+    )
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:D")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - single contributory factor not active`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = listOf("CFT_INACT"),
+    )
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).badRequest()
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is not active")
+      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:CFT_INACT")
       assertThat(moreInfo).isNull()
     }
   }
@@ -267,14 +300,14 @@ class CreateCsipRecordsIntTest(
       contributoryFactorTypeCode = listOf("AFL"),
     )
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
-      .expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody
+    val prisonNumber = givenValidPrisonNumber("C1234SP")
+    val response = webTestClient.createCsipRecord(prisonNumber, request)
 
     with(response!!) {
       assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo("TEST_USER")
       assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
@@ -321,7 +354,7 @@ class CreateCsipRecordsIntTest(
         description = DomainEventType.CSIP_CREATED.description,
         occurredAt = csipDomainEvent.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
 
@@ -339,7 +372,7 @@ class CreateCsipRecordsIntTest(
         description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
         occurredAt = contributoryFactoryDomainEvent.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
@@ -355,8 +388,8 @@ class CreateCsipRecordsIntTest(
       logCode = null,
     )
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER, source = DPS)
-      .expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody
+    val prisonNumber = givenValidPrisonNumber("C1235SP")
+    val response = webTestClient.createCsipRecord(prisonNumber, request)
 
     with(response!!) {
       assertThat(referral).isNotNull()
@@ -388,18 +421,14 @@ class CreateCsipRecordsIntTest(
       contributoryFactorTypeCode = listOf("AFL"),
     )
 
-    val response = webTestClient.createCsipResponseSpec(
-      request = request,
-      prisonNumber = PRISON_NUMBER,
-      source = NOMIS,
-      user = NOMIS_SYS_USER,
-    ).expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody
+    val prisonNumber = givenValidPrisonNumber("C1236SP")
+    val response = webTestClient.createCsipRecord(prisonNumber, request, NOMIS, NOMIS_SYS_USER)
 
     with(response!!) {
       assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), Assertions.within(3, ChronoUnit.SECONDS))
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
@@ -444,7 +473,7 @@ class CreateCsipRecordsIntTest(
         description = DomainEventType.CSIP_CREATED.description,
         occurredAt = csipDomainEvent.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
 
@@ -462,7 +491,7 @@ class CreateCsipRecordsIntTest(
         description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
         occurredAt = contributoryFactoryDomainEvent.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
@@ -471,31 +500,31 @@ class CreateCsipRecordsIntTest(
     source: Source = DPS,
     user: String = TEST_USER,
     request: CreateCsipRecordRequest,
-    prisonNumber: String = "AB123456",
-  ) = post().uri("/prisoners/$prisonNumber/csip-records").bodyValue(request).headers(
-    setAuthorisation(
-      roles = listOf(
-        source.let {
-          if (it == NOMIS) {
-            ROLE_NOMIS
-          } else {
-            ROLE_CSIP_UI
-          }
-        },
+    prisonNumber: String = PRISON_NUMBER,
+  ) = post()
+    .uri("/prisoners/$prisonNumber/csip-records")
+    .bodyValue(request).headers(
+      setAuthorisation(
+        roles = listOf(
+          source.let {
+            if (it == NOMIS) {
+              ROLE_NOMIS
+            } else {
+              ROLE_CSIP_UI
+            }
+          },
+        ),
       ),
-    ),
-  ).headers(setCsipRequestContext(source = source, username = user)).exchange().expectHeader()
+    ).headers(setCsipRequestContext(source = source, username = user)).exchange().expectHeader()
     .contentType(MediaType.APPLICATION_JSON)
 
-  private fun WebTestClient.createCsip(
+  private fun WebTestClient.createCsipRecord(
+    prisonNumber: String,
+    request: CreateCsipRecordRequest,
     source: Source = DPS,
     user: String = TEST_USER,
-    request: CreateCsipRecordRequest,
-    prisonNumber: String = "AB123456",
-  ) = createCsipResponseSpec(
-    source,
-    user,
-    request,
-    prisonNumber,
-  ).expectStatus().isCreated.expectBody(CsipRecord::class.java).returnResult().responseBody!!
+  ) = createCsipResponseSpec(source, user, request, prisonNumber)
+    .expectStatus().isCreated
+    .expectBody<CsipRecord>()
+    .returnResult().responseBody
 }

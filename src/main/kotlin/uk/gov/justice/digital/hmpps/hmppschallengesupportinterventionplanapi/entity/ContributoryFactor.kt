@@ -14,7 +14,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "contributory_factor")
-data class ContributoryFactor(
+class ContributoryFactor(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val contributoryFactorId: Long = 0,

@@ -20,9 +20,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DecisionAndActionsAlreadyExistException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvestigationAlreadyExistsException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.SaferCustodyScreeningOutcomeAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import java.time.LocalDate
@@ -31,7 +30,7 @@ import java.time.LocalTime
 
 @Entity
 @Table
-data class Referral(
+class Referral(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "referral_id")
@@ -98,7 +97,6 @@ data class Referral(
 ) : AbstractAggregateRoot<Referral>() {
   @OneToOne(
     mappedBy = "referral",
-    fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
   private var decisionAndActions: DecisionAndActions? = null
@@ -127,9 +125,7 @@ data class Referral(
     actionSimReferral: Boolean,
     description: String = "Decision and actions added to referral",
   ): CsipRecord {
-    if (decisionAndActions != null) {
-      throw DecisionAndActionsAlreadyExistException(csipRecord.recordUuid)
-    }
+    verifyDecisionDoesNotExist()
 
     decisionAndActions = DecisionAndActions(
       referral = this,
@@ -180,14 +176,12 @@ data class Referral(
 
   @OneToOne(
     mappedBy = "referral",
-    fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
   private var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
 
   @OneToOne(
     mappedBy = "referral",
-    fetch = FetchType.LAZY,
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
   )
   private var investigation: Investigation? = null
@@ -215,9 +209,7 @@ data class Referral(
     source: Source,
     activeCaseLoadId: String?,
   ): CsipRecord {
-    if (saferCustodyScreeningOutcome != null) {
-      throw SaferCustodyScreeningOutcomeAlreadyExistException(csipRecord.recordUuid)
-    }
+    verifySaferCustodyScreeningOutcomeDoesNotExist()
     val reason = Reason.USER
     val description = "Safer custody screening outcome added to referral"
 
@@ -267,9 +259,7 @@ data class Referral(
     activeCaseLoadId: String?,
     source: Source,
   ): CsipRecord {
-    if (investigation != null) {
-      throw InvestigationAlreadyExistsException(csipRecord.recordUuid)
-    }
+    verifyInvestigationDoesNotExist()
     val reason = Reason.USER
     val description = "Investigation with ${createRequest.interviews?.size ?: 0} interviews added to referral"
 
@@ -286,7 +276,7 @@ data class Referral(
     createRequest.interviews?.forEach { interview ->
       investigation!!.addInterview(
         createRequest = interview,
-        intervieweeRole = intervieweeRoleMap.get(interview.intervieweeRoleCode)!!,
+        intervieweeRole = intervieweeRoleMap[interview.intervieweeRoleCode]!!,
         actionedAt = actionedAt,
         actionedBy = actionedBy,
         actionedByDisplayName = actionedByDisplayName,
@@ -356,4 +346,15 @@ data class Referral(
       ),
     )
   }
+
+  private fun verifySaferCustodyScreeningOutcomeDoesNotExist() =
+    verifyDoesNotExist(saferCustodyScreeningOutcome) {
+      ResourceAlreadyExistException("Referral already has a Safer Custody Screening Outcome")
+    }
+
+  private fun verifyInvestigationDoesNotExist() =
+    verifyDoesNotExist(investigation) { ResourceAlreadyExistException("Referral already has an Investigation") }
+
+  private fun verifyDecisionDoesNotExist() =
+    verifyDoesNotExist(decisionAndActions) { ResourceAlreadyExistException("Referral already has a Decision and Actions") }
 }

@@ -6,14 +6,9 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
@@ -23,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -30,27 +26,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class SaferCustodyScreeningOutcomesIntTest(
-  @Autowired private val csipRecordRepository: CsipRecordRepository,
-  @Autowired private val referenceDataRepository: ReferenceDataRepository,
-) : IntegrationTestBase() {
-  private val outcomeType = referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE).first { it.isActive() }
-  private val incidentType =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_TYPE).first { it.isActive() }
-  private val incidentLocation =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_LOCATION).first { it.isActive() }
-  private val incidentInvolvement =
-    referenceDataRepository.findByDomain(ReferenceDataType.INCIDENT_INVOLVEMENT).first { it.isActive() }
-  private val refererAreaOfWork =
-    referenceDataRepository.findByDomain(ReferenceDataType.AREA_OF_WORK).first { it.isActive() }
+class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
@@ -100,33 +83,32 @@ class SaferCustodyScreeningOutcomesIntTest(
 
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val prisonNumber = givenValidPrisonNumber("S1234MF")
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
+    val request = createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE")
 
-    with(response!!) {
+    val response = createScreeningOutcomeResponseSpec(recordUuid, request).badRequest()
+
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE code 'WRONG_CODE' does not exist")
-      assertThat(developerMessage).isEqualTo("OUTCOME_TYPE code 'WRONG_CODE' does not exist")
+      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val csipRecord = createCsipRecord(withReferral = false)
+    val prisonNumber = givenValidPrisonNumber("S1234MF")
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
+    val request = createScreeningOutcomeRequest()
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val response = createScreeningOutcomeResponseSpec(recordUuid, request).badRequest()
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record with UUID: $recordUuid is missing a referral.")
@@ -138,67 +120,59 @@ class SaferCustodyScreeningOutcomesIntTest(
   @Test
   fun `404 not found - CSIP record not found`() {
     val recordUuid = UUID.randomUUID()
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java)
+    val response = createScreeningOutcomeResponseSpec(recordUuid, createScreeningOutcomeRequest())
+      .expectStatus().isNotFound
+      .expectBody<ErrorResponse>()
       .returnResult().responseBody
 
     with(response!!) {
       assertThat(status).isEqualTo(404)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("No resource found failure: Could not find CSIP record with UUID $recordUuid")
-      assertThat(developerMessage).isEqualTo("Could not find CSIP record with UUID $recordUuid")
+      assertThat(userMessage).isEqualTo("Not found: CSIP Record not found")
+      assertThat(developerMessage).isEqualTo("CSIP Record not found with identifier $recordUuid")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
-    val csipRecord = createCsipRecord()
+    val prisonNumber = givenValidPrisonNumber("S1234AE")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
+    val request = createScreeningOutcomeRequest()
 
-    csipRecordRepository.save(
-      csipRecord.let {
-        it.referral!!.createSaferCustodyScreeningOutcome(
-          outcomeType = outcomeType,
-          date = LocalDate.now(),
-          reasonForDecision = "reasonForDecision",
-          actionedAt = LocalDateTime.now(),
-          actionedBy = "actionedBy",
-          actionedByDisplayName = "actionedByDisplayName",
-          source = Source.DPS,
-          activeCaseLoadId = PRISON_CODE_LEEDS,
-        )
-      },
+    csipRecord.referral!!.createSaferCustodyScreeningOutcome(
+      outcomeType = givenRandom(ReferenceDataType.OUTCOME_TYPE),
+      date = LocalDate.now(),
+      reasonForDecision = "reasonForDecision",
+      actionedAt = LocalDateTime.now(),
+      actionedBy = "actionedBy",
+      actionedByDisplayName = "actionedByDisplayName",
+      source = Source.DPS,
+      activeCaseLoadId = PRISON_CODE_LEEDS,
     )
+    csipRecordRepository.save(csipRecord)
 
-    val response = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().is4xxClientError.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
+    val response = createScreeningOutcomeResponseSpec(recordUuid, request).expectStatus().is4xxClientError
+      .expectBody<ErrorResponse>().returnResult().responseBody!!
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(409)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Conflict failure: CSIP Record with UUID: $recordUuid already has a Safer Custody Screening Outcome created.")
-      assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid already has a Safer Custody Screening Outcome created.")
+      assertThat(userMessage).isEqualTo("Conflict failure: Referral already has a Safer Custody Screening Outcome")
+      assertThat(developerMessage).isEqualTo("Referral already has a Safer Custody Screening Outcome")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `create safer custody screening outcome via DPS UI`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("S1234CD")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = createScreeningOutcomeRequest()
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-        .headers(setCsipRequestContext()).exchange().expectStatus().isCreated.expectHeader()
-        .contentType(MediaType.APPLICATION_JSON).expectBody(SaferCustodyScreeningOutcome::class.java)
-        .returnResult().responseBody!!
+    val response = createScreeningOutcome(recordUuid, request)
 
     // Screening Outcome populated with data from request and context
     with(response) {
@@ -247,22 +221,19 @@ class SaferCustodyScreeningOutcomesIntTest(
         version = 1,
         occurredAt = event.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
 
   @Test
   fun `create safer custody screening outcome via NOMIS`() {
-    val recordUuid = createCsipRecord().recordUuid
+    val prisonNumber = givenValidPrisonNumber("S1234CN")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = createScreeningOutcomeRequest()
 
-    val response =
-      webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening").bodyValue(request)
-        .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
-        .headers(setCsipRequestContext(source = Source.NOMIS, username = NOMIS_SYS_USER)).exchange()
-        .expectStatus().isCreated.expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SaferCustodyScreeningOutcome::class.java).returnResult().responseBody!!
+    val response = createScreeningOutcome(recordUuid, request, Source.NOMIS, NOMIS_SYS_USER)
 
     // Screening Outcome populated with data from request and context
     with(response) {
@@ -311,50 +282,10 @@ class SaferCustodyScreeningOutcomesIntTest(
         version = 1,
         occurredAt = event.occurredAt,
         detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(PRISON_NUMBER),
+        personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
   }
-
-  private fun createCsipRecord(withReferral: Boolean = true) = csipRecordRepository.saveAndFlush(
-    CsipRecord(
-      recordUuid = UUID.randomUUID(),
-      prisonNumber = PRISON_NUMBER,
-      prisonCodeWhenRecorded = PRISON_CODE_LEEDS,
-      logCode = "LOG",
-      createdAt = LocalDateTime.now(),
-      createdBy = "te",
-      createdByDisplayName = "Bobbie Shepard",
-      lastModifiedAt = null,
-      lastModifiedBy = null,
-      lastModifiedByDisplayName = null,
-    ).let {
-      if (withReferral) {
-        it.setReferral(
-          Referral(
-            csipRecord = it,
-            incidentDate = LocalDate.now(),
-            referredBy = "referredBy",
-            referralDate = LocalDate.now(),
-            descriptionOfConcern = "descriptionOfConcern",
-            knownReasons = "knownReasons",
-            otherInformation = "otherInformation",
-            saferCustodyTeamInformed = false,
-            referralComplete = true,
-            referralCompletedBy = "referralCompletedBy",
-            referralCompletedByDisplayName = "referralCompletedByDisplayName",
-            referralCompletedDate = LocalDate.now(),
-            incidentType = incidentType,
-            incidentLocation = incidentLocation,
-            refererAreaOfWork = refererAreaOfWork,
-            incidentInvolvement = incidentInvolvement,
-          ),
-        )
-      } else {
-        it
-      }
-    },
-  )
 
   private fun createScreeningOutcomeRequest(outcomeTypeCode: String = "CUR") =
     CreateSaferCustodyScreeningOutcomeRequest(
@@ -362,4 +293,24 @@ class SaferCustodyScreeningOutcomesIntTest(
       date = LocalDate.now(),
       reasonForDecision = "alia",
     )
+
+  private fun createScreeningOutcomeResponseSpec(
+    recordUuid: UUID,
+    request: CreateSaferCustodyScreeningOutcomeRequest,
+    source: Source = Source.DPS,
+    username: String = TEST_USER,
+  ) = webTestClient.post().uri("/csip-records/$recordUuid/referral/safer-custody-screening")
+    .bodyValue(request)
+    .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), isUserToken = true))
+    .headers(setCsipRequestContext(source, username)).exchange()
+
+  private fun createScreeningOutcome(
+    recordUuid: UUID,
+    request: CreateSaferCustodyScreeningOutcomeRequest,
+    source: Source = Source.DPS,
+    username: String = TEST_USER,
+  ) = createScreeningOutcomeResponseSpec(recordUuid, request, source, username)
+    .expectStatus().isCreated
+    .expectBody<SaferCustodyScreeningOutcome>()
+    .returnResult().responseBody!!
 }

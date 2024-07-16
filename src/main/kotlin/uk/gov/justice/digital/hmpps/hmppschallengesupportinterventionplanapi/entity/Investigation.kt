@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table
-data class Investigation(
+class Investigation(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "investigation_id")

@@ -5,8 +5,9 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toCsipRecordEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.CsipRecordNotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
@@ -26,21 +27,19 @@ class SaferCustodyScreeningOutcomeService(
     context: CsipRequestContext,
   ): SaferCustodyScreeningOutcome {
     val outcomeType = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
-
-    return csipRecordRepository.findByRecordUuid(recordUuid)?.let {
-      it.referral?.let { referral ->
-        csipRecordRepository.saveAndFlush(
-          request.toCsipRecordEntity(
-            referral = referral,
-            outcomeType = outcomeType,
-            actionedAt = context.requestAt,
-            actionedBy = context.username,
-            actionedByDisplayName = context.userDisplayName,
-            source = context.source,
-            activeCaseLoadId = context.activeCaseLoadId,
-          ),
-        ).referral()!!.saferCustodyScreeningOutcome()!!.toModel()
-      } ?: throw MissingReferralException(recordUuid)
-    } ?: throw CsipRecordNotFoundException("Could not find CSIP record with UUID $recordUuid")
+    val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
+    return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
+      csipRecordRepository.save(
+        request.toCsipRecordEntity(
+          referral = this,
+          outcomeType = outcomeType,
+          actionedAt = context.requestAt,
+          actionedBy = context.username,
+          actionedByDisplayName = context.userDisplayName,
+          source = context.source,
+          activeCaseLoadId = context.activeCaseLoadId,
+        ),
+      ).referral()!!.saferCustodyScreeningOutcome()!!.toModel()
+    }
   }
 }
