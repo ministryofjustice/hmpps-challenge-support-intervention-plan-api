@@ -11,7 +11,7 @@ import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.AffectedComponents
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
@@ -45,17 +45,7 @@ class CsipEventServiceTest {
         additionalInformation = CsipAdditionalInformation(
           recordUuid = csipEvent.recordUuid,
           source = csipEvent.source,
-          isRecordAffected = csipEvent.affectedComponents.isRecordAffected,
-          isReferralAffected = csipEvent.affectedComponents.isReferralAffected,
-          isContributoryFactorAffected = csipEvent.affectedComponents.isContributoryFactorAffected,
-          isSaferCustodyScreeningOutcomeAffected = csipEvent.affectedComponents.isSaferCustodyScreeningOutcomeAffected,
-          isInvestigationAffected = csipEvent.affectedComponents.isInvestigationAffected,
-          isInterviewAffected = csipEvent.affectedComponents.isInterviewAffected,
-          isDecisionAndActionsAffected = csipEvent.affectedComponents.isDecisionAndActionsAffected,
-          isPlanAffected = csipEvent.affectedComponents.isPlanAffected,
-          isIdentifiedNeedAffected = csipEvent.affectedComponents.isIdentifiedNeedAffected,
-          isReviewAffected = csipEvent.affectedComponents.isReviewAffected,
-          isAttendeeAffected = csipEvent.affectedComponents.isAttendeeAffected,
+          affectedComponents = csipEvent.affectedComponents,
         ),
         description = DomainEventType.CSIP_UPDATED.description,
         occurredAt = csipEvent.occurredAt.toZoneDateTime(),
@@ -83,18 +73,6 @@ class CsipEventServiceTest {
     occurredAt = LocalDateTime.now(),
     source = Source.NOMIS,
     updatedBy = TEST_USER,
-    AffectedComponents(
-      isRecordAffected = false,
-      isReferralAffected = true,
-      isContributoryFactorAffected = false,
-      isSaferCustodyScreeningOutcomeAffected = false,
-      isInvestigationAffected = false,
-      isInterviewAffected = false,
-      isDecisionAndActionsAffected = false,
-      isPlanAffected = false,
-      isIdentifiedNeedAffected = false,
-      isReviewAffected = false,
-      isAttendeeAffected = false,
-    ),
+    affectedComponents = setOf(AffectedComponent.Referral),
   )
 }

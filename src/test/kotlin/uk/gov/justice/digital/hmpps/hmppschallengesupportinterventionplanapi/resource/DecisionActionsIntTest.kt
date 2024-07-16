@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
-import com.sun.tools.javac.code.Type.moreInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
@@ -365,17 +365,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
         eventType = DomainEventType.CSIP_UPDATED.eventType,
         additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = false,
-          isInvestigationAffected = false,
-          isInterviewAffected = false,
-          isDecisionAndActionsAffected = true,
-          isPlanAffected = false,
-          isIdentifiedNeedAffected = false,
-          isReviewAffected = false,
-          isAttendeeAffected = false,
+          setOf(AffectedComponent.DecisionAndActions),
           source = Source.DPS,
         ),
         version = 1,
@@ -436,17 +426,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
         eventType = DomainEventType.CSIP_UPDATED.eventType,
         additionalInformation = CsipAdditionalInformation(
           recordUuid = recordUuid,
-          isRecordAffected = false,
-          isReferralAffected = false,
-          isContributoryFactorAffected = false,
-          isSaferCustodyScreeningOutcomeAffected = false,
-          isInvestigationAffected = false,
-          isInterviewAffected = false,
-          isDecisionAndActionsAffected = true,
-          isPlanAffected = false,
-          isIdentifiedNeedAffected = false,
-          isReviewAffected = false,
-          isAttendeeAffected = false,
+          affectedComponents = setOf(AffectedComponent.DecisionAndActions),
           source = Source.NOMIS,
         ),
         version = 1,
