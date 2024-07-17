@@ -45,9 +45,9 @@ data class CsipDomainEvent(
 ) : DomainEvent
 
 data class CsipAdditionalInformation(
-    override val recordUuid: UUID,
-    val affectedComponents: Set<AffectedComponent>,
-    override val source: Source,
+  override val recordUuid: UUID,
+  val affectedComponents: Set<AffectedComponent>,
+  override val source: Source,
 ) : CsipBaseInformation
 
 data class CsipBasicInformation(

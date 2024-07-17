@@ -30,25 +30,25 @@ sealed interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
 }
 
 data class CsipUpdatedEvent(
-    override val recordUuid: UUID,
-    override val prisonNumber: String,
-    override val description: String,
-    override val occurredAt: LocalDateTime,
-    override val source: Source,
-    val updatedBy: String,
-    override val affectedComponents: Set<AffectedComponent>,
+  override val recordUuid: UUID,
+  override val prisonNumber: String,
+  override val description: String,
+  override val occurredAt: LocalDateTime,
+  override val source: Source,
+  val updatedBy: String,
+  override val affectedComponents: Set<AffectedComponent>,
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_UPDATED
 }
 
 data class CsipCreatedEvent(
-    override val recordUuid: UUID,
-    override val prisonNumber: String,
-    override val description: String,
-    override val occurredAt: LocalDateTime,
-    override val source: Source,
-    val createdBy: String,
-    override val affectedComponents: Set<AffectedComponent>,
+  override val recordUuid: UUID,
+  override val prisonNumber: String,
+  override val description: String,
+  override val occurredAt: LocalDateTime,
+  override val source: Source,
+  val createdBy: String,
+  override val affectedComponents: Set<AffectedComponent>,
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_CREATED
 }
