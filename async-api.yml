@@ -27,7 +27,7 @@ components:
     csip.contributory-factor.created:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-contributory-factor-created.yaml
     csip.interview.created:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-updated.yaml
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-created.yaml
 
 
 channels:
