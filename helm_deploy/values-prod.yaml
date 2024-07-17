@@ -14,7 +14,7 @@ generic-service:
     EVENTS_BASE_URL: "https://csip-api.hmpps.service.justice.gov.uk"
     SERVICE_ACTIVE_PRISONS:
   postgresDatabaseRestore:
-    jobName: csip-prod-to-preprod
+    jobName: csip-prod-to-preprod-restore
     enabled: true
     namespace_secrets:
       rds-postgresql-instance-output:
