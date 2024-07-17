@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
@@ -30,25 +30,25 @@ sealed interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
 }
 
 data class CsipUpdatedEvent(
-  override val recordUuid: UUID,
-  override val prisonNumber: String,
-  override val description: String,
-  override val occurredAt: LocalDateTime,
-  override val source: Source,
-  val updatedBy: String,
-  override val affectedComponents: Set<AffectedComponent>,
+    override val recordUuid: UUID,
+    override val prisonNumber: String,
+    override val description: String,
+    override val occurredAt: LocalDateTime,
+    override val source: Source,
+    val updatedBy: String,
+    override val affectedComponents: Set<AffectedComponent>,
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_UPDATED
 }
 
 data class CsipCreatedEvent(
-  override val recordUuid: UUID,
-  override val prisonNumber: String,
-  override val description: String,
-  override val occurredAt: LocalDateTime,
-  override val source: Source,
-  val createdBy: String,
-  override val affectedComponents: Set<AffectedComponent>,
+    override val recordUuid: UUID,
+    override val prisonNumber: String,
+    override val description: String,
+    override val occurredAt: LocalDateTime,
+    override val source: Source,
+    val createdBy: String,
+    override val affectedComponents: Set<AffectedComponent>,
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_CREATED
 }

@@ -11,7 +11,7 @@ import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent

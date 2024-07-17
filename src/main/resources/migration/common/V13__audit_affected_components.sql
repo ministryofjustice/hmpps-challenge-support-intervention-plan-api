@@ -19,3 +19,5 @@ alter table audit_event
     add constraint affected_component_enum_check check
         (affected_components <@
          ARRAY ['Record', 'Referral', 'ContributoryFactor', 'SaferCustodyScreeningOutcome', 'Investigation', 'Interview', 'DecisionAndActions', 'Plan', 'IdentifiedNeed', 'Review', 'Attendee']::varchar[]);
+
+create index idx_audit_event_csip_record_id on audit_event(csip_record_id);

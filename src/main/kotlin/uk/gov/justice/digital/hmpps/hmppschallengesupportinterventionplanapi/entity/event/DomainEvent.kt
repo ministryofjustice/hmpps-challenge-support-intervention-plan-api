@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
 
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -45,9 +45,9 @@ data class CsipDomainEvent(
 ) : DomainEvent
 
 data class CsipAdditionalInformation(
-  override val recordUuid: UUID,
-  val affectedComponents: Set<AffectedComponent>,
-  override val source: Source,
+    override val recordUuid: UUID,
+    val affectedComponents: Set<AffectedComponent>,
+    override val source: Source,
 ) : CsipBaseInformation
 
 data class CsipBasicInformation(

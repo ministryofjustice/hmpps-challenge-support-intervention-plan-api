@@ -13,7 +13,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
