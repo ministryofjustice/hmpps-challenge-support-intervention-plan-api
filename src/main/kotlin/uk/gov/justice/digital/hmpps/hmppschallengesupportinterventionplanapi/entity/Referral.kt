@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
@@ -114,7 +113,6 @@ class Referral(
     actionedAt: LocalDateTime,
     source: Source,
     activeCaseLoadId: String?,
-    reason: Reason = Reason.USER,
     actionOpenCsipAlert: Boolean,
     actionNonAssociationsUpdated: Boolean,
     actionObservationBook: Boolean,
@@ -145,6 +143,7 @@ class Referral(
       actionOther = actionOther,
     )
 
+    val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
     with(csipRecord) {
       addAuditEvent(
         action = AuditEventAction.CREATED,
@@ -153,9 +152,8 @@ class Referral(
         actionedBy = decisionOutcomeRecordedBy,
         actionedByCapturedName = decisionOutcomeRecordedByDisplayName,
         source,
-        reason,
         activeCaseLoadId,
-        isDecisionAndActionsAffected = true,
+        affectedComponents = affectedComponents,
       )
       csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
@@ -165,7 +163,7 @@ class Referral(
           occurredAt = actionedAt,
           source = source,
           updatedBy = decisionOutcomeRecordedBy,
-          affectedComponents = setOf(AffectedComponent.DecisionAndActions),
+          affectedComponents = affectedComponents,
         ),
       )
     }
@@ -209,7 +207,6 @@ class Referral(
     activeCaseLoadId: String?,
   ): CsipRecord {
     verifySaferCustodyScreeningOutcomeDoesNotExist()
-    val reason = Reason.USER
     val description = "Safer custody screening outcome added to referral"
 
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
@@ -221,6 +218,7 @@ class Referral(
       reasonForDecision = reasonForDecision,
     )
 
+    val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
     with(csipRecord) {
       addAuditEvent(
         action = AuditEventAction.CREATED,
@@ -229,9 +227,8 @@ class Referral(
         actionedBy = actionedBy,
         actionedByCapturedName = actionedByDisplayName,
         source = source,
-        reason = reason,
         activeCaseLoadId = activeCaseLoadId,
-        isSaferCustodyScreeningOutcomeAffected = true,
+        affectedComponents = affectedComponents,
       )
       csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
@@ -241,7 +238,7 @@ class Referral(
           occurredAt = actionedAt,
           source = source,
           updatedBy = actionedBy,
-          setOf(AffectedComponent.SaferCustodyScreeningOutcome),
+          affectedComponents = affectedComponents,
         ),
       )
     }
@@ -259,7 +256,6 @@ class Referral(
     source: Source,
   ): CsipRecord {
     verifyInvestigationDoesNotExist()
-    val reason = Reason.USER
     val description = "Investigation with ${createRequest.interviews?.size ?: 0} interviews added to referral"
 
     investigation = Investigation(
@@ -284,6 +280,10 @@ class Referral(
     }
 
     val isInterviewAffected = (investigation?.interviews()?.size ?: 0) > 0
+    val affectedComponents = buildSet {
+      add(AffectedComponent.Investigation)
+      if (isInterviewAffected) add(AffectedComponent.Interview)
+    }
 
     with(csipRecord) {
       addAuditEvent(
@@ -293,10 +293,8 @@ class Referral(
         actionedBy = actionedBy,
         actionedByCapturedName = actionedByDisplayName,
         source = source,
-        reason = reason,
         activeCaseLoadId = activeCaseLoadId,
-        isInvestigationAffected = true,
-        isInterviewAffected = isInterviewAffected,
+        affectedComponents = affectedComponents,
       )
       csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
@@ -306,10 +304,7 @@ class Referral(
           occurredAt = actionedAt,
           source = source,
           updatedBy = actionedBy,
-          affectedComponents = buildSet {
-            add(AffectedComponent.Investigation)
-            if (isInterviewAffected) add(AffectedComponent.Interview)
-          },
+          affectedComponents = affectedComponents,
         ),
       )
     }

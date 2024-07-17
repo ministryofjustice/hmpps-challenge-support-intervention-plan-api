@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_SIGNER_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -211,24 +210,23 @@ class DecisionActionsIntTest : IntegrationTestBase() {
     csipRecord.referral!!.createDecisionAndActions(
       decisionOutcome = outcomeType,
       decisionOutcomeSignedOffBy = decisionSignerRole,
-      decisionOutcomeDate = LocalDate.now(),
-      actionedAt = LocalDateTime.now(),
+      decisionConclusion = null,
       decisionOutcomeRecordedBy = "actionedBy",
       decisionOutcomeRecordedByDisplayName = "actionedByDisplayName",
-      source = Source.DPS,
-      reason = Reason.USER,
-      activeCaseLoadId = PRISON_CODE_LEEDS,
-      description = "description",
-      decisionConclusion = null,
-      actionOther = null,
-      actionObservationBook = false,
-      actionServiceReferral = false,
-      actionOpenCsipAlert = false,
-      actionSimReferral = false,
-      actionUnitOrCellMove = false,
+      decisionOutcomeDate = LocalDate.now(),
       nextSteps = null,
-      actionCsraOrRsraReview = false,
+      actionOther = null,
+      actionedAt = LocalDateTime.now(),
+      source = Source.DPS,
+      activeCaseLoadId = PRISON_CODE_LEEDS,
+      actionOpenCsipAlert = false,
       actionNonAssociationsUpdated = false,
+      actionObservationBook = false,
+      actionUnitOrCellMove = false,
+      actionCsraOrRsraReview = false,
+      actionServiceReferral = false,
+      actionSimReferral = false,
+      description = "description",
     )
     csipRecordRepository.save(csipRecord)
 
@@ -347,13 +345,11 @@ class DecisionActionsIntTest : IntegrationTestBase() {
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Decision and actions added to referral")
-      assertThat(isDecisionAndActionsAffected).isTrue()
-      assertThat(isSaferCustodyScreeningOutcomeAffected).isFalse()
+      assertThat(affectedComponents).containsOnly(AffectedComponent.DecisionAndActions)
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(actionedBy).isEqualTo(TEST_USER)
       assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
       assertThat(source).isEqualTo(Source.DPS)
-      assertThat(reason).isEqualTo(Reason.USER)
       assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
     }
 
@@ -409,12 +405,11 @@ class DecisionActionsIntTest : IntegrationTestBase() {
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Decision and actions added to referral")
-      assertThat(isSaferCustodyScreeningOutcomeAffected).isFalse()
+      assertThat(affectedComponents).doesNotContain(AffectedComponent.SaferCustodyScreeningOutcome)
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(actionedBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
       assertThat(source).isEqualTo(Source.NOMIS)
-      assertThat(reason).isEqualTo(Reason.USER)
       assertThat(activeCaseLoadId).isNull()
     }
 

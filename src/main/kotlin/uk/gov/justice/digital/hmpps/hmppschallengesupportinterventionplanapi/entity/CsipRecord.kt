@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEventable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import java.time.LocalDate
@@ -88,19 +87,8 @@ class CsipRecord(
     actionedBy: String,
     actionedByCapturedName: String,
     source: Source,
-    reason: Reason,
     activeCaseLoadId: String?,
-    isRecordAffected: Boolean? = false,
-    isReferralAffected: Boolean? = false,
-    isContributoryFactorAffected: Boolean? = false,
-    isSaferCustodyScreeningOutcomeAffected: Boolean? = false,
-    isInvestigationAffected: Boolean? = false,
-    isInterviewAffected: Boolean? = false,
-    isDecisionAndActionsAffected: Boolean? = false,
-    isPlanAffected: Boolean? = false,
-    isIdentifiedNeedAffected: Boolean? = false,
-    isReviewAffected: Boolean? = false,
-    isAttendeeAffected: Boolean? = false,
+    affectedComponents: Set<AffectedComponent>,
   ) = apply {
     auditEvents.add(
       AuditEvent(
@@ -111,19 +99,8 @@ class CsipRecord(
         actionedBy = actionedBy,
         actionedByCapturedName = actionedByCapturedName,
         source = source,
-        reason = reason,
         activeCaseLoadId = activeCaseLoadId,
-        isRecordAffected = isRecordAffected,
-        isReferralAffected = isReferralAffected,
-        isContributoryFactorAffected = isContributoryFactorAffected,
-        isSaferCustodyScreeningOutcomeAffected = isSaferCustodyScreeningOutcomeAffected,
-        isInvestigationAffected = isInvestigationAffected,
-        isInterviewAffected = isInterviewAffected,
-        isDecisionAndActionsAffected = isDecisionAndActionsAffected,
-        isPlanAffected = isPlanAffected,
-        isIdentifiedNeedAffected = isIdentifiedNeedAffected,
-        isReviewAffected = isReviewAffected,
-        isAttendeeAffected = isAttendeeAffected,
+        affectedComponents = affectedComponents,
       ),
     )
   }
@@ -141,7 +118,6 @@ class CsipRecord(
     incidentInvolvement: ReferenceData?,
     contributoryFactors: Map<String, ReferenceData>,
     releaseDate: LocalDate? = null,
-    reason: Reason = Reason.USER,
     description: String = DomainEventType.CSIP_CREATED.description,
   ): CsipRecord = apply {
     referral = createCsipRecordRequest.toInitialReferralEntity(
@@ -171,11 +147,11 @@ class CsipRecord(
       actionedBy = createdBy,
       actionedByCapturedName = createdByDisplayName,
       source = csipRequestContext.source,
-      reason = reason,
       activeCaseLoadId = csipRequestContext.activeCaseLoadId,
-      isRecordAffected = true,
-      isReferralAffected = true,
-      isContributoryFactorAffected = referral!!.contributoryFactors().isNotEmpty(),
+      affectedComponents = buildSet {
+        addAll(setOf(AffectedComponent.Record, AffectedComponent.Referral))
+        if (referral!!.contributoryFactors().isNotEmpty()) add(AffectedComponent.ContributoryFactor)
+      },
     )
     registerEvent(
       CsipCreatedEvent(

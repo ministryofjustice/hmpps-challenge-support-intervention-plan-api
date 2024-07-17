@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Reason
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -198,13 +197,14 @@ class InvestigationsIntTest : IntegrationTestBase() {
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Investigation with 2 interviews added to referral")
-      assertThat(isInvestigationAffected).isTrue()
-      assertThat(isInterviewAffected).isTrue()
+      assertThat(affectedComponents).containsExactlyInAnyOrder(
+        AffectedComponent.Investigation,
+        AffectedComponent.Interview,
+      )
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(actionedBy).isEqualTo(TEST_USER)
       assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
       assertThat(source).isEqualTo(Source.DPS)
-      assertThat(reason).isEqualTo(Reason.USER)
       assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
     }
 
@@ -279,13 +279,11 @@ class InvestigationsIntTest : IntegrationTestBase() {
     with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Investigation with 0 interviews added to referral")
-      assertThat(isInvestigationAffected).isTrue()
-      assertThat(isInterviewAffected).isFalse()
+      assertThat(affectedComponents).containsOnly(AffectedComponent.Investigation)
       assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(actionedBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
       assertThat(source).isEqualTo(Source.NOMIS)
-      assertThat(reason).isEqualTo(Reason.USER)
       assertThat(activeCaseLoadId).isNull()
     }
 
