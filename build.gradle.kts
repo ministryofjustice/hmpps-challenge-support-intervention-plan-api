@@ -29,12 +29,12 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:4.0.1")
 
   // Test dependencies
-  testImplementation("org.testcontainers:postgresql:1.19.8")
+  testImplementation("org.testcontainers:postgresql:1.20.0")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
   testImplementation("org.wiremock:wiremock-standalone:3.8.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
-  testImplementation("org.testcontainers:localstack:1.19.8")
+  testImplementation("org.testcontainers:localstack:1.20.0")
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
