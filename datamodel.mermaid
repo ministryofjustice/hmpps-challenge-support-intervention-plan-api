@@ -208,17 +208,7 @@ erDiagram
         varchar(255) actioned_by_captured_name "not null"
         varchar(12) source
         varchar(12) reason
-        boolean recordAffected
-        boolean referralAffected
-        boolean contributoryFactorAffected
-        boolean saferCustodyScreeningOutcomeAffected
-        boolean investigationAffected
-        boolean interviewAffected
-        boolean decisionsAndActionsAffected
-        boolean planAffected
-        boolean identifiedNeedAffected
-        boolean reviewAffected
-        boolean attendeeAffected
+        varchar[] affectedComponents
     }
 
     reference_data {
