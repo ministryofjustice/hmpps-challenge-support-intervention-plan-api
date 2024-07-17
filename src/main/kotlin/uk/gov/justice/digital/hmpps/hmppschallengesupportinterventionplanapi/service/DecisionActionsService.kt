@@ -40,6 +40,10 @@ class DecisionActionsService(
           decisionOutcomeRecordedByDisplayName = context.userDisplayName,
           decisionOutcomeDate = context.requestAt.toLocalDate(),
           nextSteps = request.nextSteps,
+          actionOther = request.actionOther,
+          actionedAt = context.requestAt,
+          source = context.source,
+          activeCaseLoadId = context.activeCaseLoadId,
           actionOpenCsipAlert = request.isActionOpenCsipAlert,
           actionNonAssociationsUpdated = request.isActionNonAssociationsUpdated,
           actionObservationBook = request.isActionObservationBook,
@@ -47,10 +51,6 @@ class DecisionActionsService(
           actionCsraOrRsraReview = request.isActionCsraOrRsraReview,
           actionServiceReferral = request.isActionServiceReferral,
           actionSimReferral = request.isActionSimReferral,
-          actionOther = request.actionOther,
-          actionedAt = context.requestAt,
-          source = context.source,
-          activeCaseLoadId = context.activeCaseLoadId,
         ),
       ).referral()!!.decisionAndActions()!!.toModel()
     }

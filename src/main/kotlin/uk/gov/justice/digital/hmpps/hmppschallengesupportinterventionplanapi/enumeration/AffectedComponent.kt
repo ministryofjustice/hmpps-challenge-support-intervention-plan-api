@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration
 
 enum class AffectedComponent {
   Record,

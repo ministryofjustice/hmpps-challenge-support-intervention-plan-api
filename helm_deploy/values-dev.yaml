@@ -28,4 +28,5 @@ generic-prometheus-alerts:
   businessHoursOnly: true
 
 generic-data-analytics-extractor:
+  enabled: true
   cronJobSchedule: "0 21 * * 1-5"

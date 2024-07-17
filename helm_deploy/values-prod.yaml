@@ -33,4 +33,5 @@ generic-prometheus-alerts:
   alertSeverity: hmpps-alerts-api-prod
 
 generic-data-analytics-extractor:
+  enabled: true
   cronJobSchedule: "0 1 * * 1-5"
