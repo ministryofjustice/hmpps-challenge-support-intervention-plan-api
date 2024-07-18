@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -96,7 +97,7 @@ data class UpdateReferralRequest(
   @Schema(
     description = "Records whether the safer custody team been informed.",
   )
-  val isSaferCustodyTeamInformed: Boolean?,
+  val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
 
   @Schema(
     description = "Is the referral complete.",
