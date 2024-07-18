@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -97,7 +98,7 @@ data class CreateReferralRequest(
   @Schema(
     description = "Records whether the safer custody team been informed.",
   )
-  val isSaferCustodyTeamInformed: Boolean?,
+  val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
 
   @Schema(
     description = "Is the referral complete.",

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import java.time.LocalDate
 
 class UpdateReferralRequestTest : RequestValidationTest() {
@@ -22,7 +23,7 @@ class UpdateReferralRequestTest : RequestValidationTest() {
       descriptionOfConcern = "novum",
       knownReasons = "gravida",
       otherInformation = null,
-      isSaferCustodyTeamInformed = null,
+      isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -45,7 +46,7 @@ class UpdateReferralRequestTest : RequestValidationTest() {
       descriptionOfConcern = null,
       knownReasons = null,
       otherInformation = null,
-      isSaferCustodyTeamInformed = null,
+      isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -68,7 +69,7 @@ class UpdateReferralRequestTest : RequestValidationTest() {
       descriptionOfConcern = "molestie",
       knownReasons = "dicat",
       otherInformation = null,
-      isSaferCustodyTeamInformed = null,
+      isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
     )
     assertValidationErrors(

@@ -4,6 +4,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -54,7 +56,7 @@ object EntityGenerator {
     descriptionOfConcern: String? = "descriptionOfConcern",
     knownReasons: String? = "knownReasons",
     otherInformation: String? = "otherInformation",
-    saferCustodyTeamInformed: Boolean? = false,
+    saferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
     referralComplete: Boolean? = true,
     referralCompletedBy: String? = "referralCompletedBy",
     referralCompletedByDisplayName: String? = "referralCompletedByDisplayName",
