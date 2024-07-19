@@ -32,7 +32,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.20.0")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
-  testImplementation("org.wiremock:wiremock-standalone:3.8.0")
+  testImplementation("org.wiremock:wiremock-standalone:3.9.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
   testImplementation("org.testcontainers:localstack:1.20.0")
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
