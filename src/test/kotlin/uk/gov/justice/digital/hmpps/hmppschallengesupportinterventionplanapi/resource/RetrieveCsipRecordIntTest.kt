@@ -57,7 +57,7 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
 
     val response = getCsipRecord(record.recordUuid, role)
     with(response) {
-      assertThat(prisonNumber).isEqualTo(prisonNumber)
+      assertThat(this.prisonNumber).isEqualTo(prisonNumber)
       assertThat(recordUuid).isEqualTo(record.recordUuid)
     }
   }
