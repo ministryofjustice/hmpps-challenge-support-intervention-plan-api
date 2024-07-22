@@ -6,6 +6,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
@@ -21,7 +22,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -70,7 +70,7 @@ class InvestigationsIntTest : IntegrationTestBase() {
   fun `400 bad request - request body validation failure`() {
     val recordUuid = UUID.randomUUID()
     val request = investigationRequest(interviewRequest(roleCode = "n".repeat(13)))
-    val response = createInvestigationResponseSpec(recordUuid, request).badRequest()
+    val response = createInvestigationResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -87,7 +87,7 @@ class InvestigationsIntTest : IntegrationTestBase() {
   fun `400 bad request - invalid Outcome Type code`() {
     val recordUuid = UUID.randomUUID()
     val request = investigationRequest(interviewRequest(roleCode = "WRONG_CODE"))
-    val response = createInvestigationResponseSpec(recordUuid, request).badRequest()
+    val response = createInvestigationResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -104,7 +104,8 @@ class InvestigationsIntTest : IntegrationTestBase() {
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
 
-    val response = createInvestigationResponseSpec(recordUuid, investigationRequest(interviewRequest())).badRequest()
+    val response = createInvestigationResponseSpec(recordUuid, investigationRequest(interviewRequest()))
+      .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
