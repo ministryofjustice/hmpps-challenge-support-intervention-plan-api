@@ -48,11 +48,6 @@ data class Referral(
   val refererArea: ReferenceData,
 
   @Schema(
-    description = "Summary of the CSIP referral.",
-  )
-  val referralSummary: String?,
-
-  @Schema(
     description = "Was this referral proactive or preventative.",
   )
   val isProactiveReferral: Boolean?,

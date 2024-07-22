@@ -44,7 +44,6 @@ erDiagram
         varchar(240) referred_by "not null. The person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY"
         int referer_area_of_work_id FK "not null. FK to reference_data. The area of work of the person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION"
         date referral_date "not null. The date the CSIP referral was raised. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED"
-        text referral_summary "Summary of the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_COMMENT? 4000 character limit"
         boolean proactive_referral "Was this referral proactive or preventative. Maps to OFFENDER_CSIP_REPORTS.RFR_PROACTIVE_RESPONSE where the default is 'N'"
         boolean staff_assaulted "Were any members of staff assaulted in the incident. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_ASSAULTED where the default is 'N'"
         text assaulted_staff_name "Name or names of assaulted members of staff if any. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_NAME. 1000 character limit"

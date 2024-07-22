@@ -53,12 +53,6 @@ data class CreateReferralRequest(
   val refererAreaCode: String,
 
   @Schema(
-    description = "Summary of the CSIP referral.",
-  )
-  @field:Size(min = 0, max = 4000, message = "Summary must be <= 4000 characters")
-  val referralSummary: String?,
-
-  @Schema(
     description = "Was this referral proactive or preventative.",
   )
   val isProactiveReferral: Boolean?,

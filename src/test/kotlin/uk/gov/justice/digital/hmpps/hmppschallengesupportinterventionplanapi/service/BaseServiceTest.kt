@@ -42,7 +42,6 @@ abstract class BaseServiceTest {
         incidentTime = null,
         referredBy = "falli",
         referralDate = LocalDate.now(),
-        referralSummary = null,
         proactiveReferral = null,
         staffAssaulted = null,
         assaultedStaffName = null,
