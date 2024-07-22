@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -159,8 +160,14 @@ abstract class IntegrationTestBase {
     it.set(SOURCE, source?.name)
     it.set(USERNAME, username)
   }
-}
 
-internal fun WebTestClient.ResponseSpec.badRequest() = expectStatus().isBadRequest
-  .expectBody<ErrorResponse>()
-  .returnResult().responseBody!!
+  internal fun WebTestClient.ResponseSpec.errorResponse(status: HttpStatus) =
+    expectStatus().isEqualTo(status)
+      .expectBody<ErrorResponse>()
+      .returnResult().responseBody!!
+
+  internal final inline fun <reified T> WebTestClient.ResponseSpec.successResponse(status: HttpStatus = HttpStatus.OK): T =
+    expectStatus().isEqualTo(status)
+      .expectBody(T::class.java)
+      .returnResult().responseBody!!
+}

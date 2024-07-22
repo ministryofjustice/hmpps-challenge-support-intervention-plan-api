@@ -6,6 +6,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -19,7 +20,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -70,7 +70,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
     val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest()
 
-    val response = createDecisionResponseSpec(recordUuid, request, username = null).badRequest()
+    val response = createDecisionResponseSpec(recordUuid, request, username = null).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -90,7 +90,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
       webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
         .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = "UNKNOWN", isUserToken = true))
         .headers(setCsipRequestContext())
-        .exchange().badRequest()
+        .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response!!) {
       assertThat(status).isEqualTo(400)
@@ -105,7 +105,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
   fun `400 bad request - request body validation failure`() {
     val recordUuid = UUID.randomUUID()
     val request = createDecisionActionsRequest(outcomeTypeCode = "n".repeat(13))
-    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
+    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -122,7 +122,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
   fun `400 bad request - invalid Outcome Type code`() {
     val recordUuid = UUID.randomUUID()
     val request = createDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE", outcomeSignedOffByRoleCode = "CUR")
-    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
+    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -137,7 +137,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
   fun `400 bad request - inactive Outcome signed off by role code`() {
     val recordUuid = UUID.randomUUID()
     val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "OT_INACT")
-    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
+    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -152,7 +152,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
   fun `400 bad request - invalid Outcome signed off by role code`() {
     val recordUuid = UUID.randomUUID()
     val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE")
-    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
+    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -170,7 +170,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
     val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest()
 
-    val response = createDecisionResponseSpec(recordUuid, request).badRequest()
+    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)

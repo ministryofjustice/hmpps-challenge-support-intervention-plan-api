@@ -200,13 +200,13 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun retrieveCsipRecord(
     @PathVariable @Parameter(
       description = "CSIP record unique identifier",
       required = true,
     ) recordUuid: UUID,
-  ): CsipRecord = throw NotImplementedError()
+  ): CsipRecord = csipRecordService.retrieveCsipRecord(recordUuid)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/csip-records/{recordUuid}/log-number")

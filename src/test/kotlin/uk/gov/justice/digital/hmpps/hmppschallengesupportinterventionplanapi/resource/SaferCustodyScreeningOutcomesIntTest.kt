@@ -6,6 +6,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -18,7 +19,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.badRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -88,7 +88,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     val recordUuid = csipRecord.recordUuid
     val request = createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE")
 
-    val response = createScreeningOutcomeResponseSpec(recordUuid, request).badRequest()
+    val response = createScreeningOutcomeResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -106,7 +106,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     val recordUuid = csipRecord.recordUuid
     val request = createScreeningOutcomeRequest()
 
-    val response = createScreeningOutcomeResponseSpec(recordUuid, request).badRequest()
+    val response = createScreeningOutcomeResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
