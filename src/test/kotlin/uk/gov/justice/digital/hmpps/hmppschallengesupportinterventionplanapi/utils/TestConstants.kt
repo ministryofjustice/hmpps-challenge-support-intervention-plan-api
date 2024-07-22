@@ -50,7 +50,6 @@ fun createReferralRequest(
   incidentLocationCode,
   "REFERRER",
   refererAreaCode,
-  "summary",
   false,
   false,
   "",

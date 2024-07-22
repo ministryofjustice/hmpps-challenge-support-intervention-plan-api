@@ -50,8 +50,6 @@ class Referral(
 
   @Column(nullable = false) val referralDate: LocalDate,
 
-  @Column val referralSummary: String? = null,
-
   @Column val proactiveReferral: Boolean? = null,
 
   @Column val staffAssaulted: Boolean? = null,
