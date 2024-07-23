@@ -59,7 +59,7 @@ class CsipRecord(
   @Column(nullable = false, length = 255)
   val createdByDisplayName: String,
 
-  ) : AbstractAggregateRoot<CsipRecord>() {
+) : AbstractAggregateRoot<CsipRecord>() {
 
   @PostLoad
   internal fun clearPropertyChanges() {
