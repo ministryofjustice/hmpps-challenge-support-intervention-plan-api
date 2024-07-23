@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
@@ -25,8 +26,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
@@ -164,7 +169,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - CSIP record updated log code`() {
+  fun `200 ok - CSIP record updated log code with source DPS`() {
     val prisonNumber = givenValidPrisonNumber("U1234DR")
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
@@ -177,6 +182,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
+      assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(lastModifiedBy).isEqualTo(TEST_USER)
+      assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
       val audit = auditEvents().single { it.action == AuditEventAction.UPDATED }
       assertThat(audit.description).isEqualTo("Updated CSIP record logCode changed from null to 'ZXY987'")
       assertThat(audit.affectedComponents).containsExactly(AffectedComponent.Record)
@@ -186,6 +194,34 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record))
+  }
+
+  @Test
+  fun `200 ok - CSIP record updated log code with source NOMIS`() {
+    val prisonNumber = givenValidPrisonNumber("U2234NR")
+    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+
+    val request = updateCsipRecordRequest()
+    val response = updateCsipRecord(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    with(response) {
+      assertThat(logCode).isEqualTo(request.logCode)
+    }
+
+    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    with(saved) {
+      assertThat(logCode).isEqualTo(request.logCode)
+      assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(lastModifiedBy).isEqualTo(NOMIS_SYS_USER)
+      assertThat(lastModifiedByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      val audit = auditEvents().single { it.action == AuditEventAction.UPDATED }
+      assertThat(audit.description).isEqualTo("Updated CSIP record logCode changed from null to 'ZXY987'")
+      assertThat(audit.affectedComponents).containsExactly(AffectedComponent.Record)
+      assertThat(audit.source).isEqualTo(NOMIS)
+      assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(audit.actionedBy).isEqualTo(NOMIS_SYS_USER)
+    }
+
+    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record), NOMIS)
   }
 
   @Test
@@ -212,6 +248,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
     with(saved) {
       assertThat(logCode).isNull()
+      assertThat(lastModifiedAt).isNull()
+      assertThat(lastModifiedBy).isNull()
+      assertThat(lastModifiedByDisplayName).isNull()
       val audit = auditEvents().single { it.action == AuditEventAction.UPDATED }
       assertThat(audit.description).isEqualTo(
         "Updated referral incidentType changed from 'ATO' to 'WIT', incidentLocation changed from 'KIT' to 'REC', refererAreaOfWork changed from 'HEA' to 'GYM'",
@@ -326,7 +365,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     request: UpdateCsipRecordRequest,
     source: Source = DPS,
     username: String? = TEST_USER,
-  ): CsipRecord = updateCsipRecordResponseSpec(uuid, request, source, username).successResponse()
+    role: String = ROLE_CSIP_UI,
+  ): CsipRecord = updateCsipRecordResponseSpec(uuid, request, source, username, role).successResponse()
 
   companion object {
     private const val INVALID = "is invalid"

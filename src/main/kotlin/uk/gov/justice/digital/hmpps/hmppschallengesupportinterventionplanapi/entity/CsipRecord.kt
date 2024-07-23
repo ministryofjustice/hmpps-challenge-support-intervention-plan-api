@@ -59,13 +59,6 @@ class CsipRecord(
   @Column(nullable = false, length = 255)
   val createdByDisplayName: String,
 
-  val lastModifiedAt: LocalDateTime? = null,
-
-  @Column(length = 32)
-  val lastModifiedBy: String? = null,
-
-  @Column(length = 255)
-  val lastModifiedByDisplayName: String? = null,
 ) : AbstractAggregateRoot<CsipRecord>() {
 
   @PostLoad
@@ -82,6 +75,17 @@ class CsipRecord(
       listenForChanges("logCode", field, value)
       field = value
     }
+
+  var lastModifiedAt: LocalDateTime? = null
+    private set
+
+  @Column(length = 32)
+  var lastModifiedBy: String? = null
+    private set
+
+  @Column(length = 255)
+  var lastModifiedByDisplayName: String? = null
+    private set
 
   @OneToMany(
     mappedBy = "csipRecord",
@@ -204,6 +208,9 @@ class CsipRecord(
         if (propertyChanges.isNotEmpty()) add(AffectedComponent.Record)
         if (referral.propertyChanges().isNotEmpty()) add(AffectedComponent.Referral)
       }
+      if (AffectedComponent.Record in affectedComponents) {
+        recordModifiedDetails(context)
+      }
       addAuditEvent(
         action = AuditEventAction.UPDATED,
         description = auditDescription(propertyChanges, referral.propertyChanges()),
@@ -230,6 +237,12 @@ class CsipRecord(
   }
 
   fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
+
+  private fun recordModifiedDetails(context: CsipRequestContext) {
+    lastModifiedAt = context.requestAt
+    lastModifiedBy = context.username
+    lastModifiedByDisplayName = context.userDisplayName
+  }
 
   private fun listenForChanges(name: String, old: Any?, new: Any?) {
     if (old != new) {
