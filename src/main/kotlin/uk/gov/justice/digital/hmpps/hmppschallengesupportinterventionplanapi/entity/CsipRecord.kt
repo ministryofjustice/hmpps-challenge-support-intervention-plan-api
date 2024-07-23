@@ -59,7 +59,7 @@ class CsipRecord(
   @Column(nullable = false, length = 255)
   val createdByDisplayName: String,
 
-) : AbstractAggregateRoot<CsipRecord>() {
+  ) : AbstractAggregateRoot<CsipRecord>() {
 
   @PostLoad
   internal fun clearPropertyChanges() {
@@ -204,12 +204,10 @@ class CsipRecord(
     request.referral?.also { referral.update(context, it, referenceProvider) }
     val allChanges = propertyChanges + referral.propertyChanges()
     if (allChanges.isNotEmpty()) {
+      recordModifiedDetails(context)
       val affectedComponents = buildSet {
         if (propertyChanges.isNotEmpty()) add(AffectedComponent.Record)
         if (referral.propertyChanges().isNotEmpty()) add(AffectedComponent.Referral)
-      }
-      if (AffectedComponent.Record in affectedComponents) {
-        recordModifiedDetails(context)
       }
       addAuditEvent(
         action = AuditEventAction.UPDATED,
