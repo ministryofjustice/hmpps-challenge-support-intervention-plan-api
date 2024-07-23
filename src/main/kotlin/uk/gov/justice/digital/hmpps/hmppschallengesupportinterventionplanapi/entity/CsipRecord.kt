@@ -79,10 +79,8 @@ class CsipRecord(
   @get:Column(length = 10)
   var logCode: String? = logCode
     set(value) {
-      if (field != value) {
-        propertyChanges.add(PropertyChange("logCode", field, value))
-        field = value
-      }
+      listenForChanges("logCode", field, value)
+      field = value
     }
 
   @OneToMany(
@@ -232,6 +230,12 @@ class CsipRecord(
   }
 
   fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
+
+  private fun listenForChanges(name: String, old: Any?, new: Any?) {
+    if (old != new) {
+      propertyChanges.add(PropertyChange(name, old, new))
+    }
+  }
 
   private fun auditDescription(recordChanges: Set<PropertyChange>, referralChanges: Set<PropertyChange>): String {
     val recordDescription =

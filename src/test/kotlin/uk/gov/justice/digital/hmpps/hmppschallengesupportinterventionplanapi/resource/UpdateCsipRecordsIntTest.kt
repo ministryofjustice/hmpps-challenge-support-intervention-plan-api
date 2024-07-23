@@ -2,15 +2,24 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
+import org.awaitility.kotlin.withPollDelay
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -26,9 +35,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.withReferral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
+import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -114,6 +125,23 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
   }
 
+  @ParameterizedTest
+  @MethodSource("referenceDataValidation")
+  fun `400 ok - when reference data code invalid or inactive`(updateReferral: UpdateReferral, invalid: InvalidRd) {
+    val prisonNumber = givenValidPrisonNumber("R1234VC")
+    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+
+    val request = updateCsipRecordRequest(logCode = null, referral = updateReferral)
+    val response = updateCsipRecordResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: ${invalid.type} ${invalid.message}")
+      assertThat(developerMessage).isEqualTo("Details => ${invalid.type}:${invalid.code(updateReferral)}")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
   @Test
   fun `200 ok - CSIP record not updated does not create audit record`() {
     val prisonNumber = givenValidPrisonNumber("U1234NC")
@@ -131,6 +159,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       val audit = auditEvents().singleOrNull { it.action == AuditEventAction.UPDATED }
       assertThat(audit).isNull()
     }
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
@@ -154,6 +184,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(audit.actionedBy).isEqualTo(TEST_USER)
     }
+
+    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record))
   }
 
   @Test
@@ -189,6 +221,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(audit.actionedBy).isEqualTo(TEST_USER)
     }
+
+    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Referral))
   }
 
   @Test
@@ -219,19 +253,26 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(audit.description).isEqualTo(
         "Updated CSIP record logCode changed from null to 'ZXY987' and updated referral descriptionOfConcern changed from 'descriptionOfConcern' to 'Updated concerns', " +
           "knownReasons changed from 'knownReasons' to 'Updated reasons', otherInformation changed from 'otherInformation' to 'Even more information that can change', " +
-          "referralCompletedDate changed from null to '${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}', referralCompletedBy changed from null to 'TEST_USER', " +
+          "referralCompletedDate changed from null to '${
+            LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+          }', referralCompletedBy changed from null to 'TEST_USER', " +
           "referralCompletedByDisplayName changed from null to 'Test User', referralComplete changed from false to true",
       )
-      assertThat(audit.affectedComponents).containsExactlyInAnyOrder(AffectedComponent.Record, AffectedComponent.Referral)
+      assertThat(audit.affectedComponents).containsExactlyInAnyOrder(
+        AffectedComponent.Record,
+        AffectedComponent.Referral,
+      )
       assertThat(audit.source).isEqualTo(DPS)
       assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(audit.actionedBy).isEqualTo(TEST_USER)
     }
+
+    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record, AffectedComponent.Referral))
   }
 
   @Test
   fun `200 ok - Undo referral complete`() {
-    val prisonNumber = givenValidPrisonNumber("U5463BT")
+    val prisonNumber = givenValidPrisonNumber("U1234UC")
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber), complete = true)
     val referral = requireNotNull(record.referral)
 
@@ -251,7 +292,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     with(saved) {
       val audit = auditEvents().single { it.action == AuditEventAction.UPDATED }
       assertThat(audit.description).isEqualTo(
-        "Updated referral referralCompletedDate changed from '${LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)}' to null, " +
+        "Updated referral referralCompletedDate changed from '${
+          LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+        }' to null, " +
           "referralCompletedBy changed from 'referralCompletedBy' to null, " +
           "referralCompletedByDisplayName changed from 'referralCompletedByDisplayName' to null, " +
           "referralComplete changed from true to false",
@@ -261,46 +304,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(audit.actionedBy).isEqualTo(TEST_USER)
     }
+
+    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Referral))
   }
-
-  private fun updateCsipRecordRequest(
-    logCode: String? = LOG_CODE,
-    referral: UpdateReferral? = null,
-  ) = UpdateCsipRecordRequest(logCode, referral)
-
-  private fun updateReferral(
-    incidentDate: LocalDate = LocalDate.now(),
-    incidentTime: LocalTime? = null,
-    incidentTypeCode: String = "WIT",
-    incidentLocationCode: String = "REC",
-    referredBy: String = "referredBy",
-    refererAreaCode: String = "GYM",
-    isProactiveReferral: Boolean? = null,
-    isStaffAssaulted: Boolean? = null,
-    assaultedStaffName: String? = null,
-    incidentInvolvementCode: String? = null,
-    descriptionOfConcern: String? = "descriptionOfConcern",
-    knownReasons: String? = "knownReasons",
-    otherInformation: String? = "otherInformation",
-    isSaferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
-    isReferralComplete: Boolean? = null,
-  ) = UpdateReferral(
-    incidentDate,
-    incidentTime,
-    incidentTypeCode,
-    incidentLocationCode,
-    referredBy,
-    refererAreaCode,
-    isProactiveReferral,
-    isStaffAssaulted,
-    assaultedStaffName,
-    incidentInvolvementCode,
-    descriptionOfConcern,
-    knownReasons,
-    otherInformation,
-    isSaferCustodyTeamInformed,
-    isReferralComplete,
-  )
 
   private fun updateCsipRecordResponseSpec(
     uuid: UUID,
@@ -321,4 +327,113 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     source: Source = DPS,
     username: String? = TEST_USER,
   ): CsipRecord = updateCsipRecordResponseSpec(uuid, request, source, username).successResponse()
+
+  companion object {
+    private const val INVALID = "is invalid"
+    private const val NOT_ACTIVE = "is not active"
+
+    @JvmStatic
+    fun referenceDataValidation() = listOf(
+      Arguments.of(
+        updateReferral(incidentTypeCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.INCIDENT_TYPE, UpdateReferral::incidentTypeCode, INVALID),
+      ),
+      Arguments.of(
+        updateReferral(incidentLocationCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.INCIDENT_LOCATION, UpdateReferral::incidentLocationCode, INVALID),
+      ),
+      Arguments.of(
+        updateReferral(refererAreaCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.AREA_OF_WORK, UpdateReferral::refererAreaCode, INVALID),
+      ),
+      Arguments.of(
+        updateReferral(incidentInvolvementCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.INCIDENT_INVOLVEMENT, { it.incidentInvolvementCode!! }, INVALID),
+      ),
+      Arguments.of(
+        updateReferral(incidentTypeCode = "IT_INACT"),
+        InvalidRd(ReferenceDataType.INCIDENT_TYPE, UpdateReferral::incidentTypeCode, NOT_ACTIVE),
+      ),
+      Arguments.of(
+        updateReferral(incidentLocationCode = "IL_INACT"),
+        InvalidRd(ReferenceDataType.INCIDENT_LOCATION, UpdateReferral::incidentLocationCode, NOT_ACTIVE),
+      ),
+      Arguments.of(
+        updateReferral(refererAreaCode = "AOW_INACT"),
+        InvalidRd(ReferenceDataType.AREA_OF_WORK, UpdateReferral::refererAreaCode, NOT_ACTIVE),
+      ),
+      Arguments.of(
+        updateReferral(incidentInvolvementCode = "II_INACT"),
+        InvalidRd(ReferenceDataType.INCIDENT_INVOLVEMENT, { it.incidentInvolvementCode!! }, NOT_ACTIVE),
+      ),
+    )
+
+    data class InvalidRd(
+      val type: ReferenceDataType,
+      val code: (UpdateReferral) -> String,
+      val message: String,
+    )
+
+    private fun updateCsipRecordRequest(
+      logCode: String? = LOG_CODE,
+      referral: UpdateReferral? = null,
+    ) = UpdateCsipRecordRequest(logCode, referral)
+
+    private fun updateReferral(
+      incidentDate: LocalDate = LocalDate.now(),
+      incidentTime: LocalTime? = null,
+      incidentTypeCode: String = "WIT",
+      incidentLocationCode: String = "REC",
+      referredBy: String = "referredBy",
+      refererAreaCode: String = "GYM",
+      isProactiveReferral: Boolean? = null,
+      isStaffAssaulted: Boolean? = null,
+      assaultedStaffName: String? = null,
+      incidentInvolvementCode: String? = null,
+      descriptionOfConcern: String? = "descriptionOfConcern",
+      knownReasons: String? = "knownReasons",
+      otherInformation: String? = "otherInformation",
+      isSaferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
+      isReferralComplete: Boolean? = null,
+    ) = UpdateReferral(
+      incidentDate,
+      incidentTime,
+      incidentTypeCode,
+      incidentLocationCode,
+      referredBy,
+      refererAreaCode,
+      isProactiveReferral,
+      isStaffAssaulted,
+      assaultedStaffName,
+      incidentInvolvementCode,
+      descriptionOfConcern,
+      knownReasons,
+      otherInformation,
+      isSaferCustodyTeamInformed,
+      isReferralComplete,
+    )
+  }
+
+  private fun verifyDomainEvent(
+    prisonNumber: String,
+    recordUuid: UUID,
+    affectedComponents: Array<AffectedComponent>,
+    source: Source = DPS,
+  ) {
+    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
+    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
+    val csipUpdatedEvent = events.filterIsInstance<CsipDomainEvent>().single()
+    with(csipUpdatedEvent) {
+      assertThat(eventType).isEqualTo(DomainEventType.CSIP_UPDATED.eventType)
+      with(additionalInformation) {
+        assertThat(this.recordUuid).isEqualTo(recordUuid)
+        assertThat(affectedComponents).containsExactlyInAnyOrder(*affectedComponents)
+        assertThat(source).isEqualTo(source)
+      }
+      assertThat(description).isEqualTo(DomainEventType.CSIP_UPDATED.description)
+      assertThat(occurredAt).isCloseTo(ZonedDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
+      assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
+    }
+  }
 }
