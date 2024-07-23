@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EuropeLondon
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -471,7 +472,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
         assertThat(source).isEqualTo(source)
       }
       assertThat(description).isEqualTo(DomainEventType.CSIP_UPDATED.description)
-      assertThat(occurredAt).isCloseTo(ZonedDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(occurredAt).isCloseTo(ZonedDateTime.now().withZoneSameInstant(EuropeLondon), within(3, ChronoUnit.SECONDS))
       assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
       assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
     }

@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 
 val EuropeLondon: ZoneId = ZoneId.of("Europe/London")
-fun LocalDateTime.toZoneDateTime(): ZonedDateTime = this.atZone(EuropeLondon)
+fun LocalDateTime.toZoneDateTime(): ZonedDateTime = atZone(ZoneId.systemDefault()).withZoneSameInstant(EuropeLondon)
 
 @JsonComponent
 class ZonedDateTimeDeserializer : JsonDeserializer<ZonedDateTime>() {
@@ -38,7 +38,7 @@ class ZonedDateTimeDeserializer : JsonDeserializer<ZonedDateTime>() {
       return if (datetime is ZonedDateTime) {
         datetime.withZoneSameInstant(EuropeLondon)
       } else {
-        (datetime as LocalDateTime).atZone(EuropeLondon)
+        (datetime as LocalDateTime).toZoneDateTime()
       }
     }
   }
