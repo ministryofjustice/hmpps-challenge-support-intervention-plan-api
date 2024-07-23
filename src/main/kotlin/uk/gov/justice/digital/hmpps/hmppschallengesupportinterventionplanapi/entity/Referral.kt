@@ -91,7 +91,7 @@ class Referral(
     propertyChanges = mutableSetOf()
   }
 
-  @field:Transient
+  @Transient
   private var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
   internal fun propertyChanges(): Set<PropertyChange> = propertyChanges.toSet()

@@ -66,10 +66,10 @@ class CsipRecord(
     propertyChanges = mutableSetOf()
   }
 
-  @field:Transient
+  @Transient
   private var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
-  @get:Column(length = 10)
+  @Column(length = 10)
   var logCode: String? = logCode
     set(value) {
       listenForChanges("logCode", field, value)
