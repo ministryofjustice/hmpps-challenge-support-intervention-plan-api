@@ -169,7 +169,8 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
     ) prisonNumber: String,
     @Valid @RequestBody createCsipRecordRequest: CreateCsipRecordRequest,
     httpRequest: HttpServletRequest,
-  ): CsipRecord = csipRecordService.createCsipRecord(createCsipRecordRequest, prisonNumber, httpRequest.csipRequestContext())
+  ): CsipRecord =
+    csipRecordService.createCsipRecord(createCsipRecordRequest, prisonNumber, httpRequest.csipRequestContext())
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/csip-records/{recordUuid}")
@@ -209,7 +210,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   ): CsipRecord = csipRecordService.retrieveCsipRecord(recordUuid)
 
   @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/csip-records/{recordUuid}/log-number")
+  @PatchMapping("/csip-records/{recordUuid}")
   @Operation(
     summary = "Update the log code for a CSIP record.",
     description = "Update the log code for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true",
@@ -242,14 +243,16 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun updateCsipRecord(
+    httpRequest: HttpServletRequest,
     @PathVariable @Parameter(
       description = "CSIP record unique identifier",
       required = true,
     ) recordUuid: UUID,
     @Valid @RequestBody updateCsipRecordRequest: UpdateCsipRecordRequest,
-  ): CsipRecord = throw NotImplementedError()
+  ): CsipRecord =
+    csipRecordService.updateCsipRecord(httpRequest.csipRequestContext(), recordUuid, updateCsipRecordRequest)
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/csip-records/{recordUuid}")

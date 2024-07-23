@@ -47,6 +47,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.LocalDate
 
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
 @Sql("classpath:test_data/reset-database.sql")
@@ -107,6 +108,7 @@ abstract class IntegrationTestBase {
       }
 
   fun givenRandom(type: ReferenceDataType) = referenceDataRepository.findByDomain(type).random()
+  fun givenReferenceData(type: ReferenceDataType, code: String) = requireNotNull(referenceDataRepository.findByDomainAndCode(type, code))
 
   fun givenValidPrisonNumber(prisonNumber: String): String {
     prisonerSearch.stubGetPrisoner(prisonNumber)
@@ -114,11 +116,15 @@ abstract class IntegrationTestBase {
   }
 
   fun givenCsipRecord(csipRecord: CsipRecord) = csipRecordRepository.save(csipRecord)
-  fun givenCsipRecordWithReferral(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(
+  fun givenCsipRecordWithReferral(csipRecord: CsipRecord, complete: Boolean = false): CsipRecord = csipRecordRepository.save(
     csipRecord.withReferral(
       incidentType = { givenRandom(INCIDENT_TYPE) },
       incidentLocation = { givenRandom(INCIDENT_LOCATION) },
       refererAreaOfWork = { givenRandom(AREA_OF_WORK) },
+      referralComplete = complete,
+      referralCompletedDate = if (complete) LocalDate.now().minusDays(1) else null,
+      referralCompletedBy = if (complete) "referralCompletedBy" else null,
+      referralCompletedByDisplayName = if (complete) "referralCompletedByDisplayName" else null,
     ),
   )
 

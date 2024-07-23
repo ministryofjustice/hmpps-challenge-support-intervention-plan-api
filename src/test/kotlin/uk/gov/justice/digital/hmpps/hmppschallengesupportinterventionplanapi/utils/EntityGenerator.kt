@@ -56,10 +56,10 @@ object EntityGenerator {
     knownReasons: String? = "knownReasons",
     otherInformation: String? = "otherInformation",
     saferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
-    referralComplete: Boolean? = true,
-    referralCompletedBy: String? = "referralCompletedBy",
-    referralCompletedByDisplayName: String? = "referralCompletedByDisplayName",
-    referralCompletedDate: LocalDate? = LocalDate.now(),
+    referralComplete: Boolean? = false,
+    referralCompletedBy: String? = null,
+    referralCompletedByDisplayName: String? = null,
+    referralCompletedDate: LocalDate? = null,
     id: Long = IdGenerator.newId(),
   ): CsipRecord {
     val referral = Referral(
