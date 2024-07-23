@@ -249,9 +249,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
     with(saved) {
       assertThat(logCode).isNull()
-      assertThat(lastModifiedAt).isNull()
-      assertThat(lastModifiedBy).isNull()
-      assertThat(lastModifiedByDisplayName).isNull()
+      assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(lastModifiedBy).isEqualTo(TEST_USER)
+      assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
       val audit = auditEvents().single { it.action == AuditEventAction.UPDATED }
       assertThat(audit.description).isEqualTo(
         "Updated referral incidentType changed from 'ATO' to 'WIT', incidentLocation changed from 'KIT' to 'REC', refererAreaOfWork changed from 'HEA' to 'GYM'",
