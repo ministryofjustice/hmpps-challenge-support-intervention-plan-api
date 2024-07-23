@@ -39,7 +39,7 @@ import java.util.UUID
   produces = [MediaType.APPLICATION_JSON_VALUE],
 )
 @Tag(
-  name = "3. Investigations Controller",
+  name = "4. Investigations Controller",
   description = "Endpoints for Investigations And Interviews operations",
 )
 class InvestigationsController(

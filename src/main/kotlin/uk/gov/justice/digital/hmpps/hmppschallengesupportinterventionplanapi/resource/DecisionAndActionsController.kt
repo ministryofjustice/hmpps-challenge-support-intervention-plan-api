@@ -35,7 +35,7 @@ import java.util.UUID
   produces = [MediaType.APPLICATION_JSON_VALUE],
 )
 @Tag(
-  name = "4. Decision And Actions Controller",
+  name = "5. Decision And Actions Controller",
   description = "Endpoints for Decision And Actions operations",
 )
 class DecisionAndActionsController(
