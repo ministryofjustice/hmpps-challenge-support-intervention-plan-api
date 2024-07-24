@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
@@ -73,4 +74,14 @@ class CsipRecordService(
     }
 
   fun retrieveCsipRecord(recordUuid: UUID): CsipRecord = csipRecordRepository.getCsipRecord(recordUuid).toModel()
+
+  fun updateCsipRecord(
+    context: CsipRequestContext,
+    recordUuid: UUID,
+    request: UpdateCsipRecordRequest,
+  ): CsipRecord {
+    val record = csipRecordRepository.getCsipRecord(recordUuid)
+      .update(context, request) { type, code -> referenceDataRepository.getReferenceData(type, code) }
+    return csipRecordRepository.save(record).toModel()
+  }
 }

@@ -13,18 +13,27 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -42,58 +51,42 @@ class Referral(
     referencedColumnName = "record_id",
   ) val csipRecord: CsipRecord,
 
-  @Column(nullable = false) val incidentDate: LocalDate,
-
-  @Column val incidentTime: LocalTime? = null,
-
-  @Column(nullable = false, length = 240) val referredBy: String,
+  incidentDate: LocalDate,
+  incidentTime: LocalTime? = null,
+  referredBy: String,
 
   @Column(nullable = false) val referralDate: LocalDate,
 
-  @Column val proactiveReferral: Boolean? = null,
-
-  @Column val staffAssaulted: Boolean? = null,
-
-  @Column val assaultedStaffName: String? = null,
+  proactiveReferral: Boolean? = null,
+  staffAssaulted: Boolean? = null,
+  assaultedStaffName: String? = null,
 
   @Column val releaseDate: LocalDate? = null,
 
-  @Column val descriptionOfConcern: String?,
+  descriptionOfConcern: String?,
+  knownReasons: String?,
+  otherInformation: String? = null,
+  saferCustodyTeamInformed: OptionalYesNoAnswer,
+  referralComplete: Boolean? = null,
 
-  @Column val knownReasons: String?,
+  referralCompletedBy: String? = null,
+  referralCompletedByDisplayName: String? = null,
+  referralCompletedDate: LocalDate? = null,
 
-  @Column val otherInformation: String? = null,
+  incidentType: ReferenceData,
+  incidentLocation: ReferenceData,
+  refererAreaOfWork: ReferenceData,
+  incidentInvolvement: ReferenceData?,
+) : PropertyChangeMonitor {
 
-  @Enumerated(EnumType.STRING) @Column val saferCustodyTeamInformed: OptionalYesNoAnswer,
+  @PostLoad
+  fun resetPropertyChanges() {
+    propertyChanges = mutableSetOf()
+  }
 
-  @Column val referralComplete: Boolean? = null,
+  @Transient
+  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
-  @Column(length = 32) val referralCompletedBy: String? = null,
-
-  @Column(length = 255) val referralCompletedByDisplayName: String? = null,
-
-  @Column val referralCompletedDate: LocalDate? = null,
-
-  @ManyToOne @JoinColumn(
-    name = "incident_type_id",
-    referencedColumnName = "reference_data_id",
-  ) val incidentType: ReferenceData,
-
-  @ManyToOne @JoinColumn(
-    name = "incident_location_id",
-    referencedColumnName = "reference_data_id",
-  ) val incidentLocation: ReferenceData,
-
-  @ManyToOne @JoinColumn(
-    name = "referer_area_of_work_id",
-    referencedColumnName = "reference_data_id",
-  ) val refererAreaOfWork: ReferenceData,
-
-  @ManyToOne @JoinColumn(
-    name = "incident_involvement_id",
-    referencedColumnName = "reference_Data_id",
-  ) val incidentInvolvement: ReferenceData?,
-) {
   @OneToOne(
     mappedBy = "referral",
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
@@ -101,6 +94,140 @@ class Referral(
   private var decisionAndActions: DecisionAndActions? = null
 
   fun decisionAndActions() = decisionAndActions
+
+  var incidentDate: LocalDate = incidentDate
+    set(value) {
+      propertyChanged(::incidentDate, value)
+      field = value
+    }
+
+  var incidentTime: LocalTime? = incidentTime
+    set(value) {
+      propertyChanged(::incidentTime, value)
+      field = value
+    }
+
+  @ManyToOne
+  @JoinColumn(name = "incident_type_id", referencedColumnName = "reference_data_id")
+  var incidentType: ReferenceData = incidentType
+    set(value) {
+      referenceDataChanged(::incidentType, value)
+      field = value
+    }
+
+  @ManyToOne
+  @JoinColumn(name = "incident_location_id", referencedColumnName = "reference_data_id")
+  var incidentLocation: ReferenceData = incidentLocation
+    set(value) {
+      referenceDataChanged(::incidentLocation, value)
+      field = value
+    }
+
+  @ManyToOne
+  @JoinColumn(name = "referer_area_of_work_id", referencedColumnName = "reference_data_id")
+  var refererAreaOfWork: ReferenceData = refererAreaOfWork
+    set(value) {
+      referenceDataChanged(::refererAreaOfWork, value)
+      field = value
+    }
+
+  @ManyToOne
+  @JoinColumn(name = "incident_involvement_id", referencedColumnName = "reference_Data_id")
+  var incidentInvolvement: ReferenceData? = incidentInvolvement
+    set(value) {
+      referenceDataChanged(::incidentInvolvement, value)
+      field = value
+    }
+
+  @Column(nullable = false, length = 240)
+  var referredBy: String = referredBy
+    set(value) {
+      propertyChanged(::referredBy, value)
+      field = value
+    }
+
+  var proactiveReferral: Boolean? = proactiveReferral
+    set(value) {
+      propertyChanged(::proactiveReferral, value)
+      field = value
+    }
+
+  var staffAssaulted: Boolean? = staffAssaulted
+    set(value) {
+      propertyChanged(::staffAssaulted, value)
+      field = value
+    }
+
+  var assaultedStaffName: String? = assaultedStaffName
+    set(value) {
+      propertyChanged(::assaultedStaffName, value)
+      field = value
+    }
+
+  var descriptionOfConcern: String? = descriptionOfConcern
+    set(value) {
+      propertyChanged(::descriptionOfConcern, value)
+      field = value
+    }
+
+  var knownReasons: String? = knownReasons
+    set(value) {
+      propertyChanged(::knownReasons, value)
+      field = value
+    }
+
+  var otherInformation: String? = otherInformation
+    set(value) {
+      propertyChanged(::otherInformation, value)
+      field = value
+    }
+
+  @Enumerated(EnumType.STRING)
+  var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
+    set(value) {
+      propertyChanged(::saferCustodyTeamInformed, value)
+      field = value
+    }
+
+  var referralComplete: Boolean? = referralComplete
+    private set(value) {
+      propertyChanged(::referralComplete, value)
+      field = value
+    }
+
+  var referralCompletedDate: LocalDate? = referralCompletedDate
+    private set(value) {
+      propertyChanged(::referralCompletedDate, value)
+      field = value
+    }
+
+  @Column(length = 32)
+  var referralCompletedBy: String? = referralCompletedBy
+    private set(value) {
+      propertyChanged(::referralCompletedBy, value)
+      field = value
+    }
+
+  @Column(length = 255)
+  var referralCompletedByDisplayName: String? = referralCompletedByDisplayName
+    private set(value) {
+      propertyChanged(::referralCompletedByDisplayName, value)
+      field = value
+    }
+
+  fun completed(on: LocalDate, by: String, byDisplayName: String) {
+    referralCompletedDate = on
+    referralCompletedBy = by
+    referralCompletedByDisplayName = byDisplayName
+    referralComplete = true
+  }
+
+  fun uncomplete() {
+    referralCompletedDate = null
+    referralCompletedBy = null
+    referralCompletedByDisplayName = null
+    referralComplete = false
+  }
 
   fun createDecisionAndActions(
     decisionOutcome: ReferenceData,
@@ -168,7 +295,6 @@ class Referral(
         ),
       )
     }
-
     return csipRecord
   }
 
@@ -352,4 +478,48 @@ class Referral(
 
   private fun verifyDecisionDoesNotExist() =
     verifyDoesNotExist(decisionAndActions) { ResourceAlreadyExistException("Referral already has a Decision and Actions") }
+
+  fun update(
+    context: CsipRequestContext,
+    update: UpdateReferral,
+    referenceProvider: (ReferenceDataType, String) -> ReferenceData,
+  ) {
+    incidentType = updateReferenceData(incidentType, referenceProvider, INCIDENT_TYPE, update.incidentTypeCode)
+    incidentLocation =
+      updateReferenceData(incidentLocation, referenceProvider, INCIDENT_LOCATION, update.incidentLocationCode)
+    refererAreaOfWork = updateReferenceData(refererAreaOfWork, referenceProvider, AREA_OF_WORK, update.refererAreaCode)
+    incidentInvolvement = if (update.incidentInvolvementCode == null) {
+      null
+    } else {
+      referenceProvider(INCIDENT_INVOLVEMENT, update.incidentInvolvementCode)
+    }
+
+    incidentDate = update.incidentDate
+    incidentTime = update.incidentTime
+    referredBy = update.referredBy
+    proactiveReferral = update.isProactiveReferral
+    staffAssaulted = update.isStaffAssaulted
+    assaultedStaffName = update.assaultedStaffName
+    descriptionOfConcern = update.descriptionOfConcern
+    knownReasons = update.knownReasons
+    otherInformation = update.otherInformation
+    saferCustodyTeamInformed = update.isSaferCustodyTeamInformed
+    if (update.isReferralComplete == true) {
+      completed(context.requestAt.toLocalDate(), context.username, context.userDisplayName)
+    } else {
+      uncomplete()
+    }
+  }
+
+  private fun updateReferenceData(
+    existing: ReferenceData,
+    referenceProvider: (ReferenceDataType, String) -> ReferenceData,
+    type: ReferenceDataType,
+    newCode: String,
+  ): ReferenceData =
+    if (newCode != existing.code) {
+      referenceProvider(type, newCode)
+    } else {
+      existing
+    }
 }

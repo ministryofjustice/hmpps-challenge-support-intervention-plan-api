@@ -20,9 +20,6 @@ object EntityGenerator {
     createdAt: LocalDateTime = LocalDateTime.now().minusDays(1),
     createdBy: String = "createdBy",
     createdByDisplayName: String = "createdByDisplayName",
-    lastModifiedAt: LocalDateTime? = null,
-    lastModifiedBy: String? = null,
-    lastModifiedByDisplayName: String? = null,
     uuid: UUID = UUID.randomUUID(),
     id: Long = IdGenerator.newId(),
   ) = CsipRecord(
@@ -34,9 +31,6 @@ object EntityGenerator {
     createdAt,
     createdBy,
     createdByDisplayName,
-    lastModifiedAt,
-    lastModifiedBy,
-    lastModifiedByDisplayName,
   )
 
   fun CsipRecord.withReferral(
@@ -56,10 +50,10 @@ object EntityGenerator {
     knownReasons: String? = "knownReasons",
     otherInformation: String? = "otherInformation",
     saferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
-    referralComplete: Boolean? = true,
-    referralCompletedBy: String? = "referralCompletedBy",
-    referralCompletedByDisplayName: String? = "referralCompletedByDisplayName",
-    referralCompletedDate: LocalDate? = LocalDate.now(),
+    referralComplete: Boolean? = false,
+    referralCompletedBy: String? = null,
+    referralCompletedByDisplayName: String? = null,
+    referralCompletedDate: LocalDate? = null,
     id: Long = IdGenerator.newId(),
   ): CsipRecord {
     val referral = Referral(

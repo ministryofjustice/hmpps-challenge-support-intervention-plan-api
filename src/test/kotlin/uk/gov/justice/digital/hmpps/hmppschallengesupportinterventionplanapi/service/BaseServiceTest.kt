@@ -31,9 +31,6 @@ abstract class BaseServiceTest {
     createdAt = LocalDateTime.now(),
     createdBy = "ornatus",
     createdByDisplayName = "Belinda Drake",
-    lastModifiedAt = null,
-    lastModifiedBy = null,
-    lastModifiedByDisplayName = null,
   ).apply {
     setReferral(
       Referral(

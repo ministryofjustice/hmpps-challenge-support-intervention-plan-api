@@ -21,10 +21,8 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferralRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
@@ -32,49 +30,6 @@ import java.util.UUID
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "2. Referral Controller", description = "Endpoints for Referral and Contributory Factor operations")
 class ReferralsController {
-  @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/csip-records/{recordUuid}/referral")
-  @Operation(
-    summary = "Update the CSIP referral",
-    description = "Update the CSIP referral only. Cannot update contributory factors with this endpoint. Publishes person.csip.record.created event with referralAffected = true",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "CSIP referral updated",
-      ),
-      ApiResponse(
-        responseCode = "400",
-        description = "Bad request",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "401",
-        description = "Unauthorised, requires a valid Oauth2 token",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "403",
-        description = "Forbidden, requires an appropriate role",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "The CSIP referral associated with this identifier was not found.",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-    ],
-  )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun updateReferral(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
-    @Valid @RequestBody updateReferralRequest: UpdateReferralRequest,
-  ): Referral = throw NotImplementedError()
-
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/csip-records/{recordUuid}/referral/contributory-factors")
   @Operation(

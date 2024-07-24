@@ -10,17 +10,23 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
+import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEventable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -42,8 +48,7 @@ class CsipRecord(
   @Column(length = 6)
   val prisonCodeWhenRecorded: String? = null,
 
-  @Column(length = 10)
-  val logCode: String? = null,
+  logCode: String? = null,
 
   @Column(nullable = false)
   val createdAt: LocalDateTime,
@@ -54,14 +59,34 @@ class CsipRecord(
   @Column(nullable = false, length = 255)
   val createdByDisplayName: String,
 
-  val lastModifiedAt: LocalDateTime? = null,
+) : AbstractAggregateRoot<CsipRecord>(), PropertyChangeMonitor {
+
+  @PostLoad
+  fun resetPropertyChanges() {
+    propertyChanges = mutableSetOf()
+  }
+
+  @Transient
+  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
+
+  @Column(length = 10)
+  var logCode: String? = logCode
+    set(value) {
+      propertyChanged(::logCode, value)
+      field = value
+    }
+
+  var lastModifiedAt: LocalDateTime? = null
+    private set
 
   @Column(length = 32)
-  val lastModifiedBy: String? = null,
+  var lastModifiedBy: String? = null
+    private set
 
   @Column(length = 255)
-  val lastModifiedByDisplayName: String? = null,
-) : AbstractAggregateRoot<CsipRecord>() {
+  var lastModifiedByDisplayName: String? = null
+    private set
+
   @OneToMany(
     mappedBy = "csipRecord",
     fetch = FetchType.EAGER,
@@ -80,7 +105,7 @@ class CsipRecord(
 
   fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
-  fun addAuditEvent(
+  internal fun addAuditEvent(
     action: AuditEventAction,
     description: String,
     actionedAt: LocalDateTime = LocalDateTime.now(),
@@ -169,5 +194,60 @@ class CsipRecord(
     )
   }
 
+  fun update(
+    context: CsipRequestContext,
+    request: UpdateCsipRecordRequest,
+    referenceProvider: (ReferenceDataType, String) -> ReferenceData,
+  ): CsipRecord {
+    val referral = requireNotNull(referral)
+    logCode = request.logCode
+    request.referral?.also { referral.update(context, it, referenceProvider) }
+    val allChanges = propertyChanges + referral.propertyChanges
+    if (allChanges.isNotEmpty()) {
+      recordModifiedDetails(context)
+      val affectedComponents = buildSet {
+        if (propertyChanges.isNotEmpty()) add(AffectedComponent.Record)
+        if (referral.propertyChanges.isNotEmpty()) add(AffectedComponent.Referral)
+      }
+      addAuditEvent(
+        action = AuditEventAction.UPDATED,
+        description = auditDescription(propertyChanges, referral.propertyChanges),
+        actionedAt = context.requestAt,
+        actionedBy = context.username,
+        actionedByCapturedName = context.userDisplayName,
+        source = context.source,
+        activeCaseLoadId = context.activeCaseLoadId,
+        affectedComponents = affectedComponents,
+      )
+      registerEvent(
+        CsipUpdatedEvent(
+          recordUuid = recordUuid,
+          prisonNumber = prisonNumber,
+          description = CSIP_UPDATED.description,
+          occurredAt = context.requestAt,
+          source = context.source,
+          updatedBy = context.username,
+          affectedComponents = affectedComponents,
+        ),
+      )
+    }
+    return this
+  }
+
   fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
+
+  private fun recordModifiedDetails(context: CsipRequestContext) {
+    lastModifiedAt = context.requestAt
+    lastModifiedBy = context.username
+    lastModifiedByDisplayName = context.userDisplayName
+  }
+
+  private fun auditDescription(recordChanges: Set<PropertyChange>, referralChanges: Set<PropertyChange>): String {
+    val recordDescription =
+      if (recordChanges.isEmpty()) null else recordChanges.joinToString(prefix = "updated CSIP record ") { it.description() }
+    val referralDescription =
+      if (referralChanges.isEmpty()) null else referralChanges.joinToString(prefix = "updated referral ") { it.description() }
+    return setOfNotNull(recordDescription, referralDescription).filter { it.isNotBlank() }
+      .joinToString(separator = " and ").replaceFirstChar(Char::uppercaseChar)
+  }
 }
