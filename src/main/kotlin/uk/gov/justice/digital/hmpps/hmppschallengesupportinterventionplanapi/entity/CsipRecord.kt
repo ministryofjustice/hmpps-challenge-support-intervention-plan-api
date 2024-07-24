@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -15,6 +16,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.Transient
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
@@ -33,6 +35,7 @@ import java.util.UUID
 
 @Entity
 @Table
+@EntityListeners(CsipEntityListener::class)
 class CsipRecord(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -106,11 +109,9 @@ class CsipRecord(
   fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
 
   internal fun addAuditEvent(
+    context: CsipRequestContext,
     action: AuditEventAction,
     description: String,
-    actionedAt: LocalDateTime = LocalDateTime.now(),
-    actionedBy: String,
-    actionedByCapturedName: String,
     source: Source,
     activeCaseLoadId: String?,
     affectedComponents: Set<AffectedComponent>,
@@ -120,9 +121,9 @@ class CsipRecord(
         csipRecord = this,
         action = action,
         description = description,
-        actionedAt = actionedAt,
-        actionedBy = actionedBy,
-        actionedByCapturedName = actionedByCapturedName,
+        actionedAt = context.requestAt,
+        actionedBy = context.username,
+        actionedByCapturedName = context.userDisplayName,
         source = source,
         activeCaseLoadId = activeCaseLoadId,
         affectedComponents = affectedComponents,
@@ -166,11 +167,9 @@ class CsipRecord(
       }
     }
     addAuditEvent(
+      context = csipRequestContext,
       action = AuditEventAction.CREATED,
       description = "CSIP record created via referral with ${referral!!.contributoryFactors().size} contributory factors",
-      actionedAt = createdAt,
-      actionedBy = createdBy,
-      actionedByCapturedName = createdByDisplayName,
       source = csipRequestContext.source,
       activeCaseLoadId = csipRequestContext.activeCaseLoadId,
       affectedComponents = buildSet {
@@ -204,17 +203,14 @@ class CsipRecord(
     request.referral?.also { referral.update(context, it, referenceProvider) }
     val allChanges = propertyChanges + referral.propertyChanges
     if (allChanges.isNotEmpty()) {
-      recordModifiedDetails(context)
       val affectedComponents = buildSet {
         if (propertyChanges.isNotEmpty()) add(AffectedComponent.Record)
         if (referral.propertyChanges.isNotEmpty()) add(AffectedComponent.Referral)
       }
       addAuditEvent(
+        context = csipRequestContext(),
         action = AuditEventAction.UPDATED,
         description = auditDescription(propertyChanges, referral.propertyChanges),
-        actionedAt = context.requestAt,
-        actionedBy = context.username,
-        actionedByCapturedName = context.userDisplayName,
         source = context.source,
         activeCaseLoadId = context.activeCaseLoadId,
         affectedComponents = affectedComponents,
@@ -236,7 +232,7 @@ class CsipRecord(
 
   fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
 
-  private fun recordModifiedDetails(context: CsipRequestContext) {
+  fun recordModifiedDetails(context: CsipRequestContext) {
     lastModifiedAt = context.requestAt
     lastModifiedBy = context.username
     lastModifiedByDisplayName = context.userDisplayName

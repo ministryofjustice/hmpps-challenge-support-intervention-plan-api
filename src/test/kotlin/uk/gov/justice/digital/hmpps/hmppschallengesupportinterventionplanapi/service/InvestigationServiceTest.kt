@@ -6,6 +6,7 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.anySet
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.REFERENCE_DATA_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
@@ -30,11 +31,9 @@ class InvestigationServiceTest : BaseServiceTest() {
     whenever(csipRecordRepository.save(any())).thenReturn(
       csipRecord().apply {
         referral!!.createInvestigation(
+          CsipRequestContext(requestAt = LocalDateTime.of(2021, 1, 1, 1, 0), username = TEST_USER, userDisplayName = TEST_USER_NAME),
           createRequest = createRequest,
           intervieweeRoleMap = mapOf(REFERENCE_DATA_CODE to referenceData()),
-          actionedAt = LocalDateTime.of(2021, 1, 1, 1, 0),
-          actionedBy = TEST_USER,
-          actionedByDisplayName = TEST_USER_NAME,
           source = Source.DPS,
           activeCaseLoadId = PRISON_CODE_LEEDS,
         )
@@ -73,11 +72,9 @@ class InvestigationServiceTest : BaseServiceTest() {
     whenever(csipRecordRepository.save(any())).thenReturn(
       csipRecord().apply {
         referral!!.createInvestigation(
+          CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
           createRequest = createRequest,
           intervieweeRoleMap = emptyMap(),
-          actionedAt = LocalDateTime.of(2021, 1, 1, 1, 0),
-          actionedBy = TEST_USER,
-          actionedByDisplayName = TEST_USER_NAME,
           source = Source.DPS,
           activeCaseLoadId = PRISON_CODE_LEEDS,
         )

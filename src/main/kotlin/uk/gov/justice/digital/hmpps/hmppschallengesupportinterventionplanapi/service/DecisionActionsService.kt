@@ -33,12 +33,10 @@ class DecisionActionsService(
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         createDecisionAndActions(
+          context = context,
           decisionOutcome = decisionOutcome,
           decisionOutcomeSignedOffBy = decisionOutcomeSignedOffBy,
           decisionConclusion = request.conclusion,
-          decisionOutcomeRecordedBy = context.username,
-          decisionOutcomeRecordedByDisplayName = context.userDisplayName,
-          decisionOutcomeDate = context.requestAt.toLocalDate(),
           nextSteps = request.nextSteps,
           actionOther = request.actionOther,
           actionedAt = context.requestAt,

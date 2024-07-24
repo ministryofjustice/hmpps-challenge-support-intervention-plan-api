@@ -35,11 +35,9 @@ class InvestigationService(
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         request.toCsipRecordEntity(
+          context = context,
           referral = this,
           intervieweeRoleMap = intervieweeRoleMap,
-          actionedAt = context.requestAt,
-          actionedBy = context.username,
-          actionedByDisplayName = context.userDisplayName,
           source = context.source,
           activeCaseLoadId = context.activeCaseLoadId,
         ),

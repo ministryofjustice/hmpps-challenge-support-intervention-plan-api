@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
@@ -141,14 +142,12 @@ class InvestigationsIntTest : IntegrationTestBase() {
     val intervieweeRole = givenRandom(ReferenceDataType.INTERVIEWEE_ROLE)
 
     csipRecord.referral!!.createInvestigation(
+      CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
       createRequest = investigationRequest(
         interviewRequest(intervieweeRole.code),
         interviewRequest(intervieweeRole.code),
       ),
       intervieweeRoleMap = mapOf(intervieweeRole.code to intervieweeRole),
-      actionedAt = LocalDateTime.now(),
-      actionedBy = "actionedBy",
-      actionedByDisplayName = "actionedByDisplayName",
       source = Source.DPS,
       activeCaseLoadId = PRISON_CODE_LEEDS,
     )

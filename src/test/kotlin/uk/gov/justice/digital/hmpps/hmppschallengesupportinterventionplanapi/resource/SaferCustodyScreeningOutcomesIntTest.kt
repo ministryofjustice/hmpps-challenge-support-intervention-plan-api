@@ -8,6 +8,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
@@ -142,12 +143,10 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     val request = createScreeningOutcomeRequest()
 
     csipRecord.referral!!.createSaferCustodyScreeningOutcome(
+      CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
       outcomeType = givenRandom(ReferenceDataType.OUTCOME_TYPE),
       date = LocalDate.now(),
       reasonForDecision = "reasonForDecision",
-      actionedAt = LocalDateTime.now(),
-      actionedBy = "actionedBy",
-      actionedByDisplayName = "actionedByDisplayName",
       source = Source.DPS,
       activeCaseLoadId = PRISON_CODE_LEEDS,
     )

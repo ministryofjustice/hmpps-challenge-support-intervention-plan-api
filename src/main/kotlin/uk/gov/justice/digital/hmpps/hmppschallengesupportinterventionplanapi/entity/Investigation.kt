@@ -11,11 +11,11 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
-import java.time.LocalDateTime
 
 @Entity
 @Table
@@ -47,11 +47,9 @@ class Investigation(
   fun interviews() = interviews.toList().sortedByDescending { it.interviewId }
 
   fun addInterview(
+    context: CsipRequestContext,
     createRequest: CreateInterviewRequest,
     intervieweeRole: ReferenceData,
-    actionedAt: LocalDateTime = LocalDateTime.now(),
-    actionedBy: String,
-    actionedByDisplayName: String,
     source: Source,
   ) = Interview(
     investigation = this,
@@ -59,9 +57,9 @@ class Investigation(
     interviewDate = createRequest.interviewDate,
     intervieweeRole = intervieweeRole,
     interviewText = createRequest.interviewText,
-    createdAt = actionedAt,
-    createdBy = actionedBy,
-    createdByDisplayName = actionedByDisplayName,
+    createdAt = context.requestAt,
+    createdBy = context.username,
+    createdByDisplayName = context.userDisplayName,
   ).apply {
     interviews.add(this)
     referral.csipRecord.registerEntityEvent(
@@ -70,9 +68,9 @@ class Investigation(
         recordUuid = referral.csipRecord.recordUuid,
         prisonNumber = referral.csipRecord.prisonNumber,
         description = DomainEventType.INTERVIEW_CREATED.description,
-        occurredAt = actionedAt,
+        occurredAt = context.requestAt,
         source = source,
-        updatedBy = actionedBy,
+        updatedBy = context.username,
       ),
     )
   }

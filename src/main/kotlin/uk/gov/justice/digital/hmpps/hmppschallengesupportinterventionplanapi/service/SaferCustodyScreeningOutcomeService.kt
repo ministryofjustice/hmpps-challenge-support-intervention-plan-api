@@ -31,11 +31,9 @@ class SaferCustodyScreeningOutcomeService(
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         request.toCsipRecordEntity(
+          context,
           referral = this,
           outcomeType = outcomeType,
-          actionedAt = context.requestAt,
-          actionedBy = context.username,
-          actionedByDisplayName = context.userDisplayName,
           source = context.source,
           activeCaseLoadId = context.activeCaseLoadId,
         ),

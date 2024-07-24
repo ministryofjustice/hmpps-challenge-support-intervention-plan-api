@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
@@ -40,16 +41,16 @@ import java.time.LocalTime
 
 @Entity
 @Table
+@EntityListeners(CsipChildEntityListener::class)
 class Referral(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "referral_id")
   val referralId: Long = 0,
 
-  @OneToOne(fetch = FetchType.LAZY) @JoinColumn(
-    name = "record_id",
-    referencedColumnName = "record_id",
-  ) val csipRecord: CsipRecord,
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "record_id", referencedColumnName = "record_id")
+  override val csipRecord: CsipRecord,
 
   incidentDate: LocalDate,
   incidentTime: LocalTime? = null,
@@ -77,7 +78,7 @@ class Referral(
   incidentLocation: ReferenceData,
   refererAreaOfWork: ReferenceData,
   incidentInvolvement: ReferenceData?,
-) : PropertyChangeMonitor {
+) : PropertyChangeMonitor, CsipChild {
 
   @PostLoad
   fun resetPropertyChanges() {
@@ -230,12 +231,10 @@ class Referral(
   }
 
   fun createDecisionAndActions(
+    context: CsipRequestContext,
     decisionOutcome: ReferenceData,
     decisionOutcomeSignedOffBy: ReferenceData?,
     decisionConclusion: String?,
-    decisionOutcomeRecordedBy: String,
-    decisionOutcomeRecordedByDisplayName: String,
-    decisionOutcomeDate: LocalDate?,
     nextSteps: String?,
     actionOther: String?,
     actionedAt: LocalDateTime,
@@ -257,9 +256,9 @@ class Referral(
       decisionOutcome = decisionOutcome,
       decisionOutcomeSignedOffBy = decisionOutcomeSignedOffBy,
       decisionConclusion = decisionConclusion,
-      decisionOutcomeRecordedBy = decisionOutcomeRecordedBy,
-      decisionOutcomeRecordedByDisplayName = decisionOutcomeRecordedByDisplayName,
-      decisionOutcomeDate = decisionOutcomeDate,
+      decisionOutcomeRecordedBy = context.username,
+      decisionOutcomeRecordedByDisplayName = context.userDisplayName,
+      decisionOutcomeDate = context.requestAt.toLocalDate(),
       nextSteps = nextSteps,
       actionOpenCsipAlert = actionOpenCsipAlert,
       actionNonAssociationsUpdated = actionNonAssociationsUpdated,
@@ -274,14 +273,12 @@ class Referral(
     val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
     with(csipRecord) {
       addAuditEvent(
-        action = AuditEventAction.CREATED,
+        context,
+        AuditEventAction.CREATED,
         description,
-        actionedAt,
-        actionedBy = decisionOutcomeRecordedBy,
-        actionedByCapturedName = decisionOutcomeRecordedByDisplayName,
         source,
         activeCaseLoadId,
-        affectedComponents = affectedComponents,
+        affectedComponents,
       )
       csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
@@ -290,7 +287,7 @@ class Referral(
           description = description,
           occurredAt = actionedAt,
           source = source,
-          updatedBy = decisionOutcomeRecordedBy,
+          updatedBy = context.username,
           affectedComponents = affectedComponents,
         ),
       )
@@ -324,12 +321,10 @@ class Referral(
   fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.contributoryFactorId }
 
   fun createSaferCustodyScreeningOutcome(
+    context: CsipRequestContext,
     outcomeType: ReferenceData,
     date: LocalDate,
     reasonForDecision: String,
-    actionedAt: LocalDateTime = LocalDateTime.now(),
-    actionedBy: String,
-    actionedByDisplayName: String,
     source: Source,
     activeCaseLoadId: String?,
   ): CsipRecord {
@@ -339,8 +334,8 @@ class Referral(
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
       outcomeType = outcomeType,
-      recordedBy = actionedBy,
-      recordedByDisplayName = actionedByDisplayName,
+      recordedBy = context.username,
+      recordedByDisplayName = context.userDisplayName,
       date = date,
       reasonForDecision = reasonForDecision,
     )
@@ -348,11 +343,9 @@ class Referral(
     val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
     with(csipRecord) {
       addAuditEvent(
+        context = context,
         action = AuditEventAction.CREATED,
         description = description,
-        actionedAt = actionedAt,
-        actionedBy = actionedBy,
-        actionedByCapturedName = actionedByDisplayName,
         source = source,
         activeCaseLoadId = activeCaseLoadId,
         affectedComponents = affectedComponents,
@@ -362,9 +355,9 @@ class Referral(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
           description = description,
-          occurredAt = actionedAt,
+          occurredAt = context.requestAt,
           source = source,
-          updatedBy = actionedBy,
+          updatedBy = context.username,
           affectedComponents = affectedComponents,
         ),
       )
@@ -374,11 +367,9 @@ class Referral(
   }
 
   fun createInvestigation(
+    context: CsipRequestContext,
     createRequest: CreateInvestigationRequest,
     intervieweeRoleMap: Map<String, ReferenceData>,
-    actionedAt: LocalDateTime = LocalDateTime.now(),
-    actionedBy: String,
-    actionedByDisplayName: String,
     activeCaseLoadId: String?,
     source: Source,
   ): CsipRecord {
@@ -397,11 +388,9 @@ class Referral(
 
     createRequest.interviews?.forEach { interview ->
       investigation!!.addInterview(
+        context = context,
         createRequest = interview,
         intervieweeRole = intervieweeRoleMap[interview.intervieweeRoleCode]!!,
-        actionedAt = actionedAt,
-        actionedBy = actionedBy,
-        actionedByDisplayName = actionedByDisplayName,
         source = source,
       )
     }
@@ -414,11 +403,9 @@ class Referral(
 
     with(csipRecord) {
       addAuditEvent(
+        context = context,
         action = AuditEventAction.CREATED,
         description = description,
-        actionedAt = actionedAt,
-        actionedBy = actionedBy,
-        actionedByCapturedName = actionedByDisplayName,
         source = source,
         activeCaseLoadId = activeCaseLoadId,
         affectedComponents = affectedComponents,
@@ -428,9 +415,9 @@ class Referral(
           recordUuid = csipRecord.recordUuid,
           prisonNumber = csipRecord.prisonNumber,
           description = description,
-          occurredAt = actionedAt,
+          occurredAt = context.requestAt,
           source = source,
-          updatedBy = actionedBy,
+          updatedBy = context.username,
           affectedComponents = affectedComponents,
         ),
       )

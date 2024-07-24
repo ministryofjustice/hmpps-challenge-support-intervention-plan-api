@@ -8,6 +8,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
@@ -208,12 +209,10 @@ class DecisionActionsIntTest : IntegrationTestBase() {
     val decisionSignerRole = givenRandom(DECISION_SIGNER_ROLE)
 
     csipRecord.referral!!.createDecisionAndActions(
+      CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
       decisionOutcome = outcomeType,
       decisionOutcomeSignedOffBy = decisionSignerRole,
       decisionConclusion = null,
-      decisionOutcomeRecordedBy = "actionedBy",
-      decisionOutcomeRecordedByDisplayName = "actionedByDisplayName",
-      decisionOutcomeDate = LocalDate.now(),
       nextSteps = null,
       actionOther = null,
       actionedAt = LocalDateTime.now(),
