@@ -35,7 +35,7 @@ import java.util.UUID
 
 @Entity
 @Table
-@EntityListeners(CsipEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class CsipRecord(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,17 +52,11 @@ class CsipRecord(
   val prisonCodeWhenRecorded: String? = null,
 
   logCode: String? = null,
+  createdAt: LocalDateTime,
+  createdBy: String,
+  createdByDisplayName: String,
 
-  @Column(nullable = false)
-  val createdAt: LocalDateTime,
-
-  @Column(nullable = false, length = 32)
-  val createdBy: String,
-
-  @Column(nullable = false, length = 255)
-  val createdByDisplayName: String,
-
-) : AbstractAggregateRoot<CsipRecord>(), PropertyChangeMonitor {
+) : AbstractAggregateRoot<CsipRecord>(), PropertyChangeMonitor, Audited {
 
   @PostLoad
   fun resetPropertyChanges() {
@@ -79,15 +73,26 @@ class CsipRecord(
       field = value
     }
 
-  var lastModifiedAt: LocalDateTime? = null
+  override var createdAt: LocalDateTime = createdAt
     private set
 
   @Column(length = 32)
-  var lastModifiedBy: String? = null
+  override var createdBy: String = createdBy
     private set
 
   @Column(length = 255)
-  var lastModifiedByDisplayName: String? = null
+  override var createdByDisplayName: String = createdByDisplayName
+    private set
+
+  override var lastModifiedAt: LocalDateTime? = null
+    private set
+
+  @Column(length = 32)
+  override var lastModifiedBy: String? = null
+    private set
+
+  @Column(length = 255)
+  override var lastModifiedByDisplayName: String? = null
     private set
 
   @OneToMany(
@@ -232,7 +237,13 @@ class CsipRecord(
 
   fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
 
-  fun recordModifiedDetails(context: CsipRequestContext) {
+  override fun recordCreatedDetails(context: CsipRequestContext) {
+    createdAt = context.requestAt
+    createdBy = context.username
+    createdByDisplayName = context.userDisplayName
+  }
+
+  override fun recordModifiedDetails(context: CsipRequestContext) {
     lastModifiedAt = context.requestAt
     lastModifiedBy = context.username
     lastModifiedByDisplayName = context.userDisplayName

@@ -9,6 +9,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -24,22 +26,9 @@ class ContributoryFactor(
 
   val comment: String? = null,
 
-  @Column(nullable = false)
-  val createdAt: LocalDateTime,
-
-  @Column(nullable = false, length = 32)
-  val createdBy: String,
-
-  @Column(nullable = false, length = 255)
-  val createdByDisplayName: String,
-
-  val lastModifiedAt: LocalDateTime? = null,
-
-  @Column(length = 32)
-  val lastModifiedBy: String? = null,
-
-  @Column(length = 255)
-  val lastModifiedByDisplayName: String? = null,
+  createdAt: LocalDateTime,
+  createdBy: String,
+  createdByDisplayName: String,
 
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(
     name = "referral_id",
@@ -50,4 +39,41 @@ class ContributoryFactor(
   @ManyToOne
   @JoinColumn(name = "contributory_factor_type_id", insertable = false, updatable = false)
   val contributoryFactorType: ReferenceData,
-)
+) : CsipChild, Audited {
+  @Transient
+  override val csipRecord: CsipRecord = referral.csipRecord
+
+  @Column(nullable = false)
+  override var createdAt: LocalDateTime = createdAt
+    private set
+
+  @Column(nullable = false, length = 32)
+  override var createdBy: String = createdBy
+    private set
+
+  @Column(nullable = false, length = 255)
+  override var createdByDisplayName: String = createdByDisplayName
+    private set
+
+  override var lastModifiedAt: LocalDateTime? = null
+    private set
+
+  @Column(length = 32)
+  override var lastModifiedBy: String? = null
+    private set
+
+  @Column(length = 255)
+  override var lastModifiedByDisplayName: String? = null
+
+  override fun recordCreatedDetails(context: CsipRequestContext) {
+    createdAt = context.requestAt
+    createdBy = context.username
+    createdByDisplayName = context.userDisplayName
+  }
+
+  override fun recordModifiedDetails(context: CsipRequestContext) {
+    lastModifiedAt = context.requestAt
+    lastModifiedBy = context.username
+    lastModifiedByDisplayName = context.userDisplayName
+  }
+}

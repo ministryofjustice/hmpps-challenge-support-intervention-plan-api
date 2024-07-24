@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
@@ -103,10 +104,13 @@ object EntityGenerator {
     createdAt = createdAt,
     createdBy = createdBy,
     createdByDisplayName = createdByDisplayName,
-    lastModifiedAt = lastModifiedAt,
-    lastModifiedBy = lastModifiedBy,
-    lastModifiedByDisplayName = lastModifiedByDisplayName,
     contributoryFactorUuid = uuid,
     contributoryFactorId = id,
-  )
+  ).apply {
+    if (lastModifiedAt != null && lastModifiedBy != null && lastModifiedByDisplayName != null) {
+      recordModifiedDetails(
+        CsipRequestContext(lastModifiedAt, username = lastModifiedBy, userDisplayName = lastModifiedByDisplayName),
+      )
+    }
+  }
 }
