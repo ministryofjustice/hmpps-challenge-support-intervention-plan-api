@@ -77,7 +77,16 @@ class Referral(
   incidentLocation: ReferenceData,
   refererAreaOfWork: ReferenceData,
   incidentInvolvement: ReferenceData?,
-) {
+) : PropertyChangeMonitor {
+
+  @PostLoad
+  fun resetPropertyChanges() {
+    propertyChanges = mutableSetOf()
+  }
+
+  @Transient
+  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
+
   @OneToOne(
     mappedBy = "referral",
     cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
@@ -86,37 +95,15 @@ class Referral(
 
   fun decisionAndActions() = decisionAndActions
 
-  @PostLoad
-  internal fun clearPropertyChanges() {
-    propertyChanges = mutableSetOf()
-  }
-
-  @Transient
-  private var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
-
-  internal fun propertyChanges(): Set<PropertyChange> = propertyChanges.toSet()
-
-  private fun listenForChanges(name: String, old: Any?, new: Any?) {
-    if (old != new) {
-      propertyChanges.add(PropertyChange(name, old, new))
-    }
-  }
-
-  private fun listenForRdChanges(name: String, old: ReferenceData?, new: ReferenceData?) {
-    if (old?.code != new?.code) {
-      propertyChanges.add(PropertyChange(name, old?.code, new?.code))
-    }
-  }
-
   var incidentDate: LocalDate = incidentDate
     set(value) {
-      listenForChanges("incidentDate", field, value)
+      propertyChanged(::incidentDate, value)
       field = value
     }
 
   var incidentTime: LocalTime? = incidentTime
     set(value) {
-      listenForChanges("incidentTime", field, value)
+      propertyChanged(::incidentTime, value)
       field = value
     }
 
@@ -124,7 +111,7 @@ class Referral(
   @JoinColumn(name = "incident_type_id", referencedColumnName = "reference_data_id")
   var incidentType: ReferenceData = incidentType
     set(value) {
-      listenForRdChanges("incidentType", field, value)
+      referenceDataChanged(::incidentType, value)
       field = value
     }
 
@@ -132,7 +119,7 @@ class Referral(
   @JoinColumn(name = "incident_location_id", referencedColumnName = "reference_data_id")
   var incidentLocation: ReferenceData = incidentLocation
     set(value) {
-      listenForRdChanges("incidentLocation", field, value)
+      referenceDataChanged(::incidentLocation, value)
       field = value
     }
 
@@ -140,7 +127,7 @@ class Referral(
   @JoinColumn(name = "referer_area_of_work_id", referencedColumnName = "reference_data_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
     set(value) {
-      listenForRdChanges("refererAreaOfWork", field, value)
+      referenceDataChanged(::refererAreaOfWork, value)
       field = value
     }
 
@@ -148,83 +135,83 @@ class Referral(
   @JoinColumn(name = "incident_involvement_id", referencedColumnName = "reference_Data_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
     set(value) {
-      listenForRdChanges("incidentInvolvement", field, value)
+      referenceDataChanged(::incidentInvolvement, value)
       field = value
     }
 
   @Column(nullable = false, length = 240)
   var referredBy: String = referredBy
     set(value) {
-      listenForChanges("referredBy", field, value)
+      propertyChanged(::referredBy, value)
       field = value
     }
 
   var proactiveReferral: Boolean? = proactiveReferral
     set(value) {
-      listenForChanges("proactiveReferral", field, value)
+      propertyChanged(::proactiveReferral, value)
       field = value
     }
 
   var staffAssaulted: Boolean? = staffAssaulted
     set(value) {
-      listenForChanges("staffAssaulted", field, value)
+      propertyChanged(::staffAssaulted, value)
       field = value
     }
 
   var assaultedStaffName: String? = assaultedStaffName
     set(value) {
-      listenForChanges("assaultedStaffName", field, value)
+      propertyChanged(::assaultedStaffName, value)
       field = value
     }
 
   var descriptionOfConcern: String? = descriptionOfConcern
     set(value) {
-      listenForChanges("descriptionOfConcern", field, value)
+      propertyChanged(::descriptionOfConcern, value)
       field = value
     }
 
   var knownReasons: String? = knownReasons
     set(value) {
-      listenForChanges("knownReasons", field, value)
+      propertyChanged(::knownReasons, value)
       field = value
     }
 
   var otherInformation: String? = otherInformation
     set(value) {
-      listenForChanges("otherInformation", field, value)
+      propertyChanged(::otherInformation, value)
       field = value
     }
 
   @Enumerated(EnumType.STRING)
   var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
     set(value) {
-      listenForChanges("saferCustodyTeamInformed", field, value)
+      propertyChanged(::saferCustodyTeamInformed, value)
       field = value
     }
 
   var referralComplete: Boolean? = referralComplete
     private set(value) {
-      listenForChanges("referralComplete", field, value)
+      propertyChanged(::referralComplete, value)
       field = value
     }
 
   var referralCompletedDate: LocalDate? = referralCompletedDate
     private set(value) {
-      listenForChanges("referralCompletedDate", field, value)
+      propertyChanged(::referralCompletedDate, value)
       field = value
     }
 
   @Column(length = 32)
   var referralCompletedBy: String? = referralCompletedBy
     private set(value) {
-      listenForChanges("referralCompletedBy", field, value)
+      propertyChanged(::referralCompletedBy, value)
       field = value
     }
 
   @Column(length = 255)
   var referralCompletedByDisplayName: String? = referralCompletedByDisplayName
     private set(value) {
-      listenForChanges("referralCompletedByDisplayName", field, value)
+      propertyChanged(::referralCompletedByDisplayName, value)
       field = value
     }
 

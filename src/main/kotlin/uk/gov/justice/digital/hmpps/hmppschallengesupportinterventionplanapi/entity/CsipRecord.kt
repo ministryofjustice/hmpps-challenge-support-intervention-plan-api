@@ -59,20 +59,20 @@ class CsipRecord(
   @Column(nullable = false, length = 255)
   val createdByDisplayName: String,
 
-) : AbstractAggregateRoot<CsipRecord>() {
+) : AbstractAggregateRoot<CsipRecord>(), PropertyChangeMonitor {
 
   @PostLoad
-  internal fun clearPropertyChanges() {
+  fun resetPropertyChanges() {
     propertyChanges = mutableSetOf()
   }
 
   @Transient
-  private var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
+  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
   @Column(length = 10)
   var logCode: String? = logCode
     set(value) {
-      listenForChanges("logCode", field, value)
+      propertyChanged(::logCode, value)
       field = value
     }
 
@@ -202,16 +202,16 @@ class CsipRecord(
     val referral = requireNotNull(referral)
     logCode = request.logCode
     request.referral?.also { referral.update(context, it, referenceProvider) }
-    val allChanges = propertyChanges + referral.propertyChanges()
+    val allChanges = propertyChanges + referral.propertyChanges
     if (allChanges.isNotEmpty()) {
       recordModifiedDetails(context)
       val affectedComponents = buildSet {
         if (propertyChanges.isNotEmpty()) add(AffectedComponent.Record)
-        if (referral.propertyChanges().isNotEmpty()) add(AffectedComponent.Referral)
+        if (referral.propertyChanges.isNotEmpty()) add(AffectedComponent.Referral)
       }
       addAuditEvent(
         action = AuditEventAction.UPDATED,
-        description = auditDescription(propertyChanges, referral.propertyChanges()),
+        description = auditDescription(propertyChanges, referral.propertyChanges),
         actionedAt = context.requestAt,
         actionedBy = context.username,
         actionedByCapturedName = context.userDisplayName,
@@ -240,12 +240,6 @@ class CsipRecord(
     lastModifiedAt = context.requestAt
     lastModifiedBy = context.username
     lastModifiedByDisplayName = context.userDisplayName
-  }
-
-  private fun listenForChanges(name: String, old: Any?, new: Any?) {
-    if (old != new) {
-      propertyChanges.add(PropertyChange(name, old, new))
-    }
   }
 
   private fun auditDescription(recordChanges: Set<PropertyChange>, referralChanges: Set<PropertyChange>): String {
