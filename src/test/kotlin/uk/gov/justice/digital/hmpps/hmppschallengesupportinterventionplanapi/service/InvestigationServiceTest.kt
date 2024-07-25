@@ -3,12 +3,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.anySet
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.REFERENCE_DATA_CODE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -16,53 +14,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class InvestigationServiceTest : BaseServiceTest() {
   private val underTest = InvestigationService(csipRecordRepository, referenceDataRepository)
-
-  @Test
-  fun `create Investigation with interview`() {
-    val createRequest = createRequest()
-
-    whenever(referenceDataRepository.findByDomainAndCodeIn(any(), anySet())).thenReturn(listOf(referenceData()))
-    whenever(csipRecordRepository.findByRecordUuid(any())).thenReturn(csipRecord())
-    whenever(csipRecordRepository.save(any())).thenReturn(
-      csipRecord().apply {
-        referral!!.createInvestigation(
-          CsipRequestContext(requestAt = LocalDateTime.of(2021, 1, 1, 1, 0), username = TEST_USER, userDisplayName = TEST_USER_NAME),
-          createRequest = createRequest,
-          intervieweeRoleMap = mapOf(REFERENCE_DATA_CODE to referenceData()),
-          source = Source.DPS,
-          activeCaseLoadId = PRISON_CODE_LEEDS,
-        )
-      },
-    )
-
-    val result = underTest.createInvestigation(
-      UUID.randomUUID(),
-      createRequest,
-      requestContext(),
-    )
-
-    with(result) {
-      assertThat(staffInvolved).isEqualTo("staffInvolved")
-      assertThat(evidenceSecured).isEqualTo("evidenceSecured")
-      assertThat(occurrenceReason).isEqualTo("occurrenceReason")
-      assertThat(personsUsualBehaviour).isEqualTo("personsUsualBehaviour")
-      assertThat(personsTrigger).isEqualTo("personsTrigger")
-      assertThat(protectiveFactors).isEqualTo("protectiveFactors")
-    }
-    with(result.interviews.single()) {
-      assertThat(interviewee).isEqualTo("gloriatur")
-      assertThat(interviewDate).isEqualTo(LocalDate.of(2021, 1, 1))
-      assertThat(interviewText).isEqualTo("text")
-      assertThat(createdBy).isEqualTo(TEST_USER)
-      assertThat(createdByDisplayName).isEqualTo(TEST_USER_NAME)
-      assertThat(createdAt).isEqualTo(LocalDateTime.of(2021, 1, 1, 1, 0))
-    }
-  }
 
   @Test
   fun `create Investigation without interview`() {
@@ -75,7 +30,6 @@ class InvestigationServiceTest : BaseServiceTest() {
           CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
           createRequest = createRequest,
           intervieweeRoleMap = emptyMap(),
-          source = Source.DPS,
           activeCaseLoadId = PRISON_CODE_LEEDS,
         )
       },

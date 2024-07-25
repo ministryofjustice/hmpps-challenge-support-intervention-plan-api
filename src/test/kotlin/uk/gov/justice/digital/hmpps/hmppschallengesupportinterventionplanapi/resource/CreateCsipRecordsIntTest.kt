@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
+import org.testcontainers.shaded.org.bouncycastle.asn1.x500.style.RFC4519Style.description
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -122,7 +123,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: Couldn't read request body")
-      assertThat(developerMessage).isEqualTo("Required request body is missing: public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.CsipRecordsController.createCsipRecord(java.lang.String,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest,jakarta.servlet.http.HttpServletRequest)")
+      assertThat(developerMessage).isEqualTo("Required request body is missing: public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.CsipRecordsController.createCsipRecord(java.lang.String,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest)")
       assertThat(moreInfo).isNull()
     }
   }
@@ -147,9 +148,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   fun `400 bad request - incident type not found`() {
     val request = createCsipRecordRequest()
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).errorResponse(
-      HttpStatus.BAD_REQUEST,
-    )
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
+      .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -188,45 +188,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK is invalid")
       assertThat(developerMessage).isEqualTo("Details => AREA_OF_WORK:C")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - incident involvement not found`() {
-    val request =
-      createCsipRecordRequest(incidentTypeCode = "ATO", incidentLocationCode = "EDU", refererAreaCode = "ACT")
-
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER).errorResponse(
-      HttpStatus.BAD_REQUEST,
-    )
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_INVOLVEMENT is invalid")
-      assertThat(developerMessage).isEqualTo("Details => INCIDENT_INVOLVEMENT:D")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - contributory factor not found`() {
-    val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-    )
-
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: CONTRIBUTORY_FACTOR_TYPE is invalid")
-      assertThat(developerMessage).isEqualTo("Details => CONTRIBUTORY_FACTOR_TYPE:D")
       assertThat(moreInfo).isNull()
     }
   }
@@ -318,7 +279,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdBy).isEqualTo("TEST_USER")
       assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
-      assertThat(referral.releaseDate).isNull()
     }
 
     with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
@@ -497,6 +457,79 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
         personReference = PersonReference.withPrisonNumber(prisonNumber),
       ),
     )
+  }
+
+  @Test
+  fun `400 bad request - no contributory factors with source DPS`() {
+    val request = createCsipRecordRequest(contributoryFactorTypeCode = listOf())
+
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
+      .errorResponse(HttpStatus.BAD_REQUEST)
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(userMessage).isEqualTo("Validation failure: A referral must have at least one contributory factor.")
+    }
+  }
+
+  @Test
+  fun `201 created - no contributory factors with source NOMIS`() {
+    val request = createCsipRecordRequest(
+      incidentTypeCode = "ATO",
+      incidentLocationCode = "EDU",
+      refererAreaCode = "ACT",
+      incidentInvolvementCode = "OTH",
+      contributoryFactorTypeCode = listOf(),
+    )
+
+    val prisonNumber = givenValidPrisonNumber("C1237SP")
+    val response = webTestClient.createCsipRecord(prisonNumber, request, NOMIS, NOMIS_SYS_USER)
+
+    with(response!!) {
+      assertThat(logCode).isEqualTo(LOG_CODE)
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
+      assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+    }
+
+    val saved = requireNotNull(csipRecordRepository.findByRecordUuid(response.recordUuid))
+    with(requireNotNull(saved.referral)) {
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
+      assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+    }
+    with(saved.auditEvents().single()) {
+      assertThat(action).isEqualTo(AuditEventAction.CREATED)
+      assertThat(description).isEqualTo("CSIP record created via referral with 0 contributory factors")
+      assertThat(affectedComponents).containsExactlyInAnyOrder(AffectedComponent.Record, AffectedComponent.Referral)
+      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(actionedBy).isEqualTo(NOMIS_SYS_USER)
+      assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      assertThat(source).isEqualTo(NOMIS)
+    }
+
+    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
+    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
+    val csipDomainEvent = events.find { it is CsipDomainEvent } as CsipDomainEvent
+
+    assertThat(csipDomainEvent).usingRecursiveComparison().ignoringFields("additionalInformation.affectedComponents")
+      .isEqualTo(
+        CsipDomainEvent(
+          eventType = DomainEventType.CSIP_CREATED.eventType,
+          additionalInformation = CsipAdditionalInformation(
+            recordUuid = response.recordUuid,
+            affectedComponents = setOf(),
+            source = NOMIS,
+          ),
+          version = 1,
+          description = DomainEventType.CSIP_CREATED.description,
+          occurredAt = csipDomainEvent.occurredAt,
+          detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
+          personReference = PersonReference.withPrisonNumber(prisonNumber),
+        ),
+      )
+    assertThat(csipDomainEvent.additionalInformation.affectedComponents)
+      .containsExactlyInAnyOrder(AffectedComponent.Record, AffectedComponent.Referral)
   }
 
   private fun WebTestClient.createCsipResponseSpec(

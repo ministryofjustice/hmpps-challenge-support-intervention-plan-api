@@ -31,7 +31,6 @@ data class ContributoryFactorCreatedEvent(
   override val description: String,
   override val occurredAt: LocalDateTime,
   override val source: Source,
-  val updatedBy: String,
 ) : CsipBasicEvent {
   override val type = DomainEventType.CONTRIBUTORY_FACTOR_CREATED
 }
@@ -43,7 +42,6 @@ data class InterviewCreatedEvent(
   override val description: String,
   override val occurredAt: LocalDateTime,
   override val source: Source,
-  val updatedBy: String,
 ) : CsipBasicEvent {
   override val type: DomainEventType = DomainEventType.INTERVIEW_CREATED
 }

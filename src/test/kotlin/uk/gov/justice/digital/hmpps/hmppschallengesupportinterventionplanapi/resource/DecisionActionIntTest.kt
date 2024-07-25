@@ -36,7 +36,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class DecisionActionsIntTest : IntegrationTestBase() {
+class DecisionActionIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
@@ -218,13 +218,7 @@ class DecisionActionsIntTest : IntegrationTestBase() {
       actionedAt = LocalDateTime.now(),
       source = Source.DPS,
       activeCaseLoadId = PRISON_CODE_LEEDS,
-      actionOpenCsipAlert = false,
-      actionNonAssociationsUpdated = false,
-      actionObservationBook = false,
-      actionUnitOrCellMove = false,
-      actionCsraOrRsraReview = false,
-      actionServiceReferral = false,
-      actionSimReferral = false,
+      actions = setOf(),
       description = "description",
     )
     csipRecordRepository.save(csipRecord)

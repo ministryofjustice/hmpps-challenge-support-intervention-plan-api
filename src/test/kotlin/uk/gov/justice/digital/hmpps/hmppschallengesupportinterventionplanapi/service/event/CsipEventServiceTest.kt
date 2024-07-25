@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -72,7 +71,6 @@ class CsipEventServiceTest {
     description = DomainEventType.CSIP_UPDATED.description,
     occurredAt = LocalDateTime.now(),
     source = Source.NOMIS,
-    updatedBy = TEST_USER,
     affectedComponents = setOf(AffectedComponent.Referral),
   )
 }

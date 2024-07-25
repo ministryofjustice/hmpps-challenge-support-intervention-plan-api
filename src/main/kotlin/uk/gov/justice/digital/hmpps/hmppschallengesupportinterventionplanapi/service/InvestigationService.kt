@@ -38,7 +38,6 @@ class InvestigationService(
           context = context,
           referral = this,
           intervieweeRoleMap = intervieweeRoleMap,
-          source = context.source,
           activeCaseLoadId = context.activeCaseLoadId,
         ),
       ).referral()!!.investigation()!!.toModel()

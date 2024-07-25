@@ -6,24 +6,24 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 
 class AuditedEntityListener {
   @PrePersist
-  fun onPrePersist(audited: Audited) {
-    audited.recordCreatedDetails(csipRequestContext())
+  fun onPrePersist(auditable: Auditable) {
+    auditable.recordCreatedDetails(csipRequestContext())
   }
 
   @PreUpdate
-  fun onPreUpdate(audited: Audited) {
-    audited.recordModifiedDetails(csipRequestContext())
+  fun onPreUpdate(auditable: Auditable) {
+    auditable.recordModifiedDetails(csipRequestContext())
   }
 }
 
-class CsipChildEntityListener {
+class UpdateParentEntityListener {
   @PrePersist
-  fun onPrePersist(csipChild: CsipChild) {
-    csipChild.csipRecord.recordModifiedDetails(csipRequestContext())
+  fun onPrePersist(parented: Parented) {
+    parented.parent().recordModifiedDetails(csipRequestContext())
   }
 
   @PreUpdate
-  fun onPreUpdate(csipChild: CsipChild) {
-    csipChild.csipRecord.recordModifiedDetails(csipRequestContext())
+  fun onPreUpdate(parented: Parented) {
+    parented.parent().recordModifiedDetails(csipRequestContext())
   }
 }

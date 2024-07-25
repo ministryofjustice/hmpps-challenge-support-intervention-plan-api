@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.actions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getOutcomeType
@@ -42,13 +43,7 @@ class DecisionActionsService(
           actionedAt = context.requestAt,
           source = context.source,
           activeCaseLoadId = context.activeCaseLoadId,
-          actionOpenCsipAlert = request.isActionOpenCsipAlert,
-          actionNonAssociationsUpdated = request.isActionNonAssociationsUpdated,
-          actionObservationBook = request.isActionObservationBook,
-          actionUnitOrCellMove = request.isActionUnitOrCellMove,
-          actionCsraOrRsraReview = request.isActionCsraOrRsraReview,
-          actionServiceReferral = request.isActionServiceReferral,
-          actionSimReferral = request.isActionSimReferral,
+          request.actions(),
         ),
       ).referral()!!.decisionAndActions()!!.toModel()
     }

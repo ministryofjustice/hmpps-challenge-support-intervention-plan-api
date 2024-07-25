@@ -63,11 +63,6 @@ data class Referral(
   val assaultedStaffName: String?,
 
   @Schema(
-    description = "The release date of the person in prison. Can be planned released date or the date they were released.",
-  )
-  val releaseDate: LocalDate?,
-
-  @Schema(
     description = "The type of involvement the person had in the incident",
   )
   val incidentInvolvement: ReferenceData?,

@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation as InvestigationModel
 
@@ -24,11 +23,9 @@ fun CreateInvestigationRequest.toCsipRecordEntity(
   referral: Referral,
   intervieweeRoleMap: Map<String, ReferenceData>,
   activeCaseLoadId: String?,
-  source: Source,
 ): CsipRecord = referral.createInvestigation(
   context = context,
   createRequest = this,
   intervieweeRoleMap = intervieweeRoleMap,
   activeCaseLoadId = activeCaseLoadId,
-  source = source,
 )

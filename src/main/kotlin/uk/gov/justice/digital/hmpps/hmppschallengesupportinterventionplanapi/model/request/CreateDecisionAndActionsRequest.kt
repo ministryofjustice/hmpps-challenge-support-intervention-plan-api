@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import java.time.LocalDate
 
 @Schema(
@@ -93,3 +94,13 @@ data class CreateDecisionAndActionsRequest(
   @field:Size(min = 0, max = 4000, message = "Action Other must be <= 4000 characters")
   val actionOther: String?,
 )
+
+fun CreateDecisionAndActionsRequest.actions() = buildSet {
+  if (isActionOpenCsipAlert) add(DecisionAction.OpenCsipAlert)
+  if (isActionNonAssociationsUpdated) add(DecisionAction.NonAssociationsUpdated)
+  if (isActionObservationBook) add(DecisionAction.ObservationBook)
+  if (isActionUnitOrCellMove) add(DecisionAction.UnitOrCellMove)
+  if (isActionCsraOrRsraReview) add(DecisionAction.CsraOrRsraReview)
+  if (isActionServiceReferral) add(DecisionAction.ServiceReferral)
+  if (isActionSimReferral) add(DecisionAction.SimReferral)
+}

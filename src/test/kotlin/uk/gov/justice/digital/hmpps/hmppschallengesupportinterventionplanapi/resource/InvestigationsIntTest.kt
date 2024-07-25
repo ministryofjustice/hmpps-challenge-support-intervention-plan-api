@@ -148,7 +148,6 @@ class InvestigationsIntTest : IntegrationTestBase() {
         interviewRequest(intervieweeRole.code),
       ),
       intervieweeRoleMap = mapOf(intervieweeRole.code to intervieweeRole),
-      source = Source.DPS,
       activeCaseLoadId = PRISON_CODE_LEEDS,
     )
     csipRecordRepository.save(csipRecord)

@@ -24,15 +24,16 @@ object EntityGenerator {
     uuid: UUID = UUID.randomUUID(),
     id: Long = IdGenerator.newId(),
   ) = CsipRecord(
-    id,
-    uuid,
     prisonNumber,
     prisonCodeWhenRecorded,
     logCode,
-    createdAt,
-    createdBy,
-    createdByDisplayName,
-  )
+    uuid,
+    id,
+  ).apply {
+    this.createdAt = createdAt
+    this.createdBy = createdBy
+    this.createdByDisplayName = createdByDisplayName
+  }
 
   fun CsipRecord.withReferral(
     incidentType: () -> ReferenceData,
@@ -46,7 +47,6 @@ object EntityGenerator {
     proactiveReferral: Boolean? = null,
     staffAssaulted: Boolean? = null,
     assaultedStaffName: String? = null,
-    releaseDate: LocalDate? = null,
     descriptionOfConcern: String? = "descriptionOfConcern",
     knownReasons: String? = "knownReasons",
     otherInformation: String? = "otherInformation",
@@ -57,17 +57,15 @@ object EntityGenerator {
     referralCompletedDate: LocalDate? = null,
     id: Long = IdGenerator.newId(),
   ): CsipRecord {
-    val referral = Referral(
-      id,
+    this.referral = Referral(
       this,
+      referralDate,
       incidentDate,
       incidentTime,
       referredBy,
-      referralDate,
       proactiveReferral,
       staffAssaulted,
       assaultedStaffName,
-      releaseDate,
       descriptionOfConcern,
       knownReasons,
       otherInformation,
@@ -80,8 +78,8 @@ object EntityGenerator {
       incidentLocation(),
       refererAreaOfWork(),
       incidentInvolvement(),
+      id,
     )
-    this.referral = referral
     return this
   }
 
@@ -98,15 +96,15 @@ object EntityGenerator {
     uuid: UUID = UUID.randomUUID(),
     id: Long = IdGenerator.newId(),
   ) = ContributoryFactor(
-    contributoryFactorType = contributoryFactorType(),
     referral = referral,
+    contributoryFactorType = contributoryFactorType(),
     comment = comment,
-    createdAt = createdAt,
-    createdBy = createdBy,
-    createdByDisplayName = createdByDisplayName,
     contributoryFactorUuid = uuid,
-    contributoryFactorId = id,
+    id = id,
   ).apply {
+    this.createdAt = createdAt
+    this.createdBy = createdBy
+    this.createdByDisplayName = createdByDisplayName
     if (lastModifiedAt != null && lastModifiedBy != null && lastModifiedByDisplayName != null) {
       recordModifiedDetails(
         CsipRequestContext(lastModifiedAt, username = lastModifiedBy, userDisplayName = lastModifiedByDisplayName),
