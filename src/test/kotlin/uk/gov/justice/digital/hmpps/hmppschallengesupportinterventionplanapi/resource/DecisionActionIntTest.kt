@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -247,18 +248,12 @@ class DecisionActionIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(outcomeSignedOffByRole).isNull()
-      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
-      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
-      assertThat(outcomeDate).isEqualTo(LocalDate.now())
+      assertThat(signedOffByRole).isNull()
+      assertThat(recordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(recordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
+      assertThat(date).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
-      assertThat(isActionOpenCsipAlert).isEqualTo(false)
-      assertThat(isActionNonAssociationsUpdated).isEqualTo(false)
-      assertThat(isActionObservationBook).isEqualTo(false)
-      assertThat(isActionUnitOrCellMove).isEqualTo(false)
-      assertThat(isActionCsraOrRsraReview).isEqualTo(false)
-      assertThat(isActionServiceReferral).isEqualTo(false)
-      assertThat(isActionSimReferral).isEqualTo(false)
+      assertThat(actions).isEmpty()
       assertThat(actionOther).isEqualTo(actionOther)
     }
   }
@@ -272,13 +267,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
     val request = createDecisionActionsRequest(
       "CUR",
       "CUSTMAN",
-      isActionOpenCsipAlert = true,
-      isActionNonAssociationsUpdated = true,
-      isActionObservationBook = true,
-      isActionUnitOrCellMove = true,
-      isActionCsraOrRsraReview = true,
-      isActionServiceReferral = true,
-      isActionSimReferral = true,
+      DecisionAction.entries.toSet(),
     )
 
     val response = createDecisionActions(recordUuid, request)
@@ -287,18 +276,12 @@ class DecisionActionIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
-      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
-      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
-      assertThat(outcomeDate).isEqualTo(LocalDate.now())
+      assertThat(signedOffByRole?.code).isEqualTo(request.signedOffByRoleCode)
+      assertThat(recordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(recordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
+      assertThat(date).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
-      assertThat(isActionOpenCsipAlert).isEqualTo(true)
-      assertThat(isActionNonAssociationsUpdated).isEqualTo(true)
-      assertThat(isActionObservationBook).isEqualTo(true)
-      assertThat(isActionUnitOrCellMove).isEqualTo(true)
-      assertThat(isActionCsraOrRsraReview).isEqualTo(true)
-      assertThat(isActionServiceReferral).isEqualTo(true)
-      assertThat(isActionSimReferral).isEqualTo(true)
+      assertThat(actions).containsAll(DecisionAction.entries)
       assertThat(actionOther).isEqualTo(actionOther)
     }
   }
@@ -316,18 +299,12 @@ class DecisionActionIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
-      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
-      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
-      assertThat(outcomeDate).isEqualTo(LocalDate.now())
+      assertThat(signedOffByRole?.code).isEqualTo(request.signedOffByRoleCode)
+      assertThat(recordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(recordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
+      assertThat(date).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
-      assertThat(isActionOpenCsipAlert).isEqualTo(request.isActionOpenCsipAlert)
-      assertThat(isActionNonAssociationsUpdated).isEqualTo(isActionNonAssociationsUpdated)
-      assertThat(isActionObservationBook).isEqualTo(isActionObservationBook)
-      assertThat(isActionUnitOrCellMove).isEqualTo(isActionUnitOrCellMove)
-      assertThat(isActionCsraOrRsraReview).isEqualTo(isActionCsraOrRsraReview)
-      assertThat(isActionServiceReferral).isEqualTo(isActionServiceReferral)
-      assertThat(isActionSimReferral).isEqualTo(isActionSimReferral)
+      assertThat(actions).containsExactlyInAnyOrder(*request.actions.toTypedArray())
       assertThat(actionOther).isEqualTo(actionOther)
     }
 
@@ -376,18 +353,12 @@ class DecisionActionIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
-      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
-      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
-      assertThat(outcomeDate).isEqualTo(LocalDate.now())
+      assertThat(signedOffByRole?.code).isEqualTo(request.signedOffByRoleCode)
+      assertThat(recordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(recordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
+      assertThat(date).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
-      assertThat(isActionOpenCsipAlert).isEqualTo(request.isActionOpenCsipAlert)
-      assertThat(isActionNonAssociationsUpdated).isEqualTo(isActionNonAssociationsUpdated)
-      assertThat(isActionObservationBook).isEqualTo(isActionObservationBook)
-      assertThat(isActionUnitOrCellMove).isEqualTo(isActionUnitOrCellMove)
-      assertThat(isActionCsraOrRsraReview).isEqualTo(isActionCsraOrRsraReview)
-      assertThat(isActionServiceReferral).isEqualTo(isActionServiceReferral)
-      assertThat(isActionSimReferral).isEqualTo(isActionSimReferral)
+      assertThat(actions).containsExactlyInAnyOrder(*request.actions.toTypedArray())
       assertThat(actionOther).isEqualTo(actionOther)
     }
 
@@ -426,29 +397,17 @@ class DecisionActionIntTest : IntegrationTestBase() {
   private fun createDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
     outcomeSignedOffByRoleCode: String? = "CUSTMAN",
-    isActionOpenCsipAlert: Boolean = false,
-    isActionNonAssociationsUpdated: Boolean = false,
-    isActionObservationBook: Boolean = false,
-    isActionUnitOrCellMove: Boolean = false,
-    isActionCsraOrRsraReview: Boolean = false,
-    isActionServiceReferral: Boolean = false,
-    isActionSimReferral: Boolean = false,
+    actions: Set<DecisionAction> = setOf(),
   ) = CreateDecisionAndActionsRequest(
     conclusion = null,
     outcomeTypeCode = outcomeTypeCode,
-    outcomeSignedOffByRoleCode = outcomeSignedOffByRoleCode,
-    outcomeRecordedBy = "outcomeRecordedBy",
-    outcomeRecordedByDisplayName = "outcomeRecordedByDisplayName",
-    outcomeDate = LocalDate.now(),
+    signedOffByRoleCode = outcomeSignedOffByRoleCode,
+    recordedBy = "outcomeRecordedBy",
+    recordedByDisplayName = "outcomeRecordedByDisplayName",
+    date = LocalDate.now(),
     nextSteps = null,
-    isActionOpenCsipAlert,
-    isActionNonAssociationsUpdated,
-    isActionObservationBook,
-    isActionUnitOrCellMove,
-    isActionCsraOrRsraReview,
-    isActionServiceReferral,
-    isActionSimReferral,
     actionOther = null,
+    actions = actions,
   )
 
   fun createDecisionResponseSpec(

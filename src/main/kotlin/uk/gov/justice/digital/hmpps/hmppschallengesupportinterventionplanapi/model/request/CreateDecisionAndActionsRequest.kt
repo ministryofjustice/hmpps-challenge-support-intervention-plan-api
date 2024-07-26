@@ -26,26 +26,26 @@ data class CreateDecisionAndActionsRequest(
     description = "The role of the person making the outcome decision.",
   )
   @field:Size(min = 0, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
-  val outcomeSignedOffByRoleCode: String?,
+  val signedOffByRoleCode: String?,
 
   @Schema(
     description = "The username of the user who recorded the outcome decision.",
   )
   @field:Size(min = 0, max = 100, message = "Outcome Recorded By username must be <= 100 characters")
-  val outcomeRecordedBy: String?,
+  val recordedBy: String?,
 
   @Schema(
     description = "The displayable name of the user who recorded the outcome decision.",
   )
   @field:Size(min = 0, max = 255, message = "Outcome Recorded By display name must be <= 255 characters")
-  val outcomeRecordedByDisplayName: String?,
+  val recordedByDisplayName: String?,
 
   @Schema(
     description = "The date the outcome decision was made.",
     example = "2021-09-27",
   )
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val outcomeDate: LocalDate?,
+  val date: LocalDate?,
 
   @Schema(
     description = "The next steps that should be taken following the outcome decision.",
@@ -54,53 +54,13 @@ data class CreateDecisionAndActionsRequest(
   val nextSteps: String?,
 
   @Schema(
-    description = "If a recommended action is to open a CSIP alert.",
-  )
-  val isActionOpenCsipAlert: Boolean,
-
-  @Schema(
-    description = "If a recommended action is to update the non associations for the person.",
-  )
-  val isActionNonAssociationsUpdated: Boolean,
-
-  @Schema(
-    description = "If a recommended action is to add the person to the observation book.",
-  )
-  val isActionObservationBook: Boolean,
-
-  @Schema(
-    description = "If a recommended action is to move the person.",
-  )
-  val isActionUnitOrCellMove: Boolean,
-
-  @Schema(
-    description = "If a recommended action is to perform a CSRA/RSRA review.",
-  )
-  val isActionCsraOrRsraReview: Boolean,
-
-  @Schema(
-    description = "If a recommended action is to refer the person to another service.",
-  )
-  val isActionServiceReferral: Boolean,
-
-  @Schema(
-    description = "If a recommended action is to refer the person to SIM.",
-  )
-  val isActionSimReferral: Boolean,
-
-  @Schema(
     description = "Any other actions that are recommended to be considered.",
   )
   @field:Size(min = 0, max = 4000, message = "Action Other must be <= 4000 characters")
   val actionOther: String?,
-)
 
-fun CreateDecisionAndActionsRequest.actions() = buildSet {
-  if (isActionOpenCsipAlert) add(DecisionAction.OpenCsipAlert)
-  if (isActionNonAssociationsUpdated) add(DecisionAction.NonAssociationsUpdated)
-  if (isActionObservationBook) add(DecisionAction.ObservationBook)
-  if (isActionUnitOrCellMove) add(DecisionAction.UnitOrCellMove)
-  if (isActionCsraOrRsraReview) add(DecisionAction.CsraOrRsraReview)
-  if (isActionServiceReferral) add(DecisionAction.ServiceReferral)
-  if (isActionSimReferral) add(DecisionAction.SimReferral)
-}
+  @Schema(
+    description = "A list of recommended actions.",
+  )
+  val actions: Set<DecisionAction> = setOf(),
+)

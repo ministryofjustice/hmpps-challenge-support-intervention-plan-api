@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.actions
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -242,15 +241,15 @@ class Referral(
     decisionAndActions = DecisionAndActions(
       referral = this,
       outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode),
-      signedOffBy = request.outcomeSignedOffByRoleCode?.let {
+      signedOffBy = request.signedOffByRoleCode?.let {
         referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
       },
       conclusion = request.conclusion,
-      recordedBy = request.outcomeRecordedBy,
-      recordedByDisplayName = request.outcomeRecordedByDisplayName,
-      date = request.outcomeDate,
+      recordedBy = request.recordedBy,
+      recordedByDisplayName = request.recordedByDisplayName,
+      date = request.date,
       nextSteps = request.nextSteps,
-      actions = request.actions(),
+      actions = request.actions,
       actionOther = request.actionOther,
     )
 

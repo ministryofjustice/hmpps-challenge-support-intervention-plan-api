@@ -17,13 +17,6 @@ import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.CsraOrRsraReview
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.NonAssociationsUpdated
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.ObservationBook
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.OpenCsipAlert
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.ServiceReferral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.SimReferral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction.UnitOrCellMove
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions as DecisionAndActionsModel
 
@@ -70,12 +63,6 @@ fun DecisionAndActions.toModel() =
     recordedByDisplayName,
     date,
     nextSteps,
-    OpenCsipAlert in actions,
-    NonAssociationsUpdated in actions,
-    ObservationBook in actions,
-    UnitOrCellMove in actions,
-    CsraOrRsraReview in actions,
-    ServiceReferral in actions,
-    SimReferral in actions,
+    actions,
     actionOther,
   )
