@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.verifyAllReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
@@ -85,8 +86,10 @@ class InvestigationsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `400 bad request - invalid Outcome Type code`() {
-    val recordUuid = UUID.randomUUID()
+  fun `400 bad request - invalid interviewee role code`() {
+    val prisonNumber = givenValidPrisonNumber("I2235OT")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val recordUuid = csipRecord.recordUuid
     val request = investigationRequest(interviewRequest(roleCode = "WRONG_CODE"))
     val response = createInvestigationResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -143,13 +146,12 @@ class InvestigationsIntTest : IntegrationTestBase() {
 
     csipRecord.referral!!.createInvestigation(
       CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
-      createRequest = investigationRequest(
+      request = investigationRequest(
         interviewRequest(intervieweeRole.code),
         interviewRequest(intervieweeRole.code),
       ),
-      intervieweeRoleMap = mapOf(intervieweeRole.code to intervieweeRole),
       activeCaseLoadId = PRISON_CODE_LEEDS,
-    )
+    ) { codes -> referenceDataRepository.verifyAllReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, codes) }
     csipRecordRepository.save(csipRecord)
 
     val response = createInvestigationResponseSpec(recordUuid, investigationRequest())

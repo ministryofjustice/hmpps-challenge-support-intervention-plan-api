@@ -34,8 +34,9 @@ class Interview(
   @Column(unique = true, nullable = false)
   val interviewUuid: UUID = UUID.randomUUID(),
 
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "interview_id")
-  val interviewId: Long = 0,
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "interview_id")
+  val id: Long = 0,
 ) : SimpleAuditable(), Parented {
   override fun parent() = investigation
 }

@@ -11,10 +11,10 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 fun createCsipRecordRequest(
-  incidentTypeCode: String = "A",
-  incidentLocationCode: String = "B",
-  refererAreaCode: String = "C",
-  incidentInvolvementCode: String? = "D",
+  incidentTypeCode: String = "ATO",
+  incidentLocationCode: String = "EDU",
+  refererAreaCode: String = "ACT",
+  incidentInvolvementCode: String? = "OTH",
   contributoryFactorTypeCode: Collection<String> = listOf("D"),
   logCode: String? = LOG_CODE,
 ) = CreateCsipRecordRequest(

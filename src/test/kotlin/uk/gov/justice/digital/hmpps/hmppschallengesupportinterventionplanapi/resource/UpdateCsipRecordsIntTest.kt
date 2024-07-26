@@ -133,7 +133,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @MethodSource("referenceDataValidation")
-  fun `400 ok - when reference data code invalid or inactive`(updateReferral: UpdateReferral, invalid: InvalidRd) {
+  fun `400 bad request - when reference data code invalid or inactive`(updateReferral: UpdateReferral, invalid: InvalidRd) {
     val prisonNumber = givenValidPrisonNumber("R1234VC")
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
@@ -468,8 +468,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(eventType).isEqualTo(DomainEventType.CSIP_UPDATED.eventType)
       with(additionalInformation) {
         assertThat(this.recordUuid).isEqualTo(recordUuid)
-        assertThat(affectedComponents).containsExactlyInAnyOrder(*affectedComponents)
-        assertThat(source).isEqualTo(source)
+        assertThat(this.affectedComponents).containsExactlyInAnyOrder(*affectedComponents)
+        assertThat(this.source).isEqualTo(source)
       }
       assertThat(description).isEqualTo(DomainEventType.CSIP_UPDATED.description)
       assertThat(occurredAt).isCloseTo(ZonedDateTime.now().withZoneSameInstant(EuropeLondon), within(3, ChronoUnit.SECONDS))

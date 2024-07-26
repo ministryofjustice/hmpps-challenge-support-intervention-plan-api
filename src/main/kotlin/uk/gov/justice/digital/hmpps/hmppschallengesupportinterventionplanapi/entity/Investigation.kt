@@ -48,7 +48,7 @@ class Investigation(
   )
   private var interviews: MutableList<Interview> = mutableListOf()
 
-  fun interviews() = interviews.toList().sortedByDescending { it.interviewId }
+  fun interviews() = interviews.toList().sortedByDescending { it.id }
 
   fun addInterview(
     context: CsipRequestContext,

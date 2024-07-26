@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils
 
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
@@ -81,34 +79,5 @@ object EntityGenerator {
       id,
     )
     return this
-  }
-
-  fun generateContributoryFactor(
-    contributoryFactorType: () -> ReferenceData,
-    referral: Referral,
-    comment: String? = null,
-    createdAt: LocalDateTime = LocalDateTime.now().minusDays(1),
-    createdBy: String = "AP1234",
-    createdByDisplayName: String = "A Person",
-    lastModifiedAt: LocalDateTime? = null,
-    lastModifiedBy: String? = null,
-    lastModifiedByDisplayName: String? = null,
-    uuid: UUID = UUID.randomUUID(),
-    id: Long = IdGenerator.newId(),
-  ) = ContributoryFactor(
-    referral = referral,
-    contributoryFactorType = contributoryFactorType(),
-    comment = comment,
-    contributoryFactorUuid = uuid,
-    id = id,
-  ).apply {
-    this.createdAt = createdAt
-    this.createdBy = createdBy
-    this.createdByDisplayName = createdByDisplayName
-    if (lastModifiedAt != null && lastModifiedBy != null && lastModifiedByDisplayName != null) {
-      recordModifiedDetails(
-        CsipRequestContext(lastModifiedAt, username = lastModifiedBy, userDisplayName = lastModifiedByDisplayName),
-      )
-    }
   }
 }

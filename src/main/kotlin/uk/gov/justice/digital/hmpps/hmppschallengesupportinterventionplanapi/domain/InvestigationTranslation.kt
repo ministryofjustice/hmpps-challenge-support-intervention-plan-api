@@ -21,11 +21,11 @@ fun Investigation.toModel() = InvestigationModel(
 fun CreateInvestigationRequest.toCsipRecordEntity(
   context: CsipRequestContext,
   referral: Referral,
-  intervieweeRoleMap: Map<String, ReferenceData>,
+  roleProvider: (Set<String>) -> Map<String, ReferenceData>,
   activeCaseLoadId: String?,
 ): CsipRecord = referral.createInvestigation(
   context = context,
-  createRequest = this,
-  intervieweeRoleMap = intervieweeRoleMap,
+  request = this,
   activeCaseLoadId = activeCaseLoadId,
+  roleProvider = roleProvider,
 )

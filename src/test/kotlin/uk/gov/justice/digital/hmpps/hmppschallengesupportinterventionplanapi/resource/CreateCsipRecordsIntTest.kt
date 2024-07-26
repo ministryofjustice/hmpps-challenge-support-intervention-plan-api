@@ -6,11 +6,13 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import org.testcontainers.shaded.org.bouncycastle.asn1.x500.style.RFC4519Style.description
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -22,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
@@ -36,6 +39,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.UpdateCsipRecordsIntTest.Companion.InvalidRd
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
 import java.time.LocalDateTime
@@ -144,50 +149,22 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `400 bad request - incident type not found`() {
-    val request = createCsipRecordRequest()
+  @ParameterizedTest
+  @MethodSource("referenceDataValidation")
+  fun `400 bad request - when reference data code invalid or inactive`(
+    request: CreateCsipRecordRequest,
+    invalid: InvalidRd,
+  ) {
+    val prisonNumber = givenValidPrisonNumber("R1234VC")
 
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
+    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = prisonNumber)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_TYPE is invalid")
-      assertThat(developerMessage).isEqualTo("Details => INCIDENT_TYPE:A")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - incident location not found`() {
-    val request = createCsipRecordRequest(incidentTypeCode = "ATO")
-
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: INCIDENT_LOCATION is invalid")
-      assertThat(developerMessage).isEqualTo("Details => INCIDENT_LOCATION:B")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - area of work not found`() {
-    val request = createCsipRecordRequest(incidentTypeCode = "ATO", incidentLocationCode = "EDU")
-
-    val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: AREA_OF_WORK is invalid")
-      assertThat(developerMessage).isEqualTo("Details => AREA_OF_WORK:C")
+      assertThat(userMessage).isEqualTo("Validation failure: ${invalid.type} ${invalid.message}")
+      assertThat(developerMessage).isEqualTo("Details => ${invalid.type}:${invalid.code(request.referral)}")
       assertThat(moreInfo).isNull()
     }
   }
@@ -195,10 +172,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - multiple contributory factor not found`() {
     val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
       contributoryFactorTypeCode = listOf("D", "E", "F"),
     )
 
@@ -563,4 +536,51 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     .expectStatus().isCreated
     .expectBody<CsipRecord>()
     .returnResult().responseBody
+
+  companion object {
+    private const val INVALID = "is invalid"
+    private const val NOT_ACTIVE = "is not active"
+
+    @JvmStatic
+    fun referenceDataValidation() = listOf(
+      Arguments.of(
+        createCsipRecordRequest(incidentTypeCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.INCIDENT_TYPE, CreateReferralRequest::incidentTypeCode, INVALID),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(incidentLocationCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.INCIDENT_LOCATION, CreateReferralRequest::incidentLocationCode, INVALID),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(refererAreaCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.AREA_OF_WORK, CreateReferralRequest::refererAreaCode, INVALID),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(incidentInvolvementCode = "NONEXISTENT"),
+        InvalidRd(ReferenceDataType.INCIDENT_INVOLVEMENT, { it.incidentInvolvementCode!! }, INVALID),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(incidentTypeCode = "IT_INACT"),
+        InvalidRd(ReferenceDataType.INCIDENT_TYPE, CreateReferralRequest::incidentTypeCode, NOT_ACTIVE),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(incidentLocationCode = "IL_INACT"),
+        InvalidRd(ReferenceDataType.INCIDENT_LOCATION, CreateReferralRequest::incidentLocationCode, NOT_ACTIVE),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(refererAreaCode = "AOW_INACT"),
+        InvalidRd(ReferenceDataType.AREA_OF_WORK, CreateReferralRequest::refererAreaCode, NOT_ACTIVE),
+      ),
+      Arguments.of(
+        createCsipRecordRequest(incidentInvolvementCode = "II_INACT"),
+        InvalidRd(ReferenceDataType.INCIDENT_INVOLVEMENT, { it.incidentInvolvementCode!! }, NOT_ACTIVE),
+      ),
+    )
+
+    data class InvalidRd(
+      val type: ReferenceDataType,
+      val code: (CreateReferralRequest) -> String,
+      val message: String,
+    )
+  }
 }

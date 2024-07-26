@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -30,14 +29,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.actions
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Entity
@@ -77,7 +78,7 @@ class Referral(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "referral_id")
-  val referralId: Long = 0,
+  val id: Long = 0,
 ) : SimpleAuditable(), PropertyChangeMonitor, Parented {
 
   override fun parent() = csipRecord
@@ -111,7 +112,7 @@ class Referral(
     }
 
   @ManyToOne
-  @JoinColumn(name = "incident_type_id", referencedColumnName = "reference_data_id")
+  @JoinColumn(name = "incident_type_id")
   var incidentType: ReferenceData = incidentType
     set(value) {
       referenceDataChanged(::incidentType, value)
@@ -119,7 +120,7 @@ class Referral(
     }
 
   @ManyToOne
-  @JoinColumn(name = "incident_location_id", referencedColumnName = "reference_data_id")
+  @JoinColumn(name = "incident_location_id")
   var incidentLocation: ReferenceData = incidentLocation
     set(value) {
       referenceDataChanged(::incidentLocation, value)
@@ -127,7 +128,7 @@ class Referral(
     }
 
   @ManyToOne
-  @JoinColumn(name = "referer_area_of_work_id", referencedColumnName = "reference_data_id")
+  @JoinColumn(name = "referer_area_of_work_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
     set(value) {
       referenceDataChanged(::refererAreaOfWork, value)
@@ -135,7 +136,7 @@ class Referral(
     }
 
   @ManyToOne
-  @JoinColumn(name = "incident_involvement_id", referencedColumnName = "reference_Data_id")
+  @JoinColumn(name = "incident_involvement_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
     set(value) {
       referenceDataChanged(::incidentInvolvement, value)
@@ -234,52 +235,45 @@ class Referral(
 
   fun createDecisionAndActions(
     context: CsipRequestContext,
-    decisionOutcome: ReferenceData,
-    decisionOutcomeSignedOffBy: ReferenceData?,
-    decisionConclusion: String?,
-    nextSteps: String?,
-    actionOther: String?,
-    actionedAt: LocalDateTime,
-    source: Source,
-    activeCaseLoadId: String?,
-    actions: Set<DecisionAction>,
-    description: String = "Decision and actions added to referral",
+    request: CreateDecisionAndActionsRequest,
+    referenceProvider: (ReferenceDataType, String) -> ReferenceData,
   ): CsipRecord {
     verifyDecisionDoesNotExist()
     decisionAndActions = DecisionAndActions(
       referral = this,
-      decisionOutcome = decisionOutcome,
-      decisionOutcomeSignedOffBy = decisionOutcomeSignedOffBy,
-      decisionConclusion = decisionConclusion,
-      decisionOutcomeRecordedBy = context.username,
-      decisionOutcomeRecordedByDisplayName = context.userDisplayName,
-      decisionOutcomeDate = context.requestAt.toLocalDate(),
-      nextSteps = nextSteps,
-      actions = actions,
-      actionOther = actionOther,
+      outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode),
+      outcomeSignedOffBy = request.outcomeSignedOffByRoleCode?.let {
+        referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
+      },
+      conclusion = request.conclusion,
+      outcomeRecordedBy = request.outcomeRecordedBy,
+      outcomeRecordedByDisplayName = request.outcomeRecordedByDisplayName,
+      outcomeDate = request.outcomeDate,
+      nextSteps = request.nextSteps,
+      actions = request.actions(),
+      actionOther = request.actionOther,
     )
 
+    val description = "Decision and actions added to referral"
     val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
-    with(csipRecord) {
-      addAuditEvent(
-        context,
-        AuditEventAction.CREATED,
-        description,
-        source,
-        activeCaseLoadId,
-        affectedComponents,
-      )
-      csipRecord.registerEntityEvent(
-        CsipUpdatedEvent(
-          recordUuid = csipRecord.recordUuid,
-          prisonNumber = csipRecord.prisonNumber,
-          description = description,
-          occurredAt = actionedAt,
-          source = source,
-          affectedComponents = affectedComponents,
-        ),
-      )
-    }
+    csipRecord.addAuditEvent(
+      context,
+      AuditEventAction.CREATED,
+      description,
+      context.source,
+      context.activeCaseLoadId,
+      affectedComponents,
+    )
+    csipRecord.registerEntityEvent(
+      CsipUpdatedEvent(
+        recordUuid = csipRecord.recordUuid,
+        prisonNumber = csipRecord.prisonNumber,
+        description = description,
+        occurredAt = context.requestAt,
+        source = context.source,
+        affectedComponents = affectedComponents,
+      ),
+    )
     return csipRecord
   }
 
@@ -329,50 +323,50 @@ class Referral(
     )
 
     val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
-    with(csipRecord) {
-      addAuditEvent(
-        context = context,
-        action = AuditEventAction.CREATED,
+    csipRecord.addAuditEvent(
+      context = context,
+      action = AuditEventAction.CREATED,
+      description = description,
+      source = source,
+      activeCaseLoadId = activeCaseLoadId,
+      affectedComponents = affectedComponents,
+    )
+    csipRecord.registerEntityEvent(
+      CsipUpdatedEvent(
+        recordUuid = csipRecord.recordUuid,
+        prisonNumber = csipRecord.prisonNumber,
         description = description,
+        occurredAt = context.requestAt,
         source = source,
-        activeCaseLoadId = activeCaseLoadId,
         affectedComponents = affectedComponents,
-      )
-      csipRecord.registerEntityEvent(
-        CsipUpdatedEvent(
-          recordUuid = csipRecord.recordUuid,
-          prisonNumber = csipRecord.prisonNumber,
-          description = description,
-          occurredAt = context.requestAt,
-          source = source,
-          affectedComponents = affectedComponents,
-        ),
-      )
-    }
-
+      ),
+    )
     return csipRecord
   }
 
   fun createInvestigation(
     context: CsipRequestContext,
-    createRequest: CreateInvestigationRequest,
-    intervieweeRoleMap: Map<String, ReferenceData>,
+    request: CreateInvestigationRequest,
     activeCaseLoadId: String?,
+    roleProvider: (Set<String>) -> Map<String, ReferenceData>,
   ): CsipRecord {
     verifyInvestigationDoesNotExist()
-    val description = "Investigation with ${createRequest.interviews?.size ?: 0} interviews added to referral"
+    val description = "Investigation with ${request.interviews?.size ?: 0} interviews added to referral"
+
+    val roleCodes = request.interviews?.map { it.intervieweeRoleCode }?.toSet() ?: emptySet()
+    val intervieweeRoleMap = if (roleCodes.isEmpty()) mapOf() else roleProvider(roleCodes)
 
     investigation = Investigation(
       referral = this,
-      staffInvolved = createRequest.staffInvolved,
-      evidenceSecured = createRequest.evidenceSecured,
-      occurrenceReason = createRequest.occurrenceReason,
-      personsUsualBehaviour = createRequest.personsUsualBehaviour,
-      personsTrigger = createRequest.personsTrigger,
-      protectiveFactors = createRequest.protectiveFactors,
+      staffInvolved = request.staffInvolved,
+      evidenceSecured = request.evidenceSecured,
+      occurrenceReason = request.occurrenceReason,
+      personsUsualBehaviour = request.personsUsualBehaviour,
+      personsTrigger = request.personsTrigger,
+      protectiveFactors = request.protectiveFactors,
     )
 
-    createRequest.interviews?.forEach { interview ->
+    request.interviews?.forEach { interview ->
       investigation!!.addInterview(
         context = context,
         createRequest = interview,
@@ -386,27 +380,24 @@ class Referral(
       if (isInterviewAffected) add(AffectedComponent.Interview)
     }
 
-    with(csipRecord) {
-      addAuditEvent(
-        context = context,
-        action = AuditEventAction.CREATED,
+    csipRecord.addAuditEvent(
+      context = context,
+      action = AuditEventAction.CREATED,
+      description = description,
+      source = context.source,
+      activeCaseLoadId = activeCaseLoadId,
+      affectedComponents = affectedComponents,
+    )
+    csipRecord.registerEntityEvent(
+      CsipUpdatedEvent(
+        recordUuid = csipRecord.recordUuid,
+        prisonNumber = csipRecord.prisonNumber,
         description = description,
+        occurredAt = context.requestAt,
         source = context.source,
-        activeCaseLoadId = activeCaseLoadId,
         affectedComponents = affectedComponents,
-      )
-      csipRecord.registerEntityEvent(
-        CsipUpdatedEvent(
-          recordUuid = csipRecord.recordUuid,
-          prisonNumber = csipRecord.prisonNumber,
-          description = description,
-          occurredAt = context.requestAt,
-          source = context.source,
-          affectedComponents = affectedComponents,
-        ),
-      )
-    }
-
+      ),
+    )
     return csipRecord
   }
 

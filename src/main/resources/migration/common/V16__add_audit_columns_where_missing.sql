@@ -92,27 +92,27 @@ create index idx_investigation_record_id on investigation (referral_id);
 
 create table decision_and_actions
 (
-    decision_and_actions_id                   bigserial primary key not null,
-    referral_id                               bigserial             not null references referral (referral_id),
-    decision_conclusion                       text,
-    decision_outcome_id                       int                   not null references reference_data (reference_data_id),
-    decision_outcome_signed_off_by_role_id    int references reference_data (reference_data_id),
-    decision_outcome_recorded_by              varchar(100),
-    decision_outcome_recorded_by_display_name varchar(255),
-    decision_outcome_date                     date,
-    next_steps                                text,
-    actions                                   varchar[]             not null,
-    action_other                              text,
-    created_at                                timestamp             not null,
-    created_by                                varchar(32)           not null,
-    created_by_display_name                   varchar(255)          not null,
-    last_modified_at                          timestamp,
-    last_modified_by                          varchar(32),
-    last_modified_by_display_name             varchar(255)
+    decision_and_actions_id          bigserial primary key not null,
+    referral_id                      bigserial             not null references referral (referral_id),
+    conclusion                       text,
+    outcome_id                       int                   not null references reference_data (reference_data_id),
+    outcome_signed_off_by_role_id    int references reference_data (reference_data_id),
+    outcome_recorded_by              varchar(100),
+    outcome_recorded_by_display_name varchar(255),
+    outcome_date                     date,
+    next_steps                       text,
+    actions                          varchar[]             not null,
+    action_other                     text,
+    created_at                       timestamp             not null,
+    created_by                       varchar(32)           not null,
+    created_by_display_name          varchar(255)          not null,
+    last_modified_at                 timestamp,
+    last_modified_by                 varchar(32),
+    last_modified_by_display_name    varchar(255)
 );
 create index idx_decision_and_actions_referral_id on decision_and_actions (referral_id);
-create index idx_decision_and_actions_decision_outcome_id on decision_and_actions (decision_outcome_id);
-create index idx_decision_and_actions_decision_outcome_signed_off_role_id on decision_and_actions (decision_outcome_signed_off_by_role_id);
+create index idx_decision_and_actions_outcome_id on decision_and_actions (outcome_id);
+create index idx_decision_and_actions_outcome_signed_off_role_id on decision_and_actions (outcome_signed_off_by_role_id);
 
 alter table decision_and_actions
     add constraint actions_enum_check check

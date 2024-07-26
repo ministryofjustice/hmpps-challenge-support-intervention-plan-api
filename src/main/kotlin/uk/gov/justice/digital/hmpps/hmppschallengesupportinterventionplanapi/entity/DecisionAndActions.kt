@@ -36,17 +36,17 @@ class DecisionAndActions(
   val referral: Referral,
 
   @ManyToOne
-  @JoinColumn(name = "decision_outcome_id", referencedColumnName = "reference_data_id", nullable = false)
-  val decisionOutcome: ReferenceData,
+  @JoinColumn(name = "outcome_id", nullable = false)
+  val outcome: ReferenceData,
 
   @ManyToOne
-  @JoinColumn(name = "decision_outcome_signed_off_by_role_id", referencedColumnName = "reference_data_id")
-  val decisionOutcomeSignedOffBy: ReferenceData?,
+  @JoinColumn(name = "outcome_signed_off_by_role_id")
+  val outcomeSignedOffBy: ReferenceData?,
 
-  @Column(length = 4000) val decisionConclusion: String?,
-  @Column(length = 100) val decisionOutcomeRecordedBy: String?,
-  @Column(length = 255) val decisionOutcomeRecordedByDisplayName: String?,
-  @Column val decisionOutcomeDate: LocalDate?,
+  @Column(length = 4000) val conclusion: String?,
+  @Column(length = 100) val outcomeRecordedBy: String?,
+  @Column(length = 255) val outcomeRecordedByDisplayName: String?,
+  @Column val outcomeDate: LocalDate?,
   @Column(length = 4000) val nextSteps: String?,
 
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
@@ -63,12 +63,12 @@ class DecisionAndActions(
 
 fun DecisionAndActions.toModel() =
   DecisionAndActionsModel(
-    decisionConclusion,
-    decisionOutcome.toReferenceDataModel(),
-    decisionOutcomeSignedOffBy?.toReferenceDataModel(),
-    decisionOutcomeRecordedBy,
-    decisionOutcomeRecordedByDisplayName,
-    decisionOutcomeDate,
+    conclusion,
+    outcome.toReferenceDataModel(),
+    outcomeSignedOffBy?.toReferenceDataModel(),
+    outcomeRecordedBy,
+    outcomeRecordedByDisplayName,
+    outcomeDate,
     nextSteps,
     OpenCsipAlert in actions,
     NonAssociationsUpdated in actions,

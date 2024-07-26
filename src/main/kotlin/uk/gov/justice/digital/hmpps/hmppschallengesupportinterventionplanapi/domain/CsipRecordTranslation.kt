@@ -5,11 +5,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor as ContributoryFactorModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipRecordModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Referral as ReferralModel
@@ -32,15 +33,15 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
     knownReasons = referral.knownReasons,
     otherInformation = referral.otherInformation,
     saferCustodyTeamInformed = referral.isSaferCustodyTeamInformed,
-    incidentType = referenceDataRepository.getReferenceData(INCIDENT_TYPE, referral.incidentTypeCode),
-    incidentLocation = referenceDataRepository.getReferenceData(INCIDENT_LOCATION, referral.incidentLocationCode),
-    refererAreaOfWork = referenceDataRepository.getReferenceData(
+    incidentType = referenceDataRepository.getActiveReferenceData(INCIDENT_TYPE, referral.incidentTypeCode),
+    incidentLocation = referenceDataRepository.getActiveReferenceData(INCIDENT_LOCATION, referral.incidentLocationCode),
+    refererAreaOfWork = referenceDataRepository.getActiveReferenceData(
       ReferenceDataType.AREA_OF_WORK,
       referral.refererAreaCode,
     ),
     incidentInvolvement = referral.incidentInvolvementCode?.let {
-      referenceDataRepository.getReferenceData(
-        INCIDENT_TYPE,
+      referenceDataRepository.getActiveReferenceData(
+        INCIDENT_INVOLVEMENT,
         it,
       )
     },

@@ -19,7 +19,7 @@ interface ReferenceDataRepository : JpaRepository<ReferenceData, Long> {
   fun findByDomainAndCodeIn(domain: ReferenceDataType, code: Set<String>): Collection<ReferenceData>
 }
 
-fun ReferenceDataRepository.getReferenceData(type: ReferenceDataType, code: String) =
+fun ReferenceDataRepository.getActiveReferenceData(type: ReferenceDataType, code: String) =
   verifyExists(findByDomainAndCode(type, code)) {
     InvalidInputException(type.name, code)
   }.also {
@@ -27,11 +27,7 @@ fun ReferenceDataRepository.getReferenceData(type: ReferenceDataType, code: Stri
   }
 
 fun ReferenceDataRepository.getOutcomeType(code: String) =
-  verifyExists(findByDomainAndCode(ReferenceDataType.OUTCOME_TYPE, code)) {
-    InvalidInputException(ReferenceDataType.OUTCOME_TYPE.name, code)
-  }.also {
-    verify(it.isActive()) { NotActiveException(ReferenceDataType.OUTCOME_TYPE.name, code) }
-  }
+  getActiveReferenceData(ReferenceDataType.OUTCOME_TYPE, code)
 
 fun ReferenceDataRepository.verifyAllReferenceData(
   type: ReferenceDataType,

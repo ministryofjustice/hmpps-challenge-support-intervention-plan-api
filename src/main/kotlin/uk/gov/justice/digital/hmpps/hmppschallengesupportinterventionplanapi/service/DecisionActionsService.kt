@@ -9,10 +9,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.actions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getOutcomeType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import java.util.UUID
 
 @Service
@@ -26,25 +25,13 @@ class DecisionActionsService(
     request: CreateDecisionAndActionsRequest,
     context: CsipRequestContext,
   ): DecisionAndActions {
-    val decisionOutcome = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
-    val decisionOutcomeSignedOffBy =
-      request.outcomeSignedOffByRoleCode?.let { referenceDataRepository.getOutcomeType(it) }
-
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         createDecisionAndActions(
           context = context,
-          decisionOutcome = decisionOutcome,
-          decisionOutcomeSignedOffBy = decisionOutcomeSignedOffBy,
-          decisionConclusion = request.conclusion,
-          nextSteps = request.nextSteps,
-          actionOther = request.actionOther,
-          actionedAt = context.requestAt,
-          source = context.source,
-          activeCaseLoadId = context.activeCaseLoadId,
-          request.actions(),
-        ),
+          request = request,
+        ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) },
       ).referral()!!.decisionAndActions()!!.toModel()
     }
   }

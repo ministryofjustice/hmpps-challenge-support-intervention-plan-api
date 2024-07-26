@@ -59,13 +59,13 @@ abstract class BaseServiceTest {
   }
 
   protected fun referenceData() = ReferenceData(
-    referenceDataId = 1,
     domain = ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
     code = REFERENCE_DATA_CODE,
     description = "Reference",
     listSequence = 99,
     createdAt = LocalDateTime.now(),
     createdBy = "admin",
+    id = 1,
   )
 
   protected fun requestContext() = CsipRequestContext(

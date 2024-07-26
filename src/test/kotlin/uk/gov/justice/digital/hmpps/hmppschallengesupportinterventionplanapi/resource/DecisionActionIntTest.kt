@@ -7,6 +7,7 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -17,8 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_SIGNER_ROLE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
@@ -29,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
@@ -71,7 +71,8 @@ class DecisionActionIntTest : IntegrationTestBase() {
     val recordUuid = csipRecord.recordUuid
     val request = createDecisionActionsRequest()
 
-    val response = createDecisionResponseSpec(recordUuid, request, username = null).errorResponse(HttpStatus.BAD_REQUEST)
+    val response =
+      createDecisionResponseSpec(recordUuid, request, username = null).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -93,7 +94,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
         .headers(setCsipRequestContext())
         .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure: User details for supplied username not found")
@@ -121,9 +122,10 @@ class DecisionActionIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
-    val recordUuid = UUID.randomUUID()
+    val prisonNumber = givenValidPrisonNumber("D1234OT")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val request = createDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE", outcomeSignedOffByRoleCode = "CUR")
-    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = createDecisionResponseSpec(csipRecord.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -136,30 +138,32 @@ class DecisionActionIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - inactive Outcome signed off by role code`() {
-    val recordUuid = UUID.randomUUID()
-    val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "OT_INACT")
-    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val prisonNumber = givenValidPrisonNumber("D1234NS")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "DSR_INACT")
+    val response = createDecisionResponseSpec(csipRecord.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is not active")
-      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:OT_INACT")
+      assertThat(userMessage).isEqualTo("Validation failure: DECISION_SIGNER_ROLE is not active")
+      assertThat(developerMessage).isEqualTo("Details => DECISION_SIGNER_ROLE:DSR_INACT")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `400 bad request - invalid Outcome signed off by role code`() {
-    val recordUuid = UUID.randomUUID()
+    val prisonNumber = givenValidPrisonNumber("D1234IS")
+    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val request = createDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE")
-    val response = createDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = createDecisionResponseSpec(csipRecord.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
-      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
+      assertThat(userMessage).isEqualTo("Validation failure: DECISION_SIGNER_ROLE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => DECISION_SIGNER_ROLE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
@@ -205,22 +209,15 @@ class DecisionActionIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("E1234CP")
     val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
-    val outcomeType = givenRandom(OUTCOME_TYPE)
-    val decisionSignerRole = givenRandom(DECISION_SIGNER_ROLE)
 
     csipRecord.referral!!.createDecisionAndActions(
-      CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
-      decisionOutcome = outcomeType,
-      decisionOutcomeSignedOffBy = decisionSignerRole,
-      decisionConclusion = null,
-      nextSteps = null,
-      actionOther = null,
-      actionedAt = LocalDateTime.now(),
-      source = Source.DPS,
-      activeCaseLoadId = PRISON_CODE_LEEDS,
-      actions = setOf(),
-      description = "description",
-    )
+      CsipRequestContext(
+        username = TEST_USER,
+        userDisplayName = TEST_USER_NAME,
+        activeCaseLoadId = PRISON_CODE_LEEDS,
+      ),
+      createDecisionActionsRequest(),
+    ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) }
     csipRecordRepository.save(csipRecord)
 
     val response = createDecisionResponseSpec(recordUuid, createDecisionActionsRequest())
@@ -251,8 +248,8 @@ class DecisionActionIntTest : IntegrationTestBase() {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
       assertThat(outcomeSignedOffByRole).isNull()
-      assertThat(outcomeRecordedBy).isEqualTo(TEST_USER)
-      assertThat(outcomeRecordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
       assertThat(outcomeDate).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
       assertThat(isActionOpenCsipAlert).isEqualTo(false)
@@ -274,7 +271,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
 
     val request = createDecisionActionsRequest(
       "CUR",
-      "CUR",
+      "CUSTMAN",
       isActionOpenCsipAlert = true,
       isActionNonAssociationsUpdated = true,
       isActionObservationBook = true,
@@ -291,8 +288,8 @@ class DecisionActionIntTest : IntegrationTestBase() {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
       assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
-      assertThat(outcomeRecordedBy).isEqualTo(TEST_USER)
-      assertThat(outcomeRecordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
       assertThat(outcomeDate).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
       assertThat(isActionOpenCsipAlert).isEqualTo(true)
@@ -320,8 +317,8 @@ class DecisionActionIntTest : IntegrationTestBase() {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
       assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
-      assertThat(outcomeRecordedBy).isEqualTo(TEST_USER)
-      assertThat(outcomeRecordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
       assertThat(outcomeDate).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
       assertThat(isActionOpenCsipAlert).isEqualTo(request.isActionOpenCsipAlert)
@@ -380,8 +377,8 @@ class DecisionActionIntTest : IntegrationTestBase() {
       assertThat(conclusion).isEqualTo(request.conclusion)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
       assertThat(outcomeSignedOffByRole?.code).isEqualTo(request.outcomeSignedOffByRoleCode)
-      assertThat(outcomeRecordedBy).isEqualTo(NOMIS_SYS_USER)
-      assertThat(outcomeRecordedByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      assertThat(outcomeRecordedBy).isEqualTo("outcomeRecordedBy")
+      assertThat(outcomeRecordedByDisplayName).isEqualTo("outcomeRecordedByDisplayName")
       assertThat(outcomeDate).isEqualTo(LocalDate.now())
       assertThat(nextSteps).isEqualTo(nextSteps)
       assertThat(isActionOpenCsipAlert).isEqualTo(request.isActionOpenCsipAlert)
@@ -428,7 +425,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
 
   private fun createDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
-    outcomeSignedOffByRoleCode: String? = "CUR",
+    outcomeSignedOffByRoleCode: String? = "CUSTMAN",
     isActionOpenCsipAlert: Boolean = false,
     isActionNonAssociationsUpdated: Boolean = false,
     isActionObservationBook: Boolean = false,
@@ -440,9 +437,9 @@ class DecisionActionIntTest : IntegrationTestBase() {
     conclusion = null,
     outcomeTypeCode = outcomeTypeCode,
     outcomeSignedOffByRoleCode = outcomeSignedOffByRoleCode,
-    outcomeRecordedBy = null,
-    outcomeRecordedByDisplayName = null,
-    outcomeDate = null,
+    outcomeRecordedBy = "outcomeRecordedBy",
+    outcomeRecordedByDisplayName = "outcomeRecordedByDisplayName",
+    outcomeDate = LocalDate.now(),
     nextSteps = null,
     isActionOpenCsipAlert,
     isActionNonAssociationsUpdated,
@@ -459,7 +456,9 @@ class DecisionActionIntTest : IntegrationTestBase() {
     request: CreateDecisionAndActionsRequest,
     source: Source = Source.DPS,
     username: String? = TEST_USER,
-  ) = webTestClient.post().uri("/csip-records/$recordUuid/referral/decision-and-actions").bodyValue(request)
+  ): WebTestClient.ResponseSpec = webTestClient.post()
+    .uri("/csip-records/$recordUuid/referral/decision-and-actions")
+    .bodyValue(request)
     .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), isUserToken = true))
     .headers(setCsipRequestContext(source = source, username = username)).exchange()
 
