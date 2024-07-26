@@ -3,42 +3,29 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.do
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor as ContributoryFactorModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipRecordModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Referral as ReferralModel
 
-fun CreateCsipRecordRequest.toCsipRecord(
-  prisonNumber: String,
-  prisonCode: String?,
-  csipRequestContext: CsipRequestContext,
-) = CsipRecord(
-  prisonNumber = prisonNumber,
-  prisonCodeWhenRecorded = prisonCode,
-  logCode = logCode,
-  createdAt = csipRequestContext.requestAt,
-  createdBy = csipRequestContext.username,
-  createdByDisplayName = csipRequestContext.userDisplayName,
-)
-
 fun CreateCsipRecordRequest.toInitialReferralEntity(
   csipRecord: CsipRecord,
   csipRequestContext: CsipRequestContext,
-  incidentType: ReferenceData,
-  incidentLocation: ReferenceData,
-  referrerAreaOfWork: ReferenceData,
-  incidentInvolvement: ReferenceData?,
-  releaseDate: LocalDate?,
-) =
-  Referral(
+  referenceDataRepository: ReferenceDataRepository,
+): Referral {
+  return Referral(
     csipRecord = csipRecord,
+    referralDate = csipRequestContext.requestAt.toLocalDate(),
     incidentDate = referral.incidentDate,
     incidentTime = referral.incidentTime,
     referredBy = referral.referredBy,
-    referralDate = csipRequestContext.requestAt.toLocalDate(),
     proactiveReferral = referral.isProactiveReferral,
     staffAssaulted = referral.isStaffAssaulted,
     assaultedStaffName = referral.assaultedStaffName,
@@ -46,12 +33,20 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
     knownReasons = referral.knownReasons,
     otherInformation = referral.otherInformation,
     saferCustodyTeamInformed = referral.isSaferCustodyTeamInformed,
-    incidentType = incidentType,
-    incidentLocation = incidentLocation,
-    refererAreaOfWork = referrerAreaOfWork,
-    incidentInvolvement = incidentInvolvement,
-    releaseDate = releaseDate,
+    incidentType = referenceDataRepository.getActiveReferenceData(INCIDENT_TYPE, referral.incidentTypeCode),
+    incidentLocation = referenceDataRepository.getActiveReferenceData(INCIDENT_LOCATION, referral.incidentLocationCode),
+    refererAreaOfWork = referenceDataRepository.getActiveReferenceData(
+      ReferenceDataType.AREA_OF_WORK,
+      referral.refererAreaCode,
+    ),
+    incidentInvolvement = referral.incidentInvolvementCode?.let {
+      referenceDataRepository.getActiveReferenceData(
+        INCIDENT_INVOLVEMENT,
+        it,
+      )
+    },
   )
+}
 
 fun ContributoryFactor.toModel() =
   ContributoryFactorModel(
@@ -79,7 +74,6 @@ fun Referral.toModel() =
     knownReasons = knownReasons,
     descriptionOfConcern = descriptionOfConcern,
     assaultedStaffName = assaultedStaffName,
-    releaseDate = releaseDate,
     isProactiveReferral = proactiveReferral,
     isStaffAssaulted = staffAssaulted,
     isReferralComplete = referralComplete,

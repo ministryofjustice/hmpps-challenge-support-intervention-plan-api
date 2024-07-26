@@ -1,12 +1,11 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
-import java.time.LocalDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation as InvestigationModel
 
 fun Investigation.toModel() = InvestigationModel(
@@ -20,19 +19,13 @@ fun Investigation.toModel() = InvestigationModel(
 )
 
 fun CreateInvestigationRequest.toCsipRecordEntity(
+  context: CsipRequestContext,
   referral: Referral,
-  intervieweeRoleMap: Map<String, ReferenceData>,
-  actionedAt: LocalDateTime = LocalDateTime.now(),
-  actionedBy: String,
-  actionedByDisplayName: String,
+  roleProvider: (Set<String>) -> Map<String, ReferenceData>,
   activeCaseLoadId: String?,
-  source: Source,
 ): CsipRecord = referral.createInvestigation(
-  createRequest = this,
-  intervieweeRoleMap = intervieweeRoleMap,
-  actionedAt = actionedAt,
-  actionedBy = actionedBy,
-  actionedByDisplayName = actionedByDisplayName,
+  context = context,
+  request = this,
   activeCaseLoadId = activeCaseLoadId,
-  source = source,
+  roleProvider = roleProvider,
 )

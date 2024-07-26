@@ -19,12 +19,15 @@ interface ReferenceDataRepository : JpaRepository<ReferenceData, Long> {
   fun findByDomainAndCodeIn(domain: ReferenceDataType, code: Set<String>): Collection<ReferenceData>
 }
 
-fun ReferenceDataRepository.getOutcomeType(code: String) =
-  verifyExists(findByDomainAndCode(ReferenceDataType.OUTCOME_TYPE, code)) {
-    InvalidInputException(ReferenceDataType.OUTCOME_TYPE.name, code)
+fun ReferenceDataRepository.getActiveReferenceData(type: ReferenceDataType, code: String) =
+  verifyExists(findByDomainAndCode(type, code)) {
+    InvalidInputException(type.name, code)
   }.also {
-    verify(it.isActive()) { NotActiveException(ReferenceDataType.OUTCOME_TYPE.name, code) }
+    verify(it.isActive()) { NotActiveException(type.name, code) }
   }
+
+fun ReferenceDataRepository.getOutcomeType(code: String) =
+  getActiveReferenceData(ReferenceDataType.OUTCOME_TYPE, code)
 
 fun ReferenceDataRepository.verifyAllReferenceData(
   type: ReferenceDataType,

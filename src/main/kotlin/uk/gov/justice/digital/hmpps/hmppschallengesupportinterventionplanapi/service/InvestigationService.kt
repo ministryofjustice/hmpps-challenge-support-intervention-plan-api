@@ -27,20 +27,14 @@ class InvestigationService(
     request: CreateInvestigationRequest,
     context: CsipRequestContext,
   ): Investigation {
-    val roleCodes = request.interviews?.map { it.intervieweeRoleCode }?.toSet() ?: emptySet()
-    val intervieweeRoleMap = referenceDataRepository.verifyAllReferenceData(INTERVIEWEE_ROLE, roleCodes)
-
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
 
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         request.toCsipRecordEntity(
+          context = context,
           referral = this,
-          intervieweeRoleMap = intervieweeRoleMap,
-          actionedAt = context.requestAt,
-          actionedBy = context.username,
-          actionedByDisplayName = context.userDisplayName,
-          source = context.source,
+          roleProvider = { codes -> referenceDataRepository.verifyAllReferenceData(INTERVIEWEE_ROLE, codes) },
           activeCaseLoadId = context.activeCaseLoadId,
         ),
       ).referral()!!.investigation()!!.toModel()

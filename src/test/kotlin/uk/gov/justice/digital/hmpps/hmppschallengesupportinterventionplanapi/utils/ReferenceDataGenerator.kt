@@ -13,5 +13,5 @@ object ReferenceDataGenerator {
     createdAt: LocalDateTime = LocalDateTime.now().minusMonths(6),
     createdBy: String = "A1234",
     id: Long = IdGenerator.newId(),
-  ): ReferenceData = ReferenceData(id, domain, code, description, listSequence, createdAt, createdBy)
+  ): ReferenceData = ReferenceData(domain, code, description, listSequence, createdAt, createdBy, id)
 }

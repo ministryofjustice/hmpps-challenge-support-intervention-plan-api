@@ -56,7 +56,13 @@ erDiagram
         boolean referral_complete "Is the referral complete. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETE_FLAG where the default is 'N'"
         varchar(32) referral_completed_by "The username of the user who completed the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_BY"
         varchar(255) referral_completed_by_display_name "The displayable name of the user who completed the CSIP referral. Not mapped"
-        date referral_completed_date "The date the referral was completed. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE"
+        date referral_completed_date "The date the referral was completed. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE",
+        timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
+        varchar(32) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
+        varchar(255) created_by_display_name "not null. The displayable name of the user who created the CSIP record. Not mapped"
+        timestamp last_modified_at "The date and time the CSIP record was last modified. Maps to OFFENDER_CSIP_REPORTS.MODIFY_DATETIME"
+        varchar(32) last_modified_by "The username of the user who last modified the CSIP record. Maps to OFFENDER_CSIP_REPORTS.MODIFY_USER_ID"
+        varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the CSIP record. Not mapped"
     }
 
     contributory_factor {
@@ -81,6 +87,12 @@ erDiagram
         varchar(255) recorded_by_display_name "not null. The displayable name of the user who recorded the safer custody screening outcome. Not mapped"
         date date "not null. The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE"
         text reason_for_decision "not null. The reasons for the safer custody screening outcome decision. Maps to OFFENDER_CSIP_REPORTS.CDR_DECISION_REASON. 4000 character limit"
+        timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
+        varchar(32) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
+        varchar(255) created_by_display_name "not null. The displayable name of the user who created the CSIP record. Not mapped"
+        timestamp last_modified_at "The date and time the CSIP record was last modified. Maps to OFFENDER_CSIP_REPORTS.MODIFY_DATETIME"
+        varchar(32) last_modified_by "The username of the user who last modified the CSIP record. Maps to OFFENDER_CSIP_REPORTS.MODIFY_USER_ID"
+        varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the CSIP record. Not mapped"
     }
 
     investigation {
@@ -92,6 +104,12 @@ erDiagram
         text persons_usual_behaviour "The normal behaviour of the person in prison. Maps to OFFENDER_CSIP_REPORTS.INV_USUAL_BEHAVIOUR. 4000 character limit"
         text persons_trigger "What triggers the person in prison has that could have motivated the incident. Maps to OFFENDER_CSIP_REPORTS.INV_PERSONS_TRIGGER. 4000 character limit"
         text protective_factors "Any protective factors. Maps to OFFENDER_CSIP_REPORTS.INV_PROTECTIVE_FACTORS. 4000 character limit"
+        timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
+        varchar(32) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
+        varchar(255) created_by_display_name "not null. The displayable name of the user who created the CSIP record. Not mapped"
+        timestamp last_modified_at "The date and time the CSIP record was last modified. Maps to OFFENDER_CSIP_REPORTS.MODIFY_DATETIME"
+        varchar(32) last_modified_by "The username of the user who last modified the CSIP record. Maps to OFFENDER_CSIP_REPORTS.MODIFY_USER_ID"
+        varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the CSIP record. Not mapped"
     }
 
     interview {
@@ -114,20 +132,20 @@ erDiagram
         bigserial decision_and_actions_id PK "not null."
         bigserial referral_id FK "not null. FK to referral"
         text decision_conclusion "The conclusion of the referral and reasons for the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_CONCLUSION. 4000 character limit"
-        int decision_outcome_id "not null. FK to reference_data. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME"
-        int decision_outcome_signed_off_by_role_id "FK to reference_data. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY"
-        varchar(100) decision_outcome_recorded_by "The username of the user who recorded the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_RECORDED_BY"
-        varchar(255) decision_outcome_recorded_by_display_name "The displayable name of the user who recorded the outcome decision. Not mapped"
-        date decision_outcome_date "The date the outcome decision was made. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_DATE"
+        int outcome_id "not null. FK to reference_data. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME"
+        int signed_off_by_role_id "FK to reference_data. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY"
+        varchar(100) recorded_by "The username of the user who recorded the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_RECORDED_BY"
+        varchar(255) recorded_by_display_name "The displayable name of the user who recorded the outcome decision. Not mapped"
+        date date "The date the outcome decision was made. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_DATE"
         text next_steps "The next steps that should be taken following the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_NEXT_STEPS. 4000 character limit"
-        boolean action_open_csip_alert "If a recommended action is to open a CSIP alert. Maps to OFFENDER_CSIP_REPORTS.OPEN_CSIP_ALERT where the default is 'N'"
-        boolean action_non_associations_updated "If a recommended action is to update the non associations for the person. Maps to OFFENDER_CSIP_REPORTS.INV_NON_ASSOC_UPDATED where the default is 'N'"
-        boolean action_observation_book "If a recommended action is to add the person to the observation book. Maps to OFFENDER_CSIP_REPORTS.INV_OBSERVATION_BOOK where the default is 'N'"
-        boolean action_unit_or_cell_move "If a recommended action is to move the person. Maps to OFFENDER_CSIP_REPORTS.INV_MOVE where the default is 'N'"
-        boolean action_csra_or_rsra_review "If a recommended action is to perform a CSRA/RSRA review. Maps to OFFENDER_CSIP_REPORTS.INV_REVIEW where the default is 'N'"
-        boolean action_service_referral "If a recommended action is to refer the person to another service. Maps to OFFENDER_CSIP_REPORTS.INV_SERVICE_REFERRAL where the default is 'N'"
-        boolean action_sim_referral "If a recommended action is to refer the person to SIM. Maps to OFFENDER_CSIP_REPORTS.INV_SIM_REFERRAL where the default is 'N'"
+        varchar[] actions "An enumeration of actions that may have been recommended ['OpenCsipAlert', 'NonAssociationsUpdated', 'ObservationBook', 'UnitOrCellMove', 'CsraOrRsraReview', 'ServiceReferral', 'SimReferral']"
         text action_other "Any other actions that are recommended to be considered. Maps to OFFENDER_CSIP_REPORTS.INV_OTHER. 4000 character limit"
+        timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
+        varchar(32) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
+        varchar(255) created_by_display_name "not null. The displayable name of the user who created the CSIP record. Not mapped"
+        timestamp last_modified_at "The date and time the CSIP record was last modified. Maps to OFFENDER_CSIP_REPORTS.MODIFY_DATETIME"
+        varchar(32) last_modified_by "The username of the user who last modified the CSIP record. Maps to OFFENDER_CSIP_REPORTS.MODIFY_USER_ID"
+        varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the CSIP record. Not mapped"
     }
 
     plan {
@@ -136,6 +154,12 @@ erDiagram
         varchar(100) case_manager "not null. The case manager assigned to the CSIP plan. Maps to OFFENDER_CSIP_REPORTS.CASE_MANAGER"
         varchar(240) reason_for_plan "not null. The reasons motivating the creation of a CSIP plan. Maps to OFFENDER_CSIP_REPORTS.REASON"
         date first_case_review_date "not null. The first date the CSIP plan should be reviewed. Maps to OFFENDER_CSIP_REPORTS.CASE_REV_DATE"
+        timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
+        varchar(32) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
+        varchar(255) created_by_display_name "not null. The displayable name of the user who created the CSIP record. Not mapped"
+        timestamp last_modified_at "The date and time the CSIP record was last modified. Maps to OFFENDER_CSIP_REPORTS.MODIFY_DATETIME"
+        varchar(32) last_modified_by "The username of the user who last modified the CSIP record. Maps to OFFENDER_CSIP_REPORTS.MODIFY_USER_ID"
+        varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the CSIP record. Not mapped"
     }
 
     identified_need {

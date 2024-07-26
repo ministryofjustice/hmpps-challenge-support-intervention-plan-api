@@ -107,7 +107,7 @@ abstract class IntegrationTestBase {
         }
       }
 
-  fun givenRandom(type: ReferenceDataType) = referenceDataRepository.findByDomain(type).random()
+  fun givenRandom(type: ReferenceDataType) = referenceDataRepository.findByDomain(type).filter { it.isActive() }.random()
   fun givenReferenceData(type: ReferenceDataType, code: String) = requireNotNull(referenceDataRepository.findByDomainAndCode(type, code))
 
   fun givenValidPrisonNumber(prisonNumber: String): String {

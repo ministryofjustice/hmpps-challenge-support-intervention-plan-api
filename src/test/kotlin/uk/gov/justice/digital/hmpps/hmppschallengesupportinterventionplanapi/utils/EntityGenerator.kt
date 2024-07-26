@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils
 
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
@@ -23,15 +22,16 @@ object EntityGenerator {
     uuid: UUID = UUID.randomUUID(),
     id: Long = IdGenerator.newId(),
   ) = CsipRecord(
-    id,
-    uuid,
     prisonNumber,
     prisonCodeWhenRecorded,
     logCode,
-    createdAt,
-    createdBy,
-    createdByDisplayName,
-  )
+    uuid,
+    id,
+  ).apply {
+    this.createdAt = createdAt
+    this.createdBy = createdBy
+    this.createdByDisplayName = createdByDisplayName
+  }
 
   fun CsipRecord.withReferral(
     incidentType: () -> ReferenceData,
@@ -45,7 +45,6 @@ object EntityGenerator {
     proactiveReferral: Boolean? = null,
     staffAssaulted: Boolean? = null,
     assaultedStaffName: String? = null,
-    releaseDate: LocalDate? = null,
     descriptionOfConcern: String? = "descriptionOfConcern",
     knownReasons: String? = "knownReasons",
     otherInformation: String? = "otherInformation",
@@ -56,17 +55,15 @@ object EntityGenerator {
     referralCompletedDate: LocalDate? = null,
     id: Long = IdGenerator.newId(),
   ): CsipRecord {
-    val referral = Referral(
-      id,
+    this.referral = Referral(
       this,
+      referralDate,
       incidentDate,
       incidentTime,
       referredBy,
-      referralDate,
       proactiveReferral,
       staffAssaulted,
       assaultedStaffName,
-      releaseDate,
       descriptionOfConcern,
       knownReasons,
       otherInformation,
@@ -79,34 +76,8 @@ object EntityGenerator {
       incidentLocation(),
       refererAreaOfWork(),
       incidentInvolvement(),
+      id,
     )
-    this.referral = referral
     return this
   }
-
-  fun generateContributoryFactor(
-    contributoryFactorType: () -> ReferenceData,
-    referral: Referral,
-    comment: String? = null,
-    createdAt: LocalDateTime = LocalDateTime.now().minusDays(1),
-    createdBy: String = "AP1234",
-    createdByDisplayName: String = "A Person",
-    lastModifiedAt: LocalDateTime? = null,
-    lastModifiedBy: String? = null,
-    lastModifiedByDisplayName: String? = null,
-    uuid: UUID = UUID.randomUUID(),
-    id: Long = IdGenerator.newId(),
-  ) = ContributoryFactor(
-    contributoryFactorType = contributoryFactorType(),
-    referral = referral,
-    comment = comment,
-    createdAt = createdAt,
-    createdBy = createdBy,
-    createdByDisplayName = createdByDisplayName,
-    lastModifiedAt = lastModifiedAt,
-    lastModifiedBy = lastModifiedBy,
-    lastModifiedByDisplayName = lastModifiedByDisplayName,
-    contributoryFactorUuid = uuid,
-    contributoryFactorId = id,
-  )
 }

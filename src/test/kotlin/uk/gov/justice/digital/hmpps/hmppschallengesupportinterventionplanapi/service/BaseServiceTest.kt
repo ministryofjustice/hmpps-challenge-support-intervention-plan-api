@@ -23,26 +23,25 @@ abstract class BaseServiceTest {
   protected val referenceDataRepository = mock<ReferenceDataRepository>()
 
   protected fun csipRecord() = CsipRecord(
-    recordId = 5516,
+    id = 5516,
     recordUuid = UUID.randomUUID(),
     prisonNumber = "quisque",
     prisonCodeWhenRecorded = null,
     logCode = null,
-    createdAt = LocalDateTime.now(),
-    createdBy = "ornatus",
-    createdByDisplayName = "Belinda Drake",
   ).apply {
+    createdAt = LocalDateTime.now()
+    createdBy = "ornatus"
+    createdByDisplayName = "Belinda Drake"
     setReferral(
       Referral(
         csipRecord = this,
+        referralDate = LocalDate.now(),
         incidentDate = LocalDate.now(),
         incidentTime = null,
         referredBy = "falli",
-        referralDate = LocalDate.now(),
         proactiveReferral = null,
         staffAssaulted = null,
         assaultedStaffName = null,
-        releaseDate = null,
         descriptionOfConcern = "purus",
         knownReasons = "iuvaret",
         otherInformation = null,
@@ -60,13 +59,13 @@ abstract class BaseServiceTest {
   }
 
   protected fun referenceData() = ReferenceData(
-    referenceDataId = 1,
     domain = ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
     code = REFERENCE_DATA_CODE,
     description = "Reference",
     listSequence = 99,
     createdAt = LocalDateTime.now(),
     createdBy = "admin",
+    id = 1,
   )
 
   protected fun requestContext() = CsipRequestContext(

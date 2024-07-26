@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getOutcomeType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import java.util.UUID
 
 @Service
@@ -25,33 +25,13 @@ class DecisionActionsService(
     request: CreateDecisionAndActionsRequest,
     context: CsipRequestContext,
   ): DecisionAndActions {
-    val decisionOutcome = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
-    val decisionOutcomeSignedOffBy =
-      request.outcomeSignedOffByRoleCode?.let { referenceDataRepository.getOutcomeType(it) }
-
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         createDecisionAndActions(
-          decisionOutcome = decisionOutcome,
-          decisionOutcomeSignedOffBy = decisionOutcomeSignedOffBy,
-          decisionConclusion = request.conclusion,
-          decisionOutcomeRecordedBy = context.username,
-          decisionOutcomeRecordedByDisplayName = context.userDisplayName,
-          decisionOutcomeDate = context.requestAt.toLocalDate(),
-          nextSteps = request.nextSteps,
-          actionOther = request.actionOther,
-          actionedAt = context.requestAt,
-          source = context.source,
-          activeCaseLoadId = context.activeCaseLoadId,
-          actionOpenCsipAlert = request.isActionOpenCsipAlert,
-          actionNonAssociationsUpdated = request.isActionNonAssociationsUpdated,
-          actionObservationBook = request.isActionObservationBook,
-          actionUnitOrCellMove = request.isActionUnitOrCellMove,
-          actionCsraOrRsraReview = request.isActionCsraOrRsraReview,
-          actionServiceReferral = request.isActionServiceReferral,
-          actionSimReferral = request.isActionSimReferral,
-        ),
+          context = context,
+          request = request,
+        ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) },
       ).referral()!!.decisionAndActions()!!.toModel()
     }
   }

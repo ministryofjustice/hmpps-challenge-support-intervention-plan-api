@@ -168,9 +168,8 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
       required = true,
     ) prisonNumber: String,
     @Valid @RequestBody createCsipRecordRequest: CreateCsipRecordRequest,
-    httpRequest: HttpServletRequest,
   ): CsipRecord =
-    csipRecordService.createCsipRecord(createCsipRecordRequest, prisonNumber, httpRequest.csipRequestContext())
+    csipRecordService.createCsipRecord(createCsipRecordRequest, prisonNumber)
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/csip-records/{recordUuid}")

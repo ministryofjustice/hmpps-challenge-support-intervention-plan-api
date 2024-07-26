@@ -19,22 +19,22 @@ class ReferenceDataServiceTest {
     whenever(referenceDataRepository.findByDomain(ReferenceDataType.OUTCOME_TYPE)).thenReturn(
       listOf(
         ReferenceData(
-          referenceDataId = 1,
           domain = ReferenceDataType.OUTCOME_TYPE,
           code = "O",
           description = "Outcome description",
           listSequence = 99,
           createdAt = LocalDateTime.of(2021, 1, 1, 1, 1, 0),
           createdBy = "admin.user",
+          id = 1,
         ),
         ReferenceData(
-          referenceDataId = 2,
           domain = ReferenceDataType.OUTCOME_TYPE,
           code = "P",
           description = "Another outcome description",
           listSequence = 99,
           createdAt = LocalDateTime.of(2021, 1, 1, 1, 1, 0),
           createdBy = "admin.user",
+          id = 2,
         ).apply {
           deactivatedAt = LocalDateTime.now().minusDays(3)
         },

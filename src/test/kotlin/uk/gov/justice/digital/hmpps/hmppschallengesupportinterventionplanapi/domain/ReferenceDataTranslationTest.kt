@@ -10,13 +10,13 @@ class ReferenceDataTranslationTest {
   @Test
   fun `should convert reference data entity to model`() {
     val entity = ReferenceData(
-      referenceDataId = 1,
       domain = ReferenceDataType.OUTCOME_TYPE,
       code = "O",
       description = "Outcome description",
       listSequence = 99,
       createdAt = LocalDateTime.of(2021, 1, 1, 1, 1, 0),
       createdBy = "admin.user",
+      id = 1,
     )
 
     assertThat(entity.toReferenceDataModel()).isEqualTo(
@@ -38,22 +38,22 @@ class ReferenceDataTranslationTest {
   fun `should convert reference data entity collection to model collection`() {
     val entities = listOf(
       ReferenceData(
-        referenceDataId = 1,
         domain = ReferenceDataType.OUTCOME_TYPE,
         code = "O",
         description = "Outcome description",
         listSequence = 99,
         createdAt = LocalDateTime.of(2021, 1, 1, 1, 1, 0),
         createdBy = "admin.user",
+        id = 1,
       ),
       ReferenceData(
-        referenceDataId = 2,
         domain = ReferenceDataType.OUTCOME_TYPE,
         code = "P",
         description = "Another outcome description",
         listSequence = 99,
         createdAt = LocalDateTime.of(2021, 1, 1, 1, 1, 0),
         createdBy = "admin.user",
+        id = 2,
       ).apply {
         deactivatedAt = LocalDateTime.now().minusDays(3)
       },
