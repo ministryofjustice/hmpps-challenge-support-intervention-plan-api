@@ -242,13 +242,13 @@ class Referral(
     decisionAndActions = DecisionAndActions(
       referral = this,
       outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode),
-      outcomeSignedOffBy = request.outcomeSignedOffByRoleCode?.let {
+      signedOffBy = request.outcomeSignedOffByRoleCode?.let {
         referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
       },
       conclusion = request.conclusion,
-      outcomeRecordedBy = request.outcomeRecordedBy,
-      outcomeRecordedByDisplayName = request.outcomeRecordedByDisplayName,
-      outcomeDate = request.outcomeDate,
+      recordedBy = request.outcomeRecordedBy,
+      recordedByDisplayName = request.outcomeRecordedByDisplayName,
+      date = request.outcomeDate,
       nextSteps = request.nextSteps,
       actions = request.actions(),
       actionOther = request.actionOther,
