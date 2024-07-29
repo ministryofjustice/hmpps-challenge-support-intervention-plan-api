@@ -26,41 +26,9 @@ data class ReferenceData(
   val listSequence: Int?,
 
   @Schema(
-    description = "The date and time the code was created",
-    example = "2021-09-27T14:19:25",
-  )
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val createdAt: LocalDateTime,
-
-  @Schema(
-    description = "The username of the user who created the code",
-    example = "USER1234",
-  )
-  val createdBy: String,
-
-  @Schema(
-    description = "The date and time the code was last modified",
-    example = "2022-07-15T15:24:56",
-  )
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val lastModifiedAt: LocalDateTime?,
-
-  @Schema(
-    description = "The username of the user who last modified the code",
-    example = "USER1234",
-  )
-  val lastModifiedBy: String?,
-
-  @Schema(
     description = "The date and time the code was deactivated",
     example = "2023-11-08T09:53:34",
   )
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   val deactivatedAt: LocalDateTime?,
-
-  @Schema(
-    description = "The username of the user who deactivated the code",
-    example = "USER1234",
-  )
-  val deactivatedBy: String?,
 )
