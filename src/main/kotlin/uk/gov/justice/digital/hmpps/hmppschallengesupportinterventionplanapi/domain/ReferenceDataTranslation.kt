@@ -9,3 +9,7 @@ fun ReferenceData.toReferenceDataModel() = ReferenceDataModel(
   listSequence = listSequence,
   deactivatedAt = deactivatedAt,
 )
+
+fun Collection<ReferenceData>.toReferenceDataModels(includeInactive: Boolean) =
+  filter { includeInactive || it.isActive() }.sortedWith(compareBy({ it.listSequence }, { it.code }))
+    .map { it.toReferenceDataModel() }
