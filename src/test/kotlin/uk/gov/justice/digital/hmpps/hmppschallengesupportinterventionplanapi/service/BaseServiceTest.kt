@@ -65,8 +65,7 @@ abstract class BaseServiceTest {
     code = REFERENCE_DATA_CODE,
     description = "Reference",
     listSequence = 99,
-    createdAt = LocalDateTime.now(),
-    createdBy = "admin",
+    null,
     id = 1,
   )
 
