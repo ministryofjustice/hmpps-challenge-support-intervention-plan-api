@@ -25,6 +25,9 @@ class CreateReferralRequestTest : RequestValidationTest() {
       otherInformation = null,
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
+      completedDate = null,
+      completedBy = null,
+      completedByDisplayName = null,
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
@@ -53,6 +56,9 @@ class CreateReferralRequestTest : RequestValidationTest() {
       otherInformation = null,
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
+      completedDate = null,
+      completedBy = null,
+      completedByDisplayName = null,
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
@@ -81,6 +87,9 @@ class CreateReferralRequestTest : RequestValidationTest() {
       otherInformation = null,
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
+      completedDate = null,
+      completedBy = "n".repeat(33),
+      completedByDisplayName = "n".repeat(256),
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
@@ -96,6 +105,8 @@ class CreateReferralRequestTest : RequestValidationTest() {
       Pair("refererAreaCode", "Area code must be <= 12 characters"),
       Pair("incidentInvolvementCode", "Involvement code must be <= 12 characters"),
       Pair("assaultedStaffName", "Name or names must be <= 1000 characters"),
+      Pair("completedBy", "Completed by username must be <= 32 characters"),
+      Pair("completedByDisplayName", "Completed by display name must be <= 255 characters"),
     )
   }
 }

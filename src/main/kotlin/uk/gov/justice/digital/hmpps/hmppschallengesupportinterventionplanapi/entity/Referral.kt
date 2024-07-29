@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
 import java.time.LocalDate
 import java.time.LocalTime
@@ -290,9 +291,8 @@ class Referral(
 
   fun createSaferCustodyScreeningOutcome(
     context: CsipRequestContext,
+    request: CreateSaferCustodyScreeningOutcomeRequest,
     outcomeType: ReferenceData,
-    date: LocalDate,
-    reasonForDecision: String,
   ): CsipRecord {
     verifySaferCustodyScreeningOutcomeDoesNotExist()
     val description = "Safer custody screening outcome added to referral"
@@ -300,10 +300,10 @@ class Referral(
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
       outcomeType = outcomeType,
-      recordedBy = context.username,
-      recordedByDisplayName = context.userDisplayName,
-      date = date,
-      reasonForDecision = reasonForDecision,
+      recordedBy = request.recordedBy,
+      recordedByDisplayName = request.recordedByDisplayName,
+      date = request.date,
+      reasonForDecision = request.reasonForDecision,
     )
 
     val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
@@ -436,11 +436,10 @@ class Referral(
     knownReasons = update.knownReasons
     otherInformation = update.otherInformation
     saferCustodyTeamInformed = update.isSaferCustodyTeamInformed
-    if (update.isReferralComplete == true) {
-      completed(context.requestAt.toLocalDate(), context.username, context.userDisplayName)
-    } else {
-      uncomplete()
-    }
+    referralComplete = update.isReferralComplete
+    referralCompletedDate = update.completedDate
+    referralCompletedBy = update.completedBy
+    referralCompletedByDisplayName = update.completedByDisplayName
   }
 
   private fun updateReferenceData(

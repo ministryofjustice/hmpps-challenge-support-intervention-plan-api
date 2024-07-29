@@ -45,6 +45,10 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
         it,
       )
     },
+    referralComplete = referral.isReferralComplete,
+    referralCompletedDate = referral.completedDate,
+    referralCompletedBy = referral.completedBy,
+    referralCompletedByDisplayName = referral.completedByDisplayName,
   )
 }
 

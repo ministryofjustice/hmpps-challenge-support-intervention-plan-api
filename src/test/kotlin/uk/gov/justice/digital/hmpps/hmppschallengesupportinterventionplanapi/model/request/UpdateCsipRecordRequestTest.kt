@@ -26,6 +26,9 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
+        completedDate = null,
+        completedBy = null,
+        completedByDisplayName = null,
       ),
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -59,7 +62,10 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
         knownReasons = "dicat",
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
-        isReferralComplete = null,
+        isReferralComplete = true,
+        completedDate = LocalDate.now(),
+        completedBy = "n".repeat(33),
+        completedByDisplayName = "n".repeat(256),
       ),
     )
     assertValidationErrors(
@@ -71,6 +77,8 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
       Pair("referral.refererAreaCode", "Area code must be <= 12 characters"),
       Pair("referral.incidentInvolvementCode", "Involvement code must be <= 12 characters"),
       Pair("referral.assaultedStaffName", "Name or names must be <= 1000 characters"),
+      Pair("referral.completedBy", "Completed by username must be <= 32 characters"),
+      Pair("referral.completedByDisplayName", "Completed by display name must be <= 255 characters"),
     )
   }
 
@@ -94,6 +102,9 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
+        completedDate = null,
+        completedBy = null,
+        completedByDisplayName = null,
       ),
     )
     assertThat(validator.validate(request)).isEmpty()

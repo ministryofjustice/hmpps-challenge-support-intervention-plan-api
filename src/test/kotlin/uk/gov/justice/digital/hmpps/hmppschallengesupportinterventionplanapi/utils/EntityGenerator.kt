@@ -49,7 +49,7 @@ object EntityGenerator {
     knownReasons: String? = "knownReasons",
     otherInformation: String? = "otherInformation",
     saferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
-    referralComplete: Boolean? = false,
+    referralComplete: Boolean? = null,
     referralCompletedBy: String? = null,
     referralCompletedByDisplayName: String? = null,
     referralCompletedDate: LocalDate? = null,

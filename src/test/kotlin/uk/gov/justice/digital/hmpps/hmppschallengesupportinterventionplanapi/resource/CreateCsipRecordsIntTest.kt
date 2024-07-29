@@ -40,9 +40,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.UpdateCsipRecordsIntTest.Companion.InvalidRd
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createReferralRequest
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -171,9 +172,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - multiple contributory factor not found`() {
-    val request = createCsipRecordRequest(
-      contributoryFactorTypeCode = listOf("D", "E", "F"),
-    )
+    val request = createCsipRecordRequest(createReferralRequest(contributoryFactorTypeCode = listOf("D", "E", "F")))
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -189,13 +188,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - single contributory factor not found`() {
-    val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = listOf("D"),
-    )
+    val request = createCsipRecordRequest(createReferralRequest(contributoryFactorTypeCode = listOf("D")))
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -212,11 +205,13 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - single contributory factor not active`() {
     val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = listOf("CFT_INACT"),
+      createReferralRequest(
+        incidentTypeCode = "ATO",
+        incidentLocationCode = "EDU",
+        refererAreaCode = "ACT",
+        incidentInvolvementCode = "OTH",
+        contributoryFactorTypeCode = listOf("CFT_INACT"),
+      ),
     )
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
@@ -234,11 +229,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - CSIP record created via DPS`() {
     val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = listOf("AFL"),
+      createReferralRequest(contributoryFactorTypeCode = listOf("AFL")),
     )
 
     val prisonNumber = givenValidPrisonNumber("C1234SP")
@@ -318,11 +309,9 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - CSIP record created via DPS with empty logCode`() {
     val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = listOf("AFL"),
+      createReferralRequest(
+        contributoryFactorTypeCode = listOf("AFL"),
+      ),
       logCode = null,
     )
 
@@ -353,11 +342,9 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - CSIP record created via NOMIS`() {
     val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = listOf("AFL"),
+      createReferralRequest(
+        contributoryFactorTypeCode = listOf("AFL"),
+      ),
     )
 
     val prisonNumber = givenValidPrisonNumber("C1236SP")
@@ -434,7 +421,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - no contributory factors with source DPS`() {
-    val request = createCsipRecordRequest(contributoryFactorTypeCode = listOf())
+    val request = createCsipRecordRequest(createReferralRequest(contributoryFactorTypeCode = listOf()))
 
     val response = webTestClient.createCsipResponseSpec(request = request, prisonNumber = PRISON_NUMBER)
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -448,11 +435,13 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - no contributory factors with source NOMIS`() {
     val request = createCsipRecordRequest(
-      incidentTypeCode = "ATO",
-      incidentLocationCode = "EDU",
-      refererAreaCode = "ACT",
-      incidentInvolvementCode = "OTH",
-      contributoryFactorTypeCode = listOf(),
+      createReferralRequest(
+        contributoryFactorTypeCode = listOf(),
+        referralComplete = true,
+        completedDate = LocalDate.now(),
+        completedBy = "CompletedBy",
+        completedByDisplayName = "Some Longer Display Name",
+      ),
     )
 
     val prisonNumber = givenValidPrisonNumber("C1237SP")
@@ -470,6 +459,10 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      assertThat(referralComplete).isEqualTo(request.referral.isReferralComplete)
+      assertThat(referralCompletedDate).isEqualTo(request.referral.completedDate)
+      assertThat(referralCompletedBy).isEqualTo(request.referral.completedBy)
+      assertThat(referralCompletedByDisplayName).isEqualTo(request.referral.completedByDisplayName)
     }
     with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
@@ -541,38 +534,52 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     private const val INVALID = "is invalid"
     private const val NOT_ACTIVE = "is not active"
 
+    private fun createCsipRequestWithReferralRd(
+      incidentTypeCode: String = "ATO",
+      incidentLocationCode: String = "EDU",
+      refererAreaCode: String = "ACT",
+      incidentInvolvementCode: String = "OTH",
+    ) = createCsipRecordRequest(
+      createReferralRequest(
+        incidentTypeCode,
+        incidentLocationCode,
+        refererAreaCode,
+        incidentInvolvementCode,
+      ),
+    )
+
     @JvmStatic
     fun referenceDataValidation() = listOf(
       Arguments.of(
-        createCsipRecordRequest(incidentTypeCode = "NONEXISTENT"),
+        createCsipRequestWithReferralRd(incidentTypeCode = "NONEXISTENT"),
         InvalidRd(ReferenceDataType.INCIDENT_TYPE, CreateReferralRequest::incidentTypeCode, INVALID),
       ),
       Arguments.of(
-        createCsipRecordRequest(incidentLocationCode = "NONEXISTENT"),
+        createCsipRequestWithReferralRd(incidentLocationCode = "NONEXISTENT"),
         InvalidRd(ReferenceDataType.INCIDENT_LOCATION, CreateReferralRequest::incidentLocationCode, INVALID),
       ),
       Arguments.of(
-        createCsipRecordRequest(refererAreaCode = "NONEXISTENT"),
+        createCsipRequestWithReferralRd(refererAreaCode = "NONEXISTENT"),
         InvalidRd(ReferenceDataType.AREA_OF_WORK, CreateReferralRequest::refererAreaCode, INVALID),
       ),
       Arguments.of(
-        createCsipRecordRequest(incidentInvolvementCode = "NONEXISTENT"),
+        createCsipRequestWithReferralRd(incidentInvolvementCode = "NONEXISTENT"),
         InvalidRd(ReferenceDataType.INCIDENT_INVOLVEMENT, { it.incidentInvolvementCode!! }, INVALID),
       ),
       Arguments.of(
-        createCsipRecordRequest(incidentTypeCode = "IT_INACT"),
+        createCsipRequestWithReferralRd(incidentTypeCode = "IT_INACT"),
         InvalidRd(ReferenceDataType.INCIDENT_TYPE, CreateReferralRequest::incidentTypeCode, NOT_ACTIVE),
       ),
       Arguments.of(
-        createCsipRecordRequest(incidentLocationCode = "IL_INACT"),
+        createCsipRequestWithReferralRd(incidentLocationCode = "IL_INACT"),
         InvalidRd(ReferenceDataType.INCIDENT_LOCATION, CreateReferralRequest::incidentLocationCode, NOT_ACTIVE),
       ),
       Arguments.of(
-        createCsipRecordRequest(refererAreaCode = "AOW_INACT"),
+        createCsipRequestWithReferralRd(refererAreaCode = "AOW_INACT"),
         InvalidRd(ReferenceDataType.AREA_OF_WORK, CreateReferralRequest::refererAreaCode, NOT_ACTIVE),
       ),
       Arguments.of(
-        createCsipRecordRequest(incidentInvolvementCode = "II_INACT"),
+        createCsipRequestWithReferralRd(incidentInvolvementCode = "II_INACT"),
         InvalidRd(ReferenceDataType.INCIDENT_INVOLVEMENT, { it.incidentInvolvementCode!! }, NOT_ACTIVE),
       ),
     )

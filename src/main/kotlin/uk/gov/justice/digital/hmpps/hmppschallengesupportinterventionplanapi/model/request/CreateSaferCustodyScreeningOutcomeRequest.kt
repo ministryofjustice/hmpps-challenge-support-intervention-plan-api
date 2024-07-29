@@ -25,4 +25,16 @@ data class CreateSaferCustodyScreeningOutcomeRequest(
   )
   @field:Size(min = 0, max = 4000, message = "Reason for Decision must be <= 4000 characters")
   val reasonForDecision: String,
+
+  @Schema(
+    description = "The username of the user who recorded the screening outcome.",
+  )
+  @field:Size(min = 0, max = 100, message = "Recorded by username must be <= 100 characters")
+  val recordedBy: String,
+
+  @Schema(
+    description = "The displayable name of the user who recorded the screening outcome.",
+  )
+  @field:Size(min = 0, max = 255, message = "Recorded by display name must be <= 255 characters")
+  val recordedByDisplayName: String,
 )
