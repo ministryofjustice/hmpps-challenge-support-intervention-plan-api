@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Page
@@ -16,6 +15,7 @@ import org.springframework.data.domain.Sort.Direction
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
@@ -163,13 +162,9 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createCsipRecord(
-    @PathVariable @Parameter(
-      description = "Prison Number of the prisoner",
-      required = true,
-    ) prisonNumber: String,
+    @PathVariable @Parameter(description = "Prison Number of the prisoner", required = true) prisonNumber: String,
     @Valid @RequestBody createCsipRecordRequest: CreateCsipRecordRequest,
-  ): CsipRecord =
-    csipRecordService.createCsipRecord(createCsipRecordRequest, prisonNumber)
+  ): CsipRecord = csipRecordService.createCsipRecord(prisonNumber, createCsipRecordRequest)
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/csip-records/{recordUuid}")
@@ -202,17 +197,14 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun retrieveCsipRecord(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
   ): CsipRecord = csipRecordService.retrieveCsipRecord(recordUuid)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/csip-records/{recordUuid}")
   @Operation(
-    summary = "Update the log code for a CSIP record.",
-    description = "Update the log code for a CSIP record. Publishes person.csip.record.updated event with recordAffected = true",
+    summary = "Update the log code for a CSIP record and/or optionally the referral.",
+    description = "Update the log code for a CSIP record. Publishes person.csip.record.updated event with affected component of `Record`",
   )
   @ApiResponses(
     value = [
@@ -244,16 +236,10 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun updateCsipRecord(
-    httpRequest: HttpServletRequest,
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody updateCsipRecordRequest: UpdateCsipRecordRequest,
-  ): CsipRecord =
-    csipRecordService.updateCsipRecord(httpRequest.csipRequestContext(), recordUuid, updateCsipRecordRequest)
+  ): CsipRecord = csipRecordService.updateCsipRecord(recordUuid, updateCsipRecordRequest)
 
-  @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/csip-records/{recordUuid}")
   @Operation(
     summary = "Delete a complete CSIP record.",
@@ -264,6 +250,10 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
       ApiResponse(
         responseCode = "204",
         description = "CSIP record deleted",
+      ),
+      ApiResponse(
+        responseCode = "200",
+        description = "CSIP previously deleted or never existed",
       ),
       ApiResponse(
         responseCode = "400",
@@ -280,18 +270,13 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
         description = "Forbidden, requires an appropriate role",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
-      ApiResponse(
-        responseCode = "404",
-        description = "The CSIP record associated with this identifier was not found.",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun deleteCsipRecord(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
-  ): Nothing = throw NotImplementedError()
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
+  ): ResponseEntity<Unit> = when (csipRecordService.deleteCsipRecord(recordUuid)) {
+    true -> ResponseEntity.noContent().build()
+    false -> ResponseEntity.ok().build()
+  }
 }

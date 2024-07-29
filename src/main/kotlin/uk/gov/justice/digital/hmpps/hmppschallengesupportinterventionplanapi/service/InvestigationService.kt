@@ -34,10 +34,8 @@ class InvestigationService(
         request.toCsipRecordEntity(
           context = context,
           referral = this,
-          roleProvider = { codes -> referenceDataRepository.verifyAllReferenceData(INTERVIEWEE_ROLE, codes) },
-          activeCaseLoadId = context.activeCaseLoadId,
-        ),
-      ).referral()!!.investigation()!!.toModel()
+        ) { codes -> referenceDataRepository.verifyAllReferenceData(INTERVIEWEE_ROLE, codes) },
+      ).referral!!.investigation!!.toModel()
     }
   }
 }

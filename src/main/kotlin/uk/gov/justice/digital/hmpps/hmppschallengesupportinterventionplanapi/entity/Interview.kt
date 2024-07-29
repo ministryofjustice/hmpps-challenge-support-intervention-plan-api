@@ -10,15 +10,17 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.SoftDelete
 import java.time.LocalDate
 import java.util.UUID
 
 @Entity
 @Table
+@SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Interview(
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "investigation_id", referencedColumnName = "investigation_id")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "investigation_id")
   val investigation: Investigation,
 
   @Column(length = 100)
@@ -26,7 +28,8 @@ class Interview(
 
   var interviewDate: LocalDate,
 
-  @ManyToOne @JoinColumn(name = "interviewee_role_id", referencedColumnName = "reference_data_id")
+  @ManyToOne
+  @JoinColumn(name = "interviewee_role_id")
   var intervieweeRole: ReferenceData,
 
   var interviewText: String?,

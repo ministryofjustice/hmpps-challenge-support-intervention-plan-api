@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
@@ -23,16 +23,15 @@ class DecisionActionsService(
   fun createDecisionAndActionsRequest(
     recordUuid: UUID,
     request: CreateDecisionAndActionsRequest,
-    context: CsipRequestContext,
   ): DecisionAndActions {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         createDecisionAndActions(
-          context = context,
+          context = csipRequestContext(),
           request = request,
         ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) },
-      ).referral()!!.decisionAndActions()!!.toModel()
+      ).referral!!.decisionAndActions!!.toModel()
     }
   }
 }

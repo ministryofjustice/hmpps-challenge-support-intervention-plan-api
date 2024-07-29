@@ -34,10 +34,8 @@ class SaferCustodyScreeningOutcomeService(
           context,
           referral = this,
           outcomeType = outcomeType,
-          source = context.source,
-          activeCaseLoadId = context.activeCaseLoadId,
         ),
-      ).referral()!!.saferCustodyScreeningOutcome()!!.toModel()
+      ).referral!!.saferCustodyScreeningOutcome!!.toModel()
     }
   }
 }

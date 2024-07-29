@@ -50,3 +50,14 @@ data class CsipCreatedEvent(
 ) : CsipEvent {
   override val type: DomainEventType = DomainEventType.CSIP_CREATED
 }
+
+data class CsipDeletedEvent(
+  override val recordUuid: UUID,
+  override val prisonNumber: String,
+  override val description: String,
+  override val occurredAt: LocalDateTime,
+  override val source: Source,
+  override val affectedComponents: Set<AffectedComponent>,
+) : CsipEvent {
+  override val type: DomainEventType = DomainEventType.CSIP_DELETED
+}

@@ -7,7 +7,6 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.REFERENCE_DATA_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
@@ -24,12 +23,12 @@ class InvestigationServiceTest : BaseServiceTest() {
     val createRequest = createRequest(withInterview = false)
 
     whenever(csipRecordRepository.findByRecordUuid(any())).thenReturn(csipRecord())
+    whenever(auditEventRepository.save(any())).thenAnswer { it.arguments[0] }
     whenever(csipRecordRepository.save(any())).thenReturn(
       csipRecord().apply {
         referral!!.createInvestigation(
           CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
           request = createRequest,
-          activeCaseLoadId = PRISON_CODE_LEEDS,
         ) { codes -> referenceDataRepository.verifyAllReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, codes) }
       },
     )

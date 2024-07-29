@@ -6,9 +6,11 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -40,6 +42,9 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class InvestigationsIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -140,21 +145,21 @@ class InvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
     val prisonNumber = givenValidPrisonNumber("S1234AC")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
-    val intervieweeRole = givenRandom(ReferenceDataType.INTERVIEWEE_ROLE)
+    val recordUuid = transactionTemplate.execute {
+      val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+      val intervieweeRole = givenRandom(ReferenceDataType.INTERVIEWEE_ROLE)
 
-    csipRecord.referral!!.createInvestigation(
-      CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
-      request = investigationRequest(
-        interviewRequest(intervieweeRole.code),
-        interviewRequest(intervieweeRole.code),
-      ),
-      activeCaseLoadId = PRISON_CODE_LEEDS,
-    ) { codes -> referenceDataRepository.verifyAllReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, codes) }
-    csipRecordRepository.save(csipRecord)
+      csipRecord.referral!!.createInvestigation(
+        CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
+        request = investigationRequest(
+          interviewRequest(intervieweeRole.code),
+          interviewRequest(intervieweeRole.code),
+        ),
+      ) { codes -> referenceDataRepository.verifyAllReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, codes) }
+      csipRecordRepository.save(csipRecord).recordUuid
+    }
 
-    val response = createInvestigationResponseSpec(recordUuid, investigationRequest())
+    val response = createInvestigationResponseSpec(recordUuid!!, investigationRequest())
       .expectStatus().is4xxClientError
       .expectBody<ErrorResponse>()
       .returnResult().responseBody
@@ -195,7 +200,7 @@ class InvestigationsIntTest : IntegrationTestBase() {
     }
 
     // Audit event saved
-    with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Investigation with 2 interviews added to referral")
       assertThat(affectedComponents).containsExactlyInAnyOrder(
@@ -277,7 +282,7 @@ class InvestigationsIntTest : IntegrationTestBase() {
     }
 
     // Audit event saved
-    with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Investigation with 0 interviews added to referral")
       assertThat(affectedComponents).containsOnly(AffectedComponent.Investigation)

@@ -6,9 +6,11 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -38,6 +40,9 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class DecisionActionIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -115,7 +120,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Validation failure(s): Outcome Type code must be <= 12 characters")
       assertThat(developerMessage).isEqualTo(
-        "Validation failed for argument [1] in public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.DecisionAndActionsController.createDecision(java.util.UUID,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest,jakarta.servlet.http.HttpServletRequest): [Field error in object 'createDecisionAndActionsRequest' on field 'outcomeTypeCode': rejected value [nnnnnnnnnnnnn]; codes [Size.createDecisionAndActionsRequest.outcomeTypeCode,Size.outcomeTypeCode,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [createDecisionAndActionsRequest.outcomeTypeCode,outcomeTypeCode]; arguments []; default message [outcomeTypeCode],12,1]; default message [Outcome Type code must be <= 12 characters]] ",
+        "Validation failed for argument [1] in public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.DecisionAndActionsController.createDecision(java.util.UUID,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest): [Field error in object 'createDecisionAndActionsRequest' on field 'outcomeTypeCode': rejected value [nnnnnnnnnnnnn]; codes [Size.createDecisionAndActionsRequest.outcomeTypeCode,Size.outcomeTypeCode,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [createDecisionAndActionsRequest.outcomeTypeCode,outcomeTypeCode]; arguments []; default message [outcomeTypeCode],12,1]; default message [Outcome Type code must be <= 12 characters]] ",
       )
       assertThat(moreInfo).isNull()
     }
@@ -208,20 +213,20 @@ class DecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
     val prisonNumber = givenValidPrisonNumber("E1234CP")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = transactionTemplate.execute {
+      val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+      csipRecord.referral!!.createDecisionAndActions(
+        CsipRequestContext(
+          username = TEST_USER,
+          userDisplayName = TEST_USER_NAME,
+          activeCaseLoadId = PRISON_CODE_LEEDS,
+        ),
+        createDecisionActionsRequest(),
+      ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) }
+      csipRecordRepository.save(csipRecord).recordUuid
+    }
 
-    csipRecord.referral!!.createDecisionAndActions(
-      CsipRequestContext(
-        username = TEST_USER,
-        userDisplayName = TEST_USER_NAME,
-        activeCaseLoadId = PRISON_CODE_LEEDS,
-      ),
-      createDecisionActionsRequest(),
-    ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) }
-    csipRecordRepository.save(csipRecord)
-
-    val response = createDecisionResponseSpec(recordUuid, createDecisionActionsRequest())
+    val response = createDecisionResponseSpec(recordUuid!!, createDecisionActionsRequest())
       .expectStatus().is4xxClientError
       .expectBody<ErrorResponse>()
       .returnResult().responseBody
@@ -309,7 +314,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
     }
 
     // Audit event saved
-    with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Decision and actions added to referral")
       assertThat(affectedComponents).containsOnly(AffectedComponent.DecisionAndActions)
@@ -363,7 +368,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
     }
 
     // Audit event saved
-    with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Decision and actions added to referral")
       assertThat(affectedComponents).doesNotContain(AffectedComponent.SaferCustodyScreeningOutcome)

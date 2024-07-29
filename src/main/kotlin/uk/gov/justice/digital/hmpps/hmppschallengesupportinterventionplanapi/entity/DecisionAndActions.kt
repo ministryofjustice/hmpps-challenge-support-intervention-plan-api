@@ -6,14 +6,14 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Parameter
+import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
@@ -22,10 +22,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 
 @Entity
 @Table
+@SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class DecisionAndActions(
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "referral_id", referencedColumnName = "referral_id")
+  @MapsId
+  @OneToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "decision_and_actions_id")
   val referral: Referral,
 
   @ManyToOne
@@ -47,7 +49,6 @@ class DecisionAndActions(
   @Column(length = 4000) val actionOther: String?,
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "decision_and_actions_id")
   val id: Long = 0,
 ) : SimpleAuditable(), Parented {

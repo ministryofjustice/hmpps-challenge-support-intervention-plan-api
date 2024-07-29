@@ -4,25 +4,27 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.SoftDelete
 import java.time.LocalDate
 
 @Entity
 @Table
+@SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class SaferCustodyScreeningOutcome(
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "referral_id", referencedColumnName = "referral_id")
+  @MapsId
+  @OneToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "safer_custody_screening_outcome_id")
   val referral: Referral,
 
   @ManyToOne
-  @JoinColumn(name = "outcome_id", referencedColumnName = "reference_data_id")
+  @JoinColumn(name = "outcome_id")
   val outcomeType: ReferenceData,
 
   @Column(nullable = false, length = 100)
@@ -38,7 +40,6 @@ class SaferCustodyScreeningOutcome(
   val reasonForDecision: String,
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "safer_custody_screening_outcome_id")
   val id: Long = 0,
 
