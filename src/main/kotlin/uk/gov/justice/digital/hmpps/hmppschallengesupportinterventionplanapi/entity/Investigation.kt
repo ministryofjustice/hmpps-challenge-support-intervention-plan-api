@@ -45,7 +45,7 @@ class Investigation(
   override fun parent() = referral
 
   @OneToMany(mappedBy = "investigation", cascade = [CascadeType.ALL])
-  private var interviews: MutableList<Interview> = mutableListOf()
+  private val interviews: MutableList<Interview> = mutableListOf()
 
   fun interviews() = interviews.toList().sortedByDescending { it.id }
 

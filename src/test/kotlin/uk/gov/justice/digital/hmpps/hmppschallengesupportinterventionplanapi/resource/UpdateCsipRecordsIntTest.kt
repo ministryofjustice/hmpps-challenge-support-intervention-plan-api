@@ -301,10 +301,11 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(audit.description).isEqualTo(
       "Updated CSIP record logCode changed from null to 'ZXY987' and updated referral descriptionOfConcern changed from 'descriptionOfConcern' to 'Updated concerns', " +
         "knownReasons changed from 'knownReasons' to 'Updated reasons', otherInformation changed from 'otherInformation' to 'Even more information that can change', " +
+        "referralComplete changed from false to true, " +
         "referralCompletedDate changed from null to '${
           LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-        }', referralCompletedBy changed from null to 'TEST_USER', " +
-        "referralCompletedByDisplayName changed from null to 'Test User', referralComplete changed from false to true",
+        }', referralCompletedBy changed from null to 'completedBy', " +
+        "referralCompletedByDisplayName changed from null to 'completedByDisplayName'",
     )
     assertThat(audit.affectedComponents).containsExactlyInAnyOrder(
       AffectedComponent.Record,
@@ -338,12 +339,11 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
     val audit = auditEventRepository.findAll().single { it.action == AuditEventAction.UPDATED }
     assertThat(audit.description).isEqualTo(
-      "Updated referral referralCompletedDate changed from '${
+      "Updated referral referralComplete changed from true to false, referralCompletedDate changed from '${
         LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
       }' to null, " +
         "referralCompletedBy changed from 'referralCompletedBy' to null, " +
-        "referralCompletedByDisplayName changed from 'referralCompletedByDisplayName' to null, " +
-        "referralComplete changed from true to false",
+        "referralCompletedByDisplayName changed from 'referralCompletedByDisplayName' to null",
     )
     assertThat(audit.affectedComponents).containsExactlyInAnyOrder(AffectedComponent.Referral)
     assertThat(audit.source).isEqualTo(DPS)
@@ -457,6 +457,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       otherInformation,
       isSaferCustodyTeamInformed,
       isReferralComplete,
+      isReferralComplete?.let { if (it) LocalDate.now() else null },
+      isReferralComplete?.let { if (it) "completedBy" else null },
+      isReferralComplete?.let { if (it) "completedByDisplayName" else null },
     )
   }
 

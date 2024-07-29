@@ -6,6 +6,9 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
@@ -68,22 +71,16 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       .headers { it.set(SOURCE, "INVALID") }.exchange().expectStatus().isBadRequest
   }
 
-  @Test
-  fun `400 bad request - request body validation failure`() {
-    val response = webTestClient.post().uri("/csip-records/${UUID.randomUUID()}/referral/safer-custody-screening")
-      .bodyValue(createScreeningOutcomeRequest(outcomeTypeCode = "n".repeat(13)))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), user = TEST_USER, isUserToken = true))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isBadRequest.expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody
-
-    with(response!!) {
+  @ParameterizedTest
+  @MethodSource("invalidRequests")
+  fun `400 bad request - invalid request values`(
+    request: CreateSaferCustodyScreeningOutcomeRequest,
+    userMessage: String,
+  ) {
+    val response = createScreeningOutcomeResponseSpec(UUID.randomUUID(), request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
       assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure(s): Outcome Type code must be <= 12 characters")
-      assertThat(developerMessage).isEqualTo(
-        "Validation failed for argument [1] in public uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource.SaferCustodyScreeningOutcomesController.createScreeningOutcome(java.util.UUID,uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest,jakarta.servlet.http.HttpServletRequest): [Field error in object 'createSaferCustodyScreeningOutcomeRequest' on field 'outcomeTypeCode': rejected value [nnnnnnnnnnnnn]; codes [Size.createSaferCustodyScreeningOutcomeRequest.outcomeTypeCode,Size.outcomeTypeCode,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [createSaferCustodyScreeningOutcomeRequest.outcomeTypeCode,outcomeTypeCode]; arguments []; default message [outcomeTypeCode],12,1]; default message [Outcome Type code must be <= 12 characters]] ",
-      )
-      assertThat(moreInfo).isNull()
+      assertThat(this.userMessage).isEqualTo(userMessage)
     }
   }
 
@@ -147,9 +144,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
       csipRecord.referral!!.createSaferCustodyScreeningOutcome(
         CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
+        createScreeningOutcomeRequest(),
         outcomeType = givenRandom(ReferenceDataType.OUTCOME_TYPE),
-        date = LocalDate.now(),
-        reasonForDecision = "reasonForDecision",
       )
       csipRecordRepository.save(csipRecord).recordUuid
     }
@@ -172,7 +168,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("S1234CD")
     val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
-    val request = createScreeningOutcomeRequest()
+    val request = createScreeningOutcomeRequest(recordedBy = "Safer")
 
     val response = createScreeningOutcome(recordUuid, request)
 
@@ -181,8 +177,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
       assertThat(date).isEqualTo(request.date)
-      assertThat(recordedBy).isEqualTo(TEST_USER)
-      assertThat(recordedByDisplayName).isEqualTo(TEST_USER_NAME)
+      assertThat(recordedBy).isEqualTo(request.recordedBy)
+      assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
     // Audit event saved
@@ -231,8 +227,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
       assertThat(date).isEqualTo(request.date)
-      assertThat(recordedBy).isEqualTo(NOMIS_SYS_USER)
-      assertThat(recordedByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
+      assertThat(recordedBy).isEqualTo(request.recordedBy)
+      assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
     // Audit event saved
@@ -267,13 +263,6 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun createScreeningOutcomeRequest(outcomeTypeCode: String = "CUR") =
-    CreateSaferCustodyScreeningOutcomeRequest(
-      outcomeTypeCode = outcomeTypeCode,
-      date = LocalDate.now(),
-      reasonForDecision = "alia",
-    )
-
   private fun createScreeningOutcomeResponseSpec(
     recordUuid: UUID,
     request: CreateSaferCustodyScreeningOutcomeRequest,
@@ -293,4 +282,39 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     .expectStatus().isCreated
     .expectBody<SaferCustodyScreeningOutcome>()
     .returnResult().responseBody!!
+
+  companion object {
+    private fun createScreeningOutcomeRequest(
+      outcomeTypeCode: String = "CUR",
+      reasonForDecision: String = "alia",
+      recordedBy: String = "recordedBy",
+      recordedByDisplayName: String = "${recordedBy}DisplayName",
+    ) = CreateSaferCustodyScreeningOutcomeRequest(
+      outcomeTypeCode,
+      LocalDate.now(),
+      reasonForDecision,
+      recordedBy,
+      recordedByDisplayName,
+    )
+
+    @JvmStatic
+    fun invalidRequests() = listOf(
+      Arguments.of(
+        createScreeningOutcomeRequest(outcomeTypeCode = "n".repeat(13)),
+        "Validation failure(s): Outcome Type code must be <= 12 characters",
+      ),
+      Arguments.of(
+        createScreeningOutcomeRequest(reasonForDecision = "n".repeat(4001)),
+        "Validation failure(s): Reason for Decision must be <= 4000 characters",
+      ),
+      Arguments.of(
+        createScreeningOutcomeRequest(recordedBy = "n".repeat(101)),
+        "Validation failure(s): Recorded by username must be <= 100 characters",
+      ),
+      Arguments.of(
+        createScreeningOutcomeRequest(recordedByDisplayName = "n".repeat(256)),
+        "Validation failure(s): Recorded by display name must be <= 255 characters",
+      ),
+    )
+  }
 }

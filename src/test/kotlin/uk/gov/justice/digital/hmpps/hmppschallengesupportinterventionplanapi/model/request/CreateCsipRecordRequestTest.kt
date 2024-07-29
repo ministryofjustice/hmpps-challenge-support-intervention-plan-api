@@ -27,6 +27,9 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
+        completedDate = null,
+        completedBy = null,
+        completedByDisplayName = null,
         contributoryFactors = listOf(
           CreateContributoryFactorRequest(
             factorTypeCode = "pericula",
@@ -58,6 +61,9 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
+        completedDate = null,
+        completedBy = null,
+        completedByDisplayName = null,
         contributoryFactors = listOf(
           CreateContributoryFactorRequest(
             factorTypeCode = "pericula",
@@ -89,6 +95,9 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
+        completedDate = null,
+        completedBy = null,
+        completedByDisplayName = null,
         contributoryFactors = listOf(
           CreateContributoryFactorRequest(
             factorTypeCode = "pericula",
@@ -120,6 +129,9 @@ class CreateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
+        completedDate = null,
+        completedBy = null,
+        completedByDisplayName = null,
         contributoryFactors = listOf(
           CreateContributoryFactorRequest(
             factorTypeCode = "n".repeat(13),

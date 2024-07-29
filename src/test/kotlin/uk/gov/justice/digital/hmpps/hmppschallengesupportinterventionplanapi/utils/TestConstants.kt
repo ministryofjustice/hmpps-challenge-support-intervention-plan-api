@@ -11,29 +11,23 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 fun createCsipRecordRequest(
-  incidentTypeCode: String = "ATO",
-  incidentLocationCode: String = "EDU",
-  refererAreaCode: String = "ACT",
-  incidentInvolvementCode: String? = "OTH",
-  contributoryFactorTypeCode: Collection<String> = listOf("D"),
+  createReferralRequest: CreateReferralRequest = createReferralRequest(),
   logCode: String? = LOG_CODE,
 ) = CreateCsipRecordRequest(
   logCode,
-  createReferralRequest(
-    incidentTypeCode,
-    incidentLocationCode,
-    refererAreaCode,
-    incidentInvolvementCode,
-    contributoryFactorTypeCode,
-  ),
+  createReferralRequest,
 )
 
 fun createReferralRequest(
-  incidentTypeCode: String = "A",
-  incidentLocationCode: String = "B",
-  refererAreaCode: String = "C",
-  incidentInvolvementCode: String? = "D",
-  contributoryFactorTypeCode: Collection<String> = listOf("D"),
+  incidentTypeCode: String = "ATO",
+  incidentLocationCode: String = "EDU",
+  refererAreaCode: String = "ACT",
+  incidentInvolvementCode: String = "OTH",
+  contributoryFactorTypeCode: Collection<String> = listOf("AFL"),
+  referralComplete: Boolean? = null,
+  completedDate: LocalDate? = null,
+  completedBy: String? = null,
+  completedByDisplayName: String? = null,
 ) = CreateReferralRequest(
   LocalDate.now(),
   LocalTime.now(),
@@ -49,7 +43,10 @@ fun createReferralRequest(
   "known reasons",
   "",
   NO,
-  null,
+  referralComplete,
+  completedDate,
+  completedBy,
+  completedByDisplayName,
   contributoryFactorTypeCode.map { createContributoryFactorRequest(it) },
 )
 
