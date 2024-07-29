@@ -7,14 +7,5 @@ fun ReferenceData.toReferenceDataModel() = ReferenceDataModel(
   code = code,
   description = description,
   listSequence = listSequence,
-  createdAt = createdAt,
-  createdBy = createdBy,
-  lastModifiedAt = lastModifiedAt,
-  lastModifiedBy = lastModifiedBy,
   deactivatedAt = deactivatedAt,
-  deactivatedBy = deactivatedBy,
 )
-
-fun Collection<ReferenceData>.toReferenceDataModels(includeInactive: Boolean) =
-  filter { includeInactive || it.isActive() }.sortedWith(compareBy({ it.listSequence }, { it.code }))
-    .map { it.toReferenceDataModel() }
