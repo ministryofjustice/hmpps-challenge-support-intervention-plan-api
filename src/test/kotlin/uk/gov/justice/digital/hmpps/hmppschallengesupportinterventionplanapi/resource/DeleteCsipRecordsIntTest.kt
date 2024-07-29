@@ -122,14 +122,14 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("D1234DS")
     val record = transactionTemplate.execute {
       val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      givenContributoryFactor(record.referral!!)
-      givenContributoryFactor(record.referral!!)
-      givenInvestigation(record.referral!!)
-      val investigation = requireNotNull(record.referral?.investigation)
-      givenAnInterview(investigation, interviewDate = LocalDate.now().minusDays(2))
-      givenAnInterview(investigation, interviewDate = LocalDate.now().minusDays(1))
-      givenAnInterview(investigation)
-      record.referral?.investigation?.interviews()
+      val referral = requireNotNull(record.referral)
+        .withContributoryFactor()
+        .withContributoryFactor()
+        .withInvestigation()
+      requireNotNull(referral.investigation)
+        .withInterview(interviewDate = LocalDate.now().minusDays(2))
+        .withInterview(interviewDate = LocalDate.now().minusDays(1))
+        .withInterview()
       record
     }!!
 

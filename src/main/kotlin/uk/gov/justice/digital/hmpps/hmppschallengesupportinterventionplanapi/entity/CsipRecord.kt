@@ -209,14 +209,14 @@ class CsipRecord(
     affected.filter { it.value.isNotEmpty() }.map { entry ->
       when (entry.key) {
         Record -> listOf(
-            CsipDeletedEvent(
-                recordUuid = recordUuid,
-                prisonNumber = prisonNumber,
-                description = DomainEventType.CSIP_DELETED.description,
-                occurredAt = context.requestAt,
-                source = context.source,
-                affectedComponents = affected.keys,
-            ),
+          CsipDeletedEvent(
+            recordUuid = recordUuid,
+            prisonNumber = prisonNumber,
+            description = DomainEventType.CSIP_DELETED.description,
+            occurredAt = context.requestAt,
+            source = context.source,
+            affectedComponents = affected.keys,
+          ),
         )
 
         ContributoryFactor, Interview, IdentifiedNeed, Review, Attendee -> entry.value.mapNotNull {

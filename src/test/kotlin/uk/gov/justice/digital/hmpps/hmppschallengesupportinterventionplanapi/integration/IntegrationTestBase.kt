@@ -144,51 +144,52 @@ abstract class IntegrationTestBase {
     return csipRecordRepository.save(record)
   }
 
-  fun givenContributoryFactor(
-    referral: Referral,
+  fun Referral.withContributoryFactor(
     type: ReferenceData = givenRandom(CONTRIBUTORY_FACTOR_TYPE),
     comment: String? = "A comment about the factor",
     uuid: UUID = UUID.randomUUID(),
     id: Long = IdGenerator.newId(),
-  ): ContributoryFactor = ContributoryFactor(referral, type, comment, uuid, id).apply {
-    referral.setByName("contributoryFactors", referral.contributoryFactors() + this)
-    csipRecordRepository.save(referral.csipRecord)
+  ): Referral = ContributoryFactor(this, type, comment, uuid, id).let {
+    this.setByName("contributoryFactors", contributoryFactors() + it)
+    csipRecordRepository.save(csipRecord)
+    this
   }
 
-  fun givenInvestigation(
-    referral: Referral,
+  fun Referral.withInvestigation(
     staffInvolved: String? = "staffInvolved",
     evidenceSecured: String? = "evidenceSecured",
     occurrenceReason: String? = "occurrenceReason",
     personsUsualBehaviour: String? = "personsUsualBehaviour",
     personsTrigger: String? = "personsTrigger",
     protectiveFactors: String? = "protectiveFactors",
-  ) = Investigation(
-    referral,
+  ): Referral = Investigation(
+    this,
     staffInvolved,
     evidenceSecured,
     occurrenceReason,
     personsUsualBehaviour,
     personsTrigger,
     protectiveFactors,
-    referral.id,
-  ).apply {
-    referral.set(referral::investigation, this)
-    csipRecordRepository.save(referral.csipRecord)
+    id,
+  ).let {
+    this.set(::investigation, it)
+    csipRecordRepository.save(csipRecord)
+    this
   }
 
-  fun givenAnInterview(
-    investigation: Investigation,
+  fun Investigation.withInterview(
     interviewee: String = "interviewee",
     interviewDate: LocalDate = LocalDate.now(),
     intervieweeRole: ReferenceData = givenRandom(INTERVIEWEE_ROLE),
     interviewText: String? = "interviewText",
     interviewUuid: UUID = UUID.randomUUID(),
     id: Long = IdGenerator.newId(),
-  ) = Interview(investigation, interviewee, interviewDate, intervieweeRole, interviewText, interviewUuid, id).apply {
-    investigation.setByName("interviews", investigation.interviews() + this)
-    csipRecordRepository.save(investigation.referral.csipRecord)
-  }
+  ): Investigation =
+    Interview(this, interviewee, interviewDate, intervieweeRole, interviewText, interviewUuid, id).let {
+      this.setByName("interviews", interviews() + it)
+      csipRecordRepository.save(referral.csipRecord)
+      this
+    }
 
   companion object {
     private val pgContainer = PostgresContainer.instance

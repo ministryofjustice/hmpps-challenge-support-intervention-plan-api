@@ -19,8 +19,8 @@ enum class DomainEventType(
   INTERVIEW_DELETED("person.csip.interview.deleted", "An interview record has been deleted in the CSIP service"),
 
   IDENTIFIED_NEED_DELETED(
-      "person.csip.identified-need.deleted",
-      "An identified need record has been deleted in the CSIP service",
+    "person.csip.identified-need.deleted",
+    "An identified need record has been deleted in the CSIP service",
   ),
   ATTENDEE_DELETED("person.csip.attendee.deleted", "An attendee record has been deleted in the CSIP service"),
   REVIEW_DELETED("person.csip.review.deleted", "A review record has been deleted in the CSIP service"),
