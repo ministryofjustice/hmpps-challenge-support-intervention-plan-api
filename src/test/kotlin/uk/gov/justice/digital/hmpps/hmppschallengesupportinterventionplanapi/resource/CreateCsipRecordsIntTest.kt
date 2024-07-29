@@ -254,7 +254,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
     }
 
-    with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
       assertThat(affectedComponents).containsExactlyInAnyOrder(
@@ -334,7 +334,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(logCode).isNull()
     }
 
-    with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
       assertThat(affectedComponents).containsExactlyInAnyOrder(
@@ -372,7 +372,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
 
-    with(csipRecordRepository.findByRecordUuid(response.recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
       assertThat(affectedComponents).containsExactlyInAnyOrder(
@@ -471,7 +471,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
-    with(saved.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("CSIP record created via referral with 0 contributory factors")
       assertThat(affectedComponents).containsExactlyInAnyOrder(AffectedComponent.Record, AffectedComponent.Referral)

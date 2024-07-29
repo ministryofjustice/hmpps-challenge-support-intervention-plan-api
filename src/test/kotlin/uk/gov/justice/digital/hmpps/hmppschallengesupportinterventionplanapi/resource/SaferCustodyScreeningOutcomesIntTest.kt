@@ -6,8 +6,10 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -35,6 +37,9 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -138,21 +143,19 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
     val prisonNumber = givenValidPrisonNumber("S1234AE")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = transactionTemplate.execute {
+      val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+      csipRecord.referral!!.createSaferCustodyScreeningOutcome(
+        CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
+        outcomeType = givenRandom(ReferenceDataType.OUTCOME_TYPE),
+        date = LocalDate.now(),
+        reasonForDecision = "reasonForDecision",
+      )
+      csipRecordRepository.save(csipRecord).recordUuid
+    }
+
     val request = createScreeningOutcomeRequest()
-
-    csipRecord.referral!!.createSaferCustodyScreeningOutcome(
-      CsipRequestContext(username = TEST_USER, userDisplayName = TEST_USER_NAME),
-      outcomeType = givenRandom(ReferenceDataType.OUTCOME_TYPE),
-      date = LocalDate.now(),
-      reasonForDecision = "reasonForDecision",
-      source = Source.DPS,
-      activeCaseLoadId = PRISON_CODE_LEEDS,
-    )
-    csipRecordRepository.save(csipRecord)
-
-    val response = createScreeningOutcomeResponseSpec(recordUuid, request).expectStatus().is4xxClientError
+    val response = createScreeningOutcomeResponseSpec(recordUuid!!, request).expectStatus().is4xxClientError
       .expectBody<ErrorResponse>().returnResult().responseBody!!
 
     with(response) {
@@ -183,7 +186,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     }
 
     // Audit event saved
-    with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
       assertThat(affectedComponents).containsOnly(AffectedComponent.SaferCustodyScreeningOutcome)
@@ -233,7 +236,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     }
 
     // Audit event saved
-    with(csipRecordRepository.findByRecordUuid(recordUuid)!!.auditEvents().single()) {
+    with(auditEventRepository.findAll().single()) {
       assertThat(action).isEqualTo(AuditEventAction.CREATED)
       assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
       assertThat(affectedComponents).containsOnly(AffectedComponent.SaferCustodyScreeningOutcome)

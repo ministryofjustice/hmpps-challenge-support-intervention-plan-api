@@ -10,14 +10,16 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.SoftDelete
 import java.util.UUID
 
 @Entity
 @Table(name = "contributory_factor")
+@SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class ContributoryFactor(
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "referral_id", referencedColumnName = "referral_id")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "referral_id")
   val referral: Referral,
 
   @ManyToOne

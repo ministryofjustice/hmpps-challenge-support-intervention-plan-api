@@ -22,10 +22,8 @@ fun CreateInvestigationRequest.toCsipRecordEntity(
   context: CsipRequestContext,
   referral: Referral,
   roleProvider: (Set<String>) -> Map<String, ReferenceData>,
-  activeCaseLoadId: String?,
 ): CsipRecord = referral.createInvestigation(
   context = context,
   request = this,
-  activeCaseLoadId = activeCaseLoadId,
   roleProvider = roleProvider,
 )

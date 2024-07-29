@@ -4,32 +4,42 @@ import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
-import jakarta.persistence.OrderBy
 import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
+import org.hibernate.annotations.Fetch
+import org.hibernate.annotations.FetchMode
+import org.hibernate.annotations.SoftDelete
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipCreatedEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDeletedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEventable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.EventFactory.createDeletedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Attendee
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.DecisionAndActions
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.IdentifiedNeed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Review
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
@@ -39,6 +49,7 @@ import java.util.UUID
 
 @Entity
 @Table
+@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class CsipRecord(
 
@@ -67,6 +78,9 @@ class CsipRecord(
   @Transient
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
+  @Transient
+  var auditEvents: MutableSet<AuditRequest>? = mutableSetOf()
+
   @Column(length = 10)
   var logCode: String? = logCode
     set(value) {
@@ -90,42 +104,18 @@ class CsipRecord(
   @Column(length = 255)
   override var lastModifiedByDisplayName: String? = null
 
-  @OneToMany(
-    mappedBy = "csipRecord",
-    fetch = FetchType.EAGER,
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  @OrderBy("actioned_at DESC")
-  private val auditEvents: MutableList<AuditEvent> = mutableListOf()
-
-  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
+  @Fetch(FetchMode.SELECT)
+  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
   var referral: Referral? = null
-
-  fun referral() = referral
-
-  fun auditEvents() = auditEvents.toList().sortedByDescending { it.actionedAt }
+    private set
 
   internal fun addAuditEvent(
-    context: CsipRequestContext,
     action: AuditEventAction,
     description: String,
-    source: Source,
-    activeCaseLoadId: String?,
     affectedComponents: Set<AffectedComponent>,
   ) = apply {
-    auditEvents.add(
-      AuditEvent(
-        csipRecord = this,
-        action = action,
-        description = description,
-        actionedAt = context.requestAt,
-        actionedBy = context.username,
-        actionedByCapturedName = context.userDisplayName,
-        source = source,
-        activeCaseLoadId = activeCaseLoadId,
-        affectedComponents = affectedComponents,
-      ),
-    )
+    auditEvents = (auditEvents ?: mutableSetOf())
+    auditEvents!!.add(AuditRequest(action, description, affectedComponents))
   }
 
   fun setReferral(referral: Referral) = apply {
@@ -155,14 +145,11 @@ class CsipRecord(
       }
     }
     addAuditEvent(
-      context = csipRequestContext,
       action = AuditEventAction.CREATED,
       description = "CSIP record created via referral with ${referral!!.contributoryFactors().size} contributory factors",
-      source = csipRequestContext.source,
-      activeCaseLoadId = csipRequestContext.activeCaseLoadId,
       affectedComponents = buildSet {
-        addAll(setOf(AffectedComponent.Record, AffectedComponent.Referral))
-        if (referral!!.contributoryFactors().isNotEmpty()) add(AffectedComponent.ContributoryFactor)
+        addAll(setOf(Record, AffectedComponent.Referral))
+        if (referral!!.contributoryFactors().isNotEmpty()) add(ContributoryFactor)
       },
     )
     registerEvent(
@@ -173,8 +160,8 @@ class CsipRecord(
         occurredAt = createdAt,
         source = csipRequestContext.source,
         affectedComponents = buildSet {
-          addAll(setOf(AffectedComponent.Record, AffectedComponent.Referral))
-          if (referral?.contributoryFactors()?.isNotEmpty() == true) add(AffectedComponent.ContributoryFactor)
+          addAll(setOf(Record, AffectedComponent.Referral))
+          if (referral?.contributoryFactors()?.isNotEmpty() == true) add(ContributoryFactor)
         },
       ),
     )
@@ -184,22 +171,19 @@ class CsipRecord(
     context: CsipRequestContext,
     request: UpdateCsipRecordRequest,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
-  ): CsipRecord {
+  ): CsipRecord = apply {
     val referral = requireNotNull(referral)
     logCode = request.logCode
     request.referral?.also { referral.update(context, it, referenceProvider) }
     val allChanges = propertyChanges + referral.propertyChanges
     if (allChanges.isNotEmpty()) {
       val affectedComponents = buildSet {
-        if (propertyChanges.isNotEmpty()) add(AffectedComponent.Record)
+        if (propertyChanges.isNotEmpty()) add(Record)
         if (referral.propertyChanges.isNotEmpty()) add(AffectedComponent.Referral)
       }
       addAuditEvent(
-        context = csipRequestContext(),
         action = AuditEventAction.UPDATED,
         description = auditDescription(propertyChanges, referral.propertyChanges),
-        source = context.source,
-        activeCaseLoadId = context.activeCaseLoadId,
         affectedComponents = affectedComponents,
       )
       registerEvent(
@@ -213,10 +197,38 @@ class CsipRecord(
         ),
       )
     }
-    return this
   }
 
-  fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
+  fun delete(context: CsipRequestContext) = apply {
+    val affected = components()
+    addAuditEvent(
+      action = AuditEventAction.DELETED,
+      description = "CSIP deleted",
+      affectedComponents = affected.keys,
+    )
+    affected.filter { it.value.isNotEmpty() }.map { entry ->
+      when (entry.key) {
+        Record -> listOf(
+          CsipDeletedEvent(
+            recordUuid = recordUuid,
+            prisonNumber = prisonNumber,
+            description = DomainEventType.CSIP_DELETED.description,
+            occurredAt = context.requestAt,
+            source = context.source,
+            affectedComponents = affected.keys,
+          ),
+        )
+
+        ContributoryFactor, Interview, IdentifiedNeed, Review, Attendee -> entry.value.mapNotNull {
+          createDeletedEvent(entry.key, prisonNumber, recordUuid, it, context.requestAt, context.source)
+        }
+
+        AffectedComponent.Referral, SaferCustodyScreeningOutcome, DecisionAndActions, Investigation, Plan -> listOf()
+      }
+    }.flatten().forEach(::registerEvent)
+  }
+
+  internal fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
 
   private fun auditDescription(recordChanges: Set<PropertyChange>, referralChanges: Set<PropertyChange>): String {
     val recordDescription =
@@ -225,5 +237,10 @@ class CsipRecord(
       if (referralChanges.isEmpty()) null else referralChanges.joinToString(prefix = "updated referral ") { it.description() }
     return setOfNotNull(recordDescription, referralDescription).filter { it.isNotBlank() }
       .joinToString(separator = " and ").replaceFirstChar(Char::uppercaseChar)
+  }
+
+  private fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
+    put(Record, setOf(recordUuid))
+    referral?.also { putAll(it.components()) }
   }
 }

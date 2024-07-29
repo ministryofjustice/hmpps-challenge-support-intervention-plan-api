@@ -24,6 +24,16 @@ sealed interface CsipBasicEvent : CsipBaseEvent<CsipBasicInformation> {
   )
 }
 
+data class GenericCsipEvent(
+  override val type: DomainEventType,
+  override val prisonNumber: String,
+  override val recordUuid: UUID,
+  override val entityUuid: UUID,
+  override val description: String,
+  override val occurredAt: LocalDateTime,
+  override val source: Source,
+) : CsipBasicEvent
+
 data class ContributoryFactorCreatedEvent(
   override val entityUuid: UUID,
   override val recordUuid: UUID,

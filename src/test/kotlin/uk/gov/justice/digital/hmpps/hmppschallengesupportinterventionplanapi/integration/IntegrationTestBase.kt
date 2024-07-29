@@ -21,15 +21,23 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEventRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
@@ -42,12 +50,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.withReferral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.IdGenerator
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
+import java.util.UUID
 
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
 @Sql("classpath:test_data/reset-database.sql")
@@ -74,6 +86,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var referenceDataRepository: ReferenceDataRepository
 
+  @Autowired
+  lateinit var auditEventRepository: AuditEventRepository
+
   internal val hmppsEventsQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
       ?: throw MissingQueueException("hmppseventtestqueue queue not found")
@@ -97,36 +112,84 @@ abstract class IntegrationTestBase {
       .map { objectMapper.readValue<Notification>(it.body()) }
       .map {
         when (it.eventType) {
-          DomainEventType.CSIP_UPDATED.eventType, DomainEventType.CSIP_CREATED.eventType ->
+          DomainEventType.CSIP_UPDATED.eventType, DomainEventType.CSIP_CREATED.eventType, DomainEventType.CSIP_DELETED.eventType ->
             objectMapper.readValue<CsipDomainEvent>(it.message)
 
-          DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType, DomainEventType.INTERVIEW_CREATED.eventType ->
-            objectMapper.readValue<CsipBasicDomainEvent>(it.message)
-
-          else -> throw IllegalArgumentException("Unknown Message Type : ${it.eventType}")
+          else -> objectMapper.readValue<CsipBasicDomainEvent>(it.message)
         }
       }
 
-  fun givenRandom(type: ReferenceDataType) = referenceDataRepository.findByDomain(type).filter { it.isActive() }.random()
-  fun givenReferenceData(type: ReferenceDataType, code: String) = requireNotNull(referenceDataRepository.findByDomainAndCode(type, code))
+  fun givenRandom(type: ReferenceDataType) =
+    referenceDataRepository.findByDomain(type).filter { it.isActive() }.random()
+
+  fun givenReferenceData(type: ReferenceDataType, code: String) =
+    requireNotNull(referenceDataRepository.findByDomainAndCode(type, code))
 
   fun givenValidPrisonNumber(prisonNumber: String): String {
     prisonerSearch.stubGetPrisoner(prisonNumber)
     return prisonNumber
   }
 
-  fun givenCsipRecord(csipRecord: CsipRecord) = csipRecordRepository.save(csipRecord)
-  fun givenCsipRecordWithReferral(csipRecord: CsipRecord, complete: Boolean = false): CsipRecord = csipRecordRepository.save(
-    csipRecord.withReferral(
+  fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(csipRecord)
+  fun givenCsipRecordWithReferral(csipRecord: CsipRecord, complete: Boolean = false): CsipRecord {
+    val record = csipRecord.withReferral(
       incidentType = { givenRandom(INCIDENT_TYPE) },
       incidentLocation = { givenRandom(INCIDENT_LOCATION) },
       refererAreaOfWork = { givenRandom(AREA_OF_WORK) },
       referralComplete = complete,
-      referralCompletedDate = if (complete) LocalDate.now().minusDays(1) else null,
       referralCompletedBy = if (complete) "referralCompletedBy" else null,
       referralCompletedByDisplayName = if (complete) "referralCompletedByDisplayName" else null,
-    ),
-  )
+      referralCompletedDate = if (complete) LocalDate.now().minusDays(1) else null,
+    )
+    return csipRecordRepository.save(record)
+  }
+
+  fun Referral.withContributoryFactor(
+    type: ReferenceData = givenRandom(CONTRIBUTORY_FACTOR_TYPE),
+    comment: String? = "A comment about the factor",
+    uuid: UUID = UUID.randomUUID(),
+    id: Long = IdGenerator.newId(),
+  ): Referral = ContributoryFactor(this, type, comment, uuid, id).let {
+    this.setByName("contributoryFactors", contributoryFactors() + it)
+    csipRecordRepository.save(csipRecord)
+    this
+  }
+
+  fun Referral.withInvestigation(
+    staffInvolved: String? = "staffInvolved",
+    evidenceSecured: String? = "evidenceSecured",
+    occurrenceReason: String? = "occurrenceReason",
+    personsUsualBehaviour: String? = "personsUsualBehaviour",
+    personsTrigger: String? = "personsTrigger",
+    protectiveFactors: String? = "protectiveFactors",
+  ): Referral = Investigation(
+    this,
+    staffInvolved,
+    evidenceSecured,
+    occurrenceReason,
+    personsUsualBehaviour,
+    personsTrigger,
+    protectiveFactors,
+    id,
+  ).let {
+    this.set(::investigation, it)
+    csipRecordRepository.save(csipRecord)
+    this
+  }
+
+  fun Investigation.withInterview(
+    interviewee: String = "interviewee",
+    interviewDate: LocalDate = LocalDate.now(),
+    intervieweeRole: ReferenceData = givenRandom(INTERVIEWEE_ROLE),
+    interviewText: String? = "interviewText",
+    interviewUuid: UUID = UUID.randomUUID(),
+    id: Long = IdGenerator.newId(),
+  ): Investigation =
+    Interview(this, interviewee, interviewDate, intervieweeRole, interviewText, interviewUuid, id).let {
+      this.setByName("interviews", interviews() + it)
+      csipRecordRepository.save(referral.csipRecord)
+      this
+    }
 
   companion object {
     private val pgContainer = PostgresContainer.instance

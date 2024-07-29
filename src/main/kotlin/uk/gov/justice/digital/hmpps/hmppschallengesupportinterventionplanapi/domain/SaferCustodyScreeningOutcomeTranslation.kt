@@ -4,7 +4,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome as ScreeningOutcomeModel
 
@@ -20,13 +19,9 @@ fun CreateSaferCustodyScreeningOutcomeRequest.toCsipRecordEntity(
   context: CsipRequestContext,
   referral: Referral,
   outcomeType: ReferenceData,
-  source: Source,
-  activeCaseLoadId: String?,
 ) = referral.createSaferCustodyScreeningOutcome(
   context = context,
   outcomeType = outcomeType,
   date = date,
   reasonForDecision = reasonForDecision,
-  source = source,
-  activeCaseLoadId = activeCaseLoadId,
 )

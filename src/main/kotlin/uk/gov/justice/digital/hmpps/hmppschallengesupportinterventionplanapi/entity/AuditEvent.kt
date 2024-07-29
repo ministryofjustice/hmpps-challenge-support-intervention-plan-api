@@ -8,11 +8,10 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
+import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -25,9 +24,7 @@ class AuditEvent(
   @Id
   val id: Long = 0,
 
-  @ManyToOne
-  @JoinColumn(name = "csip_record_id", referencedColumnName = "record_id", nullable = false)
-  val csipRecord: CsipRecord,
+  val csipRecordId: Long,
 
   @Enumerated(EnumType.STRING)
   val action: AuditEventAction,
@@ -45,3 +42,5 @@ class AuditEvent(
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   val affectedComponents: Set<AffectedComponent>,
 )
+
+interface AuditEventRepository : JpaRepository<AuditEvent, Long>

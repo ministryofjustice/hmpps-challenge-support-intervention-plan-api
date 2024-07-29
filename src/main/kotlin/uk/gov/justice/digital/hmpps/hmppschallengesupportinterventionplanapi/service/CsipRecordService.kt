@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -20,13 +19,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 @Service
 @Transactional
 class CsipRecordService(
-  val referenceDataRepository: ReferenceDataRepository,
-  val csipRecordRepository: CsipRecordRepository,
-  val prisonerSearchClient: PrisonerSearchClient,
+  private val referenceDataRepository: ReferenceDataRepository,
+  private val csipRecordRepository: CsipRecordRepository,
+  private val prisonerSearchClient: PrisonerSearchClient,
 ) {
   fun createCsipRecord(
-    request: CreateCsipRecordRequest,
     prisonNumber: String,
+    request: CreateCsipRecordRequest,
   ): CsipRecord {
     val context = csipRequestContext()
     val prisoner = requireNotNull(prisonerSearchClient.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
@@ -43,12 +42,17 @@ class CsipRecordService(
   fun retrieveCsipRecord(recordUuid: UUID): CsipRecord = csipRecordRepository.getCsipRecord(recordUuid).toModel()
 
   fun updateCsipRecord(
-    context: CsipRequestContext,
     recordUuid: UUID,
     request: UpdateCsipRecordRequest,
   ): CsipRecord {
     val record = csipRecordRepository.getCsipRecord(recordUuid)
-      .update(context, request) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) }
+      .update(csipRequestContext(), request) { type, code ->
+        referenceDataRepository.getActiveReferenceData(type, code)
+      }
     return csipRecordRepository.save(record).toModel()
   }
+
+  fun deleteCsipRecord(recordUuid: UUID): Boolean =
+    csipRecordRepository.findByRecordUuid(recordUuid)
+      ?.delete(csipRequestContext())?.also(csipRecordRepository::delete) != null
 }

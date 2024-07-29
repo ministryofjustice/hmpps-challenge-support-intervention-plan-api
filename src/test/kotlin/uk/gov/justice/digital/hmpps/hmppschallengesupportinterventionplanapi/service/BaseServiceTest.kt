@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.mockito.kotlin.mock
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.REFERENCE_DATA_CODE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEventRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
@@ -21,6 +22,7 @@ import java.util.UUID
 abstract class BaseServiceTest {
   protected val csipRecordRepository = mock<CsipRecordRepository>()
   protected val referenceDataRepository = mock<ReferenceDataRepository>()
+  protected val auditEventRepository = mock<AuditEventRepository>()
 
   protected fun csipRecord() = CsipRecord(
     id = 5516,

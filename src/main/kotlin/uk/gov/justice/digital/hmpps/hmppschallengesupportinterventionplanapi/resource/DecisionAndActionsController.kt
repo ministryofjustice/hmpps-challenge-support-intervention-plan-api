@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
@@ -82,17 +80,10 @@ class DecisionAndActionsController(
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createDecision(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody createDecisionAndActionsRequest: CreateDecisionAndActionsRequest,
-    httpRequest: HttpServletRequest,
-  ): DecisionAndActions = decisionActionsService.createDecisionAndActionsRequest(
-    recordUuid,
-    createDecisionAndActionsRequest,
-    httpRequest.csipRequestContext(),
-  )
+  ): DecisionAndActions =
+    decisionActionsService.createDecisionAndActionsRequest(recordUuid, createDecisionAndActionsRequest)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping
@@ -130,10 +121,7 @@ class DecisionAndActionsController(
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateDecision(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody updateDecisionAndActionsRequest: UpdateDecisionAndActionsRequest,
   ): DecisionAndActions = throw NotImplementedError()
 }

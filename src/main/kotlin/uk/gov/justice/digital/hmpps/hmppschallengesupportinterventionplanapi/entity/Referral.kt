@@ -7,16 +7,18 @@ import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapsId
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
+import org.hibernate.annotations.Fetch
+import org.hibernate.annotations.FetchMode
+import org.hibernate.annotations.SoftDelete
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
@@ -30,7 +32,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
@@ -39,13 +40,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 @Entity
 @Table
+@SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Referral(
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "record_id", referencedColumnName = "record_id")
+  @MapsId
+  @OneToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "referral_id")
   val csipRecord: CsipRecord,
 
   @Column(nullable = false) val referralDate: LocalDate,
@@ -75,7 +79,6 @@ class Referral(
   refererAreaOfWork: ReferenceData,
   incidentInvolvement: ReferenceData?,
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "referral_id")
   val id: Long = 0,
 ) : SimpleAuditable(), PropertyChangeMonitor, Parented {
@@ -90,13 +93,25 @@ class Referral(
   @Transient
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
-  @OneToOne(
-    mappedBy = "referral",
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  private var decisionAndActions: DecisionAndActions? = null
+  @Fetch(FetchMode.SELECT)
+  @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
+  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
+    private set
 
-  fun decisionAndActions() = decisionAndActions
+  @Fetch(FetchMode.SELECT)
+  @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
+  var decisionAndActions: DecisionAndActions? = null
+    private set
+
+  @Fetch(FetchMode.SELECT)
+  @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
+  var investigation: Investigation? = null
+    private set
+
+  @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL])
+  private var contributoryFactors: MutableList<ContributoryFactor> = mutableListOf()
+
+  fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.id }
 
   var incidentDate: LocalDate = incidentDate
     set(value) {
@@ -218,14 +233,14 @@ class Referral(
       field = value
     }
 
-  fun completed(on: LocalDate, by: String, byDisplayName: String) {
+  private fun completed(on: LocalDate, by: String, byDisplayName: String) {
     referralCompletedDate = on
     referralCompletedBy = by
     referralCompletedByDisplayName = byDisplayName
     referralComplete = true
   }
 
-  fun uncomplete() {
+  private fun uncomplete() {
     referralCompletedDate = null
     referralCompletedBy = null
     referralCompletedByDisplayName = null
@@ -256,11 +271,8 @@ class Referral(
     val description = "Decision and actions added to referral"
     val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
     csipRecord.addAuditEvent(
-      context,
       AuditEventAction.CREATED,
       description,
-      context.source,
-      context.activeCaseLoadId,
       affectedComponents,
     )
     csipRecord.registerEntityEvent(
@@ -276,38 +288,11 @@ class Referral(
     return csipRecord
   }
 
-  @OneToOne(
-    mappedBy = "referral",
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  private var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
-
-  @OneToOne(
-    mappedBy = "referral",
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  private var investigation: Investigation? = null
-
-  @OneToMany(
-    mappedBy = "referral",
-    fetch = FetchType.LAZY,
-    cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE],
-  )
-  private var contributoryFactors: MutableList<ContributoryFactor> = mutableListOf()
-
-  fun saferCustodyScreeningOutcome() = saferCustodyScreeningOutcome
-
-  fun investigation() = investigation
-
-  fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.id }
-
   fun createSaferCustodyScreeningOutcome(
     context: CsipRequestContext,
     outcomeType: ReferenceData,
     date: LocalDate,
     reasonForDecision: String,
-    source: Source,
-    activeCaseLoadId: String?,
   ): CsipRecord {
     verifySaferCustodyScreeningOutcomeDoesNotExist()
     val description = "Safer custody screening outcome added to referral"
@@ -323,11 +308,8 @@ class Referral(
 
     val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
     csipRecord.addAuditEvent(
-      context = context,
       action = AuditEventAction.CREATED,
       description = description,
-      source = source,
-      activeCaseLoadId = activeCaseLoadId,
       affectedComponents = affectedComponents,
     )
     csipRecord.registerEntityEvent(
@@ -336,7 +318,7 @@ class Referral(
         prisonNumber = csipRecord.prisonNumber,
         description = description,
         occurredAt = context.requestAt,
-        source = source,
+        source = context.source,
         affectedComponents = affectedComponents,
       ),
     )
@@ -346,7 +328,6 @@ class Referral(
   fun createInvestigation(
     context: CsipRequestContext,
     request: CreateInvestigationRequest,
-    activeCaseLoadId: String?,
     roleProvider: (Set<String>) -> Map<String, ReferenceData>,
   ): CsipRecord {
     verifyInvestigationDoesNotExist()
@@ -380,11 +361,8 @@ class Referral(
     }
 
     csipRecord.addAuditEvent(
-      context = context,
       action = AuditEventAction.CREATED,
       description = description,
-      source = context.source,
-      activeCaseLoadId = activeCaseLoadId,
       affectedComponents = affectedComponents,
     )
     csipRecord.registerEntityEvent(
@@ -476,4 +454,14 @@ class Referral(
     } else {
       existing
     }
+
+  internal fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
+    put(AffectedComponent.Referral, setOf())
+    saferCustodyScreeningOutcome?.also { put(AffectedComponent.SaferCustodyScreeningOutcome, setOf()) }
+    decisionAndActions?.also { put(AffectedComponent.DecisionAndActions, setOf()) }
+    investigation?.also { putAll(it.components()) }
+    if (contributoryFactors.isNotEmpty()) {
+      put(AffectedComponent.ContributoryFactor, contributoryFactors.map { it.contributoryFactorUuid }.toSet())
+    }
+  }
 }
