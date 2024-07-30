@@ -9,7 +9,7 @@ import java.time.LocalDate
 @Schema(
   description = "The request body to create a Decision and Actions for a CSIP referral",
 )
-data class CreateDecisionAndActionsRequest(
+data class UpsertDecisionAndActionsRequest(
   @Schema(
     description = "The conclusion of the referral and reasons for the outcome decision.",
   )

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
@@ -54,4 +55,7 @@ data class DecisionAndActions(
     description = "Any other actions that are recommended to be considered.",
   )
   val actionOther: String?,
-)
+) {
+  @JsonIgnore
+  var new: Boolean = false
+}

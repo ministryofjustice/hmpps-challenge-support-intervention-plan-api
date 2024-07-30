@@ -180,7 +180,7 @@ class CsipRecord(
   ): CsipRecord = apply {
     val referral = requireNotNull(referral)
     logCode = request.logCode
-    request.referral?.also { referral.update(context, it, referenceProvider) }
+    request.referral?.also { referral.update(it, referenceProvider) }
     val allChanges = propertyChanges + referral.propertyChanges
     if (allChanges.isNotEmpty()) {
       val affectedComponents = buildSet {
@@ -218,7 +218,6 @@ class CsipRecord(
           CsipDeletedEvent(
             recordUuid = recordUuid,
             prisonNumber = prisonNumber,
-            description = DomainEventType.CSIP_DELETED.description,
             occurredAt = context.requestAt,
             source = context.source,
             affectedComponents = affected.keys,
