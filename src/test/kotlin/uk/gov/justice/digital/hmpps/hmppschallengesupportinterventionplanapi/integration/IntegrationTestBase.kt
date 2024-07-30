@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEventRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
@@ -41,13 +42,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_SIGNER_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
@@ -213,6 +217,32 @@ abstract class IntegrationTestBase {
     )
     return csipRecordRepository.save(record)
   }
+
+  fun Referral.withDecisionAndActions(
+    outcome: ReferenceData = givenRandom(OUTCOME_TYPE),
+    signedOffBy: ReferenceData = givenRandom(DECISION_SIGNER_ROLE),
+    conclusion: String? = "a comprehensive conclusion",
+    recordedBy: String = "recordedBy",
+    recordedByDisplayName: String? = "recordedByDisplayName",
+    date: LocalDate = LocalDate.now(),
+    nextSteps: String? = "some next steps",
+    actions: Set<DecisionAction> = setOf(),
+    actionOther: String? = null,
+    id: Long = 0,
+  ): Referral = DecisionAndActions(this, outcome, id)
+    .let {
+      it.signedOffBy = signedOffBy
+      it.conclusion = conclusion
+      it.recordedBy = recordedBy
+      it.recordedByDisplayName = recordedByDisplayName
+      it.date = date
+      it.nextSteps = nextSteps
+      it.actions = actions
+      it.actionOther = actionOther
+      this.set(::decisionAndActions, it)
+      csipRecordRepository.save(csipRecord)
+      this
+    }
 
   fun Referral.withContributoryFactor(
     type: ReferenceData = givenRandom(CONTRIBUTORY_FACTOR_TYPE),

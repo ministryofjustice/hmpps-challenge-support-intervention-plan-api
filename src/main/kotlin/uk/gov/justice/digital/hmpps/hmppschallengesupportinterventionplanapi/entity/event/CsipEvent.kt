@@ -32,7 +32,7 @@ sealed interface CsipEvent : CsipBaseEvent<CsipAdditionalInformation> {
 data class CsipUpdatedEvent(
   override val recordUuid: UUID,
   override val prisonNumber: String,
-  override val description: String,
+  override val description: String = DomainEventType.CSIP_UPDATED.description,
   override val occurredAt: LocalDateTime,
   override val source: Source,
   override val affectedComponents: Set<AffectedComponent>,
@@ -43,7 +43,7 @@ data class CsipUpdatedEvent(
 data class CsipCreatedEvent(
   override val recordUuid: UUID,
   override val prisonNumber: String,
-  override val description: String,
+  override val description: String = DomainEventType.CSIP_CREATED.description,
   override val occurredAt: LocalDateTime,
   override val source: Source,
   override val affectedComponents: Set<AffectedComponent>,
@@ -54,7 +54,7 @@ data class CsipCreatedEvent(
 data class CsipDeletedEvent(
   override val recordUuid: UUID,
   override val prisonNumber: String,
-  override val description: String,
+  override val description: String = DomainEventType.CSIP_DELETED.description,
   override val occurredAt: LocalDateTime,
   override val source: Source,
   override val affectedComponents: Set<AffectedComponent>,

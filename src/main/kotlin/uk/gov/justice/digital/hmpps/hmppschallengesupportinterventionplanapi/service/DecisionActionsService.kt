@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
@@ -20,18 +20,20 @@ class DecisionActionsService(
   private val csipRecordRepository: CsipRecordRepository,
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
-  fun createDecisionAndActionsRequest(
+  fun upsertDecisionAndActionsRequest(
     recordUuid: UUID,
-    request: CreateDecisionAndActionsRequest,
+    request: UpsertDecisionAndActionsRequest,
   ): DecisionAndActions {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
-    return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
+    val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
+    val decisionAndActions = referral.decisionAndActions
+    return with(referral) {
       csipRecordRepository.save(
-        createDecisionAndActions(
+        upsertDecisionAndActions(
           context = csipRequestContext(),
           request = request,
         ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) },
-      ).referral!!.decisionAndActions!!.toModel()
+      ).referral!!.decisionAndActions!!.toModel().apply { new = decisionAndActions == null }
     }
   }
 }

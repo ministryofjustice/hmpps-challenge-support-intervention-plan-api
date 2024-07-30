@@ -35,10 +35,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -234,58 +234,53 @@ class Referral(
       field = value
     }
 
-  private fun completed(on: LocalDate, by: String, byDisplayName: String) {
-    referralCompletedDate = on
-    referralCompletedBy = by
-    referralCompletedByDisplayName = byDisplayName
-    referralComplete = true
-  }
-
-  private fun uncomplete() {
-    referralCompletedDate = null
-    referralCompletedBy = null
-    referralCompletedByDisplayName = null
-    referralComplete = false
-  }
-
-  fun createDecisionAndActions(
+  fun upsertDecisionAndActions(
     context: CsipRequestContext,
-    request: CreateDecisionAndActionsRequest,
+    request: UpsertDecisionAndActionsRequest,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
   ): CsipRecord {
-    verifyDecisionDoesNotExist()
-    decisionAndActions = DecisionAndActions(
-      referral = this,
-      outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode),
+    val isNew = decisionAndActions == null
+    val outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode)
+    if (isNew) {
+      decisionAndActions = DecisionAndActions(this, outcome)
+    }
+
+    decisionAndActions!!.apply {
+      this.outcome = outcome
       signedOffBy = request.signedOffByRoleCode?.let {
         referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
-      },
-      conclusion = request.conclusion,
-      recordedBy = request.recordedBy,
-      recordedByDisplayName = request.recordedByDisplayName,
-      date = request.date,
-      nextSteps = request.nextSteps,
-      actions = request.actions,
-      actionOther = request.actionOther,
-    )
+      }
+      conclusion = request.conclusion
+      recordedBy = request.recordedBy
+      recordedByDisplayName = request.recordedByDisplayName
+      date = request.date
+      nextSteps = request.nextSteps
+      actions = request.actions
+      actionOther = request.actionOther
+    }
 
-    val description = "Decision and actions added to referral"
-    val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
-    csipRecord.addAuditEvent(
-      AuditEventAction.CREATED,
-      description,
-      affectedComponents,
-    )
-    csipRecord.registerEntityEvent(
-      CsipUpdatedEvent(
-        recordUuid = csipRecord.recordUuid,
-        prisonNumber = csipRecord.prisonNumber,
-        description = description,
-        occurredAt = context.requestAt,
-        source = context.source,
-        affectedComponents = affectedComponents,
-      ),
-    )
+    if (isNew || decisionAndActions!!.propertyChanges.isNotEmpty()) {
+      val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
+      val auditDescription = if (isNew) {
+        "Decision and actions added to referral"
+      } else {
+        auditDescription(decisionAndActions!!.propertyChanges, prefix = "Updated decision and actions record ")
+      }
+      csipRecord.addAuditEvent(
+        if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,
+        auditDescription,
+        affectedComponents,
+      )
+      csipRecord.registerEntityEvent(
+        CsipUpdatedEvent(
+          recordUuid = csipRecord.recordUuid,
+          prisonNumber = csipRecord.prisonNumber,
+          occurredAt = context.requestAt,
+          source = context.source,
+          affectedComponents = affectedComponents,
+        ),
+      )
+    }
     return csipRecord
   }
 
@@ -410,11 +405,7 @@ class Referral(
   private fun verifyInvestigationDoesNotExist() =
     verifyDoesNotExist(investigation) { ResourceAlreadyExistException("Referral already has an Investigation") }
 
-  private fun verifyDecisionDoesNotExist() =
-    verifyDoesNotExist(decisionAndActions) { ResourceAlreadyExistException("Referral already has a Decision and Actions") }
-
   fun update(
-    context: CsipRequestContext,
     update: UpdateReferral,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
   ) {
@@ -465,4 +456,7 @@ class Referral(
       put(AffectedComponent.ContributoryFactor, contributoryFactors.map { it.contributoryFactorUuid }.toSet())
     }
   }
+
+  private fun auditDescription(propertyChanges: Set<PropertyChange>, prefix: String): String =
+    propertyChanges.joinToString(prefix = prefix) { it.description() }
 }
