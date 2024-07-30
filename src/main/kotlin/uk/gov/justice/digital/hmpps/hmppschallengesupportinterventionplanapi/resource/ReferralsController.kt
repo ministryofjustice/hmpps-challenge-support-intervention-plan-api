@@ -20,16 +20,18 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event.ReferralService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "2. Referral Controller", description = "Endpoints for Referral and Contributory Factor operations")
-class ReferralsController {
+class ReferralsController(private val referralService: ReferralService) {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/csip-records/{recordUuid}/referral/contributory-factors")
   @Operation(
@@ -64,14 +66,11 @@ class ReferralsController {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createContributoryFactor(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody createContributoryFactorRequest: CreateContributoryFactorRequest,
-  ): ContributoryFactor = throw NotImplementedError()
+  ): ContributoryFactor = referralService.addContributoryFactor(recordUuid, createContributoryFactorRequest)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/csip-records/referral/contributory-factors/{contributoryFactorUuid}")

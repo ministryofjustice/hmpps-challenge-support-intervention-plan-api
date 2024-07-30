@@ -13,12 +13,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EuropeLondon
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
@@ -45,7 +42,6 @@ import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -198,7 +194,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record))
   }
 
   @Test
@@ -227,7 +223,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(audit.actionedBy).isEqualTo(NOMIS_SYS_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record), NOMIS)
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record), NOMIS)
   }
 
   @Test
@@ -268,7 +264,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Referral))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Referral))
   }
 
   @Test
@@ -315,7 +311,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record, AffectedComponent.Referral))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record, AffectedComponent.Referral))
   }
 
   @Test
@@ -350,7 +346,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Referral))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Referral))
   }
 
   private fun updateCsipRecordResponseSpec(
@@ -466,26 +462,15 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   private fun verifyDomainEvent(
     prisonNumber: String,
     recordUuid: UUID,
-    affectedComponents: Array<AffectedComponent>,
+    affectedComponents: Set<AffectedComponent>,
     source: Source = DPS,
   ) {
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
-    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
-    val csipUpdatedEvent = events.filterIsInstance<CsipDomainEvent>().single()
-    with(csipUpdatedEvent) {
-      assertThat(eventType).isEqualTo(DomainEventType.CSIP_UPDATED.eventType)
-      with(additionalInformation) {
-        assertThat(this.recordUuid).isEqualTo(recordUuid)
-        assertThat(this.affectedComponents).containsExactlyInAnyOrder(*affectedComponents)
-        assertThat(this.source).isEqualTo(source)
-      }
-      assertThat(description).isEqualTo(DomainEventType.CSIP_UPDATED.description)
-      assertThat(occurredAt).isCloseTo(
-        ZonedDateTime.now().withZoneSameInstant(EuropeLondon),
-        within(3, ChronoUnit.SECONDS),
-      )
-      assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
-      assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
-    }
+    verifyDomainEvents(
+      prisonNumber,
+      recordUuid,
+      affectedComponents,
+      setOf(DomainEventType.CSIP_UPDATED),
+      source = source,
+    )
   }
 }
