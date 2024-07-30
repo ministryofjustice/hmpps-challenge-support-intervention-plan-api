@@ -114,8 +114,14 @@ class CsipRecord(
     description: String,
     affectedComponents: Set<AffectedComponent>,
   ) = apply {
+    addAuditEvent(AuditRequest(action, description, affectedComponents))
+  }
+
+  internal fun addAuditEvent(
+    auditRequest: AuditRequest,
+  ) = apply {
     auditEvents = (auditEvents ?: mutableSetOf())
-    auditEvents!!.add(AuditRequest(action, description, affectedComponents))
+    auditEvents!!.add(auditRequest)
   }
 
   fun setReferral(referral: Referral) = apply {

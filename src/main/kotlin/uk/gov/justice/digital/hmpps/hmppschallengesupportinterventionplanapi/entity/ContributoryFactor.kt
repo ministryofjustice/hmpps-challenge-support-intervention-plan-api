@@ -23,7 +23,7 @@ class ContributoryFactor(
   val referral: Referral,
 
   @ManyToOne
-  @JoinColumn(name = "contributory_factor_type_id", insertable = false, updatable = false)
+  @JoinColumn(name = "contributory_factor_type_id", updatable = false)
   val contributoryFactorType: ReferenceData,
 
   val comment: String? = null,

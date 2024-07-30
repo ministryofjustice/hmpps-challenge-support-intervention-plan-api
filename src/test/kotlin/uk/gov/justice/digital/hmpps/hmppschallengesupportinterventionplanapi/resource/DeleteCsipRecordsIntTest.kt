@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
@@ -14,29 +11,21 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction.DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import java.time.LocalDate
@@ -49,7 +38,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.delete().uri("/csip-records/${UUID.randomUUID()}").exchange().expectStatus().isUnauthorized
+    webTestClient.delete().uri(urlToTest(UUID.randomUUID())).exchange().expectStatus().isUnauthorized
   }
 
   @ParameterizedTest
@@ -70,7 +59,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - invalid source`() {
-    val response = webTestClient.delete().uri("/csip-records/${UUID.randomUUID()}")
+    val response = webTestClient.delete().uri(urlToTest(UUID.randomUUID()))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }
       .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -141,12 +130,14 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
 
     deleteCsipRecordResponseSpec(record.recordUuid).expectStatus().isNoContent
 
-    verifyDelete(record, setOf(Record, Referral, ContributoryFactor, Investigation, Interview))
+    verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
+    verifyAudit(record, DELETED, setOf(Record, Referral, ContributoryFactor, Investigation, Interview), "CSIP deleted")
 
     verifyDomainEvents(
       prisonNumber,
       record.recordUuid,
       setOf(Record, Referral, ContributoryFactor, Investigation, Interview),
+      setOf(DomainEventType.CSIP_DELETED),
       entityIds = factorUuids + interviewIds,
       expectedCount = 6,
     )
@@ -158,16 +149,28 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     deleteCsipRecordResponseSpec(record.recordUuid, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent
 
-    verifyDelete(
+    verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
+
+    verifyAudit(
       record,
+      DELETED,
       setOf(Record, Referral),
+      "CSIP deleted",
       source = NOMIS,
       username = NOMIS_SYS_USER,
       userDisplayName = NOMIS_SYS_USER_DISPLAY_NAME,
     )
 
-    verifyDomainEvents(prisonNumber, record.recordUuid, setOf(Record, Referral), NOMIS)
+    verifyDomainEvents(
+      prisonNumber,
+      record.recordUuid,
+      setOf(Record, Referral),
+      setOf(DomainEventType.CSIP_DELETED),
+      source = NOMIS,
+    )
   }
+
+  private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid"
 
   private fun deleteCsipRecordResponseSpec(
     uuid: UUID,
@@ -175,65 +178,8 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.delete()
-    .uri("/csip-records/$uuid")
+    .uri(urlToTest(uuid))
     .headers(setAuthorisation(roles = listOfNotNull(role)))
     .headers(setCsipRequestContext(source = source, username = username))
     .exchange()
-
-  private fun verifyDelete(
-    record: CsipRecord,
-    affectedComponents: Set<AffectedComponent>,
-    source: Source = DPS,
-    username: String = TEST_USER,
-    userDisplayName: String = TEST_USER_NAME,
-  ) {
-    val saved = csipRecordRepository.findByRecordUuid(record.recordUuid)
-    assertThat(saved).isNull()
-    val auditEvent: AuditEvent = auditEventRepository.findAll().single {
-      it.csipRecordId == record.id && it.action == AuditEventAction.DELETED
-    }
-    assertThat(auditEvent.source).isEqualTo(source)
-    assertThat(auditEvent.actionedBy).isEqualTo(username)
-    assertThat(auditEvent.actionedByCapturedName).isEqualTo(userDisplayName)
-    assertThat(auditEvent.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
-  }
-
-  private fun verifyDomainEvents(
-    prisonNumber: String,
-    recordUuid: UUID,
-    affectedComponents: Set<AffectedComponent>,
-    source: Source = DPS,
-    eventTypes: List<DomainEventType> = listOf(DomainEventType.CSIP_DELETED),
-    entityIds: Set<UUID> = setOf(),
-    expectedCount: Int = 1,
-  ) {
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
-    val allEvents = hmppsEventsQueue.receiveDomainEventsOnQueue(expectedCount)
-    eventTypes.forEach { eventType ->
-      val events = when (eventType) {
-        DomainEventType.CSIP_DELETED -> allEvents.filterIsInstance<CsipDomainEvent>()
-        else -> {
-          val basicEvents = allEvents.filterIsInstance<CsipBasicDomainEvent>()
-          assertThat(basicEvents.map { it.additionalInformation.entityUuid })
-            .containsExactlyInAnyOrderElementsOf(entityIds)
-          basicEvents
-        }
-      }
-      events.forEach { event ->
-        with(event) {
-          assertThat(this.eventType).isEqualTo(eventType.eventType)
-          with(additionalInformation as CsipBaseInformation) {
-            if (this is CsipAdditionalInformation) {
-              assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
-            }
-            assertThat(this.recordUuid).isEqualTo(recordUuid)
-            assertThat(this.source).isEqualTo(source)
-          }
-          assertThat(description).isEqualTo(eventType.description)
-          assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
-          assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
-        }
-      }
-    }
-  }
 }

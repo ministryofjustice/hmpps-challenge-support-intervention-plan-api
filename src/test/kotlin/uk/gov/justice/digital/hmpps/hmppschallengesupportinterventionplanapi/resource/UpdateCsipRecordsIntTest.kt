@@ -13,12 +13,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EuropeLondon
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
@@ -45,7 +42,6 @@ import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -191,14 +187,14 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
-    val audit = auditEventRepository.findAll().single { it.action == AuditEventAction.UPDATED }
-    assertThat(audit.description).isEqualTo("Updated CSIP record logCode changed from null to 'ZXY987'")
-    assertThat(audit.affectedComponents).containsExactly(AffectedComponent.Record)
-    assertThat(audit.source).isEqualTo(DPS)
-    assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(audit.actionedBy).isEqualTo(TEST_USER)
+    verifyAudit(
+      record,
+      AuditEventAction.UPDATED,
+      setOf(AffectedComponent.Record),
+      "Updated CSIP record logCode changed from null to 'ZXY987'",
+    )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record))
   }
 
   @Test
@@ -220,14 +216,17 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(lastModifiedByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
 
-    val audit = auditEventRepository.findAll().single { it.action == AuditEventAction.UPDATED }
-    assertThat(audit.description).isEqualTo("Updated CSIP record logCode changed from null to 'ZXY987'")
-    assertThat(audit.affectedComponents).containsExactly(AffectedComponent.Record)
-    assertThat(audit.source).isEqualTo(NOMIS)
-    assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(audit.actionedBy).isEqualTo(NOMIS_SYS_USER)
+    verifyAudit(
+      record,
+      AuditEventAction.UPDATED,
+      setOf(AffectedComponent.Record),
+      "Updated CSIP record logCode changed from null to 'ZXY987'",
+      NOMIS,
+      NOMIS_SYS_USER,
+      NOMIS_SYS_USER_DISPLAY_NAME,
+    )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record), NOMIS)
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record), NOMIS)
   }
 
   @Test
@@ -259,16 +258,14 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
-    val audit = auditEventRepository.findAll().single { it.action == AuditEventAction.UPDATED }
-    assertThat(audit.description).isEqualTo(
+    verifyAudit(
+      record,
+      AuditEventAction.UPDATED,
+      setOf(AffectedComponent.Referral),
       "Updated referral incidentType changed from 'ATO' to 'WIT', incidentLocation changed from 'KIT' to 'REC', refererAreaOfWork changed from 'HEA' to 'GYM'",
     )
-    assertThat(audit.affectedComponents).containsExactly(AffectedComponent.Referral)
-    assertThat(audit.source).isEqualTo(DPS)
-    assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Referral))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Referral))
   }
 
   @Test
@@ -297,8 +294,10 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(logCode).isEqualTo(request.logCode)
     }
 
-    val audit = auditEventRepository.findAll().single { it.action == AuditEventAction.UPDATED }
-    assertThat(audit.description).isEqualTo(
+    verifyAudit(
+      record,
+      AuditEventAction.UPDATED,
+      setOf(AffectedComponent.Record, AffectedComponent.Referral),
       "Updated CSIP record logCode changed from null to 'ZXY987' and updated referral descriptionOfConcern changed from 'descriptionOfConcern' to 'Updated concerns', " +
         "knownReasons changed from 'knownReasons' to 'Updated reasons', otherInformation changed from 'otherInformation' to 'Even more information that can change', " +
         "referralComplete changed from false to true, " +
@@ -307,15 +306,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
         }', referralCompletedBy changed from null to 'completedBy', " +
         "referralCompletedByDisplayName changed from null to 'completedByDisplayName'",
     )
-    assertThat(audit.affectedComponents).containsExactlyInAnyOrder(
-      AffectedComponent.Record,
-      AffectedComponent.Referral,
-    )
-    assertThat(audit.source).isEqualTo(DPS)
-    assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Record, AffectedComponent.Referral))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record, AffectedComponent.Referral))
   }
 
   @Test
@@ -337,20 +329,18 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     updateCsipRecord(record.recordUuid, request)
     val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
-    val audit = auditEventRepository.findAll().single { it.action == AuditEventAction.UPDATED }
-    assertThat(audit.description).isEqualTo(
+
+    verifyAudit(
+      record,
+      AuditEventAction.UPDATED,
+      setOf(AffectedComponent.Referral),
       "Updated referral referralComplete changed from true to false, referralCompletedDate changed from '${
         LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-      }' to null, " +
-        "referralCompletedBy changed from 'referralCompletedBy' to null, " +
+      }' to null, referralCompletedBy changed from 'referralCompletedBy' to null, " +
         "referralCompletedByDisplayName changed from 'referralCompletedByDisplayName' to null",
     )
-    assertThat(audit.affectedComponents).containsExactlyInAnyOrder(AffectedComponent.Referral)
-    assertThat(audit.source).isEqualTo(DPS)
-    assertThat(audit.actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(audit.actionedBy).isEqualTo(TEST_USER)
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, arrayOf(AffectedComponent.Referral))
+    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Referral))
   }
 
   private fun updateCsipRecordResponseSpec(
@@ -466,26 +456,15 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   private fun verifyDomainEvent(
     prisonNumber: String,
     recordUuid: UUID,
-    affectedComponents: Array<AffectedComponent>,
+    affectedComponents: Set<AffectedComponent>,
     source: Source = DPS,
   ) {
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
-    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
-    val csipUpdatedEvent = events.filterIsInstance<CsipDomainEvent>().single()
-    with(csipUpdatedEvent) {
-      assertThat(eventType).isEqualTo(DomainEventType.CSIP_UPDATED.eventType)
-      with(additionalInformation) {
-        assertThat(this.recordUuid).isEqualTo(recordUuid)
-        assertThat(this.affectedComponents).containsExactlyInAnyOrder(*affectedComponents)
-        assertThat(this.source).isEqualTo(source)
-      }
-      assertThat(description).isEqualTo(DomainEventType.CSIP_UPDATED.description)
-      assertThat(occurredAt).isCloseTo(
-        ZonedDateTime.now().withZoneSameInstant(EuropeLondon),
-        within(3, ChronoUnit.SECONDS),
-      )
-      assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
-      assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
-    }
+    verifyDomainEvents(
+      prisonNumber,
+      recordUuid,
+      affectedComponents,
+      setOf(DomainEventType.CSIP_UPDATED),
+      source = source,
+    )
   }
 }

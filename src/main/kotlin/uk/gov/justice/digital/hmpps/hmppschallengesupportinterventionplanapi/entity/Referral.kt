@@ -382,12 +382,14 @@ class Referral(
     createRequest: CreateContributoryFactorRequest,
     factorType: ReferenceData,
     context: CsipRequestContext,
+    auditRequest: AuditRequest? = null,
   ) = ContributoryFactor(
     referral = this,
     contributoryFactorType = factorType,
     comment = createRequest.comment,
   ).apply {
     contributoryFactors.add(this)
+    auditRequest?.also { csipRecord.addAuditEvent(auditRequest) }
     csipRecord.registerEntityEvent(
       ContributoryFactorCreatedEvent(
         entityUuid = contributoryFactorUuid,
