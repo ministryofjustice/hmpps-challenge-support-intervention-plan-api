@@ -323,6 +323,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
       recordUuid,
       setOf(AffectedComponent.DecisionAndActions),
       setOf(CSIP_UPDATED),
+      source = NOMIS,
     )
   }
 
@@ -376,7 +377,7 @@ class DecisionActionIntTest : IntegrationTestBase() {
       csipRecord,
       AuditEventAction.UPDATED,
       setOf(AffectedComponent.DecisionAndActions),
-      "Updated decision and actions record conclusion changed from 'a comprehensive conclusion' to 'a conclusion', " +
+      "Updated decision and actions conclusion changed from 'a comprehensive conclusion' to 'a conclusion', " +
         "recordedBy changed from 'recordedBy' to 'outcomeRecordedBy', " +
         "recordedByDisplayName changed from 'recordedByDisplayName' to 'outcomeRecordedByDisplayName', " +
         "nextSteps changed from 'some next steps' to 'next steps', actions changed from '[]' to '[UnitOrCellMove]'",

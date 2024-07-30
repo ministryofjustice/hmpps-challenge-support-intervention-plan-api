@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation as InvestigationModel
 
 fun Investigation.toModel() = InvestigationModel(
@@ -18,12 +18,11 @@ fun Investigation.toModel() = InvestigationModel(
   interviews = interviews().map { it.toModel() },
 )
 
-fun CreateInvestigationRequest.toCsipRecordEntity(
+fun UpsertInvestigationRequest.toCsipRecordEntity(
   context: CsipRequestContext,
   referral: Referral,
   roleProvider: (Set<String>) -> Map<String, ReferenceData>,
-): CsipRecord = referral.createInvestigation(
+): CsipRecord = referral.upsertInvestigation(
   context = context,
   request = this,
-  roleProvider = roleProvider,
 )

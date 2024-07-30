@@ -35,10 +35,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -241,30 +241,20 @@ class Referral(
   ): CsipRecord {
     val isNew = decisionAndActions == null
     val outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode)
+    val signedOffBy = request.signedOffByRoleCode?.let {
+      referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
+    }
     if (isNew) {
       decisionAndActions = DecisionAndActions(this, outcome)
     }
-
-    decisionAndActions!!.apply {
-      this.outcome = outcome
-      signedOffBy = request.signedOffByRoleCode?.let {
-        referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
-      }
-      conclusion = request.conclusion
-      recordedBy = request.recordedBy
-      recordedByDisplayName = request.recordedByDisplayName
-      date = request.date
-      nextSteps = request.nextSteps
-      actions = request.actions
-      actionOther = request.actionOther
-    }
+    decisionAndActions!!.upsert(request, outcome, signedOffBy)
 
     if (isNew || decisionAndActions!!.propertyChanges.isNotEmpty()) {
       val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
       val auditDescription = if (isNew) {
         "Decision and actions added to referral"
       } else {
-        auditDescription(decisionAndActions!!.propertyChanges, prefix = "Updated decision and actions record ")
+        auditDescription(decisionAndActions!!.propertyChanges, prefix = "Updated decision and actions ")
       }
       csipRecord.addAuditEvent(
         if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,
@@ -320,56 +310,38 @@ class Referral(
     return csipRecord
   }
 
-  fun createInvestigation(
+  fun upsertInvestigation(
     context: CsipRequestContext,
-    request: CreateInvestigationRequest,
-    roleProvider: (Set<String>) -> Map<String, ReferenceData>,
+    request: UpsertInvestigationRequest,
   ): CsipRecord {
-    verifyInvestigationDoesNotExist()
-    val description = "Investigation with ${request.interviews?.size ?: 0} interviews added to referral"
+    val isNew = investigation == null
+    if (isNew) {
+      investigation = Investigation(this)
+    }
+    investigation!!.upsert(request)
 
-    val roleCodes = request.interviews?.map { it.intervieweeRoleCode }?.toSet() ?: emptySet()
-    val intervieweeRoleMap = if (roleCodes.isEmpty()) mapOf() else roleProvider(roleCodes)
-
-    investigation = Investigation(
-      referral = this,
-      staffInvolved = request.staffInvolved,
-      evidenceSecured = request.evidenceSecured,
-      occurrenceReason = request.occurrenceReason,
-      personsUsualBehaviour = request.personsUsualBehaviour,
-      personsTrigger = request.personsTrigger,
-      protectiveFactors = request.protectiveFactors,
-    )
-
-    request.interviews?.forEach { interview ->
-      investigation!!.addInterview(
-        context = context,
-        createRequest = interview,
-        intervieweeRole = requireNotNull(intervieweeRoleMap[interview.intervieweeRoleCode]),
+    if (isNew || investigation!!.propertyChanges.isNotEmpty()) {
+      val auditDescription = if (isNew) {
+        "Investigation added to referral"
+      } else {
+        auditDescription(decisionAndActions!!.propertyChanges, prefix = "Updated investigation ")
+      }
+      val affectedComponents = setOf(AffectedComponent.Investigation)
+      csipRecord.addAuditEvent(
+        action = AuditEventAction.CREATED,
+        description = auditDescription,
+        affectedComponents = affectedComponents,
+      )
+      csipRecord.registerEntityEvent(
+        CsipUpdatedEvent(
+          recordUuid = csipRecord.recordUuid,
+          prisonNumber = csipRecord.prisonNumber,
+          occurredAt = context.requestAt,
+          source = context.source,
+          affectedComponents = affectedComponents,
+        ),
       )
     }
-
-    val isInterviewAffected = (investigation?.interviews()?.size ?: 0) > 0
-    val affectedComponents = buildSet {
-      add(AffectedComponent.Investigation)
-      if (isInterviewAffected) add(AffectedComponent.Interview)
-    }
-
-    csipRecord.addAuditEvent(
-      action = AuditEventAction.CREATED,
-      description = description,
-      affectedComponents = affectedComponents,
-    )
-    csipRecord.registerEntityEvent(
-      CsipUpdatedEvent(
-        recordUuid = csipRecord.recordUuid,
-        prisonNumber = csipRecord.prisonNumber,
-        description = description,
-        occurredAt = context.requestAt,
-        source = context.source,
-        affectedComponents = affectedComponents,
-      ),
-    )
     return csipRecord
   }
 
@@ -401,9 +373,6 @@ class Referral(
     verifyDoesNotExist(saferCustodyScreeningOutcome) {
       ResourceAlreadyExistException("Referral already has a Safer Custody Screening Outcome")
     }
-
-  private fun verifyInvestigationDoesNotExist() =
-    verifyDoesNotExist(investigation) { ResourceAlreadyExistException("Referral already has an Investigation") }
 
   fun update(
     update: UpdateReferral,

@@ -44,6 +44,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
@@ -63,6 +66,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.withReferral
@@ -128,7 +133,7 @@ abstract class IntegrationTestBase {
       .map { objectMapper.readValue<Notification>(it.body()) }
       .map {
         when (it.eventType) {
-          DomainEventType.CSIP_UPDATED.eventType, DomainEventType.CSIP_CREATED.eventType, DomainEventType.CSIP_DELETED.eventType ->
+          CSIP_UPDATED.eventType, CSIP_CREATED.eventType, CSIP_DELETED.eventType ->
             objectMapper.readValue<CsipDomainEvent>(it.message)
 
           else -> objectMapper.readValue<CsipBasicDomainEvent>(it.message)
@@ -148,7 +153,7 @@ abstract class IntegrationTestBase {
     val allEvents = hmppsEventsQueue.receiveDomainEventsOnQueue(expectedCount)
     eventTypes.forEach { eventType ->
       val events = when (eventType) {
-        DomainEventType.CSIP_DELETED -> allEvents.filterIsInstance<CsipDomainEvent>()
+        CSIP_DELETED, CSIP_UPDATED, CSIP_CREATED -> allEvents.filterIsInstance<CsipDomainEvent>()
         else -> {
           val basicEvents = allEvents.filterIsInstance<CsipBasicDomainEvent>()
           assertThat(basicEvents.map { it.additionalInformation.entityUuid })
@@ -230,15 +235,19 @@ abstract class IntegrationTestBase {
     actionOther: String? = null,
     id: Long = 0,
   ): Referral = DecisionAndActions(this, outcome, id)
-    .let {
-      it.signedOffBy = signedOffBy
-      it.conclusion = conclusion
-      it.recordedBy = recordedBy
-      it.recordedByDisplayName = recordedByDisplayName
-      it.date = date
-      it.nextSteps = nextSteps
-      it.actions = actions
-      it.actionOther = actionOther
+    .upsert(
+      UpsertDecisionAndActionsRequest(
+        conclusion,
+        outcome.code,
+        signedOffBy.code,
+        recordedBy,
+        recordedByDisplayName,
+        date,
+        nextSteps, actionOther, actions,
+      ),
+      outcome,
+      signedOffBy,
+    ).let {
       this.set(::decisionAndActions, it)
       csipRecordRepository.save(csipRecord)
       this
@@ -264,13 +273,16 @@ abstract class IntegrationTestBase {
     protectiveFactors: String? = "protectiveFactors",
   ): Referral = Investigation(
     this,
-    staffInvolved,
-    evidenceSecured,
-    occurrenceReason,
-    personsUsualBehaviour,
-    personsTrigger,
-    protectiveFactors,
     id,
+  ).upsert(
+    UpsertInvestigationRequest(
+      staffInvolved,
+      evidenceSecured,
+      occurrenceReason,
+      personsUsualBehaviour,
+      personsTrigger,
+      protectiveFactors,
+    ),
   ).let {
     this.set(::investigation, it)
     csipRecordRepository.save(csipRecord)
