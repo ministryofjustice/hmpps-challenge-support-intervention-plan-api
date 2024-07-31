@@ -121,7 +121,7 @@ class Referral(
     }
 
   var incidentTime: LocalTime? = incidentTime
-    set(value) {
+    private set(value) {
       propertyChanged(::incidentTime, value)
       field = value
     }
@@ -129,7 +129,7 @@ class Referral(
   @ManyToOne
   @JoinColumn(name = "incident_type_id")
   var incidentType: ReferenceData = incidentType
-    set(value) {
+    private set(value) {
       referenceDataChanged(::incidentType, value)
       field = value
     }
@@ -137,7 +137,7 @@ class Referral(
   @ManyToOne
   @JoinColumn(name = "incident_location_id")
   var incidentLocation: ReferenceData = incidentLocation
-    set(value) {
+    private set(value) {
       referenceDataChanged(::incidentLocation, value)
       field = value
     }
@@ -145,7 +145,7 @@ class Referral(
   @ManyToOne
   @JoinColumn(name = "referer_area_of_work_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
-    set(value) {
+    private set(value) {
       referenceDataChanged(::refererAreaOfWork, value)
       field = value
     }
@@ -153,57 +153,57 @@ class Referral(
   @ManyToOne
   @JoinColumn(name = "incident_involvement_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
-    set(value) {
+    private set(value) {
       referenceDataChanged(::incidentInvolvement, value)
       field = value
     }
 
   @Column(nullable = false, length = 240)
   var referredBy: String = referredBy
-    set(value) {
+    private set(value) {
       propertyChanged(::referredBy, value)
       field = value
     }
 
   var proactiveReferral: Boolean? = proactiveReferral
-    set(value) {
+    private set(value) {
       propertyChanged(::proactiveReferral, value)
       field = value
     }
 
   var staffAssaulted: Boolean? = staffAssaulted
-    set(value) {
+    private set(value) {
       propertyChanged(::staffAssaulted, value)
       field = value
     }
 
   var assaultedStaffName: String? = assaultedStaffName
-    set(value) {
+    private set(value) {
       propertyChanged(::assaultedStaffName, value)
       field = value
     }
 
   var descriptionOfConcern: String? = descriptionOfConcern
-    set(value) {
+    private set(value) {
       propertyChanged(::descriptionOfConcern, value)
       field = value
     }
 
   var knownReasons: String? = knownReasons
-    set(value) {
+    private set(value) {
       propertyChanged(::knownReasons, value)
       field = value
     }
 
   var otherInformation: String? = otherInformation
-    set(value) {
+    private set(value) {
       propertyChanged(::otherInformation, value)
       field = value
     }
 
   @Enumerated(EnumType.STRING)
   var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
-    set(value) {
+    private set(value) {
       propertyChanged(::saferCustodyTeamInformed, value)
       field = value
     }

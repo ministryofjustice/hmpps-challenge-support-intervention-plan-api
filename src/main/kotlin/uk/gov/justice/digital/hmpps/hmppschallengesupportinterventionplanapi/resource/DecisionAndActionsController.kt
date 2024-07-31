@@ -40,7 +40,7 @@ class DecisionAndActionsController(
   @PutMapping
   @Operation(
     summary = "Add decision and actions to the referral.",
-    description = "Create or update the decision and actions. Publishes person.csip.record.updated event with decisionAndActionsAffected = true",
+    description = "Create or update the decision and actions. Publishes person.csip.record.updated event with affected component of DecisionAndActions",
   )
   @ApiResponses(
     value = [

@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Investigation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.SaferCustodyScreeningOutcome
@@ -42,6 +41,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.verifyAllReferenceData
 import java.time.LocalDateTime
@@ -107,6 +107,11 @@ class CsipRecord(
   @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
   var referral: Referral? = null
+    private set
+
+  @Fetch(FetchMode.SELECT)
+  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
+  var plan: Plan? = null
     private set
 
   internal fun addAuditEvent(
@@ -201,6 +206,34 @@ class CsipRecord(
     }
   }
 
+  fun upsertPlan(context: CsipRequestContext, request: UpsertPlanRequest) = apply {
+    val isNew = plan == null
+    if (isNew) {
+      plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
+    } else {
+      plan!!.upsert(request)
+    }
+
+    if (isNew || plan!!.propertyChanges.isNotEmpty()) {
+      val affectedComponents = setOf(AffectedComponent.Plan)
+      addAuditEvent(
+        action = AuditEventAction.UPDATED,
+        description = if (isNew) "Plan added to CSIP record" else plan!!.auditDescription(),
+        affectedComponents = affectedComponents,
+      )
+      registerEvent(
+        CsipUpdatedEvent(
+          recordUuid = recordUuid,
+          prisonNumber = prisonNumber,
+          description = CSIP_UPDATED.description,
+          occurredAt = context.requestAt,
+          source = context.source,
+          affectedComponents = affectedComponents,
+        ),
+      )
+    }
+  }
+
   fun delete(context: CsipRequestContext) = apply {
     val affected = components()
     addAuditEvent(
@@ -224,7 +257,7 @@ class CsipRecord(
           createDeletedEvent(entry.key, prisonNumber, recordUuid, it, context.requestAt, context.source)
         }
 
-        AffectedComponent.Referral, SaferCustodyScreeningOutcome, DecisionAndActions, Investigation, Plan -> listOf()
+        AffectedComponent.Referral, SaferCustodyScreeningOutcome, DecisionAndActions, Investigation, AffectedComponent.Plan -> listOf()
       }
     }.flatten().forEach(::registerEvent)
   }
@@ -243,5 +276,6 @@ class CsipRecord(
   private fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
     put(Record, setOf(recordUuid))
     referral?.also { putAll(it.components()) }
+    plan?.also { putAll(it.components()) }
   }
 }

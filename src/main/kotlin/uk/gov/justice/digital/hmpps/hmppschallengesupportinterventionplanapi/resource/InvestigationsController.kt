@@ -47,8 +47,8 @@ class InvestigationsController(
   @ResponseStatus(HttpStatus.CREATED)
   @PutMapping("/{recordUuid}/referral/investigation")
   @Operation(
-    summary = "Add investigation and any interviews to the referral.",
-    description = "Create the investigation and any interviews. Publishes person.csip.record.updated event with investigationAffected = true and person.csip.interview.created event",
+    summary = "Add or update the investigation.",
+    description = "Create or update the investigation. Publishes person.csip.record.updated event with affected component of Investigation",
   )
   @ApiResponses(
     value = [

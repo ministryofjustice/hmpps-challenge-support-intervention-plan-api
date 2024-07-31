@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
@@ -221,6 +222,15 @@ abstract class IntegrationTestBase {
       referralCompletedDate = if (complete) LocalDate.now().minusDays(1) else null,
     )
     return csipRecordRepository.save(record)
+  }
+
+  fun CsipRecord.withPlan(
+    caseManager: String = "Case Manager",
+    reasonForPlan: String = "Reason for this plan",
+    firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
+  ) = apply {
+    this.set(this::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate, id))
+    csipRecordRepository.save(this)
   }
 
   fun Referral.withDecisionAndActions(

@@ -2,14 +2,13 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
 @Schema(
   description = "The request for creating a CSIP Plan for a CSIP record",
 )
-data class CreatePlanRequest(
+data class UpsertPlanRequest(
   @Schema(
     description = "The case manager assigned to the CSIP plan.",
   )
@@ -28,11 +27,4 @@ data class CreatePlanRequest(
   )
   @JsonFormat(pattern = "yyyy-MM-dd")
   val firstCaseReviewDate: LocalDate,
-
-  @Schema(
-    description = "The needs identified in the CSIP plan.",
-  )
-  @field:Size(min = 1, message = "A CSIP Plan must have >=1 identified need(s).")
-  @field:Valid
-  val identifiedNeeds: Collection<CreateIdentifiedNeedRequest>,
 )
