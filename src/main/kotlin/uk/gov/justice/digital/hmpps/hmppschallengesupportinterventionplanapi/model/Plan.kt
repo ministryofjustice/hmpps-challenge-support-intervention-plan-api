@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
@@ -34,4 +35,7 @@ data class Plan(
     description = "Regular reviews of the CSIP Plan",
   )
   val reviews: Collection<Review>,
-)
+) {
+  @JsonIgnore
+  var new: Boolean = false
+}
