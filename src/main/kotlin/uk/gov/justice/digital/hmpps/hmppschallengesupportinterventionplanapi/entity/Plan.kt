@@ -100,7 +100,7 @@ class Plan(
       request.intervention,
       request.progression,
     ).apply {
-      verify (identifiedNeeds.none { it.identifiedNeed == identifiedNeed }) {
+      verify(identifiedNeeds.none { it.identifiedNeed == identifiedNeed }) {
         ResourceAlreadyExistException("Identified need already part of plan")
       }
       identifiedNeeds.add(this)
