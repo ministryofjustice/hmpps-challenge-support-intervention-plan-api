@@ -4,5 +4,12 @@ import java.util.UUID
 
 abstract class MissingPrerequisiteResourceException(msg: String) : RuntimeException(msg)
 
-class MissingReferralException(recordUuid: UUID) :
-  MissingPrerequisiteResourceException("CSIP Record with UUID: $recordUuid is missing a referral.")
+interface MissingComponentException {
+  val recordUuid: UUID
+}
+
+class MissingReferralException(override val recordUuid: UUID) :
+  MissingPrerequisiteResourceException("CSIP Record is missing a referral."), MissingComponentException
+
+class MissingInvestigationException(override val recordUuid: UUID) :
+  MissingPrerequisiteResourceException("CSIP Record is missing an investigation."), MissingComponentException

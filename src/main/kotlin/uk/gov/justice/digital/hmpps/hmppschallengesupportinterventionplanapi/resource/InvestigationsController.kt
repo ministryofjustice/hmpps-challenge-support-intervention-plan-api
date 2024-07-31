@@ -134,11 +134,11 @@ class InvestigationsController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createInterview(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody createInterviewRequest: CreateInterviewRequest,
-  ): Interview = throw NotImplementedError()
+  ): Interview = investigationService.addInterview(recordUuid, createInterviewRequest)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/referral/investigation/interviews/{interviewUuid}")
