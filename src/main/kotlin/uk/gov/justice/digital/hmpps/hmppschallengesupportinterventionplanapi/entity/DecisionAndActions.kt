@@ -19,6 +19,7 @@ import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions as DecisionAndActionsModel
 
@@ -51,7 +52,7 @@ class DecisionAndActions(
   @ManyToOne
   @JoinColumn(name = "outcome_id", nullable = false)
   var outcome: ReferenceData = outcome
-    set(value) {
+    private set(value) {
       referenceDataChanged(::outcome, value)
       field = value
     }
@@ -59,59 +60,76 @@ class DecisionAndActions(
   @ManyToOne
   @JoinColumn(name = "signed_off_by_role_id")
   var signedOffBy: ReferenceData? = null
-    set(value) {
+    private set(value) {
       referenceDataChanged(::signedOffBy, value)
       field = value
     }
 
   @Column(length = 4000)
   var conclusion: String? = null
-    set(value) {
+    private set(value) {
       propertyChanged(::conclusion, value)
       field = value
     }
 
   @Column(length = 100)
   var recordedBy: String? = null
-    set(value) {
+    private set(value) {
       propertyChanged(::recordedBy, value)
       field = value
     }
 
   @Column(length = 255)
   var recordedByDisplayName: String? = null
-    set(value) {
+    private set(value) {
       propertyChanged(::recordedByDisplayName, value)
       field = value
     }
 
   @Column
   var date: LocalDate? = null
-    set(value) {
+    private set(value) {
       propertyChanged(::date, value)
       field = value
     }
 
   @Column(length = 4000)
   var nextSteps: String? = null
-    set(value) {
+    private set(value) {
       propertyChanged(::nextSteps, value)
       field = value
     }
 
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   var actions: Set<DecisionAction> = setOf()
-    set(value) {
+    private set(value) {
       propertyChanged(::actions, value)
       field = value
     }
 
   @Column(length = 4000)
   var actionOther: String? = null
-    set(value) {
+    private set(value) {
       propertyChanged(::actionOther, value)
       field = value
     }
+
+  fun upsert(
+    request: UpsertDecisionAndActionsRequest,
+    outcomeType: ReferenceData,
+    signedOffByRole: ReferenceData?,
+  ): DecisionAndActions {
+    outcome = outcomeType
+    signedOffBy = signedOffByRole
+    conclusion = request.conclusion
+    recordedBy = request.recordedBy
+    recordedByDisplayName = request.recordedByDisplayName
+    date = request.date
+    nextSteps = request.nextSteps
+    actions = request.actions
+    actionOther = request.actionOther
+    return this
+  }
 }
 
 fun DecisionAndActions.toModel() =

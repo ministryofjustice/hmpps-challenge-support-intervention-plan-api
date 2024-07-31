@@ -1,13 +1,12 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request
 
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 
 @Schema(
   description = "The request body to create an investigation on the incident that motivated the CSIP referral.",
 )
-data class CreateInvestigationRequest(
+data class UpsertInvestigationRequest(
   @Schema(
     description = "The names of the staff involved in the investigation.",
   )
@@ -44,10 +43,4 @@ data class CreateInvestigationRequest(
   )
   @field:Size(min = 0, max = 4000, message = "Protective Factors must be <= 4000 characters")
   val protectiveFactors: String?,
-
-  @Schema(
-    description = "The interviews in relation to the investigation",
-  )
-  @field:Valid
-  val interviews: Collection<CreateInterviewRequest>?,
 )

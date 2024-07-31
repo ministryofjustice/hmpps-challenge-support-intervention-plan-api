@@ -10,13 +10,16 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
 import org.hibernate.annotations.SoftDelete
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import java.util.UUID
 
 @Entity
@@ -29,20 +32,56 @@ class Investigation(
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
 
-  var staffInvolved: String?,
-
-  var evidenceSecured: String?,
-  var occurrenceReason: String?,
-  var personsUsualBehaviour: String?,
-  var personsTrigger: String?,
-  var protectiveFactors: String?,
-
   @Id
   @Column(name = "investigation_id")
   val id: Long = 0,
-) : SimpleAuditable(), Parented {
+) : SimpleAuditable(), Parented, PropertyChangeMonitor {
+
+  @PostLoad
+  fun resetPropertyChanges() {
+    propertyChanges = mutableSetOf()
+  }
+
+  @Transient
+  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
   override fun parent() = referral
+
+  var staffInvolved: String? = null
+    private set(value) {
+      propertyChanged(::staffInvolved, value)
+      field = value
+    }
+
+  var evidenceSecured: String? = null
+    private set(value) {
+      propertyChanged(::evidenceSecured, value)
+      field = value
+    }
+
+  var occurrenceReason: String? = null
+    private set(value) {
+      propertyChanged(::occurrenceReason, value)
+      field = value
+    }
+
+  var personsUsualBehaviour: String? = null
+    private set(value) {
+      propertyChanged(::personsUsualBehaviour, value)
+      field = value
+    }
+
+  var personsTrigger: String? = null
+    private set(value) {
+      propertyChanged(::personsTrigger, value)
+      field = value
+    }
+
+  var protectiveFactors: String? = null
+    private set(value) {
+      propertyChanged(::protectiveFactors, value)
+      field = value
+    }
 
   @OneToMany(mappedBy = "investigation", cascade = [CascadeType.ALL])
   private val interviews: MutableList<Interview> = mutableListOf()
@@ -78,5 +117,16 @@ class Investigation(
     if (interviews.isNotEmpty()) {
       put(AffectedComponent.Interview, interviews.map { it.interviewUuid }.toSet())
     }
+  }
+
+  fun upsert(
+    request: UpsertInvestigationRequest,
+  ) = apply {
+    staffInvolved = request.staffInvolved
+    evidenceSecured = request.evidenceSecured
+    occurrenceReason = request.occurrenceReason
+    personsUsualBehaviour = request.personsUsualBehaviour
+    personsTrigger = request.personsTrigger
+    protectiveFactors = request.protectiveFactors
   }
 }

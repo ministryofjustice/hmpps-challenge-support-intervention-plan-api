@@ -201,7 +201,7 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
       ErrorResponse(
         status = INTERNAL_SERVER_ERROR,
         userMessage = "Unexpected error: ${e.message}",
-        developerMessage = e.message,
+        developerMessage = "${e::class.simpleName} => ${e.message}",
       ),
     )
 }

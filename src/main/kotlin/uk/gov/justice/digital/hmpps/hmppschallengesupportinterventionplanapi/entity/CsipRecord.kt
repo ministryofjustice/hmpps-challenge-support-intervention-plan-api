@@ -124,10 +124,6 @@ class CsipRecord(
     auditEvents!!.add(auditRequest)
   }
 
-  fun setReferral(referral: Referral) = apply {
-    this.referral = referral
-  }
-
   fun create(
     request: CreateCsipRecordRequest,
     csipRequestContext: CsipRequestContext,
