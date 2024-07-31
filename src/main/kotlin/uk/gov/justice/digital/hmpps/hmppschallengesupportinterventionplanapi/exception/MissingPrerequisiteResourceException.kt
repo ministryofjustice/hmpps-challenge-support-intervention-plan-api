@@ -13,3 +13,6 @@ class MissingReferralException(override val recordUuid: UUID) :
 
 class MissingInvestigationException(override val recordUuid: UUID) :
   MissingPrerequisiteResourceException("CSIP Record is missing an investigation."), MissingComponentException
+
+class MissingPlanException(override val recordUuid: UUID) :
+  MissingPrerequisiteResourceException("CSIP Record is missing an investigation."), MissingComponentException

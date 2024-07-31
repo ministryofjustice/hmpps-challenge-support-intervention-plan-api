@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
@@ -7,12 +8,20 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapsId
+import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
 import org.hibernate.annotations.SoftDelete
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.GenericCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
 import java.time.LocalDate
 import java.util.UUID
@@ -64,6 +73,11 @@ class Plan(
       field = value
     }
 
+  @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
+  private var identifiedNeeds: MutableList<IdentifiedNeed> = mutableListOf()
+
+  fun identifiedNeeds() = identifiedNeeds.toList()
+
   fun upsert(request: UpsertPlanRequest): Plan = apply {
     caseManager = request.caseManager
     reasonForPlan = request.reasonForPlan
@@ -75,4 +89,36 @@ class Plan(
   }
 
   fun auditDescription(): String = propertyChanges.joinToString(prefix = "Updated plan ") { it.description() }
+  fun addIdentifiedNeed(context: CsipRequestContext, request: CreateIdentifiedNeedRequest): IdentifiedNeed =
+    IdentifiedNeed(
+      this,
+      request.identifiedNeed,
+      request.needIdentifiedBy,
+      request.createdDate,
+      request.targetDate,
+      request.closedDate,
+      request.intervention,
+      request.progression,
+    ).apply {
+      verify (identifiedNeeds.none { it.identifiedNeed == identifiedNeed }) {
+        ResourceAlreadyExistException("Identified need already part of plan")
+      }
+      identifiedNeeds.add(this)
+      val affectedComponents = setOf(AffectedComponent.IdentifiedNeed)
+      csipRecord.addAuditEvent(
+        AuditEventAction.CREATED,
+        auditDescription(),
+        affectedComponents,
+      )
+      csipRecord.registerEntityEvent(
+        GenericCsipEvent(
+          type = IDENTIFIED_NEED_CREATED,
+          entityUuid = identifiedNeedUuid,
+          recordUuid = csipRecord.recordUuid,
+          prisonNumber = csipRecord.prisonNumber,
+          occurredAt = context.requestAt,
+          source = context.source,
+        ),
+      )
+    }
 }

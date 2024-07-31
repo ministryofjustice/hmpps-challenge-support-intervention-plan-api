@@ -29,7 +29,7 @@ data class GenericCsipEvent(
   override val prisonNumber: String,
   override val recordUuid: UUID,
   override val entityUuid: UUID,
-  override val description: String,
+  override val description: String = type.description,
   override val occurredAt: LocalDateTime,
   override val source: Source,
 ) : CsipBasicEvent

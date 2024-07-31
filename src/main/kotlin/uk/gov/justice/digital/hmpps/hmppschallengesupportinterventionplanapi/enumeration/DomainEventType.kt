@@ -17,7 +17,10 @@ enum class DomainEventType(
   ),
   INTERVIEW_CREATED("person.csip.interview.created", "An interview record has been created in the CSIP service"),
   INTERVIEW_DELETED("person.csip.interview.deleted", "An interview record has been deleted in the CSIP service"),
-
+  IDENTIFIED_NEED_CREATED(
+    "person.csip.identified-need.created",
+    "An identified need record has been created in the CSIP service",
+  ),
   IDENTIFIED_NEED_DELETED(
     "person.csip.identified-need.deleted",
     "An identified need record has been deleted in the CSIP service",
