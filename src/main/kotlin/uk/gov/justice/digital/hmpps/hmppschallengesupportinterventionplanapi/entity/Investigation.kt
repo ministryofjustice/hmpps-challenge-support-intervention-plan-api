@@ -17,6 +17,7 @@ import org.hibernate.annotations.SoftDelete
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
@@ -91,15 +92,20 @@ class Investigation(
   fun addInterview(
     context: CsipRequestContext,
     createRequest: CreateInterviewRequest,
-    intervieweeRole: ReferenceData,
+    roleProvider: (String) -> ReferenceData,
   ) = Interview(
     investigation = this,
     interviewee = createRequest.interviewee,
     interviewDate = createRequest.interviewDate,
-    intervieweeRole = intervieweeRole,
+    intervieweeRole = roleProvider.invoke(createRequest.intervieweeRoleCode),
     interviewText = createRequest.interviewText,
   ).apply {
     interviews.add(this)
+    referral.csipRecord.addAuditEvent(
+      AuditEventAction.UPDATED,
+      auditDescription(),
+      setOf(AffectedComponent.Interview),
+    )
     referral.csipRecord.registerEntityEvent(
       InterviewCreatedEvent(
         entityUuid = interviewUuid,
@@ -130,3 +136,6 @@ class Investigation(
     protectiveFactors = request.protectiveFactors
   }
 }
+
+fun Interview.auditDescription() =
+  "Added interviewee '$interviewee' with role '${intervieweeRole.code}' - '${intervieweeRole.description}' to investigation"

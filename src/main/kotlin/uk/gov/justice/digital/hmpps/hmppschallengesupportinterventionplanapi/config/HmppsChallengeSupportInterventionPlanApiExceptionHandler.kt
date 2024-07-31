@@ -19,6 +19,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidDomainException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidUserRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingComponentException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPrerequisiteResourceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
@@ -192,6 +193,7 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
         status = BAD_REQUEST,
         userMessage = "Invalid request: ${e.message}",
         developerMessage = e.message,
+        moreInfo = if (e is MissingComponentException) e.recordUuid.toString() else null,
       ),
     )
 

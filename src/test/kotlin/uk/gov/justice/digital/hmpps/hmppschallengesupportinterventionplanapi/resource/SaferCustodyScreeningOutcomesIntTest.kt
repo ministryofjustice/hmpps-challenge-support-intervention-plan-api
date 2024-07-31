@@ -114,9 +114,9 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Invalid request: CSIP Record with UUID: $recordUuid is missing a referral.")
-      assertThat(developerMessage).isEqualTo("CSIP Record with UUID: $recordUuid is missing a referral.")
-      assertThat(moreInfo).isNull()
+      assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a referral.")
+      assertThat(developerMessage).isEqualTo("CSIP Record is missing a referral.")
+      assertThat(moreInfo).isEqualTo(recordUuid.toString())
     }
   }
 
