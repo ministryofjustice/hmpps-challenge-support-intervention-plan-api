@@ -111,7 +111,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `400 bad request - factor type code too long`() {
+  fun `400 bad request - interviewee role code too long`() {
     val response = addInterviewResponseSpec(randomUUID(), createInterviewRequest(roleCode = "n".repeat(13)))
       .errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -194,7 +194,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - contributory factor added DPS`() {
+  fun `201 created - interview added DPS`() {
     val prisonNumber = givenValidPrisonNumber("I1234DP")
     val record = transactionTemplate.execute {
       val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
@@ -220,7 +220,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - contributory factor added NOMIS`() {
+  fun `201 created - interview added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("C1234NM")
     val record = transactionTemplate.execute {
       val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))

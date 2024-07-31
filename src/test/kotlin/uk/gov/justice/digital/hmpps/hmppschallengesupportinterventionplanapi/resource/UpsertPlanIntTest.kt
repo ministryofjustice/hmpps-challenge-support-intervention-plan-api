@@ -124,7 +124,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - create investigation via DPS UI`() {
+  fun `201 created - create plan via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("P1234DS")
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
@@ -146,7 +146,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - create investigation via NOMIS`() {
+  fun `201 created - create plan via NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("P1234NS")
     val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
@@ -185,7 +185,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - no changes made to investigation`() {
+  fun `200 ok - no changes made to plan`() {
     val prisonNumber = givenValidPrisonNumber("P1234NC")
     val csipRecord = transactionTemplate.execute {
       givenCsipRecordWithReferral(generateCsipRecord(prisonNumber)).withPlan()
@@ -201,7 +201,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - update investigation`() {
+  fun `200 ok - update plan`() {
     val prisonNumber = givenValidPrisonNumber("P1234UP")
     val csipRecord = transactionTemplate.execute {
       givenCsipRecordWithReferral(generateCsipRecord(prisonNumber)).withPlan()

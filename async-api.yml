@@ -34,6 +34,8 @@ components:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-created.yaml
     csip.interview.deleted:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-deleted.yaml
+    csip.identified-need.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-identified-need-created.yaml
     csip.identified-need.deleted:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-identified-need-deleted.yaml
     csip.attendee.deleted:
@@ -63,6 +65,8 @@ channels:
         $ref: '#/components/messages/csip.interview.created'
       csip.interview.deleted:
         $ref: '#/components/messages/csip.interview.deleted'
+      csip.identified-need.created:
+        $ref: '#/components/messages/csip.identified-need.created'
       csip.identified-need.deleted:
         $ref: '#/components/messages/csip.identified-need.deleted'
       csip.attendee.deleted:
@@ -83,6 +87,7 @@ operations:
       - $ref: '#/channels/hmpps-domain-events/messages/csip.contributory-factor.deleted'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.interview.created'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.interview.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.identified-need.created'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.identified-need.deleted'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.attendee.deleted'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.review.deleted'

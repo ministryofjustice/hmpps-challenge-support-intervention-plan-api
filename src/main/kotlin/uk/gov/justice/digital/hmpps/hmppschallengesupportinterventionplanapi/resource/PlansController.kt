@@ -95,7 +95,7 @@ class PlansController(private val planService: PlanService) {
   @PostMapping("/{recordUuid}/plan/identified-needs")
   @Operation(
     summary = "Add an identified need to the plan.",
-    description = "Add an identified need to the plan. Publishes prisoner-csip.identified-need-created event",
+    description = "Add an identified need to the plan. Publishes prisoner-csip.identified-need.created event",
   )
   @ApiResponses(
     value = [
@@ -125,14 +125,11 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createIdentifiedNeed(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
-    @Valid @RequestBody createIdentifiedNeedRequest: CreateIdentifiedNeedRequest,
-  ): IdentifiedNeed = throw NotImplementedError()
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
+    @Valid @RequestBody request: CreateIdentifiedNeedRequest,
+  ): IdentifiedNeed = planService.addIdentifiedNeed(recordUuid, request)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/plan/identified-needs/{identifiedNeedUuid}")

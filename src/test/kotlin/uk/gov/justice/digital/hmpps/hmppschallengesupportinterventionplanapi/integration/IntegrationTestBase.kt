@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
@@ -231,6 +232,29 @@ abstract class IntegrationTestBase {
   ) = apply {
     this.set(this::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate, id))
     csipRecordRepository.save(this)
+  }
+
+  fun Plan.withNeed(
+    identifiedNeed: String = "An identified need",
+    needIdentifiedBy: String = "I Dent",
+    createdDate: LocalDate = LocalDate.now(),
+    targetDate: LocalDate = LocalDate.now().plusWeeks(8),
+    closedDate: LocalDate? = null,
+    intervention: String = "intervention description",
+    progression: String? = null,
+  ) = apply {
+    val need = IdentifiedNeed(
+      this,
+      identifiedNeed,
+      needIdentifiedBy,
+      createdDate,
+      targetDate,
+      closedDate,
+      intervention,
+      progression,
+    )
+    this.setByName("identifiedNeeds", identifiedNeeds() + need)
+    csipRecordRepository.save(this.csipRecord)
   }
 
   fun Referral.withDecisionAndActions(
