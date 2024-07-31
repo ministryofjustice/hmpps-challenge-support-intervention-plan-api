@@ -10,15 +10,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import java.util.UUID
 
 @Service
 @Transactional
-class InvestigationService(
-  private val csipRecordRepository: CsipRecordRepository,
-  private val referenceDataRepository: ReferenceDataRepository,
-) {
+class InvestigationService(private val csipRecordRepository: CsipRecordRepository) {
   fun upsertInvestigation(
     recordUuid: UUID,
     request: UpsertInvestigationRequest,
@@ -27,10 +23,7 @@ class InvestigationService(
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = referral.investigation
     return csipRecordRepository.save(
-      referral.upsertInvestigation(
-        csipRequestContext(),
-        request,
-      ),
+      referral.upsertInvestigation(csipRequestContext(), request),
     ).referral!!.investigation!!.toModel().apply { new = investigation == null }
   }
 }

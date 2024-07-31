@@ -28,7 +28,7 @@ class CreateAttendeeRequestTest : RequestValidationTest() {
     assertSingleValidationError(validator.validate(request), "contribution", "Contribution must be <= 4000 characters")
   }
 
-  fun createRequest(
+  private fun createRequest(
     name: String? = "Name",
     role: String? = "Role",
     isAttended: Boolean? = true,

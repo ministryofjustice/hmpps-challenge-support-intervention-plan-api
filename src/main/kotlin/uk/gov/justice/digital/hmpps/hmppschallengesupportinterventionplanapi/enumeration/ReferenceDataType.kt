@@ -28,7 +28,7 @@ enum class ReferenceDataType(val domain: String) {
   ;
 
   companion object {
-    const val VALIDATION_DESCRIPTION =
+    private const val VALIDATION_DESCRIPTION =
       "Reference Data domain name must be one of: area-of-work, " + "contributory-factor-type, role, incident-involvement, incident-location, incident-type, " + "interviewee-role, or outcome-type"
     private val map = entries.associateBy(ReferenceDataType::domain)
 

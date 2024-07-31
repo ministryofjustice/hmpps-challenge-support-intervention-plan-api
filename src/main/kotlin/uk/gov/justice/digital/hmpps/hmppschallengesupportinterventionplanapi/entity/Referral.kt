@@ -324,11 +324,11 @@ class Referral(
       val auditDescription = if (isNew) {
         "Investigation added to referral"
       } else {
-        auditDescription(decisionAndActions!!.propertyChanges, prefix = "Updated investigation ")
+        auditDescription(investigation!!.propertyChanges, prefix = "Updated investigation ")
       }
       val affectedComponents = setOf(AffectedComponent.Investigation)
       csipRecord.addAuditEvent(
-        action = AuditEventAction.CREATED,
+        action = if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,
         description = auditDescription,
         affectedComponents = affectedComponents,
       )

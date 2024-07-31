@@ -38,7 +38,7 @@ import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.util.UUID
 
-class DecisionActionIntTest : IntegrationTestBase() {
+class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var transactionTemplate: TransactionTemplate
