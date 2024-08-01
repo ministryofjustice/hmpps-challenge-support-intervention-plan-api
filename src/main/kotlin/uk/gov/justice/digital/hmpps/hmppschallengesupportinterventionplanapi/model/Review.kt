@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -46,31 +47,6 @@ data class Review(
   val nextReviewDate: LocalDate?,
 
   @Schema(
-    description = "If an action following the review was to inform people responsible for the person in prison.",
-  )
-  val isActionResponsiblePeopleInformed: Boolean?,
-
-  @Schema(
-    description = "If an action following the review was to update the CSIP plan.",
-  )
-  val isActionCsipUpdated: Boolean?,
-
-  @Schema(
-    description = "If the outcome decision following the review was the person should remain on the CSIP plan.",
-  )
-  val isActionRemainOnCsip: Boolean?,
-
-  @Schema(
-    description = "If an action following the review was to add a CSIP case note.",
-  )
-  val isActionCaseNote: Boolean?,
-
-  @Schema(
-    description = "If the outcome decision following the review was closing the CSIP plan.",
-  )
-  val isActionCloseCsip: Boolean?,
-
-  @Schema(
     description = "The date the CSIP plan was closed following a review outcome decision to close it.",
     example = "2021-09-27",
   )
@@ -81,6 +57,11 @@ data class Review(
     description = "Additional information about the review.",
   )
   val summary: String?,
+
+  @Schema(
+    description = "A list of actions following the review.",
+  )
+  val actions: Set<ReviewAction>,
 
   @Schema(
     description = "The date and time the Review was created",

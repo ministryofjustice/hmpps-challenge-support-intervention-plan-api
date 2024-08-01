@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
@@ -57,6 +58,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
@@ -68,6 +70,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
@@ -254,6 +257,25 @@ abstract class IntegrationTestBase {
       progression,
     )
     this.setByName("identifiedNeeds", identifiedNeeds() + need)
+    csipRecordRepository.save(this.csipRecord)
+  }
+
+  fun Plan.withReview(
+    reviewDate: LocalDate? = LocalDate.now(),
+    recordedBy: String = "recordedBy",
+    recordedByDisplayName: String = "recordedByDisplayName",
+    nextReviewDate: LocalDate? = LocalDate.now().plusWeeks(4),
+    csipClosedDate: LocalDate? = null,
+    summary: String? = "A brief summary of the review",
+    actions: Set<ReviewAction> = setOf(),
+    attendees: Collection<CreateAttendeeRequest>? = null,
+  ) = apply {
+    val need = Review(
+      this,
+      (reviews().maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
+      reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions,
+    )
+    this.setByName("reviews", reviews() + need)
     csipRecordRepository.save(this.csipRecord)
   }
 

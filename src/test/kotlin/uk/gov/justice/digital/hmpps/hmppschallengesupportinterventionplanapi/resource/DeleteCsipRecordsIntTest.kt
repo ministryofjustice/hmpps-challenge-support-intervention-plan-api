@@ -12,10 +12,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction.DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -119,6 +122,11 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
         .withInterview(interviewDate = LocalDate.now().minusDays(2))
         .withInterview(interviewDate = LocalDate.now().minusDays(1))
         .withInterview()
+      record.withPlan()
+      requireNotNull(record.plan)
+        .withNeed()
+        .withReview()
+        .withReview()
       record
     }!!
 
@@ -128,18 +136,31 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     val interviewIds = record.referral!!.investigation!!.interviews().map { it.interviewUuid }.toSet()
     assertThat(interviewIds).hasSize(3)
 
+    val needsIds = record.plan!!.identifiedNeeds().map { it.identifiedNeedUuid }.toSet()
+    assertThat(needsIds).hasSize(1)
+
+    val reviewIds = record.plan!!.reviews().map { it.reviewUuid }.toSet()
+    assertThat(reviewIds).hasSize(2)
+
     deleteCsipRecordResponseSpec(record.recordUuid).expectStatus().isNoContent
 
+    val affectedComponents = setOf(Record, Referral, ContributoryFactor, Investigation, Interview, Plan, IdentifiedNeed, Review)
     verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
-    verifyAudit(record, DELETED, setOf(Record, Referral, ContributoryFactor, Investigation, Interview), "CSIP deleted")
+    verifyAudit(
+      record,
+      DELETED,
+      affectedComponents,
+      "CSIP deleted",
+    )
 
     verifyDomainEvents(
       prisonNumber,
       record.recordUuid,
-      setOf(Record, Referral, ContributoryFactor, Investigation, Interview),
+      affectedComponents,
       setOf(DomainEventType.CSIP_DELETED),
-      entityIds = factorUuids + interviewIds,
-      expectedCount = 6,
+      entityIds = factorUuids + interviewIds + needsIds + reviewIds,
+      // expected messages: 1 csip, 2 factors, 3 interviews, 1 identified need, 2 reviews
+      expectedCount = 9,
     )
   }
 

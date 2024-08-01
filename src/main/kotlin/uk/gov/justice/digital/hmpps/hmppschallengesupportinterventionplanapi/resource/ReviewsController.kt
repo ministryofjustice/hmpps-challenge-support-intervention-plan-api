@@ -20,12 +20,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.ReviewService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
@@ -38,7 +40,7 @@ import java.util.UUID
   name = "6. Reviews Controller",
   description = "Endpoints for Reviews And Attendees operations",
 )
-class ReviewsController {
+class ReviewsController(private val reviewService: ReviewService) {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/{recordUuid}/plan/reviews")
   @Operation(
@@ -73,14 +75,11 @@ class ReviewsController {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createReview(
-    @PathVariable @Parameter(
-      description = "CSIP record unique identifier",
-      required = true,
-    ) recordUuid: UUID,
-    @Valid @RequestBody createReviewRequest: CreateReviewRequest,
-  ): Review = throw NotImplementedError()
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
+    @Valid @RequestBody request: CreateReviewRequest,
+  ): Review = reviewService.addReview(recordUuid, request)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/plan/reviews/{reviewUuid}")
@@ -118,10 +117,7 @@ class ReviewsController {
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateReview(
-    @PathVariable @Parameter(
-      description = "Review unique identifier",
-      required = true,
-    ) reviewUuid: UUID,
+    @PathVariable @Parameter(description = "Review unique identifier", required = true) reviewUuid: UUID,
     @Valid @RequestBody updateReviewRequest: UpdateReviewRequest,
   ): Review = throw NotImplementedError()
 
@@ -161,10 +157,7 @@ class ReviewsController {
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createAttendee(
-    @PathVariable @Parameter(
-      description = "Review unique identifier",
-      required = true,
-    ) reviewUuid: UUID,
+    @PathVariable @Parameter(description = "Review unique identifier", required = true) reviewUuid: UUID,
     @Valid @RequestBody createAttendeeRequest: CreateAttendeeRequest,
   ): Attendee = throw NotImplementedError()
 
@@ -204,10 +197,7 @@ class ReviewsController {
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateAttendee(
-    @PathVariable @Parameter(
-      description = "Attendee unique identifier",
-      required = true,
-    ) attendeeUuid: UUID,
+    @PathVariable @Parameter(description = "Attendee unique identifier", required = true) attendeeUuid: UUID,
     @Valid @RequestBody updateAttendeeRequest: UpdateAttendeeRequest,
   ): Attendee = throw NotImplementedError()
 
