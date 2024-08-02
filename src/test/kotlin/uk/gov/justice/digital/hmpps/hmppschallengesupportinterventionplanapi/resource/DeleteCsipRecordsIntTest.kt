@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
@@ -123,10 +124,12 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
         .withInterview(interviewDate = LocalDate.now().minusDays(1))
         .withInterview()
       record.withPlan()
-      requireNotNull(record.plan)
+      val plan = requireNotNull(record.plan)
         .withNeed()
         .withReview()
         .withReview()
+      val review1 = plan.reviews().first()
+      review1.withAttendee()
       record
     }!!
 
@@ -142,9 +145,16 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     val reviewIds = record.plan!!.reviews().map { it.reviewUuid }.toSet()
     assertThat(reviewIds).hasSize(2)
 
+    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.attendeeUuid } }
+    assertThat(attendeeIds).hasSize(1)
+
     deleteCsipRecordResponseSpec(record.recordUuid).expectStatus().isNoContent
 
-    val affectedComponents = setOf(Record, Referral, ContributoryFactor, Investigation, Interview, Plan, IdentifiedNeed, Review)
+    val affectedComponents =
+      setOf(
+        Record, Referral, ContributoryFactor, Investigation, Interview, Plan, IdentifiedNeed, Review,
+        AffectedComponent.Attendee,
+      )
     verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
     verifyAudit(
       record,
@@ -157,10 +167,17 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
       prisonNumber,
       record.recordUuid,
       affectedComponents,
-      setOf(DomainEventType.CSIP_DELETED),
-      entityIds = factorUuids + interviewIds + needsIds + reviewIds,
+      setOf(
+        DomainEventType.CSIP_DELETED,
+        DomainEventType.CONTRIBUTORY_FACTOR_DELETED,
+        DomainEventType.INTERVIEW_DELETED,
+        DomainEventType.IDENTIFIED_NEED_DELETED,
+        DomainEventType.REVIEW_DELETED,
+        DomainEventType.ATTENDEE_DELETED,
+      ),
+      entityIds = factorUuids + interviewIds + needsIds + reviewIds + attendeeIds,
       // expected messages: 1 csip, 2 factors, 3 interviews, 1 identified need, 2 reviews
-      expectedCount = 9,
+      expectedCount = 10,
     )
   }
 

@@ -25,6 +25,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEventRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
@@ -278,6 +279,17 @@ abstract class IntegrationTestBase {
     )
     this.setByName("reviews", reviews() + need)
     csipRecordRepository.save(this.csipRecord)
+  }
+
+  fun Review.withAttendee(
+    name: String? = "name",
+    role: String? = "role",
+    attended: Boolean? = true,
+    contribution: String? = "a small contribution",
+  ) = apply {
+    val attendee = Attendee(this, name, role, attended, contribution)
+    this.setByName("attendees", attendees() + attendee)
+    csipRecordRepository.save(plan.csipRecord)
   }
 
   fun Referral.withDecisionAndActions(

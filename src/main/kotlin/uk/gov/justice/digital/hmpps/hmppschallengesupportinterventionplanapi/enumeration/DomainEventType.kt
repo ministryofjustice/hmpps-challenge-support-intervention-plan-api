@@ -12,7 +12,7 @@ enum class DomainEventType(
     "A contributory factor has been created in the CSIP service",
   ),
   CONTRIBUTORY_FACTOR_DELETED(
-    "person.csip.contributory-factor.created",
+    "person.csip.contributory-factor.deleted",
     "A contributory factor has been deleted in the CSIP service",
   ),
   INTERVIEW_CREATED("person.csip.interview.created", "An interview record has been created in the CSIP service"),
