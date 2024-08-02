@@ -161,7 +161,7 @@ class AddReviewIntTest : IntegrationTestBase() {
       givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
     }!!
 
-    val request = createReviewRequest()
+    val request = createReviewRequest(actions = setOf(ReviewAction.CaseNote, ReviewAction.RemainOnCsip))
     val response = addReview(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     val review = getReview(record.recordUuid, response.reviewUuid)
