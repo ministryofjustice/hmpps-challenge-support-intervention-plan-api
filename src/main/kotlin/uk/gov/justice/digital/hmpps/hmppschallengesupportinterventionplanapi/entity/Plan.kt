@@ -19,9 +19,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
 import java.time.LocalDate
 import java.util.UUID
@@ -76,7 +78,12 @@ class Plan(
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
   private var identifiedNeeds: MutableList<IdentifiedNeed> = mutableListOf()
 
+  @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
+  private var reviews: MutableList<Review> = mutableListOf()
+
   fun identifiedNeeds() = identifiedNeeds.toList()
+
+  fun reviews() = reviews.toList()
 
   fun upsert(request: UpsertPlanRequest): Plan = apply {
     caseManager = request.caseManager
@@ -86,6 +93,15 @@ class Plan(
 
   internal fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
     put(AffectedComponent.Plan, setOf())
+    if (identifiedNeeds.isNotEmpty()) {
+      put(AffectedComponent.IdentifiedNeed, identifiedNeeds.map { it.identifiedNeedUuid }.toSet())
+    }
+    putAll(
+      reviews.flatMap { it.components().entries }.fold(mutableMapOf()) { acc, next ->
+        acc[next.component1()] = (acc[next.component1()] ?: setOf()) + (next.component2())
+        acc
+      },
+    )
   }
 
   fun auditDescription(): String = propertyChanges.joinToString(prefix = "Updated plan ") { it.description() }
@@ -121,4 +137,38 @@ class Plan(
         ),
       )
     }
+
+  fun addReview(context: CsipRequestContext, request: CreateReviewRequest): Review = Review(
+    this,
+    (reviews.maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
+    request.reviewDate,
+    request.recordedBy,
+    request.recordedByDisplayName,
+    request.nextReviewDate,
+    request.csipClosedDate,
+    request.summary,
+    request.actions ?: setOf(),
+  ).apply {
+    reviews.add(this)
+    request.attendees?.forEach { addAttendee(context, it, false) }
+    val affectedComponents = buildSet {
+      add(AffectedComponent.Review)
+      if (request.attendees?.isNotEmpty() == true) add(AffectedComponent.Attendee)
+    }
+    csipRecord.addAuditEvent(
+      AuditEventAction.CREATED,
+      auditDescription(),
+      affectedComponents,
+    )
+    csipRecord.registerEntityEvent(
+      GenericCsipEvent(
+        type = REVIEW_CREATED,
+        entityUuid = reviewUuid,
+        recordUuid = csipRecord.recordUuid,
+        prisonNumber = csipRecord.prisonNumber,
+        occurredAt = context.requestAt,
+        source = context.source,
+      ),
+    )
+  }
 }

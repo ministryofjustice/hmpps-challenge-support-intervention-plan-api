@@ -12,7 +12,7 @@ enum class DomainEventType(
     "A contributory factor has been created in the CSIP service",
   ),
   CONTRIBUTORY_FACTOR_DELETED(
-    "person.csip.contributory-factor.created",
+    "person.csip.contributory-factor.deleted",
     "A contributory factor has been deleted in the CSIP service",
   ),
   INTERVIEW_CREATED("person.csip.interview.created", "An interview record has been created in the CSIP service"),
@@ -25,6 +25,8 @@ enum class DomainEventType(
     "person.csip.identified-need.deleted",
     "An identified need record has been deleted in the CSIP service",
   ),
-  ATTENDEE_DELETED("person.csip.attendee.deleted", "An attendee record has been deleted in the CSIP service"),
+  REVIEW_CREATED("person.csip.review.created", "A review record has been created in the CSIP service"),
   REVIEW_DELETED("person.csip.review.deleted", "A review record has been deleted in the CSIP service"),
+  ATTENDEE_CREATED("person.csip.attendee.created", "An attendee record has been created in the CSIP service"),
+  ATTENDEE_DELETED("person.csip.attendee.deleted", "An attendee record has been deleted in the CSIP service"),
 }

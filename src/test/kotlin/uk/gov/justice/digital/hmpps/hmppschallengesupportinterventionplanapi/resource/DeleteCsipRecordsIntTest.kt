@@ -11,11 +11,15 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction.DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -119,6 +123,13 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
         .withInterview(interviewDate = LocalDate.now().minusDays(2))
         .withInterview(interviewDate = LocalDate.now().minusDays(1))
         .withInterview()
+      record.withPlan()
+      val plan = requireNotNull(record.plan)
+        .withNeed()
+        .withReview()
+        .withReview()
+      val review1 = plan.reviews().first()
+      review1.withAttendee()
       record
     }!!
 
@@ -128,18 +139,45 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     val interviewIds = record.referral!!.investigation!!.interviews().map { it.interviewUuid }.toSet()
     assertThat(interviewIds).hasSize(3)
 
+    val needsIds = record.plan!!.identifiedNeeds().map { it.identifiedNeedUuid }.toSet()
+    assertThat(needsIds).hasSize(1)
+
+    val reviewIds = record.plan!!.reviews().map { it.reviewUuid }.toSet()
+    assertThat(reviewIds).hasSize(2)
+
+    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.attendeeUuid } }
+    assertThat(attendeeIds).hasSize(1)
+
     deleteCsipRecordResponseSpec(record.recordUuid).expectStatus().isNoContent
 
+    val affectedComponents =
+      setOf(
+        Record, Referral, ContributoryFactor, Investigation, Interview, Plan, IdentifiedNeed, Review,
+        AffectedComponent.Attendee,
+      )
     verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
-    verifyAudit(record, DELETED, setOf(Record, Referral, ContributoryFactor, Investigation, Interview), "CSIP deleted")
+    verifyAudit(
+      record,
+      DELETED,
+      affectedComponents,
+      "CSIP deleted",
+    )
 
     verifyDomainEvents(
       prisonNumber,
       record.recordUuid,
-      setOf(Record, Referral, ContributoryFactor, Investigation, Interview),
-      setOf(DomainEventType.CSIP_DELETED),
-      entityIds = factorUuids + interviewIds,
-      expectedCount = 6,
+      affectedComponents,
+      setOf(
+        DomainEventType.CSIP_DELETED,
+        DomainEventType.CONTRIBUTORY_FACTOR_DELETED,
+        DomainEventType.INTERVIEW_DELETED,
+        DomainEventType.IDENTIFIED_NEED_DELETED,
+        DomainEventType.REVIEW_DELETED,
+        DomainEventType.ATTENDEE_DELETED,
+      ),
+      entityIds = factorUuids + interviewIds + needsIds + reviewIds + attendeeIds,
+      // expected messages: 1 csip, 2 factors, 3 interviews, 1 identified need, 2 reviews
+      expectedCount = 10,
     )
   }
 

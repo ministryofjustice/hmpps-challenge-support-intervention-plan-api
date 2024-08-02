@@ -56,4 +56,10 @@ private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanap
   )
 
 private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan.toModel(): Plan =
-  Plan(caseManager, reasonForPlan, firstCaseReviewDate, listOf(), listOf())
+  Plan(
+    caseManager,
+    reasonForPlan,
+    firstCaseReviewDate,
+    identifiedNeeds().map { it.toModel() },
+    reviews().map { it.toModel() },
+  )

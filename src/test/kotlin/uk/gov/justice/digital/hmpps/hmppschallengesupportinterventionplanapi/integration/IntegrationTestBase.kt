@@ -25,6 +25,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEventRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
@@ -57,6 +59,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
@@ -68,6 +71,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
@@ -165,7 +169,8 @@ abstract class IntegrationTestBase {
       }
       events.forEach { event ->
         with(event) {
-          assertThat(this.eventType).isEqualTo(eventType.eventType)
+          val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == this.eventType })
+          assertThat(domainEventType).isIn(eventTypes)
           with(additionalInformation as CsipBaseInformation) {
             if (this is CsipAdditionalInformation) {
               assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
@@ -173,7 +178,7 @@ abstract class IntegrationTestBase {
             assertThat(this.recordUuid).isEqualTo(recordUuid)
             assertThat(this.source).isEqualTo(source)
           }
-          assertThat(description).isEqualTo(eventType.description)
+          assertThat(description).isEqualTo(domainEventType.description)
           assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
           assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
         }
@@ -255,6 +260,36 @@ abstract class IntegrationTestBase {
     )
     this.setByName("identifiedNeeds", identifiedNeeds() + need)
     csipRecordRepository.save(this.csipRecord)
+  }
+
+  fun Plan.withReview(
+    reviewDate: LocalDate? = LocalDate.now(),
+    recordedBy: String = "recordedBy",
+    recordedByDisplayName: String = "recordedByDisplayName",
+    nextReviewDate: LocalDate? = LocalDate.now().plusWeeks(4),
+    csipClosedDate: LocalDate? = null,
+    summary: String? = "A brief summary of the review",
+    actions: Set<ReviewAction> = setOf(),
+    attendees: Collection<CreateAttendeeRequest>? = null,
+  ) = apply {
+    val need = Review(
+      this,
+      (reviews().maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
+      reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions,
+    )
+    this.setByName("reviews", reviews() + need)
+    csipRecordRepository.save(this.csipRecord)
+  }
+
+  fun Review.withAttendee(
+    name: String? = "name",
+    role: String? = "role",
+    attended: Boolean? = true,
+    contribution: String? = "a small contribution",
+  ) = apply {
+    val attendee = Attendee(this, name, role, attended, contribution)
+    this.setByName("attendees", attendees() + attendee)
+    csipRecordRepository.save(plan.csipRecord)
   }
 
   fun Referral.withDecisionAndActions(
