@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
@@ -82,9 +83,9 @@ fun Referral.toModel() =
     isStaffAssaulted = staffAssaulted,
     isReferralComplete = referralComplete,
     isSaferCustodyTeamInformed = saferCustodyTeamInformed,
-    saferCustodyScreeningOutcome = null,
-    decisionAndActions = null,
-    investigation = null,
+    saferCustodyScreeningOutcome = saferCustodyScreeningOutcome?.toModel(),
+    decisionAndActions = decisionAndActions?.toModel(),
+    investigation = investigation?.toModel(),
     contributoryFactors = contributoryFactors().map { it.toModel() },
   )
 
