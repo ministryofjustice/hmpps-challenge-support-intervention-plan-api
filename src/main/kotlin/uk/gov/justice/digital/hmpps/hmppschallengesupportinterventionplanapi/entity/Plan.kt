@@ -150,7 +150,11 @@ class Plan(
     request.actions ?: setOf(),
   ).apply {
     reviews.add(this)
-    val affectedComponents = setOf(AffectedComponent.Review)
+    request.attendees?.forEach { addAttendee(context, it, false) }
+    val affectedComponents = buildSet {
+      add(AffectedComponent.Review)
+      if (request.attendees?.isNotEmpty() == true) add(AffectedComponent.Attendee)
+    }
     csipRecord.addAuditEvent(
       AuditEventAction.CREATED,
       auditDescription(),

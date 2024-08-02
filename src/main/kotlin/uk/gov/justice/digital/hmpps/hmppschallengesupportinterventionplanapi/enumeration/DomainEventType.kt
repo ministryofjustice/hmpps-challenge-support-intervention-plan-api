@@ -27,5 +27,6 @@ enum class DomainEventType(
   ),
   REVIEW_CREATED("person.csip.review.created", "A review record has been created in the CSIP service"),
   REVIEW_DELETED("person.csip.review.deleted", "A review record has been deleted in the CSIP service"),
+  ATTENDEE_CREATED("person.csip.attendee.created", "An attendee record has been created in the CSIP service"),
   ATTENDEE_DELETED("person.csip.attendee.deleted", "An attendee record has been deleted in the CSIP service"),
 }

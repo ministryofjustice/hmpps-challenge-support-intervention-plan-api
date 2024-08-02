@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.NO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
@@ -41,10 +42,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createReferralRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class CreateCsipRecordsIntTest : IntegrationTestBase() {
@@ -588,6 +589,46 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       val type: ReferenceDataType,
       val code: (CreateReferralRequest) -> String,
       val message: String,
+    )
+
+    private fun createCsipRecordRequest(
+      createReferralRequest: CreateReferralRequest = createReferralRequest(),
+      logCode: String? = LOG_CODE,
+    ) = CreateCsipRecordRequest(
+      logCode,
+      createReferralRequest,
+    )
+
+    private fun createReferralRequest(
+      incidentTypeCode: String = "ATO",
+      incidentLocationCode: String = "EDU",
+      refererAreaCode: String = "ACT",
+      incidentInvolvementCode: String = "OTH",
+      contributoryFactorTypeCode: Collection<String> = listOf("AFL"),
+      referralComplete: Boolean? = null,
+      completedDate: LocalDate? = null,
+      completedBy: String? = null,
+      completedByDisplayName: String? = null,
+    ) = CreateReferralRequest(
+      LocalDate.now(),
+      LocalTime.now(),
+      incidentTypeCode,
+      incidentLocationCode,
+      "REFERRER",
+      refererAreaCode,
+      isProactiveReferral = false,
+      isStaffAssaulted = false,
+      "",
+      incidentInvolvementCode,
+      "concern description",
+      "known reasons",
+      "",
+      NO,
+      referralComplete,
+      completedDate,
+      completedBy,
+      completedByDisplayName,
+      contributoryFactorTypeCode.map { createContributoryFactorRequest(it) },
     )
   }
 }

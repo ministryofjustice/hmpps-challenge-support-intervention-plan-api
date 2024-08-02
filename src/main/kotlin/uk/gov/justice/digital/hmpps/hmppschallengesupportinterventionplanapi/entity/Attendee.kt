@@ -37,3 +37,6 @@ class Attendee(
 ) : SimpleAuditable(), Parented {
   override fun parent() = review
 }
+
+fun Attendee.auditDescription() =
+  "Added attendee '$name' with role '$role' to plan review"

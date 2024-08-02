@@ -168,7 +168,8 @@ abstract class IntegrationTestBase {
       }
       events.forEach { event ->
         with(event) {
-          assertThat(this.eventType).isEqualTo(eventType.eventType)
+          val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == this.eventType })
+          assertThat(domainEventType).isIn(eventTypes)
           with(additionalInformation as CsipBaseInformation) {
             if (this is CsipAdditionalInformation) {
               assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
@@ -176,7 +177,7 @@ abstract class IntegrationTestBase {
             assertThat(this.recordUuid).isEqualTo(recordUuid)
             assertThat(this.source).isEqualTo(source)
           }
-          assertThat(description).isEqualTo(eventType.description)
+          assertThat(description).isEqualTo(domainEventType.description)
           assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
           assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
         }

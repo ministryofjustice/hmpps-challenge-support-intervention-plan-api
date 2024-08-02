@@ -13,9 +13,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.auditDescription
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createAttendeeRequest
 import java.time.LocalDate
 import java.util.UUID
 import java.util.UUID.randomUUID
@@ -126,20 +127,30 @@ class AddReviewIntTest : IntegrationTestBase() {
       givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
     }!!
 
-    val request = createReviewRequest()
+    val request = createReviewRequest(attendees = listOf(createAttendeeRequest(), createAttendeeRequest()))
     val response = addReview(record.recordUuid, request)
 
     val review = getReview(record.recordUuid, response.reviewUuid)
     review.verifyAgainst(request)
 
-    verifyAudit(record, AuditEventAction.CREATED, setOf(AffectedComponent.Review), review.auditDescription())
+    val attendeeUuids = review.attendees().map { it.attendeeUuid }
+    assertThat(attendeeUuids.size).isEqualTo(2)
+
+    val affectedComponents = setOf(AffectedComponent.Review, AffectedComponent.Attendee)
+    verifyAudit(
+      record,
+      AuditEventAction.CREATED,
+      affectedComponents,
+      "Review with 2 attendees added to plan",
+    )
 
     verifyDomainEvents(
       prisonNumber,
       record.recordUuid,
-      setOf(AffectedComponent.Review),
-      setOf(REVIEW_CREATED),
-      setOf(response.reviewUuid),
+      affectedComponents,
+      setOf(REVIEW_CREATED, ATTENDEE_CREATED),
+      setOf(response.reviewUuid) + attendeeUuids,
+      expectedCount = 3,
     )
   }
 
@@ -160,7 +171,7 @@ class AddReviewIntTest : IntegrationTestBase() {
       record,
       AuditEventAction.CREATED,
       setOf(AffectedComponent.Review),
-      review.auditDescription(),
+      "Review with 0 attendees added to plan",
       NOMIS,
       NOMIS_SYS_USER,
       NOMIS_SYS_USER_DISPLAY_NAME,
@@ -228,6 +239,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     assertThat(csipClosedDate).isEqualTo(request.csipClosedDate)
     assertThat(summary).isEqualTo(request.summary)
     assertThat(actions).isEqualTo(request.actions)
+    assertThat(attendees().size).isEqualTo(request.attendees?.size ?: 0)
   }
 
   private fun getReview(recordUuid: UUID, reviewUuid: UUID): Review =

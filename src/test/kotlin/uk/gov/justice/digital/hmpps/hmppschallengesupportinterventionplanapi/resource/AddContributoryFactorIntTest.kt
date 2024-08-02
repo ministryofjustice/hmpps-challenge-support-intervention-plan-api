@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -46,7 +47,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @NullSource
   @ValueSource(strings = ["WRONG_ROLE"])
   fun `403 forbidden - no required role`(role: String?) {
-    val response = addContributoryFactorResponseSpec(randomUUID(), contributoryFactorRequest(), role = role)
+    val response = addContributoryFactorResponseSpec(randomUUID(), createContributoryFactorRequest(), role = role)
       .errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
@@ -81,7 +82,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val response = addContributoryFactorResponseSpec(randomUUID(), contributoryFactorRequest(), username = null)
+    val response = addContributoryFactorResponseSpec(randomUUID(), createContributoryFactorRequest(), username = null)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -97,7 +98,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   fun `400 bad request - username not found`() {
     val response = addContributoryFactorResponseSpec(
       randomUUID(),
-      contributoryFactorRequest(),
+      createContributoryFactorRequest(),
       username = USER_NOT_FOUND,
     ).errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -112,7 +113,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - factor type code too long`() {
-    val response = addContributoryFactorResponseSpec(randomUUID(), contributoryFactorRequest(type = "n".repeat(13)))
+    val response = addContributoryFactorResponseSpec(randomUUID(), createContributoryFactorRequest(type = "n".repeat(13)))
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -142,7 +143,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `404 not found - csip record not found`() {
     val uuid = randomUUID()
-    val response = addContributoryFactorResponseSpec(uuid, contributoryFactorRequest())
+    val response = addContributoryFactorResponseSpec(uuid, createContributoryFactorRequest())
       .errorResponse(HttpStatus.NOT_FOUND)
 
     with(response) {
@@ -164,7 +165,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     }!!
     val response = addContributoryFactorResponseSpec(
       record.recordUuid,
-      contributoryFactorRequest(type = record.referral!!.contributoryFactors().first().contributoryFactorType.code),
+      createContributoryFactorRequest(type = record.referral!!.contributoryFactors().first().contributoryFactorType.code),
     ).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -181,7 +182,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("C1234DP")
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
-    val request = contributoryFactorRequest()
+    val request = createContributoryFactorRequest()
     val response = addContributoryFactor(record.recordUuid, request)
 
     with(response) {
@@ -208,7 +209,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("C1234NM")
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
-    val request = contributoryFactorRequest(comment = "This was done by nomis")
+    val request = createContributoryFactorRequest(comment = "This was done by nomis")
     val response = addContributoryFactor(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     with(response) {
@@ -273,11 +274,11 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     @JvmStatic
     fun referenceDataValidation() = listOf(
       Arguments.of(
-        contributoryFactorRequest(type = "NONEXISTENT"),
+        createContributoryFactorRequest(type = "NONEXISTENT"),
         InvalidRd(CONTRIBUTORY_FACTOR_TYPE, CreateContributoryFactorRequest::factorTypeCode, INVALID),
       ),
       Arguments.of(
-        contributoryFactorRequest(type = "CFT_INACT"),
+        createContributoryFactorRequest(type = "CFT_INACT"),
         InvalidRd(CONTRIBUTORY_FACTOR_TYPE, CreateContributoryFactorRequest::factorTypeCode, NOT_ACTIVE),
       ),
     )
@@ -287,8 +288,5 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       val code: (CreateContributoryFactorRequest) -> String,
       val message: String,
     )
-
-    private fun contributoryFactorRequest(type: String = "BAS", comment: String? = "comment about the factor") =
-      CreateContributoryFactorRequest(type, comment)
   }
 }
