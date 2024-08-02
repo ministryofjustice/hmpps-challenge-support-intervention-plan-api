@@ -155,11 +155,11 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun createAttendee(
     @PathVariable @Parameter(description = "Review unique identifier", required = true) reviewUuid: UUID,
-    @Valid @RequestBody createAttendeeRequest: CreateAttendeeRequest,
-  ): Attendee = throw NotImplementedError()
+    @Valid @RequestBody request: CreateAttendeeRequest,
+  ): Attendee = reviewService.addAttendee(reviewUuid, request)
 
   @ResponseStatus(HttpStatus.OK)
   @PatchMapping("/plan/reviews/attendees/{attendeeUuid}")

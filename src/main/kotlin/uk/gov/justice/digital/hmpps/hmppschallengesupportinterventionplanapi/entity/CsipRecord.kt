@@ -127,6 +127,8 @@ class CsipRecord(
   ) = apply {
     auditEvents = (auditEvents ?: mutableSetOf())
     auditEvents!!.add(auditRequest)
+    // change modifiedAt to force hibernate to save audit record
+    lastModifiedAt = LocalDateTime.now()
   }
 
   fun create(
