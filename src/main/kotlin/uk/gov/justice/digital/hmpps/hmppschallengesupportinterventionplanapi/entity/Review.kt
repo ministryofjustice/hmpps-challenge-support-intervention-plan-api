@@ -72,10 +72,9 @@ class Review(
   fun addAttendee(context: CsipRequestContext, request: CreateAttendeeRequest, createAudit: Boolean) =
     Attendee(this, request.name, request.role, request.isAttended, request.contribution).apply {
       attendees.add(this)
-      val affectedComponents = setOf(AffectedComponent.Attendee)
       val record = review.plan.csipRecord
       if (createAudit) {
-        record.addAuditEvent(AuditEventAction.CREATED, auditDescription(), affectedComponents)
+        record.addAuditEvent(AuditEventAction.CREATED, auditDescription(), setOf(AffectedComponent.Attendee))
       }
       record.registerEntityEvent(
         GenericCsipEvent(
