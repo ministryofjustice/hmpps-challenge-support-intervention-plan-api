@@ -185,7 +185,7 @@ erDiagram
         varchar(32) recorded_by "not null. The username of the person who recorded the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_USER"
         varchar(255) recorded_by_display_name "not null. The displayable name of the person who recorded the review. Not mapped"
         date next_review_date "The date of the next review. Maps to OFFENDER_CSIP_REVIEWS.NEXT_REVIEW_DATE"
-        varchar[] actions "An enumeration of actions following the review ['ResponsiblePeopleInformed', 'CsipUpdated', 'RemainOnCsip', 'CaseNote', 'CloseCsip']"
+        varchar[] actions "If the actions following the review include: informing people responsible for the person in prison, updating the CSIP plan, deciding the person should remain on the CSIP plan, adding a CSIP case note, and closing the CSIP plan. Maps to OFFENDER_CSIP_REVIEWS.PEOPLE_INFORMED, OFFENDER_CSIP_REVIEWS.CSIP_UPDATED, OFFENDER_CSIP_REVIEWS.REMAIN_ON_CSIP, OFFENDER_CSIP_REVIEWS.CASE_NOTE, and OFFENDER_CSIP_REVIEWS.CLOSE_CSIP, which all have default value 'N'"
         date csip_closed_date "The date the CSIP plan was closed following a review outcome decision to close it. Maps to OFFENDER_CSIP_REVIEWS.CLOSE_DATE"
         text summary "Additional information about the review. Maps to OFFENDER_CSIP_REVIEWS.SUMMARY. 4000 character limit"
         timestamp created_at "not null. The date and time the review was created. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATETIME"
