@@ -35,10 +35,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -312,7 +313,7 @@ class Referral(
 
   fun upsertInvestigation(
     context: CsipRequestContext,
-    request: UpsertInvestigationRequest,
+    request: InvestigationRequest,
   ): CsipRecord {
     val isNew = investigation == null
     if (isNew) {
@@ -326,7 +327,10 @@ class Referral(
       } else {
         auditDescription(investigation!!.propertyChanges, prefix = "Updated investigation ")
       }
-      val affectedComponents = setOf(AffectedComponent.Investigation)
+      val affectedComponents = buildSet {
+        add((AffectedComponent.Investigation))
+        if (request is CreateInvestigationRequest && request.interviews?.isNotEmpty() == true) add(AffectedComponent.Interview)
+      }
       csipRecord.addAuditEvent(
         action = if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,
         description = auditDescription,

@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
 import java.util.UUID
 
 @Entity
@@ -125,9 +125,7 @@ class Investigation(
     }
   }
 
-  fun upsert(
-    request: UpsertInvestigationRequest,
-  ) = apply {
+  fun upsert(request: InvestigationRequest) = apply {
     staffInvolved = request.staffInvolved
     evidenceSecured = request.evidenceSecured
     occurrenceReason = request.occurrenceReason

@@ -18,104 +18,23 @@ class UpsertInvestigationRequestTest : RequestValidationTest() {
   }
 
   @Test
-  fun `staffInvolved must be no more than 4000 characters`() {
+  fun `validation fails if size constraints are not met`() {
     val request = UpsertInvestigationRequest(
       staffInvolved = "n".repeat(4001),
-      evidenceSecured = null,
-      occurrenceReason = null,
-      personsUsualBehaviour = null,
-      personsTrigger = null,
-      protectiveFactors = null,
-    )
-    assertSingleValidationError(
-      validator.validate(request),
-      "staffInvolved",
-      "Staff involved must be <= 4000 characters",
-    )
-  }
-
-  @Test
-  fun `evidenceSecured must be no more than 4000 characters`() {
-    val request = UpsertInvestigationRequest(
-      staffInvolved = null,
       evidenceSecured = "n".repeat(4001),
-      occurrenceReason = null,
-      personsUsualBehaviour = null,
-      personsTrigger = null,
-      protectiveFactors = null,
-    )
-    assertSingleValidationError(
-      validator.validate(request),
-      "evidenceSecured",
-      "Evidence Secured must be <= 4000 characters",
-    )
-  }
-
-  @Test
-  fun `occurrenceReason must be no more than 4000 characters`() {
-    val request = UpsertInvestigationRequest(
-      staffInvolved = null,
-      evidenceSecured = null,
       occurrenceReason = "n".repeat(4001),
-      personsUsualBehaviour = null,
-      personsTrigger = null,
-      protectiveFactors = null,
-    )
-    assertSingleValidationError(
-      validator.validate(request),
-      "occurrenceReason",
-      "Occurrence reason must be <= 4000 characters",
-    )
-  }
-
-  @Test
-  fun `personsUsualBehaviour must be no more than 4000 characters`() {
-    val request = UpsertInvestigationRequest(
-      staffInvolved = null,
-      evidenceSecured = null,
-      occurrenceReason = null,
       personsUsualBehaviour = "n".repeat(4001),
-      personsTrigger = null,
-      protectiveFactors = null,
-    )
-    assertSingleValidationError(
-      validator.validate(request),
-      "personsUsualBehaviour",
-      "Person's Usual Behaviour must be <= 4000 characters",
-    )
-  }
-
-  @Test
-  fun `personsTrigger must be no more than 4000 characters`() {
-    val request = UpsertInvestigationRequest(
-      staffInvolved = null,
-      evidenceSecured = null,
-      occurrenceReason = null,
-      personsUsualBehaviour = null,
       personsTrigger = "n".repeat(4001),
-      protectiveFactors = null,
-    )
-    assertSingleValidationError(
-      validator.validate(request),
-      "personsTrigger",
-      "Person's Trigger must be <= 4000 characters",
-    )
-  }
-
-  @Test
-  fun `protectiveFactors must be no more than 4000 characters`() {
-    val request = UpsertInvestigationRequest(
-      staffInvolved = null,
-      evidenceSecured = null,
-      occurrenceReason = null,
-      personsUsualBehaviour = null,
-      personsTrigger = null,
       protectiveFactors = "n".repeat(4001),
     )
-    assertSingleValidationError(
+    assertValidationErrors(
       validator.validate(request),
-      "protectiveFactors",
-      "Protective Factors must be <= 4000 characters",
+      Pair("staffInvolved", "Staff involved must be <= 4000 characters"),
+      Pair("personsUsualBehaviour", "Person's Usual Behaviour must be <= 4000 characters"),
+      Pair("protectiveFactors", "Protective Factors must be <= 4000 characters"),
+      Pair("occurrenceReason", "Occurrence reason must be <= 4000 characters"),
+      Pair("personsTrigger", "Person's Trigger must be <= 4000 characters"),
+      Pair("evidenceSecured", "Evidence Secured must be <= 4000 characters"),
     )
   }
 }

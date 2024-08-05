@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
-import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -318,12 +318,5 @@ class AddInterviewIntTest : IntegrationTestBase() {
       val code: (CreateInterviewRequest) -> String,
       val message: String,
     )
-
-    private fun createInterviewRequest(
-      roleCode: String = "OTHER",
-      date: LocalDate = LocalDate.now(),
-      interviewee: String = "A Person",
-      notes: String? = null,
-    ) = CreateInterviewRequest(interviewee, date, roleCode, notes)
   }
 }
