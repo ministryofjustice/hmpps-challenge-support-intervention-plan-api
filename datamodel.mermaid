@@ -162,7 +162,7 @@ erDiagram
         uuid identified_need_uuid "not null unique. Mapped to OFFENDER_CSIP_PLANS"
         bigint plan_id FK "not null"
         text identified_need "not null. Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED. 1000 character limit"
-        varchar(100) need_identified_by "not null. The name of the person who is responsible for taking action on the intervention. Maps to OFFENDER_CSIP_PLANS.BY_WHOM. Who identified the need (free text)"
+        varchar(100) responsible_person "not null. The name of the person who is responsible for taking action on the intervention. Maps to OFFENDER_CSIP_PLANS.BY_WHOM. Who identified the need (free text)"
         date created_date "not null. The date the need was identified. Maps to OFFENDER_CSIP_PLANS.CREATE_DATE. Date the need was identified"
         date target_date "not null. The target date the need should be progressed or resolved. Maps to OFFENDER_CSIP_PLANS.TARGET_DATE. Target date of the identified need"
         date closed_date "The date the identified need was resolved or closed. Maps to OFFENDER_CSIP_PLANS.CLOSED_DATE"
