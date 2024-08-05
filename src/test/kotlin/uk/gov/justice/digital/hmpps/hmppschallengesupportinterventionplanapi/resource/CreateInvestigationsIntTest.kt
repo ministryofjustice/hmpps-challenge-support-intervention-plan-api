@@ -204,6 +204,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     val request = createInvestigationRequest(interviews = listOf(createInterviewRequest(), createInterviewRequest()))
 
     val response = createInvestigation(recordUuid, request)
+    val interviewUuids = response.interviews.map { it.interviewUuid }
 
     val affectedComponents = setOf(AffectedComponent.Investigation, AffectedComponent.Interview)
 
@@ -220,6 +221,8 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
       recordUuid,
       affectedComponents,
       setOf(DomainEventType.CSIP_UPDATED),
+      interviewUuids.toSet(),
+      3,
     )
   }
 
