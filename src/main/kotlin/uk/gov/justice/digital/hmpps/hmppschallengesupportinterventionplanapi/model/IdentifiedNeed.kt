@@ -20,9 +20,9 @@ data class IdentifiedNeed(
   val identifiedNeed: String,
 
   @Schema(
-    description = "The name of the person who identified the need.",
+    description = "The name of the person who is responsible for taking action on the intervention.",
   )
-  val needIdentifiedBy: String,
+  val responsiblePerson: String,
 
   @Schema(
     description = "The date the need was identified.",

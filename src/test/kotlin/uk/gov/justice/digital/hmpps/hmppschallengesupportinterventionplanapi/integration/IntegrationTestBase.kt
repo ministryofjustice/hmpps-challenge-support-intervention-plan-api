@@ -241,7 +241,7 @@ abstract class IntegrationTestBase {
 
   fun Plan.withNeed(
     identifiedNeed: String = "An identified need",
-    needIdentifiedBy: String = "I Dent",
+    responsiblePerson: String = "I Dent",
     createdDate: LocalDate = LocalDate.now(),
     targetDate: LocalDate = LocalDate.now().plusWeeks(8),
     closedDate: LocalDate? = null,
@@ -251,7 +251,7 @@ abstract class IntegrationTestBase {
     val need = IdentifiedNeed(
       this,
       identifiedNeed,
-      needIdentifiedBy,
+      responsiblePerson,
       createdDate,
       targetDate,
       closedDate,

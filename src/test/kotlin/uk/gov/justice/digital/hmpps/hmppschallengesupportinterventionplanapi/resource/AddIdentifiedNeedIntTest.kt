@@ -239,7 +239,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
 
   private fun IdentifiedNeed.verifyAgainst(request: CreateIdentifiedNeedRequest) {
     assertThat(identifiedNeed).isEqualTo(request.identifiedNeed)
-    assertThat(needIdentifiedBy).isEqualTo(request.needIdentifiedBy)
+    assertThat(responsiblePerson).isEqualTo(request.responsiblePerson)
     assertThat(createdDate).isEqualTo(request.createdDate)
     assertThat(targetDate).isEqualTo(request.targetDate)
     assertThat(closedDate).isEqualTo(request.closedDate)
