@@ -80,7 +80,7 @@ class DecisionAndActionsController(
     ],
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
-  fun createDecision(
+  fun upsertDecision(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: UpsertDecisionAndActionsRequest,
   ): ResponseEntity<DecisionAndActions> =
