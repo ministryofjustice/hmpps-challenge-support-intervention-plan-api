@@ -80,7 +80,7 @@ class PlansController(private val planService: PlanService) {
     ],
   )
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
-  fun createPlan(
+  fun upsertPlan(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: UpsertPlanRequest,
   ): ResponseEntity<Plan> = planService.upsertPlan(recordUuid, request).let {
