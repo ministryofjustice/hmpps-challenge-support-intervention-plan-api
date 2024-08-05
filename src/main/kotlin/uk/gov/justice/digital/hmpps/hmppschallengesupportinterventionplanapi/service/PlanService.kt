@@ -41,7 +41,7 @@ private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanap
   IdentifiedNeed(
     identifiedNeedUuid,
     identifiedNeed,
-    needIdentifiedBy,
+    responsiblePerson,
     createdDate,
     targetDate,
     closedDate,

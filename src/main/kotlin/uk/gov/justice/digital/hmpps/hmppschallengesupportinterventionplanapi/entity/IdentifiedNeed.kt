@@ -24,7 +24,7 @@ class IdentifiedNeed(
   val plan: Plan,
 
   val identifiedNeed: String,
-  val needIdentifiedBy: String,
+  val responsiblePerson: String,
   val createdDate: LocalDate,
   val targetDate: LocalDate,
   val closedDate: LocalDate?,

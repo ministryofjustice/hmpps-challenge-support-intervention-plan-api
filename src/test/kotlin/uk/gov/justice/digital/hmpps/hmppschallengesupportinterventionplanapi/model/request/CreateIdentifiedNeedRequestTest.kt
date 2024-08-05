@@ -9,7 +9,7 @@ class CreateIdentifiedNeedRequestTest : RequestValidationTest() {
   fun `valid request`() {
     val request = CreateIdentifiedNeedRequest(
       identifiedNeed = "qui",
-      needIdentifiedBy = "melius",
+      responsiblePerson = "melius",
       createdDate = LocalDate.now(),
       targetDate = LocalDate.now(),
       closedDate = null,
@@ -23,7 +23,7 @@ class CreateIdentifiedNeedRequestTest : RequestValidationTest() {
   fun `validation fails if size constraints are not met`() {
     val request = CreateIdentifiedNeedRequest(
       identifiedNeed = "n".repeat(1001),
-      needIdentifiedBy = "n".repeat(101),
+      responsiblePerson = "n".repeat(101),
       createdDate = LocalDate.now(),
       targetDate = LocalDate.now(),
       closedDate = null,
@@ -35,7 +35,7 @@ class CreateIdentifiedNeedRequestTest : RequestValidationTest() {
       Pair("progression", "Progression must be <= 4000 characters"),
       Pair("identifiedNeed", "Identified Need must be <= 1000 characters"),
       Pair("intervention", "Intervention must be <= 4000 characters"),
-      Pair("needIdentifiedBy", "Need Identified By name must be <= 100 characters"),
+      Pair("responsiblePerson", "Responsible person name must be <= 100 characters"),
     )
   }
 }

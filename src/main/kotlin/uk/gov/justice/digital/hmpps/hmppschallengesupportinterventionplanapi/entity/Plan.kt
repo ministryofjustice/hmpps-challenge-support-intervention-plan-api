@@ -109,7 +109,7 @@ class Plan(
     IdentifiedNeed(
       this,
       request.identifiedNeed,
-      request.needIdentifiedBy,
+      request.responsiblePerson,
       request.createdDate,
       request.targetDate,
       request.closedDate,
