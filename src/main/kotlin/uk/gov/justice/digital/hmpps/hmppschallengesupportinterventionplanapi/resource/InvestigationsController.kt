@@ -48,7 +48,6 @@ class InvestigationsController(
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/{recordUuid}/referral/investigation")
-  @PutMapping("/{recordUuid}/referral/investigation")
   @Operation(
     summary = "Add investigation and any interviews to the referral.",
     description = "Create the investigation and any interviews. Publishes person.csip.record.updated event with affected component Investigation and person.csip.interview.created event",
