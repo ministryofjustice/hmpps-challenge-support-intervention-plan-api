@@ -16,7 +16,7 @@ data class CreateIdentifiedNeedRequest(
   val identifiedNeed: String,
 
   @Schema(
-    description = "The name of the person who identified the need.",
+    description = "The name of the person who is responsible for taking action on the intervention.",
   )
   @field:Size(min = 0, max = 100, message = "Need Identified By name must be <= 100 characters")
   val needIdentifiedBy: String,
