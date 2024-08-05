@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.InvestigationService
@@ -44,7 +45,53 @@ import java.util.UUID
 class InvestigationsController(
   private val investigationService: InvestigationService,
 ) {
+
   @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/{recordUuid}/referral/investigation")
+  @PutMapping("/{recordUuid}/referral/investigation")
+  @Operation(
+    summary = "Add investigation and any interviews to the referral.",
+    description = "Create the investigation and any interviews. Publishes person.csip.record.updated event with affected component Investigation and person.csip.interview.created event",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "201",
+        description = "Investigation and interviews added to CSIP referral",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "The CSIP referral associated with this identifier was not found.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "409",
+        description = "Conflict. The CSIP referral already has an Investigation created.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  fun createInvestigation(
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
+    @Valid @RequestBody request: CreateInvestigationRequest,
+  ): Investigation = investigationService.createInvestigationWithInterviews(recordUuid, request)
+
   @PutMapping("/{recordUuid}/referral/investigation")
   @Operation(
     summary = "Add or update the investigation.",
@@ -90,9 +137,9 @@ class InvestigationsController(
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun upsertInvestigation(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
-    @Valid @RequestBody createInvestigationRequest: UpsertInvestigationRequest,
+    @Valid @RequestBody request: UpsertInvestigationRequest,
   ): ResponseEntity<Investigation> =
-    investigationService.upsertInvestigation(recordUuid, createInvestigationRequest).let {
+    investigationService.upsertInvestigation(recordUuid, request).let {
       if (it.new) {
         ResponseEntity.status(HttpStatus.CREATED).body(it)
       } else {
