@@ -4,23 +4,25 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class UpdatePlanRequestTest : RequestValidationTest() {
+class CreatePlanRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = UpdatePlanRequest(
+    val request = CreatePlanRequest(
       caseManager = "postulant",
       reasonForPlan = "verterem",
       firstCaseReviewDate = LocalDate.now(),
+      listOf(),
     )
     assertThat(validator.validate(request)).isEmpty()
   }
 
   @Test
   fun `validation fails if size constraints are not met`() {
-    val request = UpdatePlanRequest(
+    val request = CreatePlanRequest(
       caseManager = "n".repeat(101),
       reasonForPlan = "n".repeat(241),
       firstCaseReviewDate = LocalDate.now(),
+      listOf(),
     )
     assertValidationErrors(
       validator.validate(request),

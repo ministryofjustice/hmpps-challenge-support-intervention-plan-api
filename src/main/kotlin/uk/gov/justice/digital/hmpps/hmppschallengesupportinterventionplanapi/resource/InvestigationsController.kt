@@ -85,7 +85,7 @@ class InvestigationsController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createInvestigation(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: CreateInvestigationRequest,

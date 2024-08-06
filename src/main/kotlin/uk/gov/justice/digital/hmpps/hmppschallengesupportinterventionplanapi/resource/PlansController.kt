@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.PlanService
@@ -33,15 +34,49 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
 @RestController
-@RequestMapping(
-  path = ["/csip-records"],
-  produces = [MediaType.APPLICATION_JSON_VALUE],
-)
-@Tag(
-  name = "6. Plans Controller",
-  description = "Endpoints for Plans And Identified Needs operations",
-)
+@RequestMapping(path = ["/csip-records"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@Tag(name = "6. Plans Controller", description = "Endpoints for Plans And Identified Needs operations")
 class PlansController(private val planService: PlanService) {
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/{recordUuid}/plan")
+  @Operation(
+    summary = "Create the CSIP plan",
+    description = "Create the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan and IdentifiedNeed",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "201",
+        description = "CSIP plan created",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "The CSIP referral associated with this identifier was not found.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  fun createPlan(
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
+    @Valid @RequestBody request: CreatePlanRequest,
+  ): Plan = planService.createPlanWithIdentifiedNeeds(recordUuid, request)
+
   @PutMapping("/{recordUuid}/plan")
   @Operation(
     summary = "Create or update the CSIP plan",

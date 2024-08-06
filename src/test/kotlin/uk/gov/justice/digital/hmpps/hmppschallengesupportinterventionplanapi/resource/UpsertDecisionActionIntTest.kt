@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
@@ -295,8 +296,14 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val recordUuid = csipRecord.recordUuid
     val request = upsertDecisionActionsRequest()
 
-    val response =
-      upsertDecisionActions(recordUuid, request, source = NOMIS, username = NOMIS_SYS_USER, status = HttpStatus.CREATED)
+    val response = upsertDecisionActions(
+      recordUuid,
+      request,
+      source = NOMIS,
+      username = NOMIS_SYS_USER,
+      role = ROLE_NOMIS,
+      status = HttpStatus.CREATED,
+    )
 
     // Screening Outcome populated with data from request and context
     response.verifyAgainst(request)
