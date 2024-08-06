@@ -41,7 +41,7 @@ class PlansController(private val planService: PlanService) {
   @PostMapping("/{recordUuid}/plan")
   @Operation(
     summary = "Create the CSIP plan",
-    description = "Create the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan",
+    description = "Create the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan and IdentifiedNeed",
   )
   @ApiResponses(
     value = [
