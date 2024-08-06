@@ -14,6 +14,8 @@ import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
@@ -25,6 +27,7 @@ import java.util.UUID
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Investigation(
@@ -44,46 +47,54 @@ class Investigation(
   }
 
   @Transient
+  @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
   override fun parent() = referral
 
+  @Audited(withModifiedFlag = true)
   var staffInvolved: String? = null
     private set(value) {
       propertyChanged(::staffInvolved, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var evidenceSecured: String? = null
     private set(value) {
       propertyChanged(::evidenceSecured, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var occurrenceReason: String? = null
     private set(value) {
       propertyChanged(::occurrenceReason, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var personsUsualBehaviour: String? = null
     private set(value) {
       propertyChanged(::personsUsualBehaviour, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var personsTrigger: String? = null
     private set(value) {
       propertyChanged(::personsTrigger, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var protectiveFactors: String? = null
     private set(value) {
       propertyChanged(::protectiveFactors, value)
       field = value
     }
 
+  @NotAudited
   @OneToMany(mappedBy = "investigation", cascade = [CascadeType.ALL])
   private val interviews: MutableList<Interview> = mutableListOf()
 

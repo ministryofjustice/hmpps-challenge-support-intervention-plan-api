@@ -11,11 +11,14 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import java.time.LocalDate
 import java.util.UUID
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Interview(
@@ -23,15 +26,19 @@ class Interview(
   @JoinColumn(name = "investigation_id")
   val investigation: Investigation,
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 100)
   var interviewee: String,
 
+  @Audited(withModifiedFlag = true)
   var interviewDate: LocalDate,
 
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "interviewee_role_id")
   var intervieweeRole: ReferenceData,
 
+  @Audited(withModifiedFlag = true)
   var interviewText: String?,
 
   @Column(unique = true, nullable = false)

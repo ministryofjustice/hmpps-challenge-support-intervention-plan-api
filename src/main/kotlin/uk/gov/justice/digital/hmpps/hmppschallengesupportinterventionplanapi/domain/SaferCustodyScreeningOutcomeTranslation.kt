@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome as ScreeningOutcomeModel
 
 fun SaferCustodyScreeningOutcome.toModel() = ScreeningOutcomeModel(
-  outcome = outcomeType.toReferenceDataModel(),
+  outcome = outcome.toReferenceDataModel(),
   recordedBy = recordedBy,
   recordedByDisplayName = recordedByDisplayName,
   date = date,

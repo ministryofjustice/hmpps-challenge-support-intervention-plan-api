@@ -11,11 +11,14 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
 import java.time.LocalDate
 import java.util.UUID
 
 @Entity
-@Table(name = "identified_need")
+@Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class IdentifiedNeed(
@@ -23,12 +26,19 @@ class IdentifiedNeed(
   @JoinColumn(name = "plan_id")
   val plan: Plan,
 
+  @Audited(withModifiedFlag = true)
   val identifiedNeed: String,
+  @Audited(withModifiedFlag = true)
   val responsiblePerson: String,
+  @Audited(withModifiedFlag = true)
   val createdDate: LocalDate,
+  @Audited(withModifiedFlag = true)
   val targetDate: LocalDate,
+  @Audited(withModifiedFlag = true)
   val closedDate: LocalDate?,
+  @Audited(withModifiedFlag = true)
   val intervention: String,
+  @Audited(withModifiedFlag = true)
   val progression: String?,
 
   @Column(unique = true, nullable = false)

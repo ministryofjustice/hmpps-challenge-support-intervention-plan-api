@@ -14,6 +14,8 @@ import jakarta.persistence.Transient
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
 import org.springframework.data.domain.AbstractAggregateRoot
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
@@ -50,14 +52,15 @@ import java.util.UUID
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class CsipRecord(
 
-  @Column(nullable = false, length = 10)
+  @Column(nullable = false, length = 10, updatable = false)
   val prisonNumber: String,
 
-  @Column(length = 6)
+  @Column(length = 6, updatable = false)
   val prisonCodeWhenRecorded: String? = null,
 
   logCode: String? = null,
@@ -77,11 +80,14 @@ class CsipRecord(
   }
 
   @Transient
+  @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
   @Transient
+  @NotAudited
   var auditEvents: MutableSet<AuditRequest>? = mutableSetOf()
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 10)
   var logCode: String? = logCode
     set(value) {
@@ -105,11 +111,13 @@ class CsipRecord(
   @Column(length = 255)
   override var lastModifiedByDisplayName: String? = null
 
+  @NotAudited
   @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
   var referral: Referral? = null
     private set
 
+  @NotAudited
   @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
   var plan: Plan? = null

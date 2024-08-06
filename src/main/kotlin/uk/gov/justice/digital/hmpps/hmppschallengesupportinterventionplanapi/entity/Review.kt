@@ -17,6 +17,7 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
+import org.hibernate.envers.Audited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.GenericCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
@@ -28,7 +29,8 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Entity
-@Table(name = "review")
+@Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Review(
@@ -36,14 +38,22 @@ class Review(
   @JoinColumn(name = "plan_id")
   val plan: Plan,
 
+  @Audited(withModifiedFlag = true)
   val reviewSequence: Int,
+  @Audited(withModifiedFlag = true)
   val reviewDate: LocalDate?,
+  @Audited(withModifiedFlag = true)
   val recordedBy: String,
+  @Audited(withModifiedFlag = true)
   val recordedByDisplayName: String,
+  @Audited(withModifiedFlag = true)
   val nextReviewDate: LocalDate?,
+  @Audited(withModifiedFlag = true)
   val csipClosedDate: LocalDate?,
+  @Audited(withModifiedFlag = true)
   val summary: String?,
 
+  @Audited(withModifiedFlag = true)
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   val actions: Set<ReviewAction>,
 

@@ -11,10 +11,13 @@ import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import java.time.LocalDate
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class SaferCustodyScreeningOutcome(
@@ -23,19 +26,24 @@ class SaferCustodyScreeningOutcome(
   @JoinColumn(name = "safer_custody_screening_outcome_id")
   val referral: Referral,
 
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "outcome_id")
-  val outcomeType: ReferenceData,
+  val outcome: ReferenceData,
 
+  @Audited(withModifiedFlag = true)
   @Column(nullable = false, length = 100)
   val recordedBy: String,
 
+  @Audited(withModifiedFlag = true)
   @Column(nullable = false, length = 255)
   val recordedByDisplayName: String,
 
+  @Audited(withModifiedFlag = true)
   @Column(nullable = false)
   val date: LocalDate,
 
+  @Audited(withModifiedFlag = true)
   @Column(nullable = false)
   val reasonForDecision: String,
 
@@ -43,6 +51,6 @@ class SaferCustodyScreeningOutcome(
   @Column(name = "safer_custody_screening_outcome_id")
   val id: Long = 0,
 
-) : SimpleAuditable(), Parented {
+  ) : SimpleAuditable(), Parented {
   override fun parent() = referral
 }
