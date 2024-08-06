@@ -329,7 +329,7 @@ class Referral(
       }
       val affectedComponents = buildSet {
         add((AffectedComponent.Investigation))
-        if (request is CreateInvestigationRequest && request.interviews?.isNotEmpty() == true) add(AffectedComponent.Interview)
+        if (request is CreateInvestigationRequest && request.interviews.isNotEmpty()) add(AffectedComponent.Interview)
       }
       csipRecord.addAuditEvent(
         action = if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,

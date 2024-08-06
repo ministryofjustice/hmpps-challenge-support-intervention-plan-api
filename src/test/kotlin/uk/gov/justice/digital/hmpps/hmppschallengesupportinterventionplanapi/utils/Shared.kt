@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ut
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import java.time.LocalDate
 
@@ -16,6 +17,24 @@ fun createInterviewRequest(
   interviewee: String = "A Person",
   notes: String? = null,
 ) = CreateInterviewRequest(interviewee, date, roleCode, notes)
+
+fun createIdentifiedNeedRequest(
+  identifiedNeed: String = "An identified need",
+  needIdentifiedBy: String = "I Dent",
+  createdDate: LocalDate = LocalDate.now(),
+  targetDate: LocalDate = LocalDate.now().plusWeeks(8),
+  closedDate: LocalDate? = null,
+  intervention: String = "intervention description",
+  progression: String? = null,
+) = CreateIdentifiedNeedRequest(
+  identifiedNeed,
+  needIdentifiedBy,
+  createdDate,
+  targetDate,
+  closedDate,
+  intervention,
+  progression,
+)
 
 fun createAttendeeRequest(
   name: String? = "name",

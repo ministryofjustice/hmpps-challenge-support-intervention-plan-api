@@ -9,14 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
@@ -38,7 +37,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @NullSource
-  @ValueSource(strings = ["WRONG_ROLE"])
+  @ValueSource(strings = ["WRONG_ROLE", ROLE_NOMIS])
   fun `403 forbidden - no required role`(role: String?) {
     val response = createInvestigationResponseSpec(UUID.randomUUID(), createInvestigationRequest(), role = role)
       .errorResponse(HttpStatus.FORBIDDEN)
@@ -136,6 +135,27 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `409 conflict - Investigation already exists`() {
+    val prisonNumber = givenValidPrisonNumber("I1234AE")
+    val csipRecord = transactionTemplate.execute {
+      val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+      val referral = requireNotNull(record.referral)
+      referral.withInvestigation()
+      record
+    }!!
+    val response = createInvestigationResponseSpec(csipRecord.recordUuid, createInvestigationRequest())
+      .errorResponse(HttpStatus.CONFLICT)
+
+    with(response) {
+      assertThat(status).isEqualTo(409)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Conflict failure: Referral already has an investigation")
+      assertThat(developerMessage).isEqualTo("Referral already has an investigation")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `201 created - create investigation via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("I1234DS")
     val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
@@ -159,40 +179,6 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
       recordUuid,
       affectedComponents,
       setOf(DomainEventType.CSIP_UPDATED),
-    )
-  }
-
-  @Test
-  fun `201 created - create investigation via NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("I1234NS")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
-    val request = createInvestigationRequest()
-
-    val response = createInvestigation(
-      recordUuid,
-      request,
-      source = Source.NOMIS,
-      username = NOMIS_SYS_USER,
-    )
-
-    response.verifyAgainst(request)
-    verifyAudit(
-      csipRecord,
-      AuditEventAction.CREATED,
-      setOf(AffectedComponent.Investigation),
-      "Investigation added to referral",
-      Source.NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      recordUuid,
-      setOf(AffectedComponent.Investigation),
-      setOf(DomainEventType.CSIP_UPDATED),
-      source = Source.NOMIS,
     )
   }
 
@@ -233,6 +219,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     assertThat(personsUsualBehaviour).isEqualTo(request.personsUsualBehaviour)
     assertThat(personsTrigger).isEqualTo(request.personsTrigger)
     assertThat(protectiveFactors).isEqualTo(request.protectiveFactors)
+    request.interviews?.also { assertThat(interviews.size).isEqualTo(it.size) }
   }
 
   private fun createInvestigationRequest(interviews: List<CreateInterviewRequest> = listOf()) =

@@ -34,9 +34,8 @@ class InvestigationService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = referral.investigation
-    return csipRecordRepository.save(
-      referral.upsertInvestigation(csipRequestContext(), request),
-    ).referral!!.investigation!!.toModel().apply { new = investigation == null }
+    return csipRecordRepository.save(referral.upsertInvestigation(csipRequestContext(), request))
+      .referral!!.investigation!!.toModel().apply { new = investigation == null }
   }
 
   fun addInterview(recordUuid: UUID, request: CreateInterviewRequest): Interview {
@@ -57,12 +56,12 @@ class InvestigationService(
       ResourceAlreadyExistException("Referral already has an investigation")
     }
     val context = csipRequestContext()
-    val csip = referral.upsertInvestigation(context, request)
+    val investigation = referral.upsertInvestigation(context, request).referral!!.investigation!!
     request.interviews?.forEach {
-      csip.referral!!.investigation!!.addInterview(context, it) { code ->
+      investigation.addInterview(context, it) { code ->
         referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
       }
     }
-    return csipRecordRepository.save(csip).referral!!.investigation!!.toModel()
+    return csipRecordRepository.save(record).referral!!.investigation!!.toModel()
   }
 }

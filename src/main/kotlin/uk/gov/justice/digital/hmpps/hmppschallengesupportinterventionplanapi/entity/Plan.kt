@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import java.time.LocalDate
 import java.util.UUID
 
@@ -85,7 +85,7 @@ class Plan(
 
   fun reviews() = reviews.toList()
 
-  fun upsert(request: UpsertPlanRequest): Plan = apply {
+  fun upsert(request: PlanRequest): Plan = apply {
     caseManager = request.caseManager
     reasonForPlan = request.reasonForPlan
     firstCaseReviewDate = request.firstCaseReviewDate

@@ -45,7 +45,7 @@ data class CreateInvestigationRequest(
 
   @Schema(description = "The interviews in relation to the investigation")
   @field:Valid
-  val interviews: Collection<CreateInterviewRequest>?,
+  val interviews: Collection<CreateInterviewRequest> = listOf(),
 ) : InvestigationRequest
 
 @Schema(

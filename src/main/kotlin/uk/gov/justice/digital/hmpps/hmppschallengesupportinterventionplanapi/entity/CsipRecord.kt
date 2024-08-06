@@ -40,8 +40,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreatePlanRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.verifyAllReferenceData
 import java.time.LocalDateTime
@@ -208,7 +209,7 @@ class CsipRecord(
     }
   }
 
-  fun upsertPlan(context: CsipRequestContext, request: UpsertPlanRequest) = apply {
+  fun upsertPlan(context: CsipRequestContext, request: PlanRequest) = apply {
     val isNew = plan == null
     if (isNew) {
       plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
@@ -217,7 +218,10 @@ class CsipRecord(
     }
 
     if (isNew || plan!!.propertyChanges.isNotEmpty()) {
-      val affectedComponents = setOf(AffectedComponent.Plan)
+      val affectedComponents = buildSet {
+        add(AffectedComponent.Plan)
+        if (request is CreatePlanRequest && request.identifiedNeeds.isNotEmpty()) add(IdentifiedNeed)
+      }
       addAuditEvent(
         action = AuditEventAction.UPDATED,
         description = if (isNew) "Plan added to CSIP record" else plan!!.auditDescription(),

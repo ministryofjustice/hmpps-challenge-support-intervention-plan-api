@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
-import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createIdentifiedNeedRequest
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -41,7 +41,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @NullSource
   @ValueSource(strings = ["WRONG_ROLE"])
   fun `403 forbidden - no required role`(role: String?) {
-    val response = addIdentifiedNeedResponseSpec(randomUUID(), identifiedNeedRequest(), role = role)
+    val response = addIdentifiedNeedResponseSpec(randomUUID(), createIdentifiedNeedRequest(), role = role)
       .errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
@@ -76,7 +76,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val response = addIdentifiedNeedResponseSpec(randomUUID(), identifiedNeedRequest(), username = null)
+    val response = addIdentifiedNeedResponseSpec(randomUUID(), createIdentifiedNeedRequest(), username = null)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -90,7 +90,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not found`() {
-    val response = addIdentifiedNeedResponseSpec(randomUUID(), identifiedNeedRequest(), username = USER_NOT_FOUND)
+    val response = addIdentifiedNeedResponseSpec(randomUUID(), createIdentifiedNeedRequest(), username = USER_NOT_FOUND)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -105,7 +105,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `404 not found - csip record not found`() {
     val uuid = randomUUID()
-    val response = addIdentifiedNeedResponseSpec(uuid, identifiedNeedRequest())
+    val response = addIdentifiedNeedResponseSpec(uuid, createIdentifiedNeedRequest())
       .errorResponse(HttpStatus.NOT_FOUND)
 
     with(response) {
@@ -126,7 +126,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
       csip
     }!!
 
-    val request = identifiedNeedRequest()
+    val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeedResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -145,7 +145,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
       givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
     }!!
 
-    val request = identifiedNeedRequest()
+    val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeed(record.recordUuid, request)
 
     val need = getIdentifiedNeed(record.recordUuid, response.identifiedNeedUuid)
@@ -169,7 +169,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
       givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
     }!!
 
-    val request = identifiedNeedRequest()
+    val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeed(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     val need = getIdentifiedNeed(record.recordUuid, response.identifiedNeedUuid)
@@ -218,24 +218,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     role: String = ROLE_CSIP_UI,
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed =
     addIdentifiedNeedResponseSpec(csipUuid, request, source, username, role).successResponse(CREATED)
-
-  private fun identifiedNeedRequest(
-    identifiedNeed: String = "An identified need",
-    needIdentifiedBy: String = "I Dent",
-    createdDate: LocalDate = LocalDate.now(),
-    targetDate: LocalDate = LocalDate.now().plusWeeks(8),
-    closedDate: LocalDate? = null,
-    intervention: String = "intervention description",
-    progression: String? = null,
-  ) = CreateIdentifiedNeedRequest(
-    identifiedNeed,
-    needIdentifiedBy,
-    createdDate,
-    targetDate,
-    closedDate,
-    intervention,
-    progression,
-  )
 
   private fun IdentifiedNeed.verifyAgainst(request: CreateIdentifiedNeedRequest) {
     assertThat(identifiedNeed).isEqualTo(request.identifiedNeed)
