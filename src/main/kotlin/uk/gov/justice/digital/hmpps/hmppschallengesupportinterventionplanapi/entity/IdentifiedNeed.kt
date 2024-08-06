@@ -12,7 +12,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
 import org.hibernate.envers.Audited
-import org.hibernate.envers.NotAudited
 import java.time.LocalDate
 import java.util.UUID
 

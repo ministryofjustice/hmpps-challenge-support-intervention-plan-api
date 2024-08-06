@@ -12,8 +12,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
 import org.hibernate.envers.Audited
-import org.hibernate.envers.NotAudited
-import org.hibernate.envers.RelationTargetAuditMode
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import java.util.UUID
 
