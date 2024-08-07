@@ -5,12 +5,12 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.transaction.support.TransactionTemplate
@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -35,6 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.util.UUID
@@ -233,7 +233,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
 
-    // Decisions Actions entry populated with data from request and context
     response.verifyAgainst(request)
   }
 
@@ -251,7 +250,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
 
-    // Decisions Actions entry populated with data from request and context
     response.verifyAgainst(request)
   }
 
@@ -263,8 +261,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val request = upsertDecisionActionsRequest()
 
     val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
-
-    // Decisions Actions entry populated with data from request and context
     response.verifyAgainst(request)
 
     val csip = requireNotNull(csipRecordRepository.getCsipRecord(csipRecord.recordUuid))
@@ -276,9 +272,8 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyAudit(
       csipRecord,
-      AuditEventAction.CREATED,
-      setOf(AffectedComponent.DecisionAndActions),
-      "Decision and actions added to referral",
+      UPDATE,
+      setOf(AffectedComponent.DecisionAndActions, AffectedComponent.Referral, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
@@ -305,7 +300,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       status = HttpStatus.CREATED,
     )
 
-    // Screening Outcome populated with data from request and context
     response.verifyAgainst(request)
 
     val csip = requireNotNull(csipRecordRepository.getCsipRecord(csipRecord.recordUuid))
@@ -317,12 +311,9 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyAudit(
       csipRecord,
-      AuditEventAction.CREATED,
-      setOf(AffectedComponent.DecisionAndActions),
-      "Decision and actions added to referral",
-      NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
+      UPDATE,
+      setOf(AffectedComponent.DecisionAndActions, AffectedComponent.Referral, AffectedComponent.Record),
+      nomisContext(),
     )
 
     verifyDomainEvents(
@@ -357,7 +348,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val response = upsertDecisionActions(csipRecord.recordUuid, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
-    assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
+
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
@@ -382,12 +373,8 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyAudit(
       csipRecord,
-      AuditEventAction.UPDATED,
-      setOf(AffectedComponent.DecisionAndActions),
-      "Updated decision and actions conclusion changed from 'a comprehensive conclusion' to 'a conclusion', " +
-        "recordedBy changed from 'recordedBy' to 'outcomeRecordedBy', " +
-        "recordedByDisplayName changed from 'recordedByDisplayName' to 'outcomeRecordedByDisplayName', " +
-        "nextSteps changed from 'some next steps' to 'next steps', actions changed from '[]' to '[UnitOrCellMove]'",
+      UPDATE,
+      setOf(AffectedComponent.DecisionAndActions, AffectedComponent.Referral, AffectedComponent.Record),
     )
 
     verifyDomainEvents(

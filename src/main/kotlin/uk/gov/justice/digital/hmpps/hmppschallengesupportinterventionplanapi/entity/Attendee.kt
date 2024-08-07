@@ -11,10 +11,12 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
 import java.util.UUID
 
 @Entity
-@Table(name = "attendee")
+@Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Attendee(
@@ -22,9 +24,13 @@ class Attendee(
   @JoinColumn(name = "review_id")
   val review: Review,
 
+  @Audited(withModifiedFlag = true)
   val name: String?,
+  @Audited(withModifiedFlag = true)
   val role: String?,
+  @Audited(withModifiedFlag = true)
   val attended: Boolean?,
+  @Audited(withModifiedFlag = true)
   val contribution: String?,
 
   @Column(unique = true, nullable = false)

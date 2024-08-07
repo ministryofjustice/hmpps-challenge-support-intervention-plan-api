@@ -19,6 +19,9 @@ import jakarta.persistence.Transient
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
+import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
@@ -46,6 +49,7 @@ import java.util.UUID
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Referral(
@@ -93,23 +97,28 @@ class Referral(
   }
 
   @Transient
+  @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
+  @NotAudited
   @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
     private set
 
+  @NotAudited
   @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var decisionAndActions: DecisionAndActions? = null
     private set
 
+  @NotAudited
   @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var investigation: Investigation? = null
     private set
 
+  @NotAudited
   @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL])
   private var contributoryFactors: MutableList<ContributoryFactor> = mutableListOf()
 
@@ -127,6 +136,7 @@ class Referral(
       field = value
     }
 
+  @Audited(targetAuditMode = NOT_AUDITED)
   @ManyToOne
   @JoinColumn(name = "incident_type_id")
   var incidentType: ReferenceData = incidentType
@@ -135,6 +145,7 @@ class Referral(
       field = value
     }
 
+  @Audited(targetAuditMode = NOT_AUDITED)
   @ManyToOne
   @JoinColumn(name = "incident_location_id")
   var incidentLocation: ReferenceData = incidentLocation
@@ -143,6 +154,7 @@ class Referral(
       field = value
     }
 
+  @Audited(targetAuditMode = NOT_AUDITED)
   @ManyToOne
   @JoinColumn(name = "referer_area_of_work_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
@@ -151,6 +163,7 @@ class Referral(
       field = value
     }
 
+  @Audited(targetAuditMode = NOT_AUDITED)
   @ManyToOne
   @JoinColumn(name = "incident_involvement_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
@@ -159,6 +172,7 @@ class Referral(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(nullable = false, length = 240)
   var referredBy: String = referredBy
     private set(value) {
@@ -166,42 +180,49 @@ class Referral(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var proactiveReferral: Boolean? = proactiveReferral
     private set(value) {
       propertyChanged(::proactiveReferral, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var staffAssaulted: Boolean? = staffAssaulted
     private set(value) {
       propertyChanged(::staffAssaulted, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var assaultedStaffName: String? = assaultedStaffName
     private set(value) {
       propertyChanged(::assaultedStaffName, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var descriptionOfConcern: String? = descriptionOfConcern
     private set(value) {
       propertyChanged(::descriptionOfConcern, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var knownReasons: String? = knownReasons
     private set(value) {
       propertyChanged(::knownReasons, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var otherInformation: String? = otherInformation
     private set(value) {
       propertyChanged(::otherInformation, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Enumerated(EnumType.STRING)
   var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
     private set(value) {
@@ -209,18 +230,21 @@ class Referral(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var referralComplete: Boolean? = referralComplete
     private set(value) {
       propertyChanged(::referralComplete, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var referralCompletedDate: LocalDate? = referralCompletedDate
     private set(value) {
       propertyChanged(::referralCompletedDate, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 32)
   var referralCompletedBy: String? = referralCompletedBy
     private set(value) {
@@ -228,6 +252,7 @@ class Referral(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 255)
   var referralCompletedByDisplayName: String? = referralCompletedByDisplayName
     private set(value) {
@@ -285,7 +310,7 @@ class Referral(
 
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
-      outcomeType = outcomeType,
+      outcome = outcomeType,
       recordedBy = request.recordedBy,
       recordedByDisplayName = request.recordedByDisplayName,
       date = request.date,
@@ -302,7 +327,6 @@ class Referral(
       CsipUpdatedEvent(
         recordUuid = csipRecord.recordUuid,
         prisonNumber = csipRecord.prisonNumber,
-        description = description,
         occurredAt = context.requestAt,
         source = context.source,
         affectedComponents = affectedComponents,

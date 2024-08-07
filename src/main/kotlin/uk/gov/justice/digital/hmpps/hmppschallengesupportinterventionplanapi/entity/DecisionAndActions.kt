@@ -17,6 +17,9 @@ import jakarta.persistence.Transient
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
+import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
@@ -25,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class DecisionAndActions(
@@ -47,8 +51,10 @@ class DecisionAndActions(
   }
 
   @Transient
+  @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "outcome_id", nullable = false)
   var outcome: ReferenceData = outcome
@@ -57,6 +63,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "signed_off_by_role_id")
   var signedOffBy: ReferenceData? = null
@@ -65,6 +72,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 4000)
   var conclusion: String? = null
     private set(value) {
@@ -72,6 +80,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 100)
   var recordedBy: String? = null
     private set(value) {
@@ -79,6 +88,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 255)
   var recordedByDisplayName: String? = null
     private set(value) {
@@ -86,6 +96,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column
   var date: LocalDate? = null
     private set(value) {
@@ -93,6 +104,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 4000)
   var nextSteps: String? = null
     private set(value) {
@@ -100,6 +112,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   var actions: Set<DecisionAction> = setOf()
     private set(value) {
@@ -107,6 +120,7 @@ class DecisionAndActions(
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   @Column(length = 4000)
   var actionOther: String? = null
     private set(value) {

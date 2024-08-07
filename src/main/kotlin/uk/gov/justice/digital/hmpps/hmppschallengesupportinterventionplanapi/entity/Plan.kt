@@ -14,6 +14,8 @@ import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.GenericCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
@@ -30,6 +32,7 @@ import java.util.UUID
 
 @Entity
 @Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class Plan(
@@ -55,29 +58,35 @@ class Plan(
   }
 
   @Transient
+  @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
+  @Audited(withModifiedFlag = true)
   var caseManager: String = caseManager
     set(value) {
       propertyChanged(::caseManager, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var reasonForPlan: String = reasonForPlan
     set(value) {
       propertyChanged(::reasonForPlan, value)
       field = value
     }
 
+  @Audited(withModifiedFlag = true)
   var firstCaseReviewDate: LocalDate = firstCaseReviewDate
     set(value) {
       propertyChanged(::firstCaseReviewDate, value)
       field = value
     }
 
+  @NotAudited
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
   private var identifiedNeeds: MutableList<IdentifiedNeed> = mutableListOf()
 
+  @NotAudited
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
   private var reviews: MutableList<Review> = mutableListOf()
 

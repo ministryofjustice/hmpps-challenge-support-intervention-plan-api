@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -13,7 +14,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -148,12 +148,11 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val plan = getPlan(csipRecord.recordUuid)
     requireNotNull(plan).verifyAgainst(request)
 
-    val affectedComponents = setOf(AffectedComponent.Plan)
-    verifyAudit(csipRecord, AuditEventAction.UPDATED, affectedComponents, "Plan added to CSIP record")
+    verifyAudit(csipRecord, UPDATE, setOf(AffectedComponent.Plan, AffectedComponent.Record))
     verifyDomainEvents(
       prisonNumber,
       recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -168,22 +167,20 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val response = createPlan(csipRecord.recordUuid, request)
 
     val needsIds = response.identifiedNeeds.map { it.identifiedNeedUuid }
-    val affectedComponents = setOf(AffectedComponent.Plan, AffectedComponent.IdentifiedNeed)
 
     val plan = getPlan(csipRecord.recordUuid)
     plan.verifyAgainst(request)
 
     verifyAudit(
       csipRecord,
-      AuditEventAction.UPDATED,
-      affectedComponents,
-      "Plan added to CSIP record",
+      UPDATE,
+      setOf(AffectedComponent.Plan, AffectedComponent.IdentifiedNeed, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       csipRecord.recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Plan, AffectedComponent.IdentifiedNeed),
       setOf(DomainEventType.CSIP_UPDATED),
       needsIds.toSet(),
       2,

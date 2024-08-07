@@ -11,10 +11,13 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SoftDelete
+import org.hibernate.envers.Audited
+import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import java.util.UUID
 
 @Entity
-@Table(name = "contributory_factor")
+@Table
+@Audited
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
 class ContributoryFactor(
@@ -22,10 +25,12 @@ class ContributoryFactor(
   @JoinColumn(name = "referral_id")
   val referral: Referral,
 
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "contributory_factor_type_id", updatable = false)
   val contributoryFactorType: ReferenceData,
 
+  @Audited(withModifiedFlag = true)
   val comment: String? = null,
 
   @Column(unique = true, nullable = false)
