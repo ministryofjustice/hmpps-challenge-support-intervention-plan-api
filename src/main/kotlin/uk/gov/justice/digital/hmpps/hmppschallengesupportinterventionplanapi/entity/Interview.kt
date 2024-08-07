@@ -18,19 +18,18 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class Interview(
+  @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "investigation_id")
   val investigation: Investigation,
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 100)
   var interviewee: String,
 
-  @Audited(withModifiedFlag = true)
   var interviewDate: LocalDate,
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
@@ -38,13 +37,15 @@ class Interview(
   @JoinColumn(name = "interviewee_role_id")
   var intervieweeRole: ReferenceData,
 
-  @Audited(withModifiedFlag = true)
   var interviewText: String?,
 
+  @Audited(withModifiedFlag = false)
   @Column(unique = true, nullable = false)
   val interviewUuid: UUID = UUID.randomUUID(),
 
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Audited(withModifiedFlag = false)
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "interview_id")
   val id: Long = 0,
 ) : SimpleAuditable(), Parented {

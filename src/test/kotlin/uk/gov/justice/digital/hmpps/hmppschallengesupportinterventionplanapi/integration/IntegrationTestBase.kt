@@ -128,11 +128,6 @@ abstract class IntegrationTestBase {
   internal fun HmppsQueue.receiveMessageOnQueue() =
     sqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(queueUrl).build()).get().messages().single()
 
-  internal fun HmppsQueue.receiveCsipDomainEventOnQueue() =
-    receiveMessageOnQueue()
-      .let { objectMapper.readValue<Notification>(it.body()) }
-      .let { objectMapper.readValue<CsipDomainEvent>(it.message) }
-
   fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<Any> =
     sqsClient.receiveMessage(
       ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),

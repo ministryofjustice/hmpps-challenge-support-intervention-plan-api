@@ -19,7 +19,6 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
@@ -27,15 +26,17 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class Investigation(
+  @Audited(withModifiedFlag = false)
   @MapsId
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
 
+  @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "investigation_id")
   val id: Long = 0,
@@ -52,42 +53,36 @@ class Investigation(
 
   override fun parent() = referral
 
-  @Audited(withModifiedFlag = true)
   var staffInvolved: String? = null
     private set(value) {
       propertyChanged(::staffInvolved, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var evidenceSecured: String? = null
     private set(value) {
       propertyChanged(::evidenceSecured, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var occurrenceReason: String? = null
     private set(value) {
       propertyChanged(::occurrenceReason, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var personsUsualBehaviour: String? = null
     private set(value) {
       propertyChanged(::personsUsualBehaviour, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var personsTrigger: String? = null
     private set(value) {
       propertyChanged(::personsTrigger, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var protectiveFactors: String? = null
     private set(value) {
       propertyChanged(::protectiveFactors, value)
@@ -112,11 +107,6 @@ class Investigation(
     interviewText = createRequest.interviewText,
   ).apply {
     interviews.add(this)
-    referral.csipRecord.addAuditEvent(
-      AuditEventAction.UPDATED,
-      auditDescription(),
-      setOf(AffectedComponent.Interview),
-    )
     referral.csipRecord.registerEntityEvent(
       InterviewCreatedEvent(
         entityUuid = interviewUuid,
@@ -145,6 +135,3 @@ class Investigation(
     protectiveFactors = request.protectiveFactors
   }
 }
-
-fun Interview.auditDescription() =
-  "Added interviewee '$interviewee' with role '${intervieweeRole.code}' - '${intervieweeRole.description}' to investigation"

@@ -17,12 +17,18 @@ interface Auditable {
   var lastModifiedByDisplayName: String?
 
   fun recordCreatedDetails(context: CsipRequestContext) {
+    if (this is Parented) {
+      parent().recordModifiedDetails(context)
+    }
     createdAt = context.requestAt
     createdBy = context.username
     createdByDisplayName = context.userDisplayName
   }
 
   fun recordModifiedDetails(context: CsipRequestContext) {
+    if (this is Parented) {
+      parent().recordModifiedDetails(context)
+    }
     lastModifiedAt = context.requestAt
     lastModifiedBy = context.username
     lastModifiedByDisplayName = context.userDisplayName
@@ -31,27 +37,27 @@ interface Auditable {
 
 @MappedSuperclass
 open class SimpleAuditable(context: CsipRequestContext = csipRequestContext()) : Auditable {
-  @field:Audited
+  @field:Audited(withModifiedFlag = false)
   @field:Column
   override var createdAt: LocalDateTime = context.requestAt
 
-  @field:Audited
+  @field:Audited(withModifiedFlag = false)
   @field:Column
   override var createdBy: String = context.username
 
-  @field:Audited
+  @field:Audited(withModifiedFlag = false)
   @field:Column
   override var createdByDisplayName: String = context.userDisplayName
 
-  @field:Audited
+  @field:Audited(withModifiedFlag = false)
   @field:Column
   override var lastModifiedAt: LocalDateTime? = null
 
-  @field:Audited
+  @field:Audited(withModifiedFlag = false)
   @field:Column
   override var lastModifiedBy: String? = null
 
-  @field:Audited
+  @field:Audited(withModifiedFlag = false)
   @field:Column
   override var lastModifiedByDisplayName: String? = null
 }

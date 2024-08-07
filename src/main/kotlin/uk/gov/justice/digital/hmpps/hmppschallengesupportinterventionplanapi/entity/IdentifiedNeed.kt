@@ -17,32 +17,28 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class IdentifiedNeed(
+  @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "plan_id")
   val plan: Plan,
 
-  @Audited(withModifiedFlag = true)
   val identifiedNeed: String,
-  @Audited(withModifiedFlag = true)
   val responsiblePerson: String,
-  @Audited(withModifiedFlag = true)
   val createdDate: LocalDate,
-  @Audited(withModifiedFlag = true)
   val targetDate: LocalDate,
-  @Audited(withModifiedFlag = true)
   val closedDate: LocalDate?,
-  @Audited(withModifiedFlag = true)
   val intervention: String,
-  @Audited(withModifiedFlag = true)
   val progression: String?,
 
+  @Audited(withModifiedFlag = false)
   @Column(unique = true, nullable = false)
   val identifiedNeedUuid: UUID = UUID.randomUUID(),
 
+  @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "identified_need_id")
@@ -50,6 +46,3 @@ class IdentifiedNeed(
 ) : SimpleAuditable(), Parented {
   override fun parent() = plan
 }
-
-fun IdentifiedNeed.auditDescription() =
-  "Added identified need '$identifiedNeed' to plan"

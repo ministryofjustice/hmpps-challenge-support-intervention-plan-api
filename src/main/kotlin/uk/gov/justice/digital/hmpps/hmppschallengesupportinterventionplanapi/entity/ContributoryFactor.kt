@@ -17,10 +17,11 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class ContributoryFactor(
+  @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "referral_id")
   val referral: Referral,
@@ -30,12 +31,13 @@ class ContributoryFactor(
   @JoinColumn(name = "contributory_factor_type_id", updatable = false)
   val contributoryFactorType: ReferenceData,
 
-  @Audited(withModifiedFlag = true)
   val comment: String? = null,
 
+  @Audited(withModifiedFlag = false)
   @Column(unique = true, nullable = false)
   val contributoryFactorUuid: UUID = UUID.randomUUID(),
 
+  @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "contributory_factor_id")

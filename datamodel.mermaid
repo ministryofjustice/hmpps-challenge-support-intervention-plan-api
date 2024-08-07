@@ -212,19 +212,6 @@ erDiagram
         varchar(255) last_modified_by_display_name "The displayable name of the user who last modified the attendee. Not mapped"
     }
 
-    audit_event {
-        long id PK "not null"
-        long csip_record_id FK "not null"
-        varchar(40) action "not null"
-        text description "not null"
-        timestamp actioned_at "not null"
-        varchar(32) actioned_by "not null"
-        varchar(255) actioned_by_captured_name "not null"
-        varchar(12) source
-        varchar(12) reason
-        varchar[] affectedComponents
-    }
-
     reference_data {
         bigserial reference_data_id PK "not null"
         varchar(30) domain "not null composite-unique(domain+code)."

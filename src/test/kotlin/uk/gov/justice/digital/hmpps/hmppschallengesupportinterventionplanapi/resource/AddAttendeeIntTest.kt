@@ -139,7 +139,7 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     verifyAudit(
       record,
       UPDATE,
-      setOf(AffectedComponent.Attendee, AffectedComponent.Review, AffectedComponent.Record),
+      setOf(AffectedComponent.Attendee, AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
@@ -171,7 +171,7 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     verifyAudit(
       record,
       UPDATE,
-      setOf(AffectedComponent.Attendee, AffectedComponent.Review, AffectedComponent.Record),
+      setOf(AffectedComponent.Attendee, AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
       nomisContext(),
     )
 

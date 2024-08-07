@@ -16,26 +16,25 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class Attendee(
+  @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "review_id")
   val review: Review,
 
-  @Audited(withModifiedFlag = true)
   val name: String?,
-  @Audited(withModifiedFlag = true)
   val role: String?,
-  @Audited(withModifiedFlag = true)
   val attended: Boolean?,
-  @Audited(withModifiedFlag = true)
   val contribution: String?,
 
+  @Audited(withModifiedFlag = false)
   @Column(unique = true, nullable = false)
   val attendeeUuid: UUID = UUID.randomUUID(),
 
+  @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "attendee_id")
@@ -43,6 +42,3 @@ class Attendee(
 ) : SimpleAuditable(), Parented {
   override fun parent() = review
 }
-
-fun Attendee.auditDescription() =
-  "Added attendee '$name' with role '$role' to plan review"

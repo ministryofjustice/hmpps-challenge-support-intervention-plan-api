@@ -146,7 +146,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
     createPlan(recordUuid, request)
 
     val plan = getPlan(csipRecord.recordUuid)
-    requireNotNull(plan).verifyAgainst(request)
+    plan.verifyAgainst(request)
 
     verifyAudit(csipRecord, UPDATE, setOf(AffectedComponent.Plan, AffectedComponent.Record))
     verifyDomainEvents(
