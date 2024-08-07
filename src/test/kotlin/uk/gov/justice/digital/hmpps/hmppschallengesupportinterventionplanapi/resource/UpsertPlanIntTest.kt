@@ -191,7 +191,6 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     upsertPlan(csipRecord.recordUuid, request, status = HttpStatus.OK)
     val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
     requireNotNull(plan).verifyAgainst(request)
-    // assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 

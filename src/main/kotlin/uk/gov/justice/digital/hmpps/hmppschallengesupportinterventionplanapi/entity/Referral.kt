@@ -327,7 +327,6 @@ class Referral(
       CsipUpdatedEvent(
         recordUuid = csipRecord.recordUuid,
         prisonNumber = csipRecord.prisonNumber,
-        description = description,
         occurredAt = context.requestAt,
         source = context.source,
         affectedComponents = affectedComponents,

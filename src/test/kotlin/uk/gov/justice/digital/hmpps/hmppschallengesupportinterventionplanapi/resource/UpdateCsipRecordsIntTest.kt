@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
 import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -162,8 +163,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     with(saved) {
       assertThat(logCode).isEqualTo(LOG_CODE)
     }
-//    val audit = auditEventRepository.findAll().singleOrNull { it.action == AuditEventAction.UPDATED }
-//    assertThat(audit).isNull()
+
+    // verify the latest audit record is the initial insert from the given of the test
+    verifyAudit(saved, INSERT, setOf(AffectedComponent.Record, AffectedComponent.Referral), nomisContext().copy(source = DPS))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }

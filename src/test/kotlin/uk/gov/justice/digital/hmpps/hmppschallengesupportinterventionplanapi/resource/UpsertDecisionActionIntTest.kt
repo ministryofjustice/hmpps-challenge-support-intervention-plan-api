@@ -233,7 +233,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
 
-    // Decisions Actions entry populated with data from request and context
     response.verifyAgainst(request)
   }
 
@@ -251,7 +250,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
 
-    // Decisions Actions entry populated with data from request and context
     response.verifyAgainst(request)
   }
 
@@ -263,8 +261,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val request = upsertDecisionActionsRequest()
 
     val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
-
-    // Decisions Actions entry populated with data from request and context
     response.verifyAgainst(request)
 
     val csip = requireNotNull(csipRecordRepository.getCsipRecord(csipRecord.recordUuid))
@@ -304,7 +300,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       status = HttpStatus.CREATED,
     )
 
-    // Screening Outcome populated with data from request and context
     response.verifyAgainst(request)
 
     val csip = requireNotNull(csipRecordRepository.getCsipRecord(csipRecord.recordUuid))
@@ -353,7 +348,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val response = upsertDecisionActions(csipRecord.recordUuid, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
-    // assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
+
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 

@@ -1,24 +1,21 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -29,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.util.UUID
@@ -166,7 +164,6 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
     val response = createScreeningOutcome(recordUuid, request)
 
-    // Screening Outcome populated with data from request and context
     with(response) {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
@@ -175,35 +172,13 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
-    // Audit event saved
-//    with(auditEventRepository.findAll().single()) {
-//      assertThat(action).isEqualTo(AuditEventAction.CREATED)
-//      assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
-//      assertThat(affectedComponents).containsOnly(AffectedComponent.SaferCustodyScreeningOutcome)
-//      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-//      assertThat(actionedBy).isEqualTo(TEST_USER)
-//      assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
-//      assertThat(source).isEqualTo(Source.DPS)
-//      assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
-//    }
+    verifyAudit(csipRecord, UPDATE, setOf(Record, Referral, AffectedComponent.SaferCustodyScreeningOutcome))
 
-    // person.csip.record.updated domain event published
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
-    val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
-    assertThat(event).usingRecursiveComparison().isEqualTo(
-      CsipDomainEvent(
-        eventType = DomainEventType.CSIP_UPDATED.eventType,
-        additionalInformation = CsipAdditionalInformation(
-          recordUuid = recordUuid,
-          affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome),
-          source = Source.DPS,
-        ),
-        description = "Safer custody screening outcome added to referral",
-        version = 1,
-        occurredAt = event.occurredAt,
-        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(prisonNumber),
-      ),
+    verifyDomainEvents(
+      prisonNumber,
+      csipRecord.recordUuid,
+      setOf(AffectedComponent.SaferCustodyScreeningOutcome),
+      setOf(DomainEventType.CSIP_UPDATED),
     )
   }
 
@@ -216,7 +191,6 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
     val response = createScreeningOutcome(recordUuid, request, Source.NOMIS, NOMIS_SYS_USER)
 
-    // Screening Outcome populated with data from request and context
     with(response) {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
       assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
@@ -225,35 +199,19 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
-    // Audit event saved
-//    with(auditEventRepository.findAll().single()) {
-//      assertThat(action).isEqualTo(AuditEventAction.CREATED)
-//      assertThat(description).isEqualTo("Safer custody screening outcome added to referral")
-//      assertThat(affectedComponents).containsOnly(AffectedComponent.SaferCustodyScreeningOutcome)
-//      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-//      assertThat(actionedBy).isEqualTo(NOMIS_SYS_USER)
-//      assertThat(actionedByCapturedName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
-//      assertThat(source).isEqualTo(Source.NOMIS)
-//      assertThat(activeCaseLoadId).isNull()
-//    }
+    verifyAudit(
+      csipRecord,
+      UPDATE,
+      setOf(Record, Referral, AffectedComponent.SaferCustodyScreeningOutcome),
+      nomisContext(),
+    )
 
-    // person.csip.record.updated domain event published
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 1 }
-    val event = hmppsEventsQueue.receiveCsipDomainEventOnQueue()
-    assertThat(event).usingRecursiveComparison().isEqualTo(
-      CsipDomainEvent(
-        eventType = DomainEventType.CSIP_UPDATED.eventType,
-        additionalInformation = CsipAdditionalInformation(
-          recordUuid = recordUuid,
-          affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome),
-          source = Source.NOMIS,
-        ),
-        description = "Safer custody screening outcome added to referral",
-        version = 1,
-        occurredAt = event.occurredAt,
-        detailUrl = "http://localhost:8080/csip-records/$recordUuid",
-        personReference = PersonReference.withPrisonNumber(prisonNumber),
-      ),
+    verifyDomainEvents(
+      prisonNumber,
+      csipRecord.recordUuid,
+      setOf(AffectedComponent.SaferCustodyScreeningOutcome),
+      setOf(DomainEventType.CSIP_UPDATED),
+      source = Source.NOMIS,
     )
   }
 
