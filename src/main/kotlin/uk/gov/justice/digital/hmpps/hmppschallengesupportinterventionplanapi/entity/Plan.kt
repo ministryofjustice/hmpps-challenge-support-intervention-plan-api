@@ -13,7 +13,6 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
-import org.hibernate.annotations.SoftDelete
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
@@ -32,7 +31,6 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class Plan(
   @Audited(withModifiedFlag = false)

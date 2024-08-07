@@ -13,7 +13,6 @@ import jakarta.persistence.Table
 import jakarta.persistence.Transient
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
-import org.hibernate.annotations.SoftDelete
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -52,7 +51,6 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class CsipRecord(
 

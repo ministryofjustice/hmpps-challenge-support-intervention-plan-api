@@ -15,7 +15,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.Parameter
-import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
@@ -31,7 +30,6 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class Review(
   @Audited(withModifiedFlag = false)

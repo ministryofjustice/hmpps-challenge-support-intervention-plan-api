@@ -15,7 +15,6 @@ import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
 import org.hibernate.annotations.Parameter
-import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
@@ -29,7 +28,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class DecisionAndActions(
   @Audited(withModifiedFlag = false)

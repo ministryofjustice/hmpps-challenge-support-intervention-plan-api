@@ -10,7 +10,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.SoftDelete
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import java.time.LocalDate
@@ -18,7 +17,6 @@ import java.time.LocalDate
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class SaferCustodyScreeningOutcome(
   @Audited(withModifiedFlag = false)

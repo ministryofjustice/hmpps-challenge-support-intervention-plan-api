@@ -10,14 +10,12 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.SoftDelete
 import org.hibernate.envers.Audited
 import java.util.UUID
 
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class Attendee(
   @Audited(withModifiedFlag = false)
