@@ -6,7 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.transaction.support.TransactionTemplate
@@ -138,7 +138,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      INSERT,
+      UPDATE,
       setOf(AffectedComponent.Review, AffectedComponent.Attendee, AffectedComponent.Plan, AffectedComponent.Record),
     )
 
@@ -167,7 +167,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      INSERT,
+      UPDATE,
       setOf(AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
       nomisContext(),
     )

@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
 import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -277,7 +276,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyAudit(
       csipRecord,
-      INSERT,
+      UPDATE,
       setOf(AffectedComponent.DecisionAndActions, AffectedComponent.Referral, AffectedComponent.Record),
     )
 
@@ -317,7 +316,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyAudit(
       csipRecord,
-      INSERT,
+      UPDATE,
       setOf(AffectedComponent.DecisionAndActions, AffectedComponent.Referral, AffectedComponent.Record),
       nomisContext(),
     )

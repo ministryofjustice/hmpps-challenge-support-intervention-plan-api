@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -16,11 +13,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
@@ -55,7 +47,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no required role`() {
-    val response = webTestClient.get().uri("/prisoners/A1234BC/csip-records")
+    val response = webTestClient.get().uri(urlToTest("A1234BC"))
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE"))).exchange().errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
@@ -69,18 +61,18 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri("/prisoners/A1234BC/csip-records").exchange().expectStatus().isUnauthorized
+    webTestClient.post().uri(urlToTest("A1234BC")).exchange().expectStatus().isUnauthorized
   }
 
   @Test
   fun `403 forbidden - no roles`() {
-    webTestClient.post().uri("/prisoners/A1234BC/csip-records").bodyValue(createCsipRecordRequest())
-      .headers(setAuthorisation()).headers(setCsipRequestContext()).exchange().expectStatus().isForbidden
+    webTestClient.post().uri(urlToTest("A1234BC")).bodyValue(createCsipRecordRequest())
+      .headers(setAuthorisation()).headers(setCsipRequestContext()).exchange().errorResponse(HttpStatus.FORBIDDEN)
   }
 
   @Test
   fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
+    val response = webTestClient.post().uri(urlToTest("A1234BC"))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }.exchange()
       .errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -95,7 +87,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
+    val response = webTestClient.post().uri(urlToTest("A1234BC"))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange()
       .errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -110,7 +102,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not found`() {
-    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records").bodyValue(createCsipRecordRequest())
+    val response = webTestClient.post().uri(urlToTest("A1234BC")).bodyValue(createCsipRecordRequest())
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(username = USER_NOT_FOUND))
       .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -125,7 +117,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - no body`() {
-    val response = webTestClient.post().uri("/prisoners/A1234BC/csip-records")
+    val response = webTestClient.post().uri(urlToTest("A1234BC"))
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext()).exchange()
       .errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -252,7 +244,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("C1234SP")
     val response = webTestClient.createCsipRecord(prisonNumber, request)
 
-    with(response!!) {
+    with(response) {
       assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
@@ -262,64 +254,18 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
     }
 
-//    with(auditEventRepository.findAll().single()) {
-//      assertThat(action).isEqualTo(AuditEventAction.CREATED)
-//      assertThat(description).isEqualTo("CSIP record created via referral with 1 contributory factors")
-//      assertThat(affectedComponents).containsExactlyInAnyOrder(
-//        AffectedComponent.Record,
-//        AffectedComponent.Referral,
-//        AffectedComponent.ContributoryFactor,
-//      )
-//      assertThat(actionedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-//      assertThat(actionedBy).isEqualTo(TEST_USER)
-//      assertThat(actionedByCapturedName).isEqualTo(TEST_USER_NAME)
-//      assertThat(source).isEqualTo(DPS)
-//      assertThat(activeCaseLoadId).isEqualTo(PRISON_CODE_LEEDS)
-//    }
+    val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
+    saved.verifyAgainst(request)
 
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 2 }
-    val events = hmppsEventsQueue.receiveDomainEventsOnQueue()
-    val csipDomainEvent = events.find { it is CsipDomainEvent } as CsipDomainEvent
+    verifyAudit(saved, INSERT, setOf(Record, Referral, ContributoryFactor))
 
-    assertThat(csipDomainEvent).usingRecursiveComparison().ignoringFields("additionalInformation.affectedComponents")
-      .isEqualTo(
-        CsipDomainEvent(
-          eventType = DomainEventType.CSIP_CREATED.eventType,
-          additionalInformation = CsipAdditionalInformation(
-            recordUuid = response.recordUuid,
-            affectedComponents = setOf(),
-            source = DPS,
-          ),
-          version = 1,
-          description = DomainEventType.CSIP_CREATED.description,
-          occurredAt = csipDomainEvent.occurredAt,
-          detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
-          personReference = PersonReference.withPrisonNumber(prisonNumber),
-        ),
-      )
-
-    assertThat(csipDomainEvent.additionalInformation.affectedComponents).containsExactlyInAnyOrder(
-      Record,
-      Referral,
-      ContributoryFactor,
-    )
-
-    val contributoryFactoryDomainEvent = events.find { it is CsipBasicDomainEvent } as CsipBasicDomainEvent
-
-    assertThat(contributoryFactoryDomainEvent).usingRecursiveComparison().isEqualTo(
-      CsipBasicDomainEvent(
-        eventType = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.eventType,
-        additionalInformation = CsipBasicInformation(
-          entityUuid = response.referral.contributoryFactors.first().factorUuid,
-          recordUuid = response.recordUuid,
-          source = DPS,
-        ),
-        version = 1,
-        description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
-        occurredAt = contributoryFactoryDomainEvent.occurredAt,
-        detailUrl = "http://localhost:8080/csip-records/${response.recordUuid}",
-        personReference = PersonReference.withPrisonNumber(prisonNumber),
-      ),
+    verifyDomainEvents(
+      prisonNumber,
+      response.recordUuid,
+      setOf(Record, Referral, ContributoryFactor),
+      setOf(DomainEventType.CSIP_CREATED, DomainEventType.CONTRIBUTORY_FACTOR_CREATED),
+      response.referral.contributoryFactors.map { it.factorUuid }.toSet(),
+      2,
     )
   }
 

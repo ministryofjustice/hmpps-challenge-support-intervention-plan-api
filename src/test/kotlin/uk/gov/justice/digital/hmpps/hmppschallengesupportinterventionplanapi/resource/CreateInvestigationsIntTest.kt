@@ -6,7 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -170,7 +170,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      INSERT,
+      UPDATE,
       setOf(AffectedComponent.Investigation, Referral, Record),
     )
 
@@ -195,7 +195,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      INSERT,
+      UPDATE,
       setOf(AffectedComponent.Investigation, Interview, Referral, Record),
     )
 

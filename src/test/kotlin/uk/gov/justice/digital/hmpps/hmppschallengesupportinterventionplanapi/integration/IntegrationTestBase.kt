@@ -195,7 +195,7 @@ abstract class IntegrationTestBase {
   ) {
     val latest = csipRecordRepository.findLastChangeRevision(record.id).orElseThrow()
     val type = latest.metadata.revisionType
-    // assertThat(action).isEqualTo(type)
+    assertThat(type).isEqualTo(action)
 
     val number = latest.metadata.revisionNumber.orElseThrow()
     val revision = auditRevisionRepository.findByIdOrNull(number)
