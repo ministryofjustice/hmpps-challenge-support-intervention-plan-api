@@ -111,7 +111,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `204 no content - CSIP record soft deleted by DPS`() {
+  fun `204 no content - CSIP record deleted by DPS`() {
     val prisonNumber = givenValidPrisonNumber("D1234DS")
     val record = transactionTemplate.execute {
       val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
@@ -181,7 +181,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `204 no content - CSIP record soft deleted by NOMIS`() {
+  fun `204 no content - CSIP record deleted by NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
     deleteCsipRecordResponseSpec(record.recordUuid, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent

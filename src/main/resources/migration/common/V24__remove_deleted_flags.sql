@@ -1,0 +1,22 @@
+alter table csip_record
+    drop column deleted;
+alter table referral
+    drop column deleted;
+alter table contributory_factor
+    drop column deleted;
+alter table safer_custody_screening_outcome
+    drop column deleted;
+alter table investigation
+    drop column deleted;
+alter table interview
+    drop column deleted;
+alter table decision_and_actions
+    drop column deleted;
+alter table plan
+    drop column deleted;
+alter table identified_need
+    drop column deleted;
+alter table review
+    drop column deleted;
+alter table attendee
+    drop column deleted;
