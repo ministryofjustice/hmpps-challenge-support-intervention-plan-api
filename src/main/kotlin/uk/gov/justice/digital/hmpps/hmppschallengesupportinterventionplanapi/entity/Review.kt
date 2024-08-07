@@ -18,10 +18,10 @@ import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.SoftDelete
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.GenericCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
@@ -30,36 +30,31 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class Review(
+  @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "plan_id")
   val plan: Plan,
 
-  @Audited(withModifiedFlag = true)
   val reviewSequence: Int,
-  @Audited(withModifiedFlag = true)
   val reviewDate: LocalDate?,
-  @Audited(withModifiedFlag = true)
   val recordedBy: String,
-  @Audited(withModifiedFlag = true)
   val recordedByDisplayName: String,
-  @Audited(withModifiedFlag = true)
   val nextReviewDate: LocalDate?,
-  @Audited(withModifiedFlag = true)
   val csipClosedDate: LocalDate?,
-  @Audited(withModifiedFlag = true)
   val summary: String?,
 
-  @Audited(withModifiedFlag = true)
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   val actions: Set<ReviewAction>,
 
+  @Audited(withModifiedFlag = false)
   @Column(unique = true, nullable = false)
   val reviewUuid: UUID = UUID.randomUUID(),
 
+  @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "review_id")
@@ -67,6 +62,7 @@ class Review(
 ) : SimpleAuditable(), Parented {
   override fun parent() = plan
 
+  @NotAudited
   @OneToMany(mappedBy = "review", cascade = [CascadeType.ALL])
   private var attendees: MutableList<Attendee> = mutableListOf()
 
@@ -79,13 +75,10 @@ class Review(
     }
   }
 
-  fun addAttendee(context: CsipRequestContext, request: CreateAttendeeRequest, createAudit: Boolean) =
+  fun addAttendee(context: CsipRequestContext, request: CreateAttendeeRequest) =
     Attendee(this, request.name, request.role, request.isAttended, request.contribution).apply {
       attendees.add(this)
       val record = review.plan.csipRecord
-      if (createAudit) {
-        record.addAuditEvent(AuditEventAction.CREATED, auditDescription(), setOf(AffectedComponent.Attendee))
-      }
       record.registerEntityEvent(
         GenericCsipEvent(
           type = ATTENDEE_CREATED,
@@ -98,6 +91,3 @@ class Review(
       )
     }
 }
-
-fun Review.auditDescription() =
-  "Review with ${attendees().size} attendees added to plan"

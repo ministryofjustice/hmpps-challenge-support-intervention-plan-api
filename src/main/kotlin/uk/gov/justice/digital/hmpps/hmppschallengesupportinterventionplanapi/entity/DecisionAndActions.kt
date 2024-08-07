@@ -28,10 +28,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class DecisionAndActions(
+  @Audited(withModifiedFlag = false)
   @MapsId
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "decision_and_actions_id")
@@ -39,6 +40,7 @@ class DecisionAndActions(
 
   outcome: ReferenceData,
 
+  @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "decision_and_actions_id")
   val id: Long = 0,
@@ -72,7 +74,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 4000)
   var conclusion: String? = null
     private set(value) {
@@ -80,7 +81,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 100)
   var recordedBy: String? = null
     private set(value) {
@@ -88,7 +88,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 255)
   var recordedByDisplayName: String? = null
     private set(value) {
@@ -96,7 +95,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column
   var date: LocalDate? = null
     private set(value) {
@@ -104,7 +102,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 4000)
   var nextSteps: String? = null
     private set(value) {
@@ -112,7 +109,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   var actions: Set<DecisionAction> = setOf()
     private set(value) {
@@ -120,7 +116,6 @@ class DecisionAndActions(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 4000)
   var actionOther: String? = null
     private set(value) {

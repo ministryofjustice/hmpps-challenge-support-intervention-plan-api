@@ -19,7 +19,6 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.GenericCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
@@ -32,10 +31,11 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class Plan(
+  @Audited(withModifiedFlag = false)
   @MapsId
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "plan_id")
@@ -45,6 +45,7 @@ class Plan(
   reasonForPlan: String,
   firstCaseReviewDate: LocalDate,
 
+  @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "plan_id")
   val id: Long = 0,
@@ -61,21 +62,18 @@ class Plan(
   @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
-  @Audited(withModifiedFlag = true)
   var caseManager: String = caseManager
     set(value) {
       propertyChanged(::caseManager, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var reasonForPlan: String = reasonForPlan
     set(value) {
       propertyChanged(::reasonForPlan, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var firstCaseReviewDate: LocalDate = firstCaseReviewDate
     set(value) {
       propertyChanged(::firstCaseReviewDate, value)
@@ -113,7 +111,6 @@ class Plan(
     )
   }
 
-  fun auditDescription(): String = propertyChanges.joinToString(prefix = "Updated plan ") { it.description() }
   fun addIdentifiedNeed(context: CsipRequestContext, request: CreateIdentifiedNeedRequest): IdentifiedNeed =
     IdentifiedNeed(
       this,
@@ -129,12 +126,6 @@ class Plan(
         ResourceAlreadyExistException("Identified need already part of plan")
       }
       identifiedNeeds.add(this)
-      val affectedComponents = setOf(AffectedComponent.IdentifiedNeed)
-      csipRecord.addAuditEvent(
-        AuditEventAction.CREATED,
-        auditDescription(),
-        affectedComponents,
-      )
       csipRecord.registerEntityEvent(
         GenericCsipEvent(
           type = IDENTIFIED_NEED_CREATED,
@@ -159,16 +150,7 @@ class Plan(
     request.actions ?: setOf(),
   ).apply {
     reviews.add(this)
-    request.attendees?.forEach { addAttendee(context, it, false) }
-    val affectedComponents = buildSet {
-      add(AffectedComponent.Review)
-      if (request.attendees?.isNotEmpty() == true) add(AffectedComponent.Attendee)
-    }
-    csipRecord.addAuditEvent(
-      AuditEventAction.CREATED,
-      auditDescription(),
-      affectedComponents,
-    )
+    request.attendees?.forEach { addAttendee(context, it) }
     csipRecord.registerEntityEvent(
       GenericCsipEvent(
         type = REVIEW_CREATED,

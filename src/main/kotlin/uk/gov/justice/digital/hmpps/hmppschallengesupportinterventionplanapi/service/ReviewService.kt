@@ -31,7 +31,7 @@ class ReviewService(
 
   fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee {
     val review = reviewRepository.getReview(reviewUuid)
-    val attendee = review.addAttendee(csipRequestContext(), request, true)
+    val attendee = review.addAttendee(csipRequestContext(), request)
     csipRecordRepository.save(review.plan.csipRecord)
     return attendee.toModel()
   }

@@ -17,10 +17,11 @@ import java.time.LocalDate
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class SaferCustodyScreeningOutcome(
+  @Audited(withModifiedFlag = false)
   @MapsId
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "safer_custody_screening_outcome_id")
@@ -31,22 +32,19 @@ class SaferCustodyScreeningOutcome(
   @JoinColumn(name = "outcome_id")
   val outcome: ReferenceData,
 
-  @Audited(withModifiedFlag = true)
   @Column(nullable = false, length = 100)
   val recordedBy: String,
 
-  @Audited(withModifiedFlag = true)
   @Column(nullable = false, length = 255)
   val recordedByDisplayName: String,
 
-  @Audited(withModifiedFlag = true)
   @Column(nullable = false)
   val date: LocalDate,
 
-  @Audited(withModifiedFlag = true)
   @Column(nullable = false)
   val reasonForDecision: String,
 
+  @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "safer_custody_screening_outcome_id")
   val id: Long = 0,

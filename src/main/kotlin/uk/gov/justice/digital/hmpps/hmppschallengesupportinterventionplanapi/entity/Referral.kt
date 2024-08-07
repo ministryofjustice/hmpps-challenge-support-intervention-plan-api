@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -49,10 +48,11 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
-@EntityListeners(AuditedEntityListener::class, UpdateParentEntityListener::class)
+@EntityListeners(AuditedEntityListener::class)
 class Referral(
+  @Audited(withModifiedFlag = false)
   @MapsId
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "referral_id")
@@ -84,6 +84,8 @@ class Referral(
 
   refererAreaOfWork: ReferenceData,
   incidentInvolvement: ReferenceData?,
+
+  @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "referral_id")
   val id: Long = 0,
@@ -136,7 +138,7 @@ class Referral(
       field = value
     }
 
-  @Audited(targetAuditMode = NOT_AUDITED)
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_type_id")
   var incidentType: ReferenceData = incidentType
@@ -145,7 +147,7 @@ class Referral(
       field = value
     }
 
-  @Audited(targetAuditMode = NOT_AUDITED)
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_location_id")
   var incidentLocation: ReferenceData = incidentLocation
@@ -154,7 +156,7 @@ class Referral(
       field = value
     }
 
-  @Audited(targetAuditMode = NOT_AUDITED)
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "referer_area_of_work_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
@@ -163,7 +165,7 @@ class Referral(
       field = value
     }
 
-  @Audited(targetAuditMode = NOT_AUDITED)
+  @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_involvement_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
@@ -172,7 +174,6 @@ class Referral(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(nullable = false, length = 240)
   var referredBy: String = referredBy
     private set(value) {
@@ -180,49 +181,42 @@ class Referral(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var proactiveReferral: Boolean? = proactiveReferral
     private set(value) {
       propertyChanged(::proactiveReferral, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var staffAssaulted: Boolean? = staffAssaulted
     private set(value) {
       propertyChanged(::staffAssaulted, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var assaultedStaffName: String? = assaultedStaffName
     private set(value) {
       propertyChanged(::assaultedStaffName, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var descriptionOfConcern: String? = descriptionOfConcern
     private set(value) {
       propertyChanged(::descriptionOfConcern, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var knownReasons: String? = knownReasons
     private set(value) {
       propertyChanged(::knownReasons, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var otherInformation: String? = otherInformation
     private set(value) {
       propertyChanged(::otherInformation, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Enumerated(EnumType.STRING)
   var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
     private set(value) {
@@ -230,21 +224,18 @@ class Referral(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var referralComplete: Boolean? = referralComplete
     private set(value) {
       propertyChanged(::referralComplete, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   var referralCompletedDate: LocalDate? = referralCompletedDate
     private set(value) {
       propertyChanged(::referralCompletedDate, value)
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 32)
   var referralCompletedBy: String? = referralCompletedBy
     private set(value) {
@@ -252,7 +243,6 @@ class Referral(
       field = value
     }
 
-  @Audited(withModifiedFlag = true)
   @Column(length = 255)
   var referralCompletedByDisplayName: String? = referralCompletedByDisplayName
     private set(value) {
@@ -277,16 +267,6 @@ class Referral(
 
     if (isNew || decisionAndActions!!.propertyChanges.isNotEmpty()) {
       val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
-      val auditDescription = if (isNew) {
-        "Decision and actions added to referral"
-      } else {
-        auditDescription(decisionAndActions!!.propertyChanges, prefix = "Updated decision and actions ")
-      }
-      csipRecord.addAuditEvent(
-        if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,
-        auditDescription,
-        affectedComponents,
-      )
       csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
@@ -306,7 +286,6 @@ class Referral(
     outcomeType: ReferenceData,
   ): CsipRecord {
     verifySaferCustodyScreeningOutcomeDoesNotExist()
-    val description = "Safer custody screening outcome added to referral"
 
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
@@ -318,11 +297,6 @@ class Referral(
     )
 
     val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
-    csipRecord.addAuditEvent(
-      action = AuditEventAction.CREATED,
-      description = description,
-      affectedComponents = affectedComponents,
-    )
     csipRecord.registerEntityEvent(
       CsipUpdatedEvent(
         recordUuid = csipRecord.recordUuid,
@@ -346,20 +320,10 @@ class Referral(
     investigation!!.upsert(request)
 
     if (isNew || investigation!!.propertyChanges.isNotEmpty()) {
-      val auditDescription = if (isNew) {
-        "Investigation added to referral"
-      } else {
-        auditDescription(investigation!!.propertyChanges, prefix = "Updated investigation ")
-      }
       val affectedComponents = buildSet {
         add((AffectedComponent.Investigation))
         if (request is CreateInvestigationRequest && request.interviews.isNotEmpty()) add(AffectedComponent.Interview)
       }
-      csipRecord.addAuditEvent(
-        action = if (isNew) AuditEventAction.CREATED else AuditEventAction.UPDATED,
-        description = auditDescription,
-        affectedComponents = affectedComponents,
-      )
       csipRecord.registerEntityEvent(
         CsipUpdatedEvent(
           recordUuid = csipRecord.recordUuid,
@@ -377,14 +341,12 @@ class Referral(
     createRequest: CreateContributoryFactorRequest,
     factorType: ReferenceData,
     context: CsipRequestContext,
-    auditRequest: AuditRequest? = null,
   ) = ContributoryFactor(
     referral = this,
     contributoryFactorType = factorType,
     comment = createRequest.comment,
   ).apply {
     contributoryFactors.add(this)
-    auditRequest?.also { csipRecord.addAuditEvent(auditRequest) }
     csipRecord.registerEntityEvent(
       ContributoryFactorCreatedEvent(
         entityUuid = contributoryFactorUuid,
@@ -453,7 +415,4 @@ class Referral(
       put(AffectedComponent.ContributoryFactor, contributoryFactors.map { it.contributoryFactorUuid }.toSet())
     }
   }
-
-  private fun auditDescription(propertyChanges: Set<PropertyChange>, prefix: String): String =
-    propertyChanges.joinToString(prefix = prefix) { it.description() }
 }

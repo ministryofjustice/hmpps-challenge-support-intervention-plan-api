@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -52,22 +51,26 @@ import java.util.UUID
 
 @Entity
 @Table
-@Audited
+@Audited(withModifiedFlag = true)
 @SoftDelete
 @EntityListeners(AuditedEntityListener::class)
 class CsipRecord(
 
+  @Audited(withModifiedFlag = false)
   @Column(nullable = false, length = 10, updatable = false)
   val prisonNumber: String,
 
+  @Audited(withModifiedFlag = false)
   @Column(length = 6, updatable = false)
   val prisonCodeWhenRecorded: String? = null,
 
   logCode: String? = null,
 
+  @Audited(withModifiedFlag = false)
   @Column(unique = true, nullable = false)
   val recordUuid: UUID = UUID.randomUUID(),
 
+  @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "record_id")
@@ -83,11 +86,6 @@ class CsipRecord(
   @NotAudited
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
-  @Transient
-  @NotAudited
-  var auditEvents: MutableSet<AuditRequest>? = mutableSetOf()
-
-  @Audited(withModifiedFlag = true)
   @Column(length = 10)
   var logCode: String? = logCode
     set(value) {
@@ -95,19 +93,25 @@ class CsipRecord(
       field = value
     }
 
+  @Audited(withModifiedFlag = false)
   override var createdAt: LocalDateTime = LocalDateTime.now()
 
+  @Audited(withModifiedFlag = false)
   @Column(length = 32)
   override var createdBy: String = SYSTEM_USER_NAME
 
+  @Audited(withModifiedFlag = false)
   @Column(length = 255)
   override var createdByDisplayName: String = SYSTEM_DISPLAY_NAME
 
+  @Audited(withModifiedFlag = false)
   override var lastModifiedAt: LocalDateTime? = null
 
+  @Audited(withModifiedFlag = false)
   @Column(length = 32)
   override var lastModifiedBy: String? = null
 
+  @Audited(withModifiedFlag = false)
   @Column(length = 255)
   override var lastModifiedByDisplayName: String? = null
 
@@ -122,23 +126,6 @@ class CsipRecord(
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
   var plan: Plan? = null
     private set
-
-  internal fun addAuditEvent(
-    action: AuditEventAction,
-    description: String,
-    affectedComponents: Set<AffectedComponent>,
-  ) = apply {
-    addAuditEvent(AuditRequest(action, description, affectedComponents))
-  }
-
-  internal fun addAuditEvent(
-    auditRequest: AuditRequest,
-  ) = apply {
-    auditEvents = (auditEvents ?: mutableSetOf())
-    auditEvents!!.add(auditRequest)
-    // change modifiedAt to force hibernate to save audit record
-    lastModifiedAt = LocalDateTime.now()
-  }
 
   fun create(
     request: CreateCsipRecordRequest,
@@ -162,14 +149,6 @@ class CsipRecord(
         )
       }
     }
-    addAuditEvent(
-      action = AuditEventAction.CREATED,
-      description = "CSIP record created via referral with ${referral!!.contributoryFactors().size} contributory factors",
-      affectedComponents = buildSet {
-        addAll(setOf(Record, AffectedComponent.Referral))
-        if (referral!!.contributoryFactors().isNotEmpty()) add(ContributoryFactor)
-      },
-    )
     registerEvent(
       CsipCreatedEvent(
         recordUuid = this.recordUuid,
@@ -199,11 +178,6 @@ class CsipRecord(
         if (propertyChanges.isNotEmpty()) add(Record)
         if (referral.propertyChanges.isNotEmpty()) add(AffectedComponent.Referral)
       }
-      addAuditEvent(
-        action = AuditEventAction.UPDATED,
-        description = auditDescription(propertyChanges, referral.propertyChanges),
-        affectedComponents = affectedComponents,
-      )
       registerEvent(
         CsipUpdatedEvent(
           recordUuid = recordUuid,
@@ -230,11 +204,6 @@ class CsipRecord(
         add(AffectedComponent.Plan)
         if (request is CreatePlanRequest && request.identifiedNeeds.isNotEmpty()) add(IdentifiedNeed)
       }
-      addAuditEvent(
-        action = AuditEventAction.UPDATED,
-        description = if (isNew) "Plan added to CSIP record" else plan!!.auditDescription(),
-        affectedComponents = affectedComponents,
-      )
       registerEvent(
         CsipUpdatedEvent(
           recordUuid = recordUuid,
@@ -250,11 +219,6 @@ class CsipRecord(
 
   fun delete(context: CsipRequestContext) = apply {
     val affected = components()
-    addAuditEvent(
-      action = AuditEventAction.DELETED,
-      description = "CSIP deleted",
-      affectedComponents = affected.keys,
-    )
     affected.filter { it.value.isNotEmpty() }.map { entry ->
       when (entry.key) {
         Record -> listOf(
@@ -277,15 +241,6 @@ class CsipRecord(
   }
 
   internal fun registerEntityEvent(event: DomainEventable): DomainEventable = registerEvent(event)
-
-  private fun auditDescription(recordChanges: Set<PropertyChange>, referralChanges: Set<PropertyChange>): String {
-    val recordDescription =
-      if (recordChanges.isEmpty()) null else recordChanges.joinToString(prefix = "updated CSIP record ") { it.description() }
-    val referralDescription =
-      if (referralChanges.isEmpty()) null else referralChanges.joinToString(prefix = "updated referral ") { it.description() }
-    return setOfNotNull(recordDescription, referralDescription).filter { it.isNotBlank() }
-      .joinToString(separator = " and ").replaceFirstChar(Char::uppercaseChar)
-  }
 
   private fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
     put(Record, setOf(recordUuid))
