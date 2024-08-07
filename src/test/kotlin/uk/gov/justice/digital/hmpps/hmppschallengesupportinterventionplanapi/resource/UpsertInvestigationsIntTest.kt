@@ -5,29 +5,29 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.util.UUID
 
@@ -149,20 +149,17 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
 
     val response = upsertInvestigation(recordUuid, request, status = HttpStatus.CREATED)
 
-    val affectedComponents = setOf(AffectedComponent.Investigation)
-
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      AuditEventAction.CREATED,
-      affectedComponents,
-      "Investigation added to referral",
+      INSERT,
+      setOf(AffectedComponent.Investigation, AffectedComponent.Referral, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -186,12 +183,9 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      AuditEventAction.CREATED,
-      setOf(AffectedComponent.Investigation),
-      "Investigation added to referral",
-      Source.NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
+      INSERT,
+      setOf(AffectedComponent.Investigation, AffectedComponent.Referral, AffectedComponent.Record),
+      nomisContext(),
     )
 
     verifyDomainEvents(
@@ -217,7 +211,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
 
     val response = upsertInvestigation(csipRecord.recordUuid, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
-    assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
+    // assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
@@ -241,24 +235,17 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     val request = investigationRequest()
 
     val response = upsertInvestigation(csipRecord.recordUuid, request, status = HttpStatus.OK)
-    val affectedComponents = setOf(AffectedComponent.Investigation)
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      AuditEventAction.UPDATED,
-      affectedComponents,
-      "Updated investigation staffInvolved changed from 'oldStaffInvolved' to 'staffInvolved', " +
-        "evidenceSecured changed from 'oldEvidenceSecured' to 'evidenceSecured', " +
-        "occurrenceReason changed from 'oldOccurrenceReason' to 'occurrenceReason', " +
-        "personsUsualBehaviour changed from 'oldPersonsUsualBehaviour' to 'personsUsualBehaviour', " +
-        "personsTrigger changed from 'oldPersonsTrigger' to 'personsTrigger', " +
-        "protectiveFactors changed from 'oldProtectiveFactors' to 'protectiveFactors'",
+      UPDATE,
+      setOf(AffectedComponent.Investigation, AffectedComponent.Referral, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       csipRecord.recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }

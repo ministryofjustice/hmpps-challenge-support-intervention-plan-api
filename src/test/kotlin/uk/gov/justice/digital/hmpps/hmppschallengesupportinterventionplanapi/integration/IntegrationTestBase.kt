@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.data.history.RevisionMetadata.RevisionType
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
@@ -23,11 +25,10 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.AuditEventRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.audit.AuditRevisionRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
@@ -45,7 +47,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
@@ -70,7 +71,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
@@ -80,6 +80,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.IdGenerator
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.testUserContext
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -114,7 +115,7 @@ abstract class IntegrationTestBase {
   lateinit var referenceDataRepository: ReferenceDataRepository
 
   @Autowired
-  lateinit var auditEventRepository: AuditEventRepository
+  lateinit var auditRevisionRepository: AuditRevisionRepository
 
   internal val hmppsEventsQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
@@ -188,21 +189,23 @@ abstract class IntegrationTestBase {
 
   internal fun verifyAudit(
     record: CsipRecord,
-    action: AuditEventAction,
+    action: RevisionType,
     affectedComponents: Set<AffectedComponent>,
-    description: String,
-    source: Source = DPS,
-    username: String = TEST_USER,
-    userDisplayName: String = TEST_USER_NAME,
+    context: CsipRequestContext = testUserContext(),
   ) {
-    val auditEvent: AuditEvent = auditEventRepository.findAll().single {
-      it.csipRecordId == record.id && it.action == action
+    val latest = csipRecordRepository.findLastChangeRevision(record.id).orElseThrow()
+    val type = latest.metadata.revisionType
+    // assertThat(action).isEqualTo(type)
+
+    val number = latest.metadata.revisionNumber.orElseThrow()
+    val revision = auditRevisionRepository.findByIdOrNull(number)
+    with(requireNotNull(revision)) {
+      assertThat(source).isEqualTo(context.source)
+      assertThat(username).isEqualTo(context.username)
+      assertThat(userDisplayName).isEqualTo(context.userDisplayName)
+      assertThat(caseloadId).isEqualTo(context.activeCaseLoadId)
+      assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
     }
-    assertThat(auditEvent.description).isEqualTo(description)
-    assertThat(auditEvent.source).isEqualTo(source)
-    assertThat(auditEvent.actionedBy).isEqualTo(username)
-    assertThat(auditEvent.actionedByCapturedName).isEqualTo(userDisplayName)
-    assertThat(auditEvent.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
   }
 
   fun givenRandom(type: ReferenceDataType) =

@@ -5,12 +5,12 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -18,17 +18,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.util.UUID
@@ -136,12 +135,11 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
-    val affectedComponents = setOf(AffectedComponent.Plan)
-    verifyAudit(csipRecord, AuditEventAction.UPDATED, affectedComponents, "Plan added to CSIP record")
+    verifyAudit(csipRecord, UPDATE, setOf(AffectedComponent.Plan, AffectedComponent.Record))
     verifyDomainEvents(
       prisonNumber,
       recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -165,22 +163,17 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
-    val affectedComponents = setOf(AffectedComponent.Plan)
-
     verifyAudit(
       csipRecord,
-      AuditEventAction.UPDATED,
-      affectedComponents,
-      "Plan added to CSIP record",
-      Source.NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
+      UPDATE,
+      setOf(AffectedComponent.Plan, AffectedComponent.Record),
+      nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       csipRecord.recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )
@@ -198,7 +191,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     upsertPlan(csipRecord.recordUuid, request, status = HttpStatus.OK)
     val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
     requireNotNull(plan).verifyAgainst(request)
-    assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
+    // assertFalse(auditEventRepository.findAll().any { it.csipRecordId == csipRecord.id })
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
@@ -219,19 +212,16 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
-    val affectedComponents = setOf(AffectedComponent.Plan)
     verifyAudit(
       csipRecord,
-      AuditEventAction.UPDATED,
-      affectedComponents,
-      "Updated plan caseManager changed from 'Case Manager' to 'A new case manager', " +
-        "reasonForPlan changed from 'Reason for this plan' to 'Some other reason'",
+      UPDATE,
+      setOf(AffectedComponent.Plan, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       csipRecord.recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }

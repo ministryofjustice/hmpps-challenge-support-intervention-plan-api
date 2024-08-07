@@ -6,13 +6,16 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -164,20 +167,17 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
     val response = createInvestigation(recordUuid, request)
 
-    val affectedComponents = setOf(AffectedComponent.Investigation)
-
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      AuditEventAction.CREATED,
-      affectedComponents,
-      "Investigation added to referral",
+      INSERT,
+      setOf(AffectedComponent.Investigation, Referral, Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -192,20 +192,17 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     val response = createInvestigation(recordUuid, request)
     val interviewUuids = response.interviews.map { it.interviewUuid }
 
-    val affectedComponents = setOf(AffectedComponent.Investigation, AffectedComponent.Interview)
-
     response.verifyAgainst(request)
     verifyAudit(
       csipRecord,
-      AuditEventAction.CREATED,
-      affectedComponents,
-      "Investigation added to referral",
+      INSERT,
+      setOf(AffectedComponent.Investigation, Interview, Referral, Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Investigation, Interview),
       setOf(DomainEventType.CSIP_UPDATED),
       interviewUuids.toSet(),
       3,
@@ -219,7 +216,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     assertThat(personsUsualBehaviour).isEqualTo(request.personsUsualBehaviour)
     assertThat(personsTrigger).isEqualTo(request.personsTrigger)
     assertThat(protectiveFactors).isEqualTo(request.protectiveFactors)
-    request.interviews?.also { assertThat(interviews.size).isEqualTo(it.size) }
+    assertThat(interviews.size).isEqualTo(request.interviews.size)
   }
 
   private fun createInvestigationRequest(interviews: List<CreateInterviewRequest> = listOf()) =

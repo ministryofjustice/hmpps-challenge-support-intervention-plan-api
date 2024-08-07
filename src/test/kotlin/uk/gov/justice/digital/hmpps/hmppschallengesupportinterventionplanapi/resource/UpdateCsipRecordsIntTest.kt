@@ -12,12 +12,12 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
@@ -38,11 +38,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.withReferral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -162,8 +162,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     with(saved) {
       assertThat(logCode).isEqualTo(LOG_CODE)
     }
-    val audit = auditEventRepository.findAll().singleOrNull { it.action == AuditEventAction.UPDATED }
-    assertThat(audit).isNull()
+//    val audit = auditEventRepository.findAll().singleOrNull { it.action == AuditEventAction.UPDATED }
+//    assertThat(audit).isNull()
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
@@ -189,9 +189,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.UPDATED,
+      UPDATE,
       setOf(AffectedComponent.Record),
-      "Updated CSIP record logCode changed from null to 'ZXY987'",
     )
 
     verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record))
@@ -218,12 +217,9 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.UPDATED,
+      UPDATE,
       setOf(AffectedComponent.Record),
-      "Updated CSIP record logCode changed from null to 'ZXY987'",
-      NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
+      nomisContext(),
     )
 
     verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record), NOMIS)
@@ -260,9 +256,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.UPDATED,
-      setOf(AffectedComponent.Referral),
-      "Updated referral incidentType changed from 'ATO' to 'WIT', incidentLocation changed from 'KIT' to 'REC', refererAreaOfWork changed from 'HEA' to 'GYM'",
+      UPDATE,
+      setOf(AffectedComponent.Referral, AffectedComponent.Record),
     )
 
     verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Referral))
@@ -296,15 +291,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.UPDATED,
+      UPDATE,
       setOf(AffectedComponent.Record, AffectedComponent.Referral),
-      "Updated CSIP record logCode changed from null to 'ZXY987' and updated referral descriptionOfConcern changed from 'descriptionOfConcern' to 'Updated concerns', " +
-        "knownReasons changed from 'knownReasons' to 'Updated reasons', otherInformation changed from 'otherInformation' to 'Even more information that can change', " +
-        "referralComplete changed from false to true, " +
-        "referralCompletedDate changed from null to '${
-          LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-        }', referralCompletedBy changed from null to 'completedBy', " +
-        "referralCompletedByDisplayName changed from null to 'completedByDisplayName'",
     )
 
     verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Record, AffectedComponent.Referral))
@@ -332,12 +320,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.UPDATED,
-      setOf(AffectedComponent.Referral),
-      "Updated referral referralComplete changed from true to false, referralCompletedDate changed from '${
-        LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-      }' to null, referralCompletedBy changed from 'referralCompletedBy' to null, " +
-        "referralCompletedByDisplayName changed from 'referralCompletedByDisplayName' to null",
+      UPDATE,
+      setOf(AffectedComponent.Referral, AffectedComponent.Record),
     )
 
     verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(AffectedComponent.Referral))

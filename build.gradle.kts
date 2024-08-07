@@ -24,7 +24,8 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
   implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.8.2")
-  implementation("org.hibernate.orm:hibernate-envers:6.5.2.Final")
+  implementation("org.hibernate.orm:hibernate-envers")
+  implementation("org.springframework.data:spring-data-envers")
 
   // AWS
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:4.1.0")

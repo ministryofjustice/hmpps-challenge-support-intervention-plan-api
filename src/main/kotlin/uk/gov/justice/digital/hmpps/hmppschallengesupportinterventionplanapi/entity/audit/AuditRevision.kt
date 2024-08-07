@@ -17,6 +17,7 @@ import org.hibernate.envers.RevisionListener
 import org.hibernate.envers.RevisionNumber
 import org.hibernate.envers.RevisionTimestamp
 import org.hibernate.envers.RevisionType
+import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
@@ -42,8 +43,9 @@ class AuditRevision {
   @RevisionNumber
   var id: Long = 0
 
+  // must be called timestamp for EnversRevisionRepositoryImpl
   @RevisionTimestamp
-  var datetime: LocalDateTime = LocalDateTime.now()
+  var timestamp: LocalDateTime = LocalDateTime.now()
 
   var username: String? = null
   var userDisplayName: String? = null
@@ -93,3 +95,5 @@ class AuditRevisionEntityListener : RevisionListener, EntityTrackingRevisionList
     }
   }
 }
+
+interface AuditRevisionRepository : JpaRepository<AuditRevision, Long>

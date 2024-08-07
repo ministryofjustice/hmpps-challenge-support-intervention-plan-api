@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.transaction.support.TransactionTemplate
@@ -14,7 +15,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
@@ -31,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createAttendeeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.LocalDate
 import java.util.UUID
 import java.util.UUID.randomUUID
@@ -136,18 +136,16 @@ class AddReviewIntTest : IntegrationTestBase() {
     val attendeeUuids = review.attendees().map { it.attendeeUuid }
     assertThat(attendeeUuids.size).isEqualTo(2)
 
-    val affectedComponents = setOf(AffectedComponent.Review, AffectedComponent.Attendee)
     verifyAudit(
       record,
-      AuditEventAction.CREATED,
-      affectedComponents,
-      "Review with 2 attendees added to plan",
+      INSERT,
+      setOf(AffectedComponent.Review, AffectedComponent.Attendee, AffectedComponent.Plan, AffectedComponent.Record),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.recordUuid,
-      affectedComponents,
+      setOf(AffectedComponent.Review, AffectedComponent.Attendee),
       setOf(REVIEW_CREATED, ATTENDEE_CREATED),
       setOf(response.reviewUuid) + attendeeUuids,
       expectedCount = 3,
@@ -169,12 +167,9 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.CREATED,
-      setOf(AffectedComponent.Review),
-      "Review with 0 attendees added to plan",
-      NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
+      INSERT,
+      setOf(AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
+      nomisContext(),
     )
 
     verifyDomainEvents(

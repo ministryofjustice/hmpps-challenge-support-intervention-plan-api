@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.transaction.support.TransactionTemplate
@@ -16,9 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.auditDescription
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AuditEventAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.INTERVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
@@ -35,6 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -208,7 +208,16 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val interview = getInterview(record.recordUuid, response.interviewUuid)
     interview.verifyAgainst(request)
 
-    verifyAudit(record, AuditEventAction.UPDATED, setOf(AffectedComponent.Interview), interview.auditDescription())
+    verifyAudit(
+      record,
+      UPDATE,
+      setOf(
+        AffectedComponent.Interview,
+        AffectedComponent.Investigation,
+        AffectedComponent.Referral,
+        AffectedComponent.Record,
+      ),
+    )
 
     verifyDomainEvents(
       prisonNumber,
@@ -236,12 +245,14 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      AuditEventAction.UPDATED,
-      setOf(AffectedComponent.Interview),
-      interview.auditDescription(),
-      NOMIS,
-      NOMIS_SYS_USER,
-      NOMIS_SYS_USER_DISPLAY_NAME,
+      UPDATE,
+      setOf(
+        AffectedComponent.Interview,
+        AffectedComponent.Investigation,
+        AffectedComponent.Referral,
+        AffectedComponent.Record,
+      ),
+      nomisContext(),
     )
 
     verifyDomainEvents(
