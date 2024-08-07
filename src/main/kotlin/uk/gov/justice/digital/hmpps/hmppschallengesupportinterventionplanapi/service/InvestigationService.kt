@@ -57,7 +57,7 @@ class InvestigationService(
     }
     val context = csipRequestContext()
     val investigation = referral.upsertInvestigation(context, request).referral!!.investigation!!
-    request.interviews?.forEach {
+    request.interviews.forEach {
       investigation.addInterview(context, it) { code ->
         referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
       }
