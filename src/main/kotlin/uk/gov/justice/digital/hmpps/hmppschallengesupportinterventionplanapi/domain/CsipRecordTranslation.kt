@@ -103,4 +103,5 @@ fun CsipRecord.toModel() =
     lastModifiedByDisplayName = lastModifiedByDisplayName,
     referral = referral!!.toModel(),
     plan = null,
+    status = status,
   )
