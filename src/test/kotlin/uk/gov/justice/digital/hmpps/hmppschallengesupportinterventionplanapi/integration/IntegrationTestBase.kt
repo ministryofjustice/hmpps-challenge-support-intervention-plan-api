@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.audit.AuditRevisionRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
@@ -52,6 +53,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
@@ -76,7 +79,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.withReferral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.IdGenerator
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
@@ -87,6 +89,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
+import java.time.LocalTime
 import java.util.UUID
 
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
@@ -124,9 +127,6 @@ abstract class IntegrationTestBase {
 
   internal fun HmppsQueue.countAllMessagesOnQueue() =
     sqsClient.countAllMessagesOnQueue(queueUrl).get()
-
-  internal fun HmppsQueue.receiveMessageOnQueue() =
-    sqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(queueUrl).build()).get().messages().single()
 
   fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<Any> =
     sqsClient.receiveMessage(
@@ -217,9 +217,6 @@ abstract class IntegrationTestBase {
   fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(csipRecord)
   fun givenCsipRecordWithReferral(csipRecord: CsipRecord, complete: Boolean = false): CsipRecord {
     val record = csipRecord.withReferral(
-      incidentType = { givenRandom(INCIDENT_TYPE) },
-      incidentLocation = { givenRandom(INCIDENT_LOCATION) },
-      refererAreaOfWork = { givenRandom(AREA_OF_WORK) },
       referralComplete = complete,
       referralCompletedBy = if (complete) "referralCompletedBy" else null,
       referralCompletedByDisplayName = if (complete) "referralCompletedByDisplayName" else null,
@@ -227,6 +224,54 @@ abstract class IntegrationTestBase {
     )
     return csipRecordRepository.save(record)
   }
+
+  fun CsipRecord.withReferral(
+    incidentType: () -> ReferenceData = { givenRandom(INCIDENT_TYPE) },
+    incidentLocation: () -> ReferenceData = { givenRandom(INCIDENT_LOCATION) },
+    refererAreaOfWork: () -> ReferenceData = { givenRandom(AREA_OF_WORK) },
+    incidentInvolvement: () -> ReferenceData? = { null },
+    incidentDate: LocalDate = LocalDate.now(),
+    incidentTime: LocalTime? = null,
+    referredBy: String = "referredBy",
+    referralDate: LocalDate = LocalDate.now(),
+    proactiveReferral: Boolean? = null,
+    staffAssaulted: Boolean? = null,
+    assaultedStaffName: String? = null,
+    descriptionOfConcern: String? = "descriptionOfConcern",
+    knownReasons: String? = "knownReasons",
+    otherInformation: String? = "otherInformation",
+    saferCustodyTeamInformed: OptionalYesNoAnswer = DO_NOT_KNOW,
+    referralComplete: Boolean? = null,
+    referralCompletedBy: String? = null,
+    referralCompletedByDisplayName: String? = null,
+    referralCompletedDate: LocalDate? = null,
+  ): CsipRecord =
+    this.set(
+      this::referral,
+      Referral(
+        this,
+        referralDate,
+        incidentDate,
+        incidentTime,
+        referredBy,
+        proactiveReferral,
+        staffAssaulted,
+        assaultedStaffName,
+        descriptionOfConcern,
+        knownReasons,
+        otherInformation,
+        saferCustodyTeamInformed,
+        referralComplete,
+        referralCompletedBy,
+        referralCompletedByDisplayName,
+        referralCompletedDate,
+        incidentType(),
+        incidentLocation(),
+        refererAreaOfWork(),
+        incidentInvolvement(),
+        id,
+      ),
+    )
 
   fun CsipRecord.withPlan(
     caseManager: String = "Case Manager",
@@ -290,6 +335,20 @@ abstract class IntegrationTestBase {
     csipRecordRepository.save(plan.csipRecord)
   }
 
+  fun Referral.withSaferCustodyScreeningOutcome(
+    outcome: ReferenceData = givenRandom(OUTCOME_TYPE),
+    recordedBy: String = "recordedBy",
+    recordedByDisplayName: String = "recordedByDisplayName",
+    date: LocalDate = LocalDate.now(),
+    reasonForDecision: String = "A reason for the decision",
+  ) = apply {
+    this.set(
+      this::saferCustodyScreeningOutcome,
+      SaferCustodyScreeningOutcome(this, outcome, recordedBy, recordedByDisplayName, date, reasonForDecision, id),
+    )
+    csipRecordRepository.save(csipRecord)
+  }
+
   fun Referral.withDecisionAndActions(
     outcome: ReferenceData = givenRandom(OUTCOME_TYPE),
     signedOffBy: ReferenceData = givenRandom(DECISION_SIGNER_ROLE),
@@ -300,7 +359,6 @@ abstract class IntegrationTestBase {
     nextSteps: String? = "some next steps",
     actions: Set<DecisionAction> = setOf(),
     actionOther: String? = null,
-    id: Long = 0,
   ): Referral = DecisionAndActions(this, outcome, id)
     .upsert(
       UpsertDecisionAndActionsRequest(
