@@ -106,7 +106,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val prisonNumber = givenValidPrisonNumber("I2234MR")
+    val prisonNumber = givenValidPrisonNumber("I3234MR")
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
     val recordUuid = csipRecord.recordUuid
 

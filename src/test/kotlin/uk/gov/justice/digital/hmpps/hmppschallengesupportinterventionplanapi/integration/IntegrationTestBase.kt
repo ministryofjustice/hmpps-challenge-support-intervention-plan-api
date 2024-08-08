@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.SqlMergeMode
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
@@ -92,7 +93,7 @@ import java.time.LocalTime
 import java.util.UUID
 
 @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
-// @Sql("classpath:test_data/reset-database.sql")
+@Sql("classpath:test_data/reset-database.sql")
 @ExtendWith(HmppsAuthApiExtension::class, ManageUsersExtension::class, PrisonerSearchExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -126,9 +127,6 @@ abstract class IntegrationTestBase {
 
   internal fun HmppsQueue.countAllMessagesOnQueue() =
     sqsClient.countAllMessagesOnQueue(queueUrl).get()
-
-  internal fun HmppsQueue.receiveMessageOnQueue() =
-    sqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(queueUrl).build()).get().messages().single()
 
   fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<Any> =
     sqsClient.receiveMessage(
