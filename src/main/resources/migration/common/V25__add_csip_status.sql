@@ -62,14 +62,14 @@ declare
 begin
     actioned_to_close = actioned_to_close(csip_id);
     if actioned_to_close then
-        return 'CsipClosed';
+        return 'CSIP_CLOSED';
     elsif exists(select 1 from plan where plan_id = csip_id) then
-        return 'CsipOpen';
+        return 'CSIP_OPEN';
     end if;
 
     referral_complete = referral_complete(csip_id);
     if not referral_complete then
-        return 'ReferralPending';
+        return 'REFERRAL_PENDING';
     end if;
 
     select sout.code, dout.code, da.conclusion
@@ -83,14 +83,14 @@ begin
 
     return case
                when decision_conclusion is null and decision_outcome is not null and screening_outcome = 'OPE'
-                   then 'AwaitingDecision'
-               when is_acc_support(screening_outcome, decision_outcome) then 'AcctSupport'
-               when is_plan_pending(screening_outcome, decision_outcome) then 'PlanPending'
-               when screening_outcome = 'OPE' and decision_outcome is null then 'InvestigationPending'
-               when is_no_further_action(screening_outcome, decision_outcome) then 'NoFurtherAction'
-               when is_outside_support(screening_outcome, decision_outcome) then 'SupportOutsideCsip'
-               when screening_outcome is null then 'ReferralSubmitted'
-               else 'Unknown'
+                   then 'AWAITING_DECISION'
+               when is_acc_support(screening_outcome, decision_outcome) then 'ACCT_SUPPORT'
+               when is_plan_pending(screening_outcome, decision_outcome) then 'PLAN_PENDING'
+               when screening_outcome = 'OPE' and decision_outcome is null then 'INVESTIGATION_PENDING'
+               when is_no_further_action(screening_outcome, decision_outcome) then 'NO_FURTHER_ACTION'
+               when is_outside_support(screening_outcome, decision_outcome) then 'SUPPORT_OUTSIDE_CSIP'
+               when screening_outcome is null then 'REFERRAL_SUBMITTED'
+               else 'UNKNOWN'
         end;
 
 end;
@@ -114,8 +114,17 @@ from csip_record;
 alter table csip_record
     alter status set not null,
     add constraint status_enum_check check
-        (status in ('CsipClosed', 'CsipOpen', 'AwaitingDecision', 'AcctSupport', 'PlanPending', 'InvestigationPending',
-                    'NoFurtherAction', 'SupportOutsideCsip', 'ReferralSubmitted', 'ReferralPending', 'Unknown'));
+        (status in ('CSIP_CLOSED',
+                    'CSIP_OPEN',
+                    'AWAITING_DECISION',
+                    'ACCT_SUPPORT',
+                    'PLAN_PENDING',
+                    'INVESTIGATION_PENDING',
+                    'NO_FURTHER_ACTION',
+                    'SUPPORT_OUTSIDE_CSIP',
+                    'REFERRAL_SUBMITTED',
+                    'REFERRAL_PENDING',
+                    'UNKNOWN'));
 
 -----
 

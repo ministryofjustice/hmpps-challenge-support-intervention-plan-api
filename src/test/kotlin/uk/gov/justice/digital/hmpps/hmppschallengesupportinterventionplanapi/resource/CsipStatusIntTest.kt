@@ -36,7 +36,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.CsipClosed)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_CLOSED)
   }
 
   @Test
@@ -52,7 +52,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.CsipOpen)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
   }
 
   @Test
@@ -67,7 +67,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.AwaitingDecision)
+    assertThat(saved.status).isEqualTo(CsipStatus.AWAITING_DECISION)
   }
 
   @Test
@@ -82,7 +82,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.AcctSupport)
+    assertThat(saved.status).isEqualTo(CsipStatus.ACCT_SUPPORT)
   }
 
   @Test
@@ -97,7 +97,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.AcctSupport)
+    assertThat(saved.status).isEqualTo(CsipStatus.ACCT_SUPPORT)
   }
 
   @Test
@@ -112,7 +112,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.PlanPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.PLAN_PENDING)
   }
 
   @Test
@@ -127,7 +127,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.PlanPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.PLAN_PENDING)
   }
 
   @Test
@@ -142,7 +142,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.InvestigationPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.INVESTIGATION_PENDING)
   }
 
   @Test
@@ -157,7 +157,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.NoFurtherAction)
+    assertThat(saved.status).isEqualTo(CsipStatus.NO_FURTHER_ACTION)
   }
 
   @Test
@@ -172,7 +172,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }!!
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.NoFurtherAction)
+    assertThat(saved.status).isEqualTo(CsipStatus.NO_FURTHER_ACTION)
   }
 
   @Test
@@ -181,7 +181,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber), complete = true)
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.ReferralSubmitted)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
   }
 
   @Test
@@ -190,7 +190,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
     val saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.ReferralPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
   }
 
   @Test
@@ -199,47 +199,47 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
 
     var saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.ReferralPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
 
     record.setReferralComplete()
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.ReferralSubmitted)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
 
     record.addSaferCustodyScreeningOutcome()
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.InvestigationPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.INVESTIGATION_PENDING)
 
     record.addDecisionWithoutConclusion()
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.AwaitingDecision)
+    assertThat(saved.status).isEqualTo(CsipStatus.AWAITING_DECISION)
 
     record.changeDecision("ACC")
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.AcctSupport)
+    assertThat(saved.status).isEqualTo(CsipStatus.ACCT_SUPPORT)
 
     record.changeDecision("WIN")
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.SupportOutsideCsip)
+    assertThat(saved.status).isEqualTo(CsipStatus.SUPPORT_OUTSIDE_CSIP)
 
     record.changeDecision("NFA")
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.NoFurtherAction)
+    assertThat(saved.status).isEqualTo(CsipStatus.NO_FURTHER_ACTION)
 
     record.changeScreeningOutcome("CUR")
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.PlanPending)
+    assertThat(saved.status).isEqualTo(CsipStatus.PLAN_PENDING)
 
     record.addPlan()
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.CsipOpen)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
 
     record.addReview(ReviewAction.CsipUpdated, ReviewAction.CaseNote, ReviewAction.ResponsiblePeopleInformed)
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.CsipOpen)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
 
     record.addReview(ReviewAction.CaseNote, ReviewAction.CloseCsip)
     saved = service.retrieveCsipRecord(record.recordUuid)
-    assertThat(saved.status).isEqualTo(CsipStatus.CsipClosed)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_CLOSED)
   }
 
   private fun CsipRecord.setReferralComplete() = transactionTemplate.execute {

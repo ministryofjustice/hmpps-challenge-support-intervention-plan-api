@@ -131,7 +131,7 @@ class CsipRecord(
   @NotAudited
   @Enumerated(EnumType.STRING)
   @Column(insertable = false, updatable = false)
-  var status: CsipStatus = CsipStatus.Unknown
+  var status: CsipStatus = CsipStatus.UNKNOWN
     private set
 
   fun create(
