@@ -128,11 +128,8 @@ class AddInterviewIntTest : IntegrationTestBase() {
     invalid: InvalidRd,
   ) {
     val prisonNumber = givenValidPrisonNumber("R1234VI")
-    val record = transactionTemplate.execute {
-      val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      requireNotNull(csip.referral).withInvestigation()
-      csip
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    requireNotNull(record.referral).withInvestigation()
 
     val response = addInterviewResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
@@ -179,7 +176,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - missing investigation record`() {
     val prisonNumber = givenValidPrisonNumber("I1234MI")
-    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
     val response = addInterviewResponseSpec(record.recordUuid, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -196,11 +193,8 @@ class AddInterviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - interview added DPS`() {
     val prisonNumber = givenValidPrisonNumber("I1234DP")
-    val record = transactionTemplate.execute {
-      val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      requireNotNull(csip.referral).withInvestigation()
-      csip
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    requireNotNull(record.referral).withInvestigation()
 
     val request = createInterviewRequest(notes = "Some notes about the interview")
     val response = addInterview(record.recordUuid, request)
@@ -231,11 +225,8 @@ class AddInterviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - interview added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("C1234NM")
-    val record = transactionTemplate.execute {
-      val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      requireNotNull(csip.referral).withInvestigation()
-      csip
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    requireNotNull(record.referral).withInvestigation()
 
     val request = createInterviewRequest(notes = "Created By NOMIS")
     val response = addInterview(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -27,7 +26,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getReview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
@@ -38,7 +38,7 @@ import java.util.UUID.randomUUID
 class AddReviewIntTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
+  lateinit var reviewRepository: ReviewRepository
 
   @Test
   fun `401 unauthorised`() {
@@ -123,14 +123,12 @@ class AddReviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - review added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val record = transactionTemplate.execute {
-      givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
 
     val request = createReviewRequest(attendees = listOf(createAttendeeRequest(), createAttendeeRequest()))
     val response = addReview(record.recordUuid, request)
 
-    val review = getReview(record.recordUuid, response.reviewUuid)
+    val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
 
     val attendeeUuids = review.attendees().map { it.attendeeUuid }
@@ -155,14 +153,12 @@ class AddReviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - review added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val record = transactionTemplate.execute {
-      givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
 
     val request = createReviewRequest(actions = setOf(ReviewAction.CaseNote, ReviewAction.RemainOnCsip))
     val response = addReview(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val review = getReview(record.recordUuid, response.reviewUuid)
+    val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
 
     verifyAudit(
@@ -237,11 +233,5 @@ class AddReviewIntTest : IntegrationTestBase() {
     assertThat(attendees().size).isEqualTo(request.attendees?.size ?: 0)
   }
 
-  private fun getReview(recordUuid: UUID, reviewUuid: UUID): Review =
-    transactionTemplate.execute {
-      val review = csipRecordRepository.getCsipRecord(recordUuid).plan!!.reviews()
-        .find { it.reviewUuid == reviewUuid }
-      review?.attendees() // to lazy load the attendees inside the transaction
-      review
-    }!!
+  private fun getReview(reviewUuid: UUID): Review = reviewRepository.getReview(reviewUuid)
 }

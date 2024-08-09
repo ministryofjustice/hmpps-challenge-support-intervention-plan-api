@@ -115,8 +115,9 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - factor type code too long`() {
-    val response = addContributoryFactorResponseSpec(randomUUID(), createContributoryFactorRequest(type = "n".repeat(13)))
-      .errorResponse(HttpStatus.BAD_REQUEST)
+    val response =
+      addContributoryFactorResponseSpec(randomUUID(), createContributoryFactorRequest(type = "n".repeat(13)))
+        .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -131,7 +132,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     invalid: InvalidRd,
   ) {
     val prisonNumber = givenValidPrisonNumber("R1234VC")
-    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
     val response = addContributoryFactorResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -160,14 +161,14 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - contributory factor already present`() {
     val prisonNumber = givenValidPrisonNumber("C1234FE")
-    val record = transactionTemplate.execute {
-      val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      requireNotNull(csip.referral).withContributoryFactor()
-      csip
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    requireNotNull(record.referral).withContributoryFactor()
+
     val response = addContributoryFactorResponseSpec(
       record.recordUuid,
-      createContributoryFactorRequest(type = record.referral!!.contributoryFactors().first().contributoryFactorType.code),
+      createContributoryFactorRequest(
+        type = record.referral!!.contributoryFactors().first().contributoryFactorType.code,
+      ),
     ).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -182,7 +183,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - contributory factor added DPS`() {
     val prisonNumber = givenValidPrisonNumber("C1234DP")
-    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
     val request = createContributoryFactorRequest()
     val response = addContributoryFactor(record.recordUuid, request)
@@ -209,7 +210,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - contributory factor added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("C1234NM")
-    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
     val request = createContributoryFactorRequest(comment = "This was done by nomis")
     val response = addContributoryFactor(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)

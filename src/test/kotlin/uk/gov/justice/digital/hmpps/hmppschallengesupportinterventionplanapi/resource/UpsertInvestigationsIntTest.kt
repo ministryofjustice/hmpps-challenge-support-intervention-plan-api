@@ -9,10 +9,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -31,9 +29,6 @@ import java.time.Duration.ofSeconds
 import java.util.UUID
 
 class UpsertInvestigationsIntTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -73,7 +68,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(PRISON_NUMBER))
+    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val recordUuid = csipRecord.recordUuid
     val request = investigationRequest()
 
@@ -142,7 +137,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create investigation via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("I1234DS")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
     val recordUuid = csipRecord.recordUuid
     val request = investigationRequest()
 
@@ -166,7 +161,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create investigation via NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("I1234NS")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
     val recordUuid = csipRecord.recordUuid
     val request = investigationRequest()
 
@@ -199,11 +194,8 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - no changes made to investigation`() {
     val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val csipRecord = transactionTemplate.execute {
-      val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      requireNotNull(csip.referral).withInvestigation()
-      csip
-    }!!
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    requireNotNull(csipRecord.referral).withInvestigation()
 
     requireNotNull(csipRecord.referral?.investigation)
     val request = investigationRequest()
@@ -216,18 +208,15 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - update investigation`() {
     val prisonNumber = givenValidPrisonNumber("I1234UI")
-    val csipRecord = transactionTemplate.execute {
-      val csip = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      requireNotNull(csip.referral).withInvestigation(
-        "oldStaffInvolved",
-        "oldEvidenceSecured",
-        "oldOccurrenceReason",
-        "oldPersonsUsualBehaviour",
-        "oldPersonsTrigger",
-        "oldProtectiveFactors",
-      )
-      csip
-    }!!
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    requireNotNull(csipRecord.referral).withInvestigation(
+      "oldStaffInvolved",
+      "oldEvidenceSecured",
+      "oldOccurrenceReason",
+      "oldPersonsUsualBehaviour",
+      "oldPersonsTrigger",
+      "oldProtectiveFactors",
+    )
 
     requireNotNull(csipRecord.referral?.investigation)
     val request = investigationRequest()

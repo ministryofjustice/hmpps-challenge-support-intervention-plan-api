@@ -9,10 +9,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -33,9 +31,6 @@ import java.time.LocalDate
 import java.util.UUID
 
 class UpsertPlanIntTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -75,7 +70,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(PRISON_NUMBER))
+    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val recordUuid = csipRecord.recordUuid
     val request = planRequest()
 
@@ -147,7 +142,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create plan via NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("P1234NS")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
     val request = planRequest()
 
@@ -182,9 +177,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - no changes made to plan`() {
     val prisonNumber = givenValidPrisonNumber("P1234NC")
-    val csipRecord = transactionTemplate.execute {
-      givenCsipRecordWithReferral(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral().withPlan()
 
     val request = planRequest()
 
@@ -197,9 +190,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - update plan`() {
     val prisonNumber = givenValidPrisonNumber("P1234UP")
-    val csipRecord = transactionTemplate.execute {
-      givenCsipRecordWithReferral(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral().withPlan()
 
     val request = planRequest(
       "A new case manager",

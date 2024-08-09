@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.saveAndRefresh
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord as CsipEntity
 
@@ -36,7 +37,7 @@ class CsipRecordService(
 
     val record = CsipEntity(prisonNumber, prisoner.prisonId, request.logCode)
       .create(request, context, referenceDataRepository)
-    return csipRecordRepository.save(record).toModel()
+    return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
   fun retrieveCsipRecord(recordUuid: UUID): CsipRecord = csipRecordRepository.getCsipRecord(recordUuid).toModel()
@@ -49,7 +50,7 @@ class CsipRecordService(
       .update(csipRequestContext(), request) { type, code ->
         referenceDataRepository.getActiveReferenceData(type, code)
       }
-    return csipRecordRepository.save(record).toModel()
+    return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
   fun deleteCsipRecord(recordUuid: UUID): Boolean =

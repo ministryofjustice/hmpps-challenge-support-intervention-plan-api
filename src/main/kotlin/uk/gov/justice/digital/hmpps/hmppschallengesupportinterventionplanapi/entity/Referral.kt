@@ -16,8 +16,6 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
-import org.hibernate.annotations.Fetch
-import org.hibernate.annotations.FetchMode
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
@@ -101,19 +99,16 @@ class Referral(
   override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
 
   @NotAudited
-  @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
     private set
 
   @NotAudited
-  @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var decisionAndActions: DecisionAndActions? = null
     private set
 
   @NotAudited
-  @Fetch(FetchMode.SELECT)
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var investigation: Investigation? = null
     private set

@@ -114,8 +114,8 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   fun `204 no content - CSIP record deleted by DPS`() {
     val prisonNumber = givenValidPrisonNumber("D1234DS")
     val record = transactionTemplate.execute {
-      val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
-      val referral = requireNotNull(record.referral)
+      val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+      val referral = requireNotNull(csip.referral)
         .withContributoryFactor()
         .withContributoryFactor()
         .withInvestigation()
@@ -123,14 +123,14 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
         .withInterview(interviewDate = LocalDate.now().minusDays(2))
         .withInterview(interviewDate = LocalDate.now().minusDays(1))
         .withInterview()
-      record.withPlan()
-      val plan = requireNotNull(record.plan)
+      csip.withPlan()
+      val plan = requireNotNull(csip.plan)
         .withNeed()
         .withReview()
         .withReview()
       val review1 = plan.reviews().first()
       review1.withAttendee()
-      record
+      csip
     }!!
 
     val factorUuids = record.referral!!.contributoryFactors().map { it.contributoryFactorUuid }.toSet()
@@ -183,7 +183,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `204 no content - CSIP record deleted by NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
-    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
     deleteCsipRecordResponseSpec(record.recordUuid, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent
 
     verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
