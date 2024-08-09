@@ -249,7 +249,7 @@ abstract class IntegrationTestBase {
     referralCompletedDate: LocalDate? = null,
   ): CsipRecord = apply {
     set(
-      this::referral,
+      ::referral,
       Referral(
         this,
         referralDate,
@@ -282,7 +282,7 @@ abstract class IntegrationTestBase {
     reasonForPlan: String = "Reason for this plan",
     firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
   ) = apply {
-    this.set(this::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate, id))
+    set(::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate, id))
     csipRecordRepository.save(this)
   }
 
@@ -306,7 +306,7 @@ abstract class IntegrationTestBase {
       progression,
     )
     getByName<MutableList<IdentifiedNeed>>("identifiedNeeds") += need
-    csipRecordRepository.save(this.csipRecord)
+    csipRecordRepository.save(csipRecord)
   }
 
   fun Plan.withReview(
@@ -325,7 +325,7 @@ abstract class IntegrationTestBase {
       reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions,
     )
     getByName<MutableList<Review>>("reviews") += review
-    csipRecordRepository.save(this.csipRecord)
+    csipRecordRepository.save(csipRecord)
   }
 
   fun Review.withAttendee(
@@ -347,7 +347,7 @@ abstract class IntegrationTestBase {
     reasonForDecision: String = "A reason for the decision",
   ) = apply {
     this.set(
-      this::saferCustodyScreeningOutcome,
+      ::saferCustodyScreeningOutcome,
       SaferCustodyScreeningOutcome(this, outcome, recordedBy, recordedByDisplayName, date, reasonForDecision, id),
     )
     csipRecordRepository.save(csipRecord)
@@ -378,7 +378,7 @@ abstract class IntegrationTestBase {
         outcome,
         signedOffBy,
       )
-    this.set(::decisionAndActions, decision)
+    set(::decisionAndActions, decision)
     csipRecordRepository.save(csipRecord)
   }
 
@@ -412,7 +412,7 @@ abstract class IntegrationTestBase {
         protectiveFactors,
       ),
     )
-    this.set(::investigation, investigation)
+    set(::investigation, investigation)
     csipRecordRepository.save(csipRecord)
   }
 
