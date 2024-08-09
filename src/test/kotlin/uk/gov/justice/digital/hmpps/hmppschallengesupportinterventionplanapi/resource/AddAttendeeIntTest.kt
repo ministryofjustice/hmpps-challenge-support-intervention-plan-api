@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
@@ -35,9 +34,6 @@ class AddAttendeeIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var reviewRepository: ReviewRepository
-
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -122,12 +118,9 @@ class AddAttendeeIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - attendee added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val review = transactionTemplate.execute {
-      val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-      val plan = requireNotNull(csip.plan)
-      plan.withReview()
-      plan.reviews().first()
-    }!!
+    val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    val plan = requireNotNull(csip.plan).withReview()
+    val review = plan.reviews().first()
 
     val request = createAttendeeRequest(name = "A Person", role = "A special role")
     val response = addAttendee(review.reviewUuid, request)
@@ -154,12 +147,9 @@ class AddAttendeeIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - attendee added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val review = transactionTemplate.execute {
-      val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-      val plan = requireNotNull(csip.plan)
-      plan.withReview()
-      plan.reviews().first()
-    }!!
+    val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    val plan = requireNotNull(csip.plan).withReview()
+    val review = plan.reviews().first()
 
     val request = createAttendeeRequest(name = "A Person", role = "A special role")
     val response = addAttendee(review.reviewUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
@@ -224,7 +214,5 @@ class AddAttendeeIntTest : IntegrationTestBase() {
   }
 
   private fun getAttendee(reviewUuid: UUID, attendeeUuid: UUID): Attendee =
-    transactionTemplate.execute {
-      reviewRepository.getReview(reviewUuid).attendees().find { it.attendeeUuid == attendeeUuid }
-    }!!
+    reviewRepository.getReview(reviewUuid).attendees().first { it.attendeeUuid == attendeeUuid }
 }

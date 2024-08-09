@@ -53,7 +53,7 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   @ValueSource(strings = [ROLE_CSIP_UI, ROLE_NOMIS])
   fun `200 ok - returns matching CSIP record`(role: String) {
     val prisonNumber = givenValidPrisonNumber("G1234CR")
-    val record = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
     val response = getCsipRecord(record.recordUuid, role)
     with(response) {

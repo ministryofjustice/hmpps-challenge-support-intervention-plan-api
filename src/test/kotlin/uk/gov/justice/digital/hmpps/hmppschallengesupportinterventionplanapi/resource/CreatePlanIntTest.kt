@@ -69,7 +69,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(PRISON_NUMBER))
+    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val recordUuid = csipRecord.recordUuid
     val request = createPlanRequest()
 
@@ -120,9 +120,8 @@ class CreatePlanIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - Plan already exists`() {
     val prisonNumber = givenValidPrisonNumber("P1234AE")
-    val csipRecord = transactionTemplate.execute {
-      givenCsipRecordWithReferral(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
+      .withCompletedReferral().withPlan()
 
     val response = createPlanResponseSpec(csipRecord.recordUuid, createPlanRequest())
       .errorResponse(HttpStatus.CONFLICT)
@@ -160,10 +159,9 @@ class CreatePlanIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create plan with identified needs via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("P1234WN")
-    val csipRecord = givenCsipRecordWithReferral(generateCsipRecord(prisonNumber))
+    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
-    val request =
-      createPlanRequest(identifiedNeeds = listOf(createIdentifiedNeedRequest()))
+    val request = createPlanRequest(identifiedNeeds = listOf(createIdentifiedNeedRequest()))
     val response = createPlan(csipRecord.recordUuid, request)
 
     val needsIds = response.identifiedNeeds.map { it.identifiedNeedUuid }

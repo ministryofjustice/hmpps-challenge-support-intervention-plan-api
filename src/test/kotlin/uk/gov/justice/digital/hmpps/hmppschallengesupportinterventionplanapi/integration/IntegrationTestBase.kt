@@ -79,9 +79,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.IdGenerator
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.getByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.testUserContext
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -215,15 +214,18 @@ abstract class IntegrationTestBase {
   }
 
   fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(csipRecord)
-  fun givenCsipRecordWithReferral(csipRecord: CsipRecord, complete: Boolean = false): CsipRecord {
-    val record = csipRecord.withReferral(
-      referralComplete = complete,
-      referralCompletedBy = if (complete) "referralCompletedBy" else null,
-      referralCompletedByDisplayName = if (complete) "referralCompletedByDisplayName" else null,
-      referralCompletedDate = if (complete) LocalDate.now().minusDays(1) else null,
-    )
-    return csipRecordRepository.save(record)
-  }
+
+  fun CsipRecord.withCompletedReferral(
+    referralComplete: Boolean = true,
+    referralCompletedBy: String = "referralCompletedBy",
+    referralCompletedByDisplayName: String = "referralCompletedByDisplayName",
+    referralCompletedDate: LocalDate = LocalDate.now().minusDays(1),
+  ) = withReferral(
+    referralComplete = referralComplete,
+    referralCompletedBy = referralCompletedBy,
+    referralCompletedByDisplayName = referralCompletedByDisplayName,
+    referralCompletedDate = referralCompletedDate,
+  )
 
   fun CsipRecord.withReferral(
     incidentType: () -> ReferenceData = { givenRandom(INCIDENT_TYPE) },
@@ -245,8 +247,8 @@ abstract class IntegrationTestBase {
     referralCompletedBy: String? = null,
     referralCompletedByDisplayName: String? = null,
     referralCompletedDate: LocalDate? = null,
-  ): CsipRecord =
-    this.set(
+  ): CsipRecord = apply {
+    set(
       this::referral,
       Referral(
         this,
@@ -272,6 +274,8 @@ abstract class IntegrationTestBase {
         id,
       ),
     )
+    csipRecordRepository.save(this)
+  }
 
   fun CsipRecord.withPlan(
     caseManager: String = "Case Manager",
@@ -301,7 +305,7 @@ abstract class IntegrationTestBase {
       intervention,
       progression,
     )
-    this.setByName("identifiedNeeds", identifiedNeeds() + need)
+    getByName<MutableList<IdentifiedNeed>>("identifiedNeeds") += need
     csipRecordRepository.save(this.csipRecord)
   }
 
@@ -315,12 +319,12 @@ abstract class IntegrationTestBase {
     actions: Set<ReviewAction> = setOf(),
     attendees: Collection<CreateAttendeeRequest>? = null,
   ) = apply {
-    val need = Review(
+    val review = Review(
       this,
       (reviews().maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
       reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions,
     )
-    this.setByName("reviews", reviews() + need)
+    getByName<MutableList<Review>>("reviews") += review
     csipRecordRepository.save(this.csipRecord)
   }
 
@@ -331,7 +335,7 @@ abstract class IntegrationTestBase {
     contribution: String? = "a small contribution",
   ) = apply {
     val attendee = Attendee(this, name, role, attended, contribution)
-    this.setByName("attendees", attendees() + attendee)
+    getByName<MutableList<Attendee>>("attendees") += attendee
     csipRecordRepository.save(plan.csipRecord)
   }
 
@@ -359,34 +363,32 @@ abstract class IntegrationTestBase {
     nextSteps: String? = "some next steps",
     actions: Set<DecisionAction> = setOf(),
     actionOther: String? = null,
-  ): Referral = DecisionAndActions(this, outcome, id)
-    .upsert(
-      UpsertDecisionAndActionsRequest(
-        conclusion,
-        outcome.code,
-        signedOffBy.code,
-        recordedBy,
-        recordedByDisplayName,
-        date,
-        nextSteps, actionOther, actions,
-      ),
-      outcome,
-      signedOffBy,
-    ).let {
-      this.set(::decisionAndActions, it)
-      csipRecordRepository.save(csipRecord)
-      this
-    }
+  ): Referral = apply {
+    val decision = DecisionAndActions(this, outcome, id)
+      .upsert(
+        UpsertDecisionAndActionsRequest(
+          conclusion,
+          outcome.code,
+          signedOffBy.code,
+          recordedBy,
+          recordedByDisplayName,
+          date,
+          nextSteps, actionOther, actions,
+        ),
+        outcome,
+        signedOffBy,
+      )
+    this.set(::decisionAndActions, decision)
+    csipRecordRepository.save(csipRecord)
+  }
 
   fun Referral.withContributoryFactor(
     type: ReferenceData = givenRandom(CONTRIBUTORY_FACTOR_TYPE),
     comment: String? = "A comment about the factor",
-    uuid: UUID = UUID.randomUUID(),
-    id: Long = IdGenerator.newId(),
-  ): Referral = ContributoryFactor(this, type, comment, uuid, id).let {
-    this.setByName("contributoryFactors", contributoryFactors() + it)
+  ): Referral = apply {
+    val factor = ContributoryFactor(this, type, comment)
+    getByName<MutableList<ContributoryFactor>>("contributoryFactors") += factor
     csipRecordRepository.save(csipRecord)
-    this
   }
 
   fun Referral.withInvestigation(
@@ -396,22 +398,22 @@ abstract class IntegrationTestBase {
     personsUsualBehaviour: String? = "personsUsualBehaviour",
     personsTrigger: String? = "personsTrigger",
     protectiveFactors: String? = "protectiveFactors",
-  ): Referral = Investigation(
-    this,
-    id,
-  ).upsert(
-    UpsertInvestigationRequest(
-      staffInvolved,
-      evidenceSecured,
-      occurrenceReason,
-      personsUsualBehaviour,
-      personsTrigger,
-      protectiveFactors,
-    ),
-  ).let {
-    this.set(::investigation, it)
+  ): Referral = apply {
+    val investigation = Investigation(
+      this,
+      id,
+    ).upsert(
+      UpsertInvestigationRequest(
+        staffInvolved,
+        evidenceSecured,
+        occurrenceReason,
+        personsUsualBehaviour,
+        personsTrigger,
+        protectiveFactors,
+      ),
+    )
+    this.set(::investigation, investigation)
     csipRecordRepository.save(csipRecord)
-    this
   }
 
   fun Investigation.withInterview(
@@ -419,14 +421,11 @@ abstract class IntegrationTestBase {
     interviewDate: LocalDate = LocalDate.now(),
     intervieweeRole: ReferenceData = givenRandom(INTERVIEWEE_ROLE),
     interviewText: String? = "interviewText",
-    interviewUuid: UUID = UUID.randomUUID(),
-    id: Long = IdGenerator.newId(),
-  ): Investigation =
-    Interview(this, interviewee, interviewDate, intervieweeRole, interviewText, interviewUuid, id).let {
-      this.setByName("interviews", interviews() + it)
-      csipRecordRepository.save(referral.csipRecord)
-      this
-    }
+  ): Investigation = apply {
+    val interview = Interview(this, interviewee, interviewDate, intervieweeRole, interviewText)
+    getByName<MutableList<Interview>>("interviews") += interview
+    csipRecordRepository.save(referral.csipRecord)
+  }
 
   companion object {
     private val pgContainer = PostgresContainer.instance

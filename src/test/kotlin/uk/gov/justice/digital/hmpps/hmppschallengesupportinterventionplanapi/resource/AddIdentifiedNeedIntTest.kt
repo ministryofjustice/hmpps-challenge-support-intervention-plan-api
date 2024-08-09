@@ -121,11 +121,8 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - identified need already present`() {
     val prisonNumber = givenValidPrisonNumber("N1234AA")
-    val record = transactionTemplate.execute {
-      val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-      requireNotNull(csip.plan).withNeed()
-      csip
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    requireNotNull(record.plan).withNeed()
 
     val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeedResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.CONFLICT)
@@ -142,9 +139,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - identified need added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val record = transactionTemplate.execute {
-      givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
 
     val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeed(record.recordUuid, request)
@@ -166,9 +161,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - identified need added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val record = transactionTemplate.execute {
-      givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    }!!
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
 
     val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeed(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
@@ -230,6 +223,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   private fun getIdentifiedNeed(recordUuid: UUID, identifiedNeedUuid: UUID): IdentifiedNeed =
     transactionTemplate.execute {
       csipRecordRepository.getCsipRecord(recordUuid).plan!!.identifiedNeeds()
-        .find { it.identifiedNeedUuid == identifiedNeedUuid }
+        .first { it.identifiedNeedUuid == identifiedNeedUuid }
     }!!
 }

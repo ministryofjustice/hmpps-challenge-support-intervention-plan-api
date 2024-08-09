@@ -13,8 +13,6 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
-import org.hibernate.annotations.Fetch
-import org.hibernate.annotations.FetchMode
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -117,14 +115,12 @@ class CsipRecord(
   override var lastModifiedByDisplayName: String? = null
 
   @NotAudited
-  @Fetch(FetchMode.SELECT)
-  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
+  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
   var referral: Referral? = null
     private set
 
   @NotAudited
-  @Fetch(FetchMode.SELECT)
-  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.ALL])
+  @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
   var plan: Plan? = null
     private set
 

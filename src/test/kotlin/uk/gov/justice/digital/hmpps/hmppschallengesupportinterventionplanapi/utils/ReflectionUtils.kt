@@ -14,3 +14,11 @@ fun <T : Any, V : Any?> T.setByName(field: String, value: V): T {
   f.isAccessible = false
   return this
 }
+
+inline fun <reified V : Any?> Any.getByName(field: String): V {
+  val f = this::class.java.getDeclaredField(field)
+  f.isAccessible = true
+  val value = f[this] as V
+  f.isAccessible = false
+  return value
+}
