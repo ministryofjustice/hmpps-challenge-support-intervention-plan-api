@@ -1,19 +1,17 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -27,9 +25,6 @@ import java.time.LocalDate
 import java.util.UUID
 
 class CreatePlanIntTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -70,7 +65,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - username not supplied`() {
     val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
     val request = createPlanRequest()
 
     val response = createPlanResponseSpec(recordUuid, request, username = null)
@@ -123,7 +118,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
       .withCompletedReferral().withPlan()
 
-    val response = createPlanResponseSpec(csipRecord.recordUuid, createPlanRequest())
+    val response = createPlanResponseSpec(csipRecord.uuid, createPlanRequest())
       .errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -138,20 +133,20 @@ class CreatePlanIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create plan via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("P1234DS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
+    val recordUuid = record.uuid
     val request = createPlanRequest()
 
     createPlan(recordUuid, request)
 
-    val plan = getPlan(csipRecord.recordUuid)
+    val plan = getPlan(record.uuid)
     plan.verifyAgainst(request)
 
-    verifyAudit(csipRecord, UPDATE, setOf(AffectedComponent.Plan, AffectedComponent.Record))
+    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.Plan))
     verifyDomainEvents(
-      prisonNumber,
+      record.prisonNumber,
       recordUuid,
-      setOf(AffectedComponent.Plan),
+      setOf(CsipComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -159,27 +154,27 @@ class CreatePlanIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create plan with identified needs via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("P1234WN")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
 
     val request = createPlanRequest(identifiedNeeds = listOf(createIdentifiedNeedRequest()))
-    val response = createPlan(csipRecord.recordUuid, request)
+    val response = createPlan(record.uuid, request)
 
     val needsIds = response.identifiedNeeds.map { it.identifiedNeedUuid }
 
-    val plan = getPlan(csipRecord.recordUuid)
+    val plan = getPlan(record.uuid)
     plan.verifyAgainst(request)
 
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Plan, AffectedComponent.IdentifiedNeed, AffectedComponent.Record),
+      plan,
+      RevisionType.ADD,
+      setOf(CsipComponent.Plan, CsipComponent.IdentifiedNeed),
     )
 
     verifyDomainEvents(
-      prisonNumber,
-      csipRecord.recordUuid,
-      setOf(AffectedComponent.Plan, AffectedComponent.IdentifiedNeed),
-      setOf(DomainEventType.CSIP_UPDATED),
+      record.prisonNumber,
+      record.uuid,
+      setOf(CsipComponent.Plan, CsipComponent.IdentifiedNeed),
+      setOf(DomainEventType.CSIP_UPDATED, DomainEventType.IDENTIFIED_NEED_CREATED),
       needsIds.toSet(),
       2,
     )
@@ -221,7 +216,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
     .successResponse<uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan>(HttpStatus.CREATED)
 
   private fun getPlan(recordUuid: UUID) = transactionTemplate.execute {
-    val plan = csipRecordRepository.findByRecordUuid(recordUuid)!!.plan
+    val plan = csipRecordRepository.findByUuid(recordUuid)!!.plan
     plan!!.identifiedNeeds()
     plan
   }!!

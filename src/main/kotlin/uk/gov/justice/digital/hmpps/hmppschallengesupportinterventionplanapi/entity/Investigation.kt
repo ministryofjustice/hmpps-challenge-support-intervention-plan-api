@@ -10,18 +10,12 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
-import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
-import jakarta.persistence.Transient
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.InterviewCreatedEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
-import java.util.UUID
 
 @Entity
 @Table
@@ -38,54 +32,27 @@ class Investigation(
   @Id
   @Column(name = "investigation_id")
   val id: Long = 0,
-) : SimpleAuditable(), Parented, PropertyChangeMonitor {
+) : SimpleAuditable(), CsipAware {
 
-  @PostLoad
-  fun resetPropertyChanges() {
-    propertyChanges = mutableSetOf()
-  }
-
-  @Transient
-  @NotAudited
-  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
-
-  override fun parent() = referral
+  override fun csipRecord() = referral.csipRecord
 
   var staffInvolved: String? = null
-    private set(value) {
-      propertyChanged(::staffInvolved, value)
-      field = value
-    }
+    private set
 
   var evidenceSecured: String? = null
-    private set(value) {
-      propertyChanged(::evidenceSecured, value)
-      field = value
-    }
+    private set
 
   var occurrenceReason: String? = null
-    private set(value) {
-      propertyChanged(::occurrenceReason, value)
-      field = value
-    }
+    private set
 
   var personsUsualBehaviour: String? = null
-    private set(value) {
-      propertyChanged(::personsUsualBehaviour, value)
-      field = value
-    }
+    private set
 
   var personsTrigger: String? = null
-    private set(value) {
-      propertyChanged(::personsTrigger, value)
-      field = value
-    }
+    private set
 
   var protectiveFactors: String? = null
-    private set(value) {
-      propertyChanged(::protectiveFactors, value)
-      field = value
-    }
+    private set
 
   @NotAudited
   @OneToMany(mappedBy = "investigation", cascade = [CascadeType.ALL])
@@ -94,7 +61,6 @@ class Investigation(
   fun interviews() = interviews.toList().sortedByDescending { it.id }
 
   fun addInterview(
-    context: CsipRequestContext,
     createRequest: CreateInterviewRequest,
     roleProvider: (String) -> ReferenceData,
   ) = Interview(
@@ -105,23 +71,6 @@ class Investigation(
     interviewText = createRequest.interviewText,
   ).apply {
     interviews.add(this)
-    referral.csipRecord.registerEntityEvent(
-      InterviewCreatedEvent(
-        entityUuid = interviewUuid,
-        recordUuid = referral.csipRecord.recordUuid,
-        prisonNumber = referral.csipRecord.prisonNumber,
-        description = DomainEventType.INTERVIEW_CREATED.description,
-        occurredAt = context.requestAt,
-        source = context.source,
-      ),
-    )
-  }
-
-  internal fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
-    put(AffectedComponent.Investigation, setOf())
-    if (interviews.isNotEmpty()) {
-      put(AffectedComponent.Interview, interviews.map { it.interviewUuid }.toSet())
-    }
   }
 
   fun upsert(request: InvestigationRequest) = apply {
@@ -131,5 +80,12 @@ class Investigation(
     personsUsualBehaviour = request.personsUsualBehaviour
     personsTrigger = request.personsTrigger
     protectiveFactors = request.protectiveFactors
+  }
+
+  fun components(): Set<CsipComponent> = buildSet {
+    add(CsipComponent.Investigation)
+    if (interviews.isNotEmpty()) {
+      add(CsipComponent.Interview)
+    }
   }
 }

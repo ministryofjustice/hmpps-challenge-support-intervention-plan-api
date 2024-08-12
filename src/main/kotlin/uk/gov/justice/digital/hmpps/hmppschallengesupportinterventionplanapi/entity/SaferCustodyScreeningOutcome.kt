@@ -46,7 +46,6 @@ class SaferCustodyScreeningOutcome(
   @Id
   @Column(name = "safer_custody_screening_outcome_id")
   val id: Long = 0,
-
-) : SimpleAuditable(), Parented {
-  override fun parent() = referral
+) : SimpleAuditable(), CsipAware {
+  override fun csipRecord() = referral.csipRecord
 }

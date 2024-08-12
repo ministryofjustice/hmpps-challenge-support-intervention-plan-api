@@ -11,12 +11,13 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.DeleteEventListener
 import java.util.UUID
 
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class)
+@EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
 class Attendee(
   @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -29,14 +30,14 @@ class Attendee(
   val contribution: String?,
 
   @Audited(withModifiedFlag = false)
-  @Column(unique = true, nullable = false)
-  val attendeeUuid: UUID = UUID.randomUUID(),
+  @Column(name = "attendee_uuid", unique = true, nullable = false)
+  override val uuid: UUID = UUID.randomUUID(),
 
   @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "attendee_id")
   val id: Long = 0,
-) : SimpleAuditable(), Parented {
-  override fun parent() = review
+) : SimpleAuditable(), Identifiable, CsipAware {
+  override fun csipRecord() = review.plan.csipRecord
 }

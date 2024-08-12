@@ -14,10 +14,11 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -25,7 +26,7 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.LocalDateTime
 import java.util.UUID
 
-class DomainEventPublisherTest {
+class CsipEventTypePublisherTest {
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val domainEventsTopic = mock<HmppsTopic>()
   private val domainEventsSnsClient = mock<SnsAsyncClient>()
@@ -38,7 +39,7 @@ class DomainEventPublisherTest {
   fun `throws IllegalStateException when topic not found`() {
     whenever(hmppsQueueService.findByTopicId("hmppseventtopic")).thenReturn(null)
     val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
-    val exception = assertThrows<IllegalStateException> { domainEventPublisher.publish(mock<CsipDomainEvent>()) }
+    val exception = assertThrows<IllegalStateException> { domainEventPublisher.publish(mock<DomainEvent>()) }
     assertThat(exception.message).isEqualTo("hmppseventtopic not found")
   }
 
@@ -50,12 +51,12 @@ class DomainEventPublisherTest {
     val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
     val recordUuid = UUID.randomUUID()
     val occurredAt = LocalDateTime.now()
-    val domainEvent = CsipDomainEvent(
+    val domainEvent = HmppsDomainEvent(
       eventType = CSIP_CREATED.eventType,
-      additionalInformation = CsipAdditionalInformation(
+      additionalInformation = CsipInformation(
         recordUuid = recordUuid,
         source = NOMIS,
-        affectedComponents = setOf(AffectedComponent.Record),
+        affectedComponents = setOf(CsipComponent.Record),
       ),
       description = CSIP_CREATED.description,
       occurredAt = occurredAt.toZoneDateTime(),
@@ -85,7 +86,7 @@ class DomainEventPublisherTest {
     whenever(domainEventsTopic.snsClient).thenReturn(domainEventsSnsClient)
     whenever(domainEventsTopic.arn).thenReturn(domainEventsTopicArn)
     val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
-    val domainEvent = mock<CsipDomainEvent>()
+    val domainEvent = mock<HmppsDomainEvent<CsipInformation>>()
     whenever(domainEventsSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException("Failed to publish"))
 
     domainEventPublisher.publish(domainEvent)

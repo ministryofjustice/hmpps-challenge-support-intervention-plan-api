@@ -1,22 +1,18 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Plan
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
@@ -35,8 +31,10 @@ import java.util.UUID.randomUUID
 
 class AddIdentifiedNeedIntTest : IntegrationTestBase() {
 
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
+  @Test
+  fun `401 unauthorised`() {
+    webTestClient.post().uri(urlToTest(randomUUID())).exchange().expectStatus().isUnauthorized
+  }
 
   @ParameterizedTest
   @NullSource
@@ -52,12 +50,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
       assertThat(developerMessage).isEqualTo("Access Denied")
       assertThat(moreInfo).isNull()
     }
-  }
-
-  @Test
-  fun `401 unauthorised`() {
-    webTestClient.post().uri(urlToTest(randomUUID()))
-      .exchange().expectStatus().isUnauthorized
   }
 
   @Test
@@ -121,11 +113,14 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - identified need already present`() {
     val prisonNumber = givenValidPrisonNumber("N1234AA")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    requireNotNull(record.plan).withNeed()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withPlan()
+      requireNotNull(it.plan).withNeed()
+      it
+    }
 
     val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeedResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.CONFLICT)
+    val response = addIdentifiedNeedResponseSpec(record.uuid, request).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
       assertThat(status).isEqualTo(409)
@@ -139,20 +134,20 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - identified need added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeed(record.recordUuid, request)
+    val response = addIdentifiedNeed(record.uuid, request)
 
-    val need = getIdentifiedNeed(record.recordUuid, response.identifiedNeedUuid)
+    val need = getIdentifiedNeed(record.uuid, response.identifiedNeedUuid)
     need.verifyAgainst(request)
 
-    verifyAudit(record, UPDATE, setOf(AffectedComponent.IdentifiedNeed, Plan, Record))
+    verifyAudit(need, RevisionType.ADD, setOf(CsipComponent.IdentifiedNeed))
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.IdentifiedNeed),
+      record.uuid,
+      setOf(CsipComponent.IdentifiedNeed),
       setOf(IDENTIFIED_NEED_CREATED),
       setOf(response.identifiedNeedUuid),
     )
@@ -161,25 +156,25 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - identified need added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeed(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addIdentifiedNeed(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val need = getIdentifiedNeed(record.recordUuid, response.identifiedNeedUuid)
+    val need = getIdentifiedNeed(record.uuid, response.identifiedNeedUuid)
     need.verifyAgainst(request)
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(AffectedComponent.IdentifiedNeed, Plan, Record),
+      need,
+      RevisionType.ADD,
+      setOf(CsipComponent.IdentifiedNeed),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.IdentifiedNeed),
+      record.uuid,
+      setOf(CsipComponent.IdentifiedNeed),
       setOf(IDENTIFIED_NEED_CREATED),
       setOf(response.identifiedNeedUuid),
       source = NOMIS,
@@ -223,6 +218,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   private fun getIdentifiedNeed(recordUuid: UUID, identifiedNeedUuid: UUID): IdentifiedNeed =
     transactionTemplate.execute {
       csipRecordRepository.getCsipRecord(recordUuid).plan!!.identifiedNeeds()
-        .first { it.identifiedNeedUuid == identifiedNeedUuid }
+        .first { it.uuid == identifiedNeedUuid }
     }!!
 }

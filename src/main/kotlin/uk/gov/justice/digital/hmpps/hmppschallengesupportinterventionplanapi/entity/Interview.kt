@@ -12,13 +12,14 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.DeleteEventListener
 import java.time.LocalDate
 import java.util.UUID
 
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class)
+@EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
 class Interview(
   @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -26,26 +27,26 @@ class Interview(
   val investigation: Investigation,
 
   @Column(length = 100)
-  var interviewee: String,
+  val interviewee: String,
 
-  var interviewDate: LocalDate,
+  val interviewDate: LocalDate,
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "interviewee_role_id")
-  var intervieweeRole: ReferenceData,
+  val intervieweeRole: ReferenceData,
 
-  var interviewText: String?,
+  val interviewText: String?,
 
   @Audited(withModifiedFlag = false)
-  @Column(unique = true, nullable = false)
-  val interviewUuid: UUID = UUID.randomUUID(),
+  @Column(name = "interview_uuid", unique = true, nullable = false)
+  override val uuid: UUID = UUID.randomUUID(),
 
   @Audited(withModifiedFlag = false)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "interview_id")
   val id: Long = 0,
-) : SimpleAuditable(), Parented {
-  override fun parent() = investigation
+) : SimpleAuditable(), Identifiable, CsipAware {
+  override fun csipRecord() = investigation.referral.csipRecord
 }

@@ -5,17 +5,17 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -71,7 +71,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - username not supplied`() {
     val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
     val request = planRequest()
 
     val response = upsertPlanResponseSpec(recordUuid, request, username = null)
@@ -121,20 +121,19 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create plan via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("P1234DS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
     val request = planRequest()
 
-    upsertPlan(recordUuid, request, status = HttpStatus.CREATED)
+    upsertPlan(record.uuid, request, status = HttpStatus.CREATED)
 
-    val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
+    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
-    verifyAudit(csipRecord, UPDATE, setOf(AffectedComponent.Plan, AffectedComponent.Record))
+    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.Plan))
     verifyDomainEvents(
       prisonNumber,
-      recordUuid,
-      setOf(AffectedComponent.Plan),
+      record.uuid,
+      setOf(CsipComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -142,12 +141,12 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create plan via NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("P1234NS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
 
     val request = planRequest()
 
     upsertPlan(
-      csipRecord.recordUuid,
+      record.uuid,
       request,
       source = Source.NOMIS,
       username = NOMIS_SYS_USER,
@@ -155,20 +154,20 @@ class UpsertPlanIntTest : IntegrationTestBase() {
       status = HttpStatus.CREATED,
     )
 
-    val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
+    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Plan, AffectedComponent.Record),
+      plan,
+      RevisionType.ADD,
+      setOf(CsipComponent.Plan),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      csipRecord.recordUuid,
-      setOf(AffectedComponent.Plan),
+      record.uuid,
+      setOf(CsipComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )
@@ -177,41 +176,49 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - no changes made to plan`() {
     val prisonNumber = givenValidPrisonNumber("P1234NC")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral().withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral().withPlan() }
 
     val request = planRequest()
 
-    upsertPlan(csipRecord.recordUuid, request, status = HttpStatus.OK)
-    val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
+    upsertPlan(record.uuid, request, status = HttpStatus.OK)
+    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
     requireNotNull(plan).verifyAgainst(request)
+
+    verifyAudit(
+      plan,
+      RevisionType.ADD,
+      setOf(CsipComponent.Plan, CsipComponent.Referral, CsipComponent.Record),
+      nomisContext().copy(source = Source.DPS),
+    )
+
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
   fun `200 ok - update plan`() {
     val prisonNumber = givenValidPrisonNumber("P1234UP")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral().withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral().withPlan() }
 
     val request = planRequest(
       "A new case manager",
       "Some other reason",
     )
 
-    upsertPlan(csipRecord.recordUuid, request, status = HttpStatus.OK)
+    upsertPlan(record.uuid, request, status = HttpStatus.OK)
 
-    val plan = csipRecordRepository.getCsipRecord(csipRecord.recordUuid).plan
+    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Plan, AffectedComponent.Record),
+      plan,
+      RevisionType.MOD,
+      setOf(CsipComponent.Plan),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      csipRecord.recordUuid,
-      setOf(AffectedComponent.Plan),
+      record.uuid,
+      setOf(CsipComponent.Plan),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }

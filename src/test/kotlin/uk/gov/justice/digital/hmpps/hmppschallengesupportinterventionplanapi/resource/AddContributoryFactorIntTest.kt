@@ -2,23 +2,19 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CONTRIBUTORY_FACTOR_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
@@ -32,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
@@ -42,8 +39,10 @@ import java.util.UUID.randomUUID
 
 class AddContributoryFactorIntTest : IntegrationTestBase() {
 
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
+  @Test
+  fun `401 unauthorised`() {
+    webTestClient.post().uri(urlToTest(randomUUID())).exchange().expectStatus().isUnauthorized
+  }
 
   @ParameterizedTest
   @NullSource
@@ -59,12 +58,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(developerMessage).isEqualTo("Access Denied")
       assertThat(moreInfo).isNull()
     }
-  }
-
-  @Test
-  fun `401 unauthorised`() {
-    webTestClient.post().uri(urlToTest(randomUUID()))
-      .exchange().expectStatus().isUnauthorized
   }
 
   @Test
@@ -133,7 +126,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   ) {
     val prisonNumber = givenValidPrisonNumber("R1234VC")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val response = addContributoryFactorResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = addContributoryFactorResponseSpec(record.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
@@ -165,7 +158,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     requireNotNull(record.referral).withContributoryFactor()
 
     val response = addContributoryFactorResponseSpec(
-      record.recordUuid,
+      record.uuid,
       createContributoryFactorRequest(
         type = record.referral!!.contributoryFactors().first().contributoryFactorType.code,
       ),
@@ -183,10 +176,10 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - contributory factor added DPS`() {
     val prisonNumber = givenValidPrisonNumber("C1234DP")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
 
     val request = createContributoryFactorRequest()
-    val response = addContributoryFactor(record.recordUuid, request)
+    val response = addContributoryFactor(record.uuid, request)
 
     with(response) {
       assertThat(factorType.code).isEqualTo(request.factorTypeCode)
@@ -196,11 +189,12 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(createdByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
-    verifyAudit(record, UPDATE, setOf(ContributoryFactor, Referral, Record))
+    val saved = getContributoryFactory(record.uuid, response.factorUuid)
+    verifyAudit(saved, RevisionType.ADD, setOf(ContributoryFactor))
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
+      record.uuid,
       setOf(ContributoryFactor),
       setOf(CONTRIBUTORY_FACTOR_CREATED),
       setOf(response.factorUuid),
@@ -210,10 +204,10 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - contributory factor added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("C1234NM")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
 
     val request = createContributoryFactorRequest(comment = "This was done by nomis")
-    val response = addContributoryFactor(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addContributoryFactor(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     with(response) {
       assertThat(factorType.code).isEqualTo(request.factorTypeCode)
@@ -223,11 +217,12 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
 
-    verifyAudit(record, UPDATE, setOf(ContributoryFactor, Referral, Record), nomisContext())
+    val saved = getContributoryFactory(record.uuid, response.factorUuid)
+    verifyAudit(saved, RevisionType.ADD, setOf(ContributoryFactor), nomisContext())
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
+      record.uuid,
       setOf(ContributoryFactor),
       setOf(CONTRIBUTORY_FACTOR_CREATED),
       setOf(response.factorUuid),
@@ -258,6 +253,10 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     role: String = ROLE_CSIP_UI,
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor =
     addContributoryFactorResponseSpec(csipUuid, request, source, username, role).successResponse(CREATED)
+
+  private fun getContributoryFactory(recordUuid: UUID, factorUuid: UUID) = transactionTemplate.execute {
+    csipRecordRepository.getCsipRecord(recordUuid).referral!!.contributoryFactors().find { it.uuid == factorUuid }
+  }!!
 
   companion object {
     private const val INVALID = "is invalid"

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
@@ -30,7 +29,6 @@ class DecisionActionsService(
     return with(referral) {
       csipRecordRepository.save(
         upsertDecisionAndActions(
-          context = csipRequestContext(),
           request = request,
         ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) },
       ).referral!!.decisionAndActions!!.toModel().apply { new = decisionAndActions == null }

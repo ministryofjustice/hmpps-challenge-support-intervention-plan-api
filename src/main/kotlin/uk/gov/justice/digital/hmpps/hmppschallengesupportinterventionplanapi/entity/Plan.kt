@@ -10,23 +10,16 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
-import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
-import jakarta.persistence.Transient
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.GenericCsipEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_CREATED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import java.time.LocalDate
-import java.util.UUID
 
 @Entity
 @Table
@@ -47,36 +40,18 @@ class Plan(
   @Id
   @Column(name = "plan_id")
   val id: Long = 0,
-) : SimpleAuditable(), PropertyChangeMonitor, Parented {
+) : SimpleAuditable(), CsipAware {
 
-  override fun parent() = csipRecord
-
-  @PostLoad
-  fun resetPropertyChanges() {
-    propertyChanges = mutableSetOf()
-  }
-
-  @Transient
-  @NotAudited
-  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
+  override fun csipRecord() = csipRecord
 
   var caseManager: String = caseManager
-    set(value) {
-      propertyChanged(::caseManager, value)
-      field = value
-    }
+    private set
 
   var reasonForPlan: String = reasonForPlan
-    set(value) {
-      propertyChanged(::reasonForPlan, value)
-      field = value
-    }
+    private set
 
   var firstCaseReviewDate: LocalDate = firstCaseReviewDate
-    set(value) {
-      propertyChanged(::firstCaseReviewDate, value)
-      field = value
-    }
+    private set
 
   @NotAudited
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
@@ -96,20 +71,7 @@ class Plan(
     firstCaseReviewDate = request.firstCaseReviewDate
   }
 
-  internal fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
-    put(AffectedComponent.Plan, setOf())
-    if (identifiedNeeds.isNotEmpty()) {
-      put(AffectedComponent.IdentifiedNeed, identifiedNeeds.map { it.identifiedNeedUuid }.toSet())
-    }
-    putAll(
-      reviews.flatMap { it.components().entries }.fold(mutableMapOf()) { acc, next ->
-        acc[next.component1()] = (acc[next.component1()] ?: setOf()) + (next.component2())
-        acc
-      },
-    )
-  }
-
-  fun addIdentifiedNeed(context: CsipRequestContext, request: CreateIdentifiedNeedRequest): IdentifiedNeed =
+  fun addIdentifiedNeed(request: CreateIdentifiedNeedRequest): IdentifiedNeed =
     IdentifiedNeed(
       this,
       request.identifiedNeed,
@@ -124,19 +86,9 @@ class Plan(
         ResourceAlreadyExistException("Identified need already part of plan")
       }
       identifiedNeeds.add(this)
-      csipRecord.registerEntityEvent(
-        GenericCsipEvent(
-          type = IDENTIFIED_NEED_CREATED,
-          entityUuid = identifiedNeedUuid,
-          recordUuid = csipRecord.recordUuid,
-          prisonNumber = csipRecord.prisonNumber,
-          occurredAt = context.requestAt,
-          source = context.source,
-        ),
-      )
     }
 
-  fun addReview(context: CsipRequestContext, request: CreateReviewRequest): Review = Review(
+  fun addReview(request: CreateReviewRequest): Review = Review(
     this,
     (reviews.maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
     request.reviewDate,
@@ -148,16 +100,19 @@ class Plan(
     request.actions ?: setOf(),
   ).apply {
     reviews.add(this)
-    request.attendees?.forEach { addAttendee(context, it) }
-    csipRecord.registerEntityEvent(
-      GenericCsipEvent(
-        type = REVIEW_CREATED,
-        entityUuid = reviewUuid,
-        recordUuid = csipRecord.recordUuid,
-        prisonNumber = csipRecord.prisonNumber,
-        occurredAt = context.requestAt,
-        source = context.source,
-      ),
-    )
+    request.attendees?.forEach { addAttendee(it) }
+  }
+
+  fun components(): Set<CsipComponent> = buildSet {
+    add(CsipComponent.Plan)
+    if (identifiedNeeds.isNotEmpty()) {
+      add(CsipComponent.IdentifiedNeed)
+    }
+    if (reviews.isNotEmpty()) {
+      add(CsipComponent.Review)
+    }
+    if (reviews.flatMap { it.attendees() }.isNotEmpty()) {
+      add(CsipComponent.Attendee)
+    }
   }
 }

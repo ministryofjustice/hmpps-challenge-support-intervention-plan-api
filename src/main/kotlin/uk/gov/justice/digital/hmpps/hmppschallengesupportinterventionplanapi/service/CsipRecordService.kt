@@ -47,13 +47,12 @@ class CsipRecordService(
     request: UpdateCsipRecordRequest,
   ): CsipRecord {
     val record = csipRecordRepository.getCsipRecord(recordUuid)
-      .update(csipRequestContext(), request) { type, code ->
+      .update(request) { type, code ->
         referenceDataRepository.getActiveReferenceData(type, code)
       }
     return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
   fun deleteCsipRecord(recordUuid: UUID): Boolean =
-    csipRecordRepository.findByRecordUuid(recordUuid)
-      ?.delete(csipRequestContext())?.also(csipRecordRepository::delete) != null
+    csipRecordRepository.findByUuid(recordUuid)?.also(csipRecordRepository::delete) != null
 }
