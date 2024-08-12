@@ -200,13 +200,13 @@ class AddInterviewIntTest : IntegrationTestBase() {
     verifyAudit(
       interview,
       RevisionType.ADD,
-      setOf(CsipComponent.Interview),
+      setOf(CsipComponent.INTERVIEW),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Interview),
+      setOf(CsipComponent.INTERVIEW),
       setOf(INTERVIEW_CREATED),
       setOf(response.interviewUuid),
     )
@@ -230,14 +230,14 @@ class AddInterviewIntTest : IntegrationTestBase() {
     verifyAudit(
       interview,
       RevisionType.ADD,
-      setOf(CsipComponent.Interview),
+      setOf(CsipComponent.INTERVIEW),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Interview),
+      setOf(CsipComponent.INTERVIEW),
       setOf(INTERVIEW_CREATED),
       setOf(response.interviewUuid),
       source = NOMIS,

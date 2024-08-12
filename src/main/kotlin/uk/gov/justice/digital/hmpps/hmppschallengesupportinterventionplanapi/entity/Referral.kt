@@ -272,12 +272,12 @@ class Referral(
     }
 
   fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.Referral)
-    saferCustodyScreeningOutcome?.also { add(CsipComponent.SaferCustodyScreeningOutcome) }
-    decisionAndActions?.also { add(CsipComponent.DecisionAndActions) }
+    add(CsipComponent.REFERRAL)
+    saferCustodyScreeningOutcome?.also { add(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME) }
+    decisionAndActions?.also { add(CsipComponent.DECISION_AND_ACTIONS) }
     investigation?.also { addAll(it.components()) }
     if (contributoryFactors.isNotEmpty()) {
-      add(CsipComponent.ContributoryFactor)
+      add(CsipComponent.CONTRIBUTORY_FACTOR)
     }
   }
 }

@@ -148,13 +148,13 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     verifyAudit(
       investigation,
       RevisionType.ADD,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -180,14 +180,14 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     verifyAudit(
       investigation,
       RevisionType.ADD,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )
@@ -236,13 +236,13 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     verifyAudit(
       investigation,
       RevisionType.MOD,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }

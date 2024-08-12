@@ -67,6 +67,6 @@ class CsipEventServiceTest {
     type = DomainEventType.CSIP_UPDATED,
     occurredAt = LocalDateTime.now(),
     source = Source.NOMIS,
-    affectedComponents = setOf(CsipComponent.Referral),
+    affectedComponents = setOf(CsipComponent.REFERRAL),
   )
 }

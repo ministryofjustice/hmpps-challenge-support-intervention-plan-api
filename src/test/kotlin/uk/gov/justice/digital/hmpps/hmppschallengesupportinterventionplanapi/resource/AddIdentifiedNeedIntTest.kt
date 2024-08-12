@@ -142,12 +142,12 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     val need = getIdentifiedNeed(record.uuid, response.identifiedNeedUuid)
     need.verifyAgainst(request)
 
-    verifyAudit(need, RevisionType.ADD, setOf(CsipComponent.IdentifiedNeed))
+    verifyAudit(need, RevisionType.ADD, setOf(CsipComponent.IDENTIFIED_NEED))
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.IdentifiedNeed),
+      setOf(CsipComponent.IDENTIFIED_NEED),
       setOf(IDENTIFIED_NEED_CREATED),
       setOf(response.identifiedNeedUuid),
     )
@@ -167,14 +167,14 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     verifyAudit(
       need,
       RevisionType.ADD,
-      setOf(CsipComponent.IdentifiedNeed),
+      setOf(CsipComponent.IDENTIFIED_NEED),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.IdentifiedNeed),
+      setOf(CsipComponent.IDENTIFIED_NEED),
       setOf(IDENTIFIED_NEED_CREATED),
       setOf(response.identifiedNeedUuid),
       source = NOMIS,

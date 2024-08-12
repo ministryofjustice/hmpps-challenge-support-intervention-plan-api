@@ -154,12 +154,12 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     }
 
     val saved = getScreeningOutcome(record.uuid)
-    verifyAudit(saved, RevisionType.ADD, setOf(CsipComponent.SaferCustodyScreeningOutcome))
+    verifyAudit(saved, RevisionType.ADD, setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME))
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.SaferCustodyScreeningOutcome),
+      setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -184,14 +184,14 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     verifyAudit(
       saved,
       RevisionType.ADD,
-      setOf(CsipComponent.SaferCustodyScreeningOutcome),
+      setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.SaferCustodyScreeningOutcome),
+      setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )

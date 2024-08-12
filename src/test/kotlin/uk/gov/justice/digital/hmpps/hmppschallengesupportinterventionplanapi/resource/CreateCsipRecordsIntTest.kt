@@ -13,9 +13,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ContributoryFactor
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.NO
@@ -259,12 +259,12 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
 
-    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral, ContributoryFactor))
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
 
     verifyDomainEvents(
       prisonNumber,
       response.recordUuid,
-      setOf(Record, Referral, ContributoryFactor),
+      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       setOf(DomainEventType.CSIP_CREATED, DomainEventType.CONTRIBUTORY_FACTOR_CREATED),
       response.referral.contributoryFactors.map { it.factorUuid }.toSet(),
       2,
@@ -290,7 +290,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     assertThat(saved.logCode).isNull()
-    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral, ContributoryFactor))
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
   }
 
   @Test
@@ -318,14 +318,14 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(
       saved,
       RevisionType.ADD,
-      setOf(Record, Referral, ContributoryFactor),
+      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       response.recordUuid,
-      setOf(Record, Referral, ContributoryFactor),
+      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       setOf(DomainEventType.CSIP_CREATED, DomainEventType.CONTRIBUTORY_FACTOR_CREATED),
       response.referral.contributoryFactors.map { it.factorUuid }.toSet(),
       2,
@@ -350,12 +350,12 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
 
-    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral), nomisContext())
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL), nomisContext())
 
     verifyDomainEvents(
       prisonNumber,
       response.recordUuid,
-      setOf(Record, Referral),
+      setOf(RECORD, REFERRAL),
       setOf(DomainEventType.CSIP_CREATED),
       source = NOMIS,
     )

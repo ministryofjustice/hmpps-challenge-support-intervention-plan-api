@@ -129,11 +129,11 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
     requireNotNull(plan).verifyAgainst(request)
 
-    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.Plan))
+    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN))
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Plan),
+      setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -160,14 +160,14 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     verifyAudit(
       plan,
       RevisionType.ADD,
-      setOf(CsipComponent.Plan),
+      setOf(CsipComponent.PLAN),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Plan),
+      setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )
@@ -187,7 +187,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     verifyAudit(
       plan,
       RevisionType.ADD,
-      setOf(CsipComponent.Plan, CsipComponent.Referral, CsipComponent.Record),
+      setOf(CsipComponent.PLAN, CsipComponent.REFERRAL, CsipComponent.RECORD),
       nomisContext().copy(source = Source.DPS),
     )
 
@@ -212,13 +212,13 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     verifyAudit(
       plan,
       RevisionType.MOD,
-      setOf(CsipComponent.Plan),
+      setOf(CsipComponent.PLAN),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Plan),
+      setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }

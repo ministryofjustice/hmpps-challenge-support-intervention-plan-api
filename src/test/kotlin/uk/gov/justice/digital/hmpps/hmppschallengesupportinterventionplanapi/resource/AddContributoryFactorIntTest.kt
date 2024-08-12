@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ContributoryFactor
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CONTRIBUTORY_FACTOR_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
@@ -190,12 +190,12 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     }
 
     val saved = getContributoryFactory(record.uuid, response.factorUuid)
-    verifyAudit(saved, RevisionType.ADD, setOf(ContributoryFactor))
+    verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR))
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(ContributoryFactor),
+      setOf(CONTRIBUTORY_FACTOR),
       setOf(CONTRIBUTORY_FACTOR_CREATED),
       setOf(response.factorUuid),
     )
@@ -218,12 +218,12 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     }
 
     val saved = getContributoryFactory(record.uuid, response.factorUuid)
-    verifyAudit(saved, RevisionType.ADD, setOf(ContributoryFactor), nomisContext())
+    verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR), nomisContext())
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(ContributoryFactor),
+      setOf(CONTRIBUTORY_FACTOR),
       setOf(CONTRIBUTORY_FACTOR_CREATED),
       setOf(response.factorUuid),
       source = NOMIS,

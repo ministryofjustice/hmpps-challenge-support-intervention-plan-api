@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Interview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INTERVIEW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -162,13 +162,13 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     verifyAudit(
       investigation,
       RevisionType.ADD,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Investigation),
+      setOf(CsipComponent.INVESTIGATION),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -187,13 +187,13 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     verifyAudit(
       investigation,
       RevisionType.ADD,
-      setOf(CsipComponent.Investigation, Interview),
+      setOf(CsipComponent.INVESTIGATION, INTERVIEW),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Investigation, Interview),
+      setOf(CsipComponent.INVESTIGATION, INTERVIEW),
       setOf(DomainEventType.CSIP_UPDATED, DomainEventType.INTERVIEW_CREATED),
       interviewUuids.toSet(),
       3,

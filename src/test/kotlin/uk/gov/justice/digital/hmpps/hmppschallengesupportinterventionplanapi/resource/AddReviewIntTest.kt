@@ -136,13 +136,13 @@ class AddReviewIntTest : IntegrationTestBase() {
     verifyAudit(
       review,
       RevisionType.ADD,
-      setOf(CsipComponent.Review, CsipComponent.Attendee),
+      setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE),
     )
 
     verifyDomainEvents(
       record.prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Review, CsipComponent.Attendee),
+      setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE),
       setOf(REVIEW_CREATED, ATTENDEE_CREATED),
       setOf(response.reviewUuid) + attendeeUuids,
       expectedCount = 3,
@@ -154,7 +154,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
-    val request = createReviewRequest(actions = setOf(ReviewAction.CaseNote, ReviewAction.RemainOnCsip))
+    val request = createReviewRequest(actions = setOf(ReviewAction.CASE_NOTE, ReviewAction.REMAIN_ON_CSIP))
     val response = addReview(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     val review = getReview(response.reviewUuid)
@@ -163,14 +163,14 @@ class AddReviewIntTest : IntegrationTestBase() {
     verifyAudit(
       review,
       RevisionType.ADD,
-      setOf(CsipComponent.Review),
+      setOf(CsipComponent.REVIEW),
       nomisContext(),
     )
 
     verifyDomainEvents(
       record.prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Review),
+      setOf(CsipComponent.REVIEW),
       setOf(REVIEW_CREATED),
       setOf(response.reviewUuid),
       source = NOMIS,

@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.PersistenceAction
 import java.util.UUID
@@ -15,7 +15,7 @@ object EventFactory {
     affectedComponents: Set<CsipComponent>,
   ): CsipEvent {
     val context = csipRequestContext()
-    val eventType = "${Record.description}.${action.name.lowercase()}"
+    val eventType = "${RECORD.description}.${action.name.lowercase()}"
     return CsipEvent(
       DomainEventType.fromEventName(eventType)
         ?: throw IllegalArgumentException("Unknown Event Type: $eventType"),

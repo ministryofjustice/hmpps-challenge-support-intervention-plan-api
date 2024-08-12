@@ -25,8 +25,8 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { csip ->
       csip.withCompletedReferral().withPlan()
       val plan = requireNotNull(csip.plan)
-      plan.withReview(actions = setOf(ReviewAction.CsipUpdated))
-        .withReview(actions = setOf(ReviewAction.CloseCsip))
+      plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
+        .withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
       csip
     }
 
@@ -40,8 +40,8 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral().withPlan()
       val plan = requireNotNull(it.plan)
-      plan.withReview(actions = setOf(ReviewAction.CsipUpdated))
-        .withReview(actions = setOf(ReviewAction.RemainOnCsip))
+      plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
+        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP))
       it
     }
 
@@ -210,11 +210,11 @@ class CsipStatusIntTest : IntegrationTestBase() {
     saved = service.retrieveCsipRecord(record.uuid)
     assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
 
-    record.addReview(ReviewAction.CsipUpdated, ReviewAction.CaseNote, ReviewAction.ResponsiblePeopleInformed)
+    record.addReview(ReviewAction.CSIP_UPDATED, ReviewAction.CASE_NOTE, ReviewAction.RESPONSIBLE_PEOPLE_INFORMED)
     saved = service.retrieveCsipRecord(record.uuid)
     assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
 
-    record.addReview(ReviewAction.CaseNote, ReviewAction.CloseCsip)
+    record.addReview(ReviewAction.CASE_NOTE, ReviewAction.CLOSE_CSIP)
     saved = service.retrieveCsipRecord(record.uuid)
     assertThat(saved.status).isEqualTo(CsipStatus.CSIP_CLOSED)
   }

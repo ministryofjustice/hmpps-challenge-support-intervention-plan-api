@@ -264,13 +264,13 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     verifyAudit(
       decision,
       RevisionType.ADD,
-      setOf(CsipComponent.DecisionAndActions),
+      setOf(CsipComponent.DECISION_AND_ACTIONS),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.DecisionAndActions),
+      setOf(CsipComponent.DECISION_AND_ACTIONS),
       setOf(CSIP_UPDATED),
     )
   }
@@ -300,14 +300,14 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     verifyAudit(
       decision,
       RevisionType.ADD,
-      setOf(CsipComponent.DecisionAndActions),
+      setOf(CsipComponent.DECISION_AND_ACTIONS),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.DecisionAndActions),
+      setOf(CsipComponent.DECISION_AND_ACTIONS),
       setOf(CSIP_UPDATED),
       source = NOMIS,
     )
@@ -321,7 +321,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       requireNotNull(it.referral).withDecisionAndActions(
         outcome = givenRandom(ReferenceDataType.OUTCOME_TYPE),
         signedOffBy = givenRandom(ReferenceDataType.DECISION_SIGNER_ROLE),
-        actions = setOf(DecisionAction.OpenCsipAlert),
+        actions = setOf(DecisionAction.OPEN_CSIP_ALERT),
         conclusion = "a conclusion",
         recordedBy = "outcomeRecordedBy",
         recordedByDisplayName = "outcomeRecordedByDisplayName",
@@ -340,7 +340,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     verifyAudit(
       record.referral!!.decisionAndActions!!,
       RevisionType.ADD,
-      setOf(CsipComponent.DecisionAndActions, CsipComponent.Referral, CsipComponent.Record),
+      setOf(CsipComponent.DECISION_AND_ACTIONS, CsipComponent.REFERRAL, CsipComponent.RECORD),
       nomisContext().copy(source = DPS),
     )
 
@@ -360,7 +360,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val request = upsertDecisionActionsRequest(
       decision.outcome.code,
       decision.signedOffBy?.code,
-      setOf(DecisionAction.UnitOrCellMove),
+      setOf(DecisionAction.UNIT_OR_CELL_MOVE),
     )
 
     val response = upsertDecisionActions(record.uuid, request, status = HttpStatus.OK)
@@ -369,13 +369,13 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     verifyAudit(
       record.referral!!.decisionAndActions!!,
       RevisionType.MOD,
-      setOf(CsipComponent.DecisionAndActions),
+      setOf(CsipComponent.DECISION_AND_ACTIONS),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.DecisionAndActions),
+      setOf(CsipComponent.DECISION_AND_ACTIONS),
       setOf(CSIP_UPDATED),
     )
   }

@@ -133,13 +133,13 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     verifyAudit(
       attendee,
       RevisionType.ADD,
-      setOf(CsipComponent.Attendee),
+      setOf(CsipComponent.ATTENDEE),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Attendee),
+      setOf(CsipComponent.ATTENDEE),
       setOf(ATTENDEE_CREATED),
       setOf(attendee.uuid),
     )
@@ -164,14 +164,14 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     verifyAudit(
       attendee,
       RevisionType.ADD,
-      setOf(CsipComponent.Attendee),
+      setOf(CsipComponent.ATTENDEE),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Attendee),
+      setOf(CsipComponent.ATTENDEE),
       setOf(ATTENDEE_CREATED),
       setOf(attendee.uuid),
       source = NOMIS,
