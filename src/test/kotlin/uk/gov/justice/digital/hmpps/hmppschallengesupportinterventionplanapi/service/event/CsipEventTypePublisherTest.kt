@@ -56,7 +56,7 @@ class CsipEventTypePublisherTest {
       additionalInformation = CsipInformation(
         recordUuid = recordUuid,
         source = NOMIS,
-        affectedComponents = setOf(CsipComponent.Record),
+        affectedComponents = setOf(CsipComponent.RECORD),
       ),
       description = CSIP_CREATED.description,
       occurredAt = occurredAt.toZoneDateTime(),

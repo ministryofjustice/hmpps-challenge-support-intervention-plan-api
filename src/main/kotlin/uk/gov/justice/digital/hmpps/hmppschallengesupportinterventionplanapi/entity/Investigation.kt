@@ -83,9 +83,9 @@ class Investigation(
   }
 
   fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.Investigation)
+    add(CsipComponent.INVESTIGATION)
     if (interviews.isNotEmpty()) {
-      add(CsipComponent.Interview)
+      add(CsipComponent.INTERVIEW)
     }
   }
 }

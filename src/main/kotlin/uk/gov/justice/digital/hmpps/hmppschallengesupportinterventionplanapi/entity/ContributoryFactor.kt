@@ -12,7 +12,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.DeleteEventListener
 import java.util.UUID
 
 @Entity

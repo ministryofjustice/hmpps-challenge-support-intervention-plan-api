@@ -13,7 +13,6 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.DeleteEventListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
@@ -111,7 +110,7 @@ class CsipRecord(
   }
 
   fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.Record)
+    add(CsipComponent.RECORD)
     referral?.also { addAll(it.components()) }
     plan?.also { addAll(it.components()) }
   }

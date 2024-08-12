@@ -18,7 +18,6 @@ import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.DeleteEventListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import java.time.LocalDate

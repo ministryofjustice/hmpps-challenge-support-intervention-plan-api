@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
@@ -166,7 +166,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     // verify the latest audit record is the initial insert from the given of the test
-    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral), nomisContext().copy(source = DPS))
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL), nomisContext().copy(source = DPS))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
@@ -193,10 +193,10 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(
       saved,
       RevisionType.MOD,
-      setOf(Record),
+      setOf(RECORD),
     )
 
-    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Record))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(RECORD))
   }
 
   @Test
@@ -221,11 +221,11 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(
       saved,
       RevisionType.MOD,
-      setOf(Record),
+      setOf(RECORD),
       nomisContext(),
     )
 
-    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Record), NOMIS)
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(RECORD), NOMIS)
   }
 
   @Test
@@ -262,10 +262,10 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(
       saved.referral!!,
       RevisionType.MOD,
-      setOf(Referral),
+      setOf(REFERRAL),
     )
 
-    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Referral))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(REFERRAL))
   }
 
   @Test
@@ -298,10 +298,10 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(
       record,
       RevisionType.MOD,
-      setOf(Record, Referral),
+      setOf(RECORD, REFERRAL),
     )
 
-    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Record, Referral))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(RECORD, REFERRAL))
   }
 
   @Test
@@ -327,10 +327,10 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(
       saved.referral!!,
       RevisionType.MOD,
-      setOf(Referral),
+      setOf(REFERRAL),
     )
 
-    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Referral))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(REFERRAL))
   }
 
   private fun updateCsipRecordResponseSpec(

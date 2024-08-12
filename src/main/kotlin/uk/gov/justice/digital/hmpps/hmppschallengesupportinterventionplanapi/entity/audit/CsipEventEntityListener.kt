@@ -13,12 +13,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.EventFactory.csipChildEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.EventFactory.csipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.DecisionAndActions
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Investigation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Plan
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.SaferCustodyScreeningOutcome
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.DECISION_AND_ACTIONS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INVESTIGATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.PLAN
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.PersistenceAction
 
 @Component
@@ -52,18 +52,18 @@ class EventInformation {
   fun createEvents(entityManager: EntityManager): List<CsipBaseEvent> = buildList {
     val (csip, children) = changes.partition {
       it.component in listOf(
-        Record,
-        Referral,
-        SaferCustodyScreeningOutcome,
-        Investigation,
-        DecisionAndActions,
-        Plan,
+        RECORD,
+        REFERRAL,
+        SAFER_CUSTODY_SCREENING_OUTCOME,
+        INVESTIGATION,
+        DECISION_AND_ACTIONS,
+        PLAN,
       )
     }
 
-    val csipChange = csip.firstOrNull { it.component == Record } ?: csip.firstOrNull()
+    val csipChange = csip.firstOrNull { it.component == RECORD } ?: csip.firstOrNull()
     csipChange?.also { changed ->
-      val action: PersistenceAction = if (changed.component == Record) changed.action else PersistenceAction.UPDATED
+      val action: PersistenceAction = if (changed.component == RECORD) changed.action else PersistenceAction.UPDATED
       entityManager.find(CsipRecord::class.java, changed.id)?.also { csip ->
         add(csipEvent(csip.prisonNumber, action, csip.uuid, changes.map { it.component }.toSet()))
       }

@@ -104,15 +104,15 @@ class Plan(
   }
 
   fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.Plan)
+    add(CsipComponent.PLAN)
     if (identifiedNeeds.isNotEmpty()) {
-      add(CsipComponent.IdentifiedNeed)
+      add(CsipComponent.IDENTIFIED_NEED)
     }
     if (reviews.isNotEmpty()) {
-      add(CsipComponent.Review)
+      add(CsipComponent.REVIEW)
     }
     if (reviews.flatMap { it.attendees() }.isNotEmpty()) {
-      add(CsipComponent.Attendee)
+      add(CsipComponent.ATTENDEE)
     }
   }
 }

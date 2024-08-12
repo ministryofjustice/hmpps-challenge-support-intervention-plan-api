@@ -142,11 +142,11 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val plan = getPlan(record.uuid)
     plan.verifyAgainst(request)
 
-    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.Plan))
+    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN))
     verifyDomainEvents(
       record.prisonNumber,
       recordUuid,
-      setOf(CsipComponent.Plan),
+      setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -167,13 +167,13 @@ class CreatePlanIntTest : IntegrationTestBase() {
     verifyAudit(
       plan,
       RevisionType.ADD,
-      setOf(CsipComponent.Plan, CsipComponent.IdentifiedNeed),
+      setOf(CsipComponent.PLAN, CsipComponent.IDENTIFIED_NEED),
     )
 
     verifyDomainEvents(
       record.prisonNumber,
       record.uuid,
-      setOf(CsipComponent.Plan, CsipComponent.IdentifiedNeed),
+      setOf(CsipComponent.PLAN, CsipComponent.IDENTIFIED_NEED),
       setOf(DomainEventType.CSIP_UPDATED, DomainEventType.IDENTIFIED_NEED_CREATED),
       needsIds.toSet(),
       2,
