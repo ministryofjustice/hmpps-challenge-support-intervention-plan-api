@@ -1,19 +1,19 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
@@ -37,8 +37,7 @@ class AddAttendeeIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri(urlToTest(randomUUID()))
-      .exchange().expectStatus().isUnauthorized
+    webTestClient.post().uri(urlToTest(randomUUID())).exchange().expectStatus().isUnauthorized
   }
 
   @ParameterizedTest
@@ -118,59 +117,63 @@ class AddAttendeeIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - attendee added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    val plan = requireNotNull(csip.plan).withReview()
-    val review = plan.reviews().first()
+    val review = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withPlan()
+      val plan = requireNotNull(it.plan).withReview()
+      plan.reviews().first()
+    }
 
     val request = createAttendeeRequest(name = "A Person", role = "A special role")
-    val response = addAttendee(review.reviewUuid, request)
+    val response = addAttendee(review.uuid, request)
 
-    val attendee = getAttendee(review.reviewUuid, response.attendeeUuid)
+    val attendee = getAttendee(review.uuid, response.attendeeUuid)
     attendee.verifyAgainst(request)
 
     val record = review.plan.csipRecord
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(AffectedComponent.Attendee, AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
+      attendee,
+      RevisionType.ADD,
+      setOf(CsipComponent.Attendee),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.Attendee),
+      record.uuid,
+      setOf(CsipComponent.Attendee),
       setOf(ATTENDEE_CREATED),
-      setOf(attendee.attendeeUuid),
+      setOf(attendee.uuid),
     )
   }
 
   @Test
   fun `201 created - attendee added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
-    val plan = requireNotNull(csip.plan).withReview()
-    val review = plan.reviews().first()
+    val review = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withPlan()
+      val plan = requireNotNull(it.plan).withReview()
+      plan.reviews().first()
+    }
 
     val request = createAttendeeRequest(name = "A Person", role = "A special role")
-    val response = addAttendee(review.reviewUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addAttendee(review.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val attendee = getAttendee(review.reviewUuid, response.attendeeUuid)
+    val attendee = getAttendee(review.uuid, response.attendeeUuid)
     attendee.verifyAgainst(request)
 
     val record = review.plan.csipRecord
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(AffectedComponent.Attendee, AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
+      attendee,
+      RevisionType.ADD,
+      setOf(CsipComponent.Attendee),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.Attendee),
+      record.uuid,
+      setOf(CsipComponent.Attendee),
       setOf(ATTENDEE_CREATED),
-      setOf(attendee.attendeeUuid),
+      setOf(attendee.uuid),
       source = NOMIS,
     )
   }
@@ -214,5 +217,5 @@ class AddAttendeeIntTest : IntegrationTestBase() {
   }
 
   private fun getAttendee(reviewUuid: UUID, attendeeUuid: UUID): Attendee =
-    reviewRepository.getReview(reviewUuid).attendees().first { it.attendeeUuid == attendeeUuid }
+    reviewRepository.getReview(reviewUuid).attendees().first { it.uuid == attendeeUuid }
 }

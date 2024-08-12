@@ -1,19 +1,19 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
@@ -42,8 +42,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri(urlToTest(randomUUID()))
-      .exchange().expectStatus().isUnauthorized
+    webTestClient.post().uri(urlToTest(randomUUID())).exchange().expectStatus().isUnauthorized
   }
 
   @ParameterizedTest
@@ -123,27 +122,27 @@ class AddReviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - review added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createReviewRequest(attendees = listOf(createAttendeeRequest(), createAttendeeRequest()))
-    val response = addReview(record.recordUuid, request)
+    val response = addReview(record.uuid, request)
 
     val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
 
-    val attendeeUuids = review.attendees().map { it.attendeeUuid }
+    val attendeeUuids = review.attendees().map { it.uuid }
     assertThat(attendeeUuids.size).isEqualTo(2)
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(AffectedComponent.Review, AffectedComponent.Attendee, AffectedComponent.Plan, AffectedComponent.Record),
+      review,
+      RevisionType.ADD,
+      setOf(CsipComponent.Review, CsipComponent.Attendee),
     )
 
     verifyDomainEvents(
-      prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.Review, AffectedComponent.Attendee),
+      record.prisonNumber,
+      record.uuid,
+      setOf(CsipComponent.Review, CsipComponent.Attendee),
       setOf(REVIEW_CREATED, ATTENDEE_CREATED),
       setOf(response.reviewUuid) + attendeeUuids,
       expectedCount = 3,
@@ -153,25 +152,25 @@ class AddReviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - review added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createReviewRequest(actions = setOf(ReviewAction.CaseNote, ReviewAction.RemainOnCsip))
-    val response = addReview(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addReview(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(AffectedComponent.Review, AffectedComponent.Plan, AffectedComponent.Record),
+      review,
+      RevisionType.ADD,
+      setOf(CsipComponent.Review),
       nomisContext(),
     )
 
     verifyDomainEvents(
-      prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.Review),
+      record.prisonNumber,
+      record.uuid,
+      setOf(CsipComponent.Review),
       setOf(REVIEW_CREATED),
       setOf(response.reviewUuid),
       source = NOMIS,

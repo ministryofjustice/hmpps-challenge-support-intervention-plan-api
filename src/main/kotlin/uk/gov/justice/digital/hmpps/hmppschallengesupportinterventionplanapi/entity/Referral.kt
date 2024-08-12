@@ -13,17 +13,11 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
-import jakarta.persistence.PostLoad
 import jakarta.persistence.Table
-import jakarta.persistence.Transient
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.ContributoryFactorCreatedEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipUpdatedEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
@@ -34,14 +28,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.UUID
 
 @Entity
 @Table
@@ -85,18 +77,9 @@ class Referral(
   @Id
   @Column(name = "referral_id")
   val id: Long = 0,
-) : SimpleAuditable(), PropertyChangeMonitor, Parented {
+) : SimpleAuditable(), CsipAware {
 
-  override fun parent() = csipRecord
-
-  @PostLoad
-  fun resetPropertyChanges() {
-    propertyChanges = mutableSetOf()
-  }
-
-  @Transient
-  @NotAudited
-  override var propertyChanges: MutableSet<PropertyChange> = mutableSetOf()
+  override fun csipRecord() = csipRecord
 
   @NotAudited
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
@@ -120,131 +103,76 @@ class Referral(
   fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.id }
 
   var incidentDate: LocalDate = incidentDate
-    set(value) {
-      propertyChanged(::incidentDate, value)
-      field = value
-    }
+    private set
 
   var incidentTime: LocalTime? = incidentTime
-    private set(value) {
-      propertyChanged(::incidentTime, value)
-      field = value
-    }
+    private set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_type_id")
   var incidentType: ReferenceData = incidentType
-    private set(value) {
-      referenceDataChanged(::incidentType, value)
-      field = value
-    }
+    private set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_location_id")
   var incidentLocation: ReferenceData = incidentLocation
-    private set(value) {
-      referenceDataChanged(::incidentLocation, value)
-      field = value
-    }
+    private set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "referer_area_of_work_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
-    private set(value) {
-      referenceDataChanged(::refererAreaOfWork, value)
-      field = value
-    }
+    private set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_involvement_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
-    private set(value) {
-      referenceDataChanged(::incidentInvolvement, value)
-      field = value
-    }
+    private set
 
   @Column(nullable = false, length = 240)
   var referredBy: String = referredBy
-    private set(value) {
-      propertyChanged(::referredBy, value)
-      field = value
-    }
+    private set
 
   var proactiveReferral: Boolean? = proactiveReferral
-    private set(value) {
-      propertyChanged(::proactiveReferral, value)
-      field = value
-    }
+    private set
 
   var staffAssaulted: Boolean? = staffAssaulted
-    private set(value) {
-      propertyChanged(::staffAssaulted, value)
-      field = value
-    }
+    private set
 
   var assaultedStaffName: String? = assaultedStaffName
-    private set(value) {
-      propertyChanged(::assaultedStaffName, value)
-      field = value
-    }
+    private set
 
   var descriptionOfConcern: String? = descriptionOfConcern
-    private set(value) {
-      propertyChanged(::descriptionOfConcern, value)
-      field = value
-    }
+    private set
 
   var knownReasons: String? = knownReasons
-    private set(value) {
-      propertyChanged(::knownReasons, value)
-      field = value
-    }
+    private set
 
   var otherInformation: String? = otherInformation
-    private set(value) {
-      propertyChanged(::otherInformation, value)
-      field = value
-    }
+    private set
 
   @Enumerated(EnumType.STRING)
   var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
-    private set(value) {
-      propertyChanged(::saferCustodyTeamInformed, value)
-      field = value
-    }
+    private set
 
   var referralComplete: Boolean? = referralComplete
-    private set(value) {
-      propertyChanged(::referralComplete, value)
-      field = value
-    }
+    private set
 
   var referralCompletedDate: LocalDate? = referralCompletedDate
-    private set(value) {
-      propertyChanged(::referralCompletedDate, value)
-      field = value
-    }
+    private set
 
   @Column(length = 32)
   var referralCompletedBy: String? = referralCompletedBy
-    private set(value) {
-      propertyChanged(::referralCompletedBy, value)
-      field = value
-    }
+    private set
 
   @Column(length = 255)
   var referralCompletedByDisplayName: String? = referralCompletedByDisplayName
-    private set(value) {
-      propertyChanged(::referralCompletedByDisplayName, value)
-      field = value
-    }
+    private set
 
   fun upsertDecisionAndActions(
-    context: CsipRequestContext,
     request: UpsertDecisionAndActionsRequest,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
   ): CsipRecord {
@@ -257,24 +185,10 @@ class Referral(
       decisionAndActions = DecisionAndActions(this, outcome)
     }
     decisionAndActions!!.upsert(request, outcome, signedOffBy)
-
-    if (isNew || decisionAndActions!!.propertyChanges.isNotEmpty()) {
-      val affectedComponents = setOf(AffectedComponent.DecisionAndActions)
-      csipRecord.registerEntityEvent(
-        CsipUpdatedEvent(
-          recordUuid = csipRecord.recordUuid,
-          prisonNumber = csipRecord.prisonNumber,
-          occurredAt = context.requestAt,
-          source = context.source,
-          affectedComponents = affectedComponents,
-        ),
-      )
-    }
     return csipRecord
   }
 
   fun createSaferCustodyScreeningOutcome(
-    context: CsipRequestContext,
     request: CreateSaferCustodyScreeningOutcomeRequest,
     outcomeType: ReferenceData,
   ): CsipRecord {
@@ -288,68 +202,26 @@ class Referral(
       date = request.date,
       reasonForDecision = request.reasonForDecision,
     )
-
-    val affectedComponents = setOf(AffectedComponent.SaferCustodyScreeningOutcome)
-    csipRecord.registerEntityEvent(
-      CsipUpdatedEvent(
-        recordUuid = csipRecord.recordUuid,
-        prisonNumber = csipRecord.prisonNumber,
-        occurredAt = context.requestAt,
-        source = context.source,
-        affectedComponents = affectedComponents,
-      ),
-    )
     return csipRecord
   }
 
   fun upsertInvestigation(
-    context: CsipRequestContext,
     request: InvestigationRequest,
   ): CsipRecord {
-    val isNew = investigation == null
-    if (isNew) {
-      investigation = Investigation(this)
-    }
+    investigation = investigation ?: Investigation(this)
     investigation!!.upsert(request)
-
-    if (isNew || investigation!!.propertyChanges.isNotEmpty()) {
-      val affectedComponents = buildSet {
-        add((AffectedComponent.Investigation))
-        if (request is CreateInvestigationRequest && request.interviews.isNotEmpty()) add(AffectedComponent.Interview)
-      }
-      csipRecord.registerEntityEvent(
-        CsipUpdatedEvent(
-          recordUuid = csipRecord.recordUuid,
-          prisonNumber = csipRecord.prisonNumber,
-          occurredAt = context.requestAt,
-          source = context.source,
-          affectedComponents = affectedComponents,
-        ),
-      )
-    }
     return csipRecord
   }
 
   fun addContributoryFactor(
     createRequest: CreateContributoryFactorRequest,
     factorType: ReferenceData,
-    context: CsipRequestContext,
   ) = ContributoryFactor(
     referral = this,
     contributoryFactorType = factorType,
     comment = createRequest.comment,
   ).apply {
     contributoryFactors.add(this)
-    csipRecord.registerEntityEvent(
-      ContributoryFactorCreatedEvent(
-        entityUuid = contributoryFactorUuid,
-        recordUuid = csipRecord.recordUuid,
-        prisonNumber = csipRecord.prisonNumber,
-        description = DomainEventType.CONTRIBUTORY_FACTOR_CREATED.description,
-        occurredAt = context.requestAt,
-        source = context.source,
-      ),
-    )
   }
 
   private fun verifySaferCustodyScreeningOutcomeDoesNotExist() =
@@ -399,13 +271,13 @@ class Referral(
       existing
     }
 
-  internal fun components(): Map<AffectedComponent, Set<UUID>> = buildMap {
-    put(AffectedComponent.Referral, setOf())
-    saferCustodyScreeningOutcome?.also { put(AffectedComponent.SaferCustodyScreeningOutcome, setOf()) }
-    decisionAndActions?.also { put(AffectedComponent.DecisionAndActions, setOf()) }
-    investigation?.also { putAll(it.components()) }
+  fun components(): Set<CsipComponent> = buildSet {
+    add(CsipComponent.Referral)
+    saferCustodyScreeningOutcome?.also { add(CsipComponent.SaferCustodyScreeningOutcome) }
+    decisionAndActions?.also { add(CsipComponent.DecisionAndActions) }
+    investigation?.also { addAll(it.components()) }
     if (contributoryFactors.isNotEmpty()) {
-      put(AffectedComponent.ContributoryFactor, contributoryFactors.map { it.contributoryFactorUuid }.toSet())
+      add(CsipComponent.ContributoryFactor)
     }
   }
 }

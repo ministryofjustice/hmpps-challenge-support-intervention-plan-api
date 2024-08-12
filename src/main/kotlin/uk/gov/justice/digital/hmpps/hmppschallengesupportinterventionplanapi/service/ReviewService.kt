@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
@@ -24,21 +23,21 @@ class ReviewService(
   fun addReview(recordUuid: UUID, request: CreateReviewRequest): Review {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
-    val review = plan.addReview(csipRequestContext(), request)
+    val review = plan.addReview(request)
     csipRecordRepository.save(record)
     return review.toModel()
   }
 
   fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee {
     val review = reviewRepository.getReview(reviewUuid)
-    val attendee = review.addAttendee(csipRequestContext(), request)
+    val attendee = review.addAttendee(request)
     csipRecordRepository.save(review.plan.csipRecord)
     return attendee.toModel()
   }
 }
 
 fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review.toModel() = Review(
-  reviewUuid,
+  uuid,
   reviewSequence,
   reviewDate,
   recordedBy,
@@ -57,7 +56,7 @@ fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity
 )
 
 fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee.toModel() = Attendee(
-  attendeeUuid,
+  uuid,
   name,
   role,
   attended,

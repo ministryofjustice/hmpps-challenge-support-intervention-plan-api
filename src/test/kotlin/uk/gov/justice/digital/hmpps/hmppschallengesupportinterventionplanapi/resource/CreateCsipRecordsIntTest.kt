@@ -2,20 +2,20 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ContributoryFactor
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.NO
@@ -47,6 +47,11 @@ import java.time.temporal.ChronoUnit
 class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
+  fun `401 unauthorised`() {
+    webTestClient.post().uri(urlToTest("A1234BC")).exchange().expectStatus().isUnauthorized
+  }
+
+  @Test
   fun `403 forbidden - no required role`() {
     val response = webTestClient.get().uri(urlToTest("A1234BC"))
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE"))).exchange().errorResponse(HttpStatus.FORBIDDEN)
@@ -58,11 +63,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(developerMessage).isEqualTo("Access Denied")
       assertThat(moreInfo).isNull()
     }
-  }
-
-  @Test
-  fun `401 unauthorised`() {
-    webTestClient.post().uri(urlToTest("A1234BC")).exchange().expectStatus().isUnauthorized
   }
 
   @Test
@@ -259,7 +259,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
 
-    verifyAudit(saved, INSERT, setOf(Record, Referral, ContributoryFactor))
+    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral, ContributoryFactor))
 
     verifyDomainEvents(
       prisonNumber,
@@ -290,7 +290,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     assertThat(saved.logCode).isNull()
-    verifyAudit(saved, INSERT, setOf(Record, Referral, ContributoryFactor))
+    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral, ContributoryFactor))
   }
 
   @Test
@@ -317,7 +317,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       saved,
-      INSERT,
+      RevisionType.ADD,
       setOf(Record, Referral, ContributoryFactor),
       nomisContext(),
     )
@@ -350,7 +350,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
 
-    verifyAudit(saved, INSERT, setOf(Record, Referral), nomisContext())
+    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral), nomisContext())
 
     verifyDomainEvents(
       prisonNumber,

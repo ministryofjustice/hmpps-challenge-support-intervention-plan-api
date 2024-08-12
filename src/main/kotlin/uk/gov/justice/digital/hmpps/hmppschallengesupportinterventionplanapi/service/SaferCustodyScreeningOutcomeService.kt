@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
@@ -29,7 +28,6 @@ class SaferCustodyScreeningOutcomeService(
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       csipRecordRepository.save(
         this.createSaferCustodyScreeningOutcome(
-          context = csipRequestContext(),
           request = request,
           outcomeType = outcomeType,
         ),

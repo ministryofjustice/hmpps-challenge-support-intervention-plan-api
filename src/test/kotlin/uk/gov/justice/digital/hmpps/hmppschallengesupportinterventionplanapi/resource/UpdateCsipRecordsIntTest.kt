@@ -6,21 +6,20 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.data.history.RevisionMetadata.RevisionType.INSERT
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
@@ -140,7 +139,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
     val request = updateCsipRecordRequest(logCode = null, referral = updateReferral)
-    val response = updateCsipRecordResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = updateCsipRecordResponseSpec(record.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
@@ -153,21 +152,21 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - CSIP record not updated does not create audit record`() {
     val prisonNumber = givenValidPrisonNumber("U1234NC")
-    val record = generateCsipRecord(prisonNumber, logCode = LOG_CODE).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber, logCode = LOG_CODE)) { it.withReferral() }
 
     val request = updateCsipRecordRequest(logCode = LOG_CODE)
-    val response = updateCsipRecord(record.recordUuid, request)
+    val response = updateCsipRecord(record.uuid, request)
     with(response) {
       assertThat(logCode).isEqualTo(LOG_CODE)
     }
 
-    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    val saved = csipRecordRepository.getCsipRecord(record.uuid)
     with(saved) {
       assertThat(logCode).isEqualTo(LOG_CODE)
     }
 
     // verify the latest audit record is the initial insert from the given of the test
-    verifyAudit(saved, INSERT, setOf(AffectedComponent.Record, Referral), nomisContext().copy(source = DPS))
+    verifyAudit(saved, RevisionType.ADD, setOf(Record, Referral), nomisContext().copy(source = DPS))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
@@ -175,15 +174,15 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - CSIP record updated log code with source DPS`() {
     val prisonNumber = givenValidPrisonNumber("U1234DR")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
 
     val request = updateCsipRecordRequest()
-    val response = updateCsipRecord(record.recordUuid, request)
+    val response = updateCsipRecord(record.uuid, request)
     with(response) {
       assertThat(logCode).isEqualTo(request.logCode)
     }
 
-    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    val saved = csipRecordRepository.getCsipRecord(record.uuid)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
       assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
@@ -192,26 +191,26 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifyAudit(
-      record,
-      UPDATE,
+      saved,
+      RevisionType.MOD,
       setOf(Record),
     )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(Record))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Record))
   }
 
   @Test
   fun `200 ok - CSIP record updated log code with source NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("U2234NR")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
 
     val request = updateCsipRecordRequest()
-    val response = updateCsipRecord(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = updateCsipRecord(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
     with(response) {
       assertThat(logCode).isEqualTo(request.logCode)
     }
 
-    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    val saved = csipRecordRepository.getCsipRecord(record.uuid)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
       assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
@@ -220,13 +219,13 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifyAudit(
-      record,
-      UPDATE,
+      saved,
+      RevisionType.MOD,
       setOf(Record),
       nomisContext(),
     )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(Record), NOMIS)
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Record), NOMIS)
   }
 
   @Test
@@ -236,40 +235,43 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val incidentLocation = givenReferenceData(ReferenceDataType.INCIDENT_LOCATION, "KIT")
     val refererArea = givenReferenceData(ReferenceDataType.AREA_OF_WORK, "HEA")
 
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral(
-      incidentType = { incidentType },
-      incidentLocation = { incidentLocation },
-      refererAreaOfWork = { refererArea },
-    )
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral(
+        incidentType = { incidentType },
+        incidentLocation = { incidentLocation },
+        refererAreaOfWork = { refererArea },
+      )
+    }
 
-    val request = updateCsipRecordRequest(logCode = null, referral = updateReferral())
-    val response = updateCsipRecord(record.recordUuid, request)
+    val request = updateCsipRecordRequest(logCode = null, referral = updateReferral(descriptionOfConcern = "Concern"))
+    val response = updateCsipRecord(record.uuid, request)
     with(response) {
       assertThat(logCode).isNull()
       assertThat(status).isEqualTo(CsipStatus.REFERRAL_PENDING)
     }
 
-    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    val saved = csipRecordRepository.getCsipRecord(record.uuid)
     with(saved) {
       assertThat(logCode).isNull()
-      assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(lastModifiedBy).isEqualTo(TEST_USER)
-      assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
+      val referral = requireNotNull(saved.referral)
+      assertThat(referral.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(referral.lastModifiedBy).isEqualTo(TEST_USER)
+      assertThat(referral.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(Referral, Record),
+      saved.referral!!,
+      RevisionType.MOD,
+      setOf(Referral),
     )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(Referral))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Referral))
   }
 
   @Test
   fun `200 ok - CSIP record updates csip and completes referral`() {
     val prisonNumber = givenValidPrisonNumber("U5463BT")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val referral = requireNotNull(record.referral)
 
     val request = updateCsipRecordRequest(
@@ -286,8 +288,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       ),
     )
 
-    updateCsipRecord(record.recordUuid, request)
-    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    updateCsipRecord(record.uuid, request)
+    val saved = csipRecordRepository.getCsipRecord(record.uuid)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
       assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
@@ -295,17 +297,17 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyAudit(
       record,
-      UPDATE,
+      RevisionType.MOD,
       setOf(Record, Referral),
     )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(Record, Referral))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Record, Referral))
   }
 
   @Test
   fun `200 ok - Undo referral complete`() {
     val prisonNumber = givenValidPrisonNumber("U1234UC")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withCompletedReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withCompletedReferral() }
     val referral = requireNotNull(record.referral)
 
     val request = updateCsipRecordRequest(
@@ -319,16 +321,16 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       ),
     )
 
-    updateCsipRecord(record.recordUuid, request)
-    val saved = csipRecordRepository.getCsipRecord(record.recordUuid)
+    updateCsipRecord(record.uuid, request)
+    val saved = csipRecordRepository.getCsipRecord(record.uuid)
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(Referral, Record),
+      saved.referral!!,
+      RevisionType.MOD,
+      setOf(Referral),
     )
 
-    verifyDomainEvent(prisonNumber, saved.recordUuid, setOf(Referral))
+    verifyDomainEvent(prisonNumber, saved.uuid, setOf(Referral))
   }
 
   private fun updateCsipRecordResponseSpec(
@@ -444,7 +446,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   private fun verifyDomainEvent(
     prisonNumber: String,
     recordUuid: UUID,
-    affectedComponents: Set<AffectedComponent>,
+    affectedComponents: Set<CsipComponent>,
     source: Source = DPS,
   ) {
     verifyDomainEvents(

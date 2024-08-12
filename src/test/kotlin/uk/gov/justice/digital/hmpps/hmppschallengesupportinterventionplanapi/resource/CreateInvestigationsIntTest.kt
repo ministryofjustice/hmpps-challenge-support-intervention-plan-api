@@ -1,19 +1,17 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -22,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
 import java.util.UUID
@@ -67,7 +66,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - username not supplied`() {
     val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
     val request = createInvestigationRequest()
 
     val response = createInvestigationResponseSpec(recordUuid, request, username = null)
@@ -103,7 +102,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("I3234MR")
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
 
     val response = createInvestigationResponseSpec(recordUuid, createInvestigationRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -138,7 +137,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
     requireNotNull(csipRecord.referral).withInvestigation()
 
-    val response = createInvestigationResponseSpec(csipRecord.recordUuid, createInvestigationRequest())
+    val response = createInvestigationResponseSpec(csipRecord.uuid, createInvestigationRequest())
       .errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -153,23 +152,23 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create investigation via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("I1234DS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createInvestigationRequest()
 
-    val response = createInvestigation(recordUuid, request)
-
+    val response = createInvestigation(record.uuid, request)
     response.verifyAgainst(request)
+
+    val investigation = getInvestigation(record.uuid)
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Investigation, Referral, Record),
+      investigation,
+      RevisionType.ADD,
+      setOf(CsipComponent.Investigation),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      recordUuid,
-      setOf(AffectedComponent.Investigation),
+      record.uuid,
+      setOf(CsipComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -177,25 +176,25 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create investigation with interviews via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("I1234WI")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createInvestigationRequest(interviews = listOf(createInterviewRequest(), createInterviewRequest()))
 
-    val response = createInvestigation(recordUuid, request)
+    val response = createInvestigation(record.uuid, request)
     val interviewUuids = response.interviews.map { it.interviewUuid }
-
     response.verifyAgainst(request)
+
+    val investigation = getInvestigation(record.uuid)
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Investigation, Interview, Referral, Record),
+      investigation,
+      RevisionType.ADD,
+      setOf(CsipComponent.Investigation, Interview),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      recordUuid,
-      setOf(AffectedComponent.Investigation, Interview),
-      setOf(DomainEventType.CSIP_UPDATED),
+      record.uuid,
+      setOf(CsipComponent.Investigation, Interview),
+      setOf(DomainEventType.CSIP_UPDATED, DomainEventType.INTERVIEW_CREATED),
       interviewUuids.toSet(),
       3,
     )
@@ -242,4 +241,6 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     username: String = TEST_USER,
   ) = createInvestigationResponseSpec(recordUuid, request, source, username, role)
     .successResponse<Investigation>(HttpStatus.CREATED)
+
+  private fun getInvestigation(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
 }

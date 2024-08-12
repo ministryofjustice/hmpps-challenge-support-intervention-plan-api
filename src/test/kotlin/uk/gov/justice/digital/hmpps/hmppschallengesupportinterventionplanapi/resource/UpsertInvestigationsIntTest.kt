@@ -5,16 +5,16 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
@@ -69,7 +70,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - username not supplied`() {
     val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
     val request = investigationRequest()
 
     val response = upsertInvestigationResponseSpec(recordUuid, request, username = null)
@@ -105,7 +106,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("I2234MR")
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
 
     val response = upsertInvestigationResponseSpec(recordUuid, investigationRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -137,23 +138,23 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create investigation via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("I1234DS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = investigationRequest()
 
-    val response = upsertInvestigation(recordUuid, request, status = HttpStatus.CREATED)
-
+    val response = upsertInvestigation(record.uuid, request, status = HttpStatus.CREATED)
     response.verifyAgainst(request)
+
+    val investigation = getInvestigation(record.uuid)
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Investigation, AffectedComponent.Referral, AffectedComponent.Record),
+      investigation,
+      RevisionType.ADD,
+      setOf(CsipComponent.Investigation),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      recordUuid,
-      setOf(AffectedComponent.Investigation),
+      record.uuid,
+      setOf(CsipComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -161,12 +162,11 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - create investigation via NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("I1234NS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = investigationRequest()
 
     val response = upsertInvestigation(
-      recordUuid,
+      record.uuid,
       request,
       source = Source.NOMIS,
       username = NOMIS_SYS_USER,
@@ -175,17 +175,19 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     )
 
     response.verifyAgainst(request)
+
+    val investigation = getInvestigation(record.uuid)
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Investigation, AffectedComponent.Referral, AffectedComponent.Record),
+      investigation,
+      RevisionType.ADD,
+      setOf(CsipComponent.Investigation),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      recordUuid,
-      setOf(AffectedComponent.Investigation),
+      record.uuid,
+      setOf(CsipComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )
@@ -194,13 +196,16 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - no changes made to investigation`() {
     val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(csipRecord.referral).withInvestigation()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withInvestigation()
+      it
+    }
 
-    requireNotNull(csipRecord.referral?.investigation)
+    requireNotNull(record.referral?.investigation)
     val request = investigationRequest()
 
-    val response = upsertInvestigation(csipRecord.recordUuid, request, status = HttpStatus.OK)
+    val response = upsertInvestigation(record.uuid, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
@@ -208,34 +213,42 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - update investigation`() {
     val prisonNumber = givenValidPrisonNumber("I1234UI")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(csipRecord.referral).withInvestigation(
-      "oldStaffInvolved",
-      "oldEvidenceSecured",
-      "oldOccurrenceReason",
-      "oldPersonsUsualBehaviour",
-      "oldPersonsTrigger",
-      "oldProtectiveFactors",
-    )
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withInvestigation(
+        "oldStaffInvolved",
+        "oldEvidenceSecured",
+        "oldOccurrenceReason",
+        "oldPersonsUsualBehaviour",
+        "oldPersonsTrigger",
+        "oldProtectiveFactors",
+      )
+      it
+    }
 
-    requireNotNull(csipRecord.referral?.investigation)
+    requireNotNull(record.referral?.investigation)
     val request = investigationRequest()
 
-    val response = upsertInvestigation(csipRecord.recordUuid, request, status = HttpStatus.OK)
+    val response = upsertInvestigation(record.uuid, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
+
+    val investigation = getInvestigation(record.uuid)
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(AffectedComponent.Investigation, AffectedComponent.Referral, AffectedComponent.Record),
+      investigation,
+      RevisionType.MOD,
+      setOf(CsipComponent.Investigation),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      csipRecord.recordUuid,
-      setOf(AffectedComponent.Investigation),
+      record.uuid,
+      setOf(CsipComponent.Investigation),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
+
+  private fun getInvestigation(recordUuid: UUID) =
+    csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
 
   private fun Investigation.verifyAgainst(request: UpsertInvestigationRequest) {
     assertThat(staffInvolved).isEqualTo(request.staffInvolved)

@@ -1,8 +1,7 @@
-package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
@@ -33,7 +32,7 @@ class ReferralService(
     verify(referral.contributoryFactors().none { it.contributoryFactorType.code == request.factorTypeCode }) {
       ResourceAlreadyExistException("Contributory factor already part of referral")
     }
-    val factor = referral.addContributoryFactor(request, factorType, csipRequestContext())
+    val factor = referral.addContributoryFactor(request, factorType)
     csipRecordRepository.save(record)
     return factor.toModel()
   }

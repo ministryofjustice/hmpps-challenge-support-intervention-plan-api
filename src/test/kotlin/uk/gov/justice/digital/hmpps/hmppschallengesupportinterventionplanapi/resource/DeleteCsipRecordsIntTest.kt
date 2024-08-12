@@ -1,26 +1,24 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.DELETE
 import org.springframework.http.HttpStatus
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.ContributoryFactor
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.IdentifiedNeed
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Interview
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Investigation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Plan
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Review
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ContributoryFactor
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.IdentifiedNeed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Interview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Record
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
@@ -36,9 +34,6 @@ import java.time.LocalDate
 import java.util.UUID
 
 class DeleteCsipRecordsIntTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
 
   @Test
   fun `401 unauthorised`() {
@@ -113,9 +108,9 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `204 no content - CSIP record deleted by DPS`() {
     val prisonNumber = givenValidPrisonNumber("D1234DS")
-    val record = transactionTemplate.execute {
-      val csip = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-      val referral = requireNotNull(csip.referral)
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      val referral = requireNotNull(it.referral)
         .withContributoryFactor()
         .withContributoryFactor()
         .withInvestigation()
@@ -123,48 +118,48 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
         .withInterview(interviewDate = LocalDate.now().minusDays(2))
         .withInterview(interviewDate = LocalDate.now().minusDays(1))
         .withInterview()
-      csip.withPlan()
-      val plan = requireNotNull(csip.plan)
+      it.withPlan()
+      val plan = requireNotNull(it.plan)
         .withNeed()
         .withReview()
         .withReview()
       val review1 = plan.reviews().first()
       review1.withAttendee()
-      csip
-    }!!
+      it
+    }
 
-    val factorUuids = record.referral!!.contributoryFactors().map { it.contributoryFactorUuid }.toSet()
+    val factorUuids = record.referral!!.contributoryFactors().map { it.uuid }.toSet()
     assertThat(factorUuids).hasSize(2)
 
-    val interviewIds = record.referral!!.investigation!!.interviews().map { it.interviewUuid }.toSet()
+    val interviewIds = record.referral!!.investigation!!.interviews().map { it.uuid }.toSet()
     assertThat(interviewIds).hasSize(3)
 
-    val needsIds = record.plan!!.identifiedNeeds().map { it.identifiedNeedUuid }.toSet()
+    val needsIds = record.plan!!.identifiedNeeds().map { it.uuid }.toSet()
     assertThat(needsIds).hasSize(1)
 
-    val reviewIds = record.plan!!.reviews().map { it.reviewUuid }.toSet()
+    val reviewIds = record.plan!!.reviews().map { it.uuid }.toSet()
     assertThat(reviewIds).hasSize(2)
 
-    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.attendeeUuid } }
+    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.uuid } }
     assertThat(attendeeIds).hasSize(1)
 
-    deleteCsipRecordResponseSpec(record.recordUuid).expectStatus().isNoContent
+    deleteCsipRecordResponseSpec(record.uuid).expectStatus().isNoContent
 
     val affectedComponents =
       setOf(
         Record, Referral, ContributoryFactor, Investigation, Interview, Plan, IdentifiedNeed, Review,
-        AffectedComponent.Attendee,
+        CsipComponent.Attendee,
       )
-    verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(csipRecordRepository.findByUuid(record.uuid)) { IllegalStateException("CSIP record not deleted") }
     verifyAudit(
       record,
-      DELETE,
+      RevisionType.DEL,
       affectedComponents,
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
+      record.uuid,
       affectedComponents,
       setOf(
         DomainEventType.CSIP_DELETED,
@@ -175,7 +170,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
         DomainEventType.ATTENDEE_DELETED,
       ),
       entityIds = factorUuids + interviewIds + needsIds + reviewIds + attendeeIds,
-      // expected messages: 1 csip, 2 factors, 3 interviews, 1 identified need, 2 reviews
+      // expected messages: 1 csip, 2 factors, 3 interviews, 1 identified need, 2 reviews, 2 attendees
       expectedCount = 10,
     )
   }
@@ -183,21 +178,21 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `204 no content - CSIP record deleted by NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    deleteCsipRecordResponseSpec(record.recordUuid, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    deleteCsipRecordResponseSpec(record.uuid, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent
 
-    verifyDoesNotExist(csipRecordRepository.findByRecordUuid(record.recordUuid)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(csipRecordRepository.findByUuid(record.uuid)) { IllegalStateException("CSIP record not deleted") }
 
     verifyAudit(
       record,
-      DELETE,
+      RevisionType.DEL,
       setOf(Record, Referral),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
+      record.uuid,
       setOf(Record, Referral),
       setOf(DomainEventType.CSIP_DELETED),
       source = NOMIS,

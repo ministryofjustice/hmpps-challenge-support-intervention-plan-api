@@ -2,22 +2,20 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
-import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.INTERVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
@@ -42,13 +40,9 @@ import java.util.UUID.randomUUID
 
 class AddInterviewIntTest : IntegrationTestBase() {
 
-  @Autowired
-  lateinit var transactionTemplate: TransactionTemplate
-
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri(urlToTest(randomUUID()))
-      .exchange().expectStatus().isUnauthorized
+    webTestClient.post().uri(urlToTest(randomUUID())).exchange().expectStatus().isUnauthorized
   }
 
   @ParameterizedTest
@@ -131,7 +125,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
     requireNotNull(record.referral).withInvestigation()
 
-    val response = addInterviewResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = addInterviewResponseSpec(record.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
@@ -161,15 +155,14 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("I1234MR")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber))
 
-    val response = addInterviewResponseSpec(record.recordUuid, createInterviewRequest())
+    val response = addInterviewResponseSpec(record.uuid, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
-      println(response)
       assertThat(status).isEqualTo(400)
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a referral.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing a referral.")
-      assertThat(moreInfo).isEqualTo(record.recordUuid.toString())
+      assertThat(moreInfo).isEqualTo(record.uuid.toString())
     }
   }
 
@@ -178,45 +171,42 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("I1234MI")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
 
-    val response = addInterviewResponseSpec(record.recordUuid, createInterviewRequest())
+    val response = addInterviewResponseSpec(record.uuid, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
-      println(response)
       assertThat(status).isEqualTo(400)
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing an investigation.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing an investigation.")
-      assertThat(moreInfo).isEqualTo(record.recordUuid.toString())
+      assertThat(moreInfo).isEqualTo(record.uuid.toString())
     }
   }
 
   @Test
   fun `201 created - interview added DPS`() {
     val prisonNumber = givenValidPrisonNumber("I1234DP")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(record.referral).withInvestigation()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withInvestigation()
+      it
+    }
 
     val request = createInterviewRequest(notes = "Some notes about the interview")
-    val response = addInterview(record.recordUuid, request)
+    val response = addInterview(record.uuid, request)
 
-    val interview = getInterview(record.recordUuid, response.interviewUuid)
+    val interview = getInterview(record.uuid, response.interviewUuid)
     interview.verifyAgainst(request)
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(
-        AffectedComponent.Interview,
-        AffectedComponent.Investigation,
-        AffectedComponent.Referral,
-        AffectedComponent.Record,
-      ),
+      interview,
+      RevisionType.ADD,
+      setOf(CsipComponent.Interview),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.Interview),
+      record.uuid,
+      setOf(CsipComponent.Interview),
       setOf(INTERVIEW_CREATED),
       setOf(response.interviewUuid),
     )
@@ -225,31 +215,29 @@ class AddInterviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - interview added NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("C1234NM")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(record.referral).withInvestigation()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withInvestigation()
+      it
+    }
 
     val request = createInterviewRequest(notes = "Created By NOMIS")
-    val response = addInterview(record.recordUuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addInterview(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val interview = getInterview(record.recordUuid, response.interviewUuid)
+    val interview = getInterview(record.uuid, response.interviewUuid)
     interview.verifyAgainst(request, NOMIS_SYS_USER, NOMIS_SYS_USER_DISPLAY_NAME)
 
     verifyAudit(
-      record,
-      UPDATE,
-      setOf(
-        AffectedComponent.Interview,
-        AffectedComponent.Investigation,
-        AffectedComponent.Referral,
-        AffectedComponent.Record,
-      ),
+      interview,
+      RevisionType.ADD,
+      setOf(CsipComponent.Interview),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      record.recordUuid,
-      setOf(AffectedComponent.Interview),
+      record.uuid,
+      setOf(CsipComponent.Interview),
       setOf(INTERVIEW_CREATED),
       setOf(response.interviewUuid),
       source = NOMIS,
@@ -258,7 +246,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
   private fun getInterview(csipUuid: UUID, interviewUuid: UUID): Interview = transactionTemplate.execute {
     val investigation = requireNotNull(csipRecordRepository.getCsipRecord(csipUuid).referral?.investigation)
-    investigation.interviews().first { it.interviewUuid == interviewUuid }
+    investigation.interviews().first { it.uuid == interviewUuid }
   }!!
 
   private fun Interview.verifyAgainst(

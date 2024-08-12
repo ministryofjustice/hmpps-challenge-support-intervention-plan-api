@@ -29,4 +29,15 @@ enum class DomainEventType(
   REVIEW_DELETED("person.csip.review.deleted", "A review record has been deleted in the CSIP service"),
   ATTENDEE_CREATED("person.csip.attendee.created", "An attendee record has been created in the CSIP service"),
   ATTENDEE_DELETED("person.csip.attendee.deleted", "An attendee record has been deleted in the CSIP service"),
+  ;
+
+  companion object {
+    fun fromEventName(eventName: String): DomainEventType? = entries.find { it.eventType == eventName }
+  }
+}
+
+enum class PersistenceAction {
+  CREATED,
+  UPDATED,
+  DELETED,
 }

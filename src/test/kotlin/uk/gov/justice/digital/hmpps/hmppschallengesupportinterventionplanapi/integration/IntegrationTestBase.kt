@@ -2,18 +2,21 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.in
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.hibernate.envers.AuditReaderFactory
+import org.hibernate.envers.RevisionType
+import org.hibernate.envers.query.AuditEntity
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.data.history.RevisionMetadata.RevisionType
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
@@ -23,12 +26,15 @@ import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.SqlMergeMode
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.transaction.support.TransactionTemplate
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Auditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.DecisionAndActions
@@ -40,14 +46,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.audit.AuditRevisionRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipAdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.audit.AuditRevision
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBasicDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipChildInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
@@ -79,8 +85,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event.EntityEventService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.getByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.testUserContext
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -111,13 +119,19 @@ abstract class IntegrationTestBase {
   lateinit var hmppsQueueService: HmppsQueueService
 
   @Autowired
+  lateinit var entityEventService: EntityEventService
+
+  @Autowired
   lateinit var csipRecordRepository: CsipRecordRepository
 
   @Autowired
   lateinit var referenceDataRepository: ReferenceDataRepository
 
   @Autowired
-  lateinit var auditRevisionRepository: AuditRevisionRepository
+  lateinit var transactionTemplate: TransactionTemplate
+
+  @Autowired
+  lateinit var entityManager: EntityManager
 
   internal val hmppsEventsQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
@@ -127,7 +141,7 @@ abstract class IntegrationTestBase {
   internal fun HmppsQueue.countAllMessagesOnQueue() =
     sqsClient.countAllMessagesOnQueue(queueUrl).get()
 
-  fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<Any> =
+  fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<HmppsDomainEvent<*>> =
     sqsClient.receiveMessage(
       ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
     ).get().messages()
@@ -135,16 +149,31 @@ abstract class IntegrationTestBase {
       .map {
         when (it.eventType) {
           CSIP_UPDATED.eventType, CSIP_CREATED.eventType, CSIP_DELETED.eventType ->
-            objectMapper.readValue<CsipDomainEvent>(it.message)
+            objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
 
-          else -> objectMapper.readValue<CsipBasicDomainEvent>(it.message)
+          else -> objectMapper.readValue<HmppsDomainEvent<CsipChildInformation>>(it.message)
         }
       }
+
+  fun switchEventPublish(publish: Boolean) {
+    val current = entityEventService.getByName<EventProperties>("eventProperties")
+    entityEventService.setByName("eventProperties", current.copy(publish = publish))
+  }
+
+  fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
+    switchEventPublish(false)
+    val result = transactionTemplate.execute {
+      val res = code(givenCsipRecord(csipRecord))
+      res
+    }!!
+    switchEventPublish(true)
+    return result
+  }
 
   internal fun verifyDomainEvents(
     prisonNumber: String,
     recordUuid: UUID,
-    affectedComponents: Set<AffectedComponent>,
+    affectedComponents: Set<CsipComponent>,
     eventTypes: Set<DomainEventType>,
     entityIds: Set<UUID> = setOf(),
     expectedCount: Int = 1,
@@ -152,53 +181,63 @@ abstract class IntegrationTestBase {
   ) {
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
     val allEvents = hmppsEventsQueue.receiveDomainEventsOnQueue(expectedCount)
-    eventTypes.forEach { eventType ->
-      val events = when (eventType) {
-        CSIP_DELETED, CSIP_UPDATED, CSIP_CREATED -> allEvents.filterIsInstance<CsipDomainEvent>()
-        else -> {
-          val basicEvents = allEvents.filterIsInstance<CsipBasicDomainEvent>()
-          assertThat(basicEvents.map { it.additionalInformation.entityUuid })
-            .containsExactlyInAnyOrderElementsOf(entityIds)
-          basicEvents
-        }
-      }
-      events.forEach { event ->
-        with(event) {
-          val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == this.eventType })
-          assertThat(domainEventType).isIn(eventTypes)
-          with(additionalInformation as CsipBaseInformation) {
-            if (this is CsipAdditionalInformation) {
-              assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
-            }
-            assertThat(this.recordUuid).isEqualTo(recordUuid)
-            assertThat(this.source).isEqualTo(source)
+    val basicEvents = allEvents.map { it.additionalInformation }.filterIsInstance<CsipChildInformation>()
+    assertThat(basicEvents.map { it.entityUuid }).containsExactlyInAnyOrderElementsOf(entityIds)
+    allEvents.forEach { event ->
+      with(event) {
+        val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == event.eventType })
+        assertThat(domainEventType).isIn(eventTypes)
+        with(additionalInformation as CsipBaseInformation) {
+          if (this is CsipInformation) {
+            assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
           }
-          assertThat(description).isEqualTo(domainEventType.description)
-          assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
-          assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
+          assertThat(this.recordUuid).isEqualTo(recordUuid)
+          assertThat(this.source).isEqualTo(source)
         }
+        assertThat(description).isEqualTo(domainEventType.description)
+        assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
+        assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
       }
     }
   }
 
   internal fun verifyAudit(
-    record: CsipRecord,
-    action: RevisionType,
-    affectedComponents: Set<AffectedComponent>,
+    entity: Any,
+    revisionType: RevisionType,
+    affectedComponents: Set<CsipComponent>,
     context: CsipRequestContext = testUserContext(),
-  ) {
-    val latest = csipRecordRepository.findLastChangeRevision(record.id).orElseThrow()
-    val type = latest.metadata.revisionType
-    assertThat(type).isEqualTo(action)
+  ) = transactionTemplate.execute {
+    val auditReader = AuditReaderFactory.get(entityManager)
+    assertTrue(auditReader.isEntityClassAudited(entity::class.java))
 
-    val number = latest.metadata.revisionNumber.orElseThrow()
-    val revision = auditRevisionRepository.findByIdOrNull(number)
-    with(requireNotNull(revision)) {
+    val revisionNumber = auditReader.getRevisions(entity::class.java, entity.getByName("id"))
+      .filterIsInstance<Long>().max()
+
+    val entityRevision: Array<*> = auditReader.createQuery()
+      .forRevisionsOfEntity(entity::class.java, false, true)
+      .add(AuditEntity.revisionNumber().eq(revisionNumber))
+      .resultList.first() as Array<*>
+    assertThat(entityRevision[2]).isEqualTo(revisionType)
+
+    val auditRevision = entityRevision[1] as AuditRevision
+    with(auditRevision) {
       assertThat(source).isEqualTo(context.source)
       assertThat(username).isEqualTo(context.username)
       assertThat(userDisplayName).isEqualTo(context.userDisplayName)
       assertThat(caseloadId).isEqualTo(context.activeCaseLoadId)
       assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
+    }
+
+    val audited = entityRevision[0] as Auditable
+    with(audited) {
+      if (revisionType == RevisionType.ADD) {
+        assertThat(createdBy).isEqualTo(context.username)
+        assertThat(createdByDisplayName).isEqualTo(context.userDisplayName)
+      }
+      if (revisionType == RevisionType.MOD) {
+        assertThat(lastModifiedBy).isEqualTo(context.username)
+        assertThat(lastModifiedByDisplayName).isEqualTo(context.userDisplayName)
+      }
     }
   }
 

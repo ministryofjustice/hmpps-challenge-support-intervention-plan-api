@@ -8,8 +8,8 @@ import java.util.UUID
 
 interface ReviewRepository : JpaRepository<Review, UUID> {
   @EntityGraph(attributePaths = ["attendees"])
-  fun findByReviewUuid(uuid: UUID): Review?
+  fun findByUuid(uuid: UUID): Review?
 }
 
 fun ReviewRepository.getReview(reviewUuid: UUID) =
-  findByReviewUuid(reviewUuid) ?: throw NotFoundException("Review", reviewUuid.toString())
+  findByUuid(reviewUuid) ?: throw NotFoundException("Review", reviewUuid.toString())

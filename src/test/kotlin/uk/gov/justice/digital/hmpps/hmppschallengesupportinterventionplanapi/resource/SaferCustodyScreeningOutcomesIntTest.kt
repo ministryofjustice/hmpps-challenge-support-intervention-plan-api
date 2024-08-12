@@ -1,18 +1,16 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Record
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.AffectedComponent.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -20,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -71,7 +70,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   fun `400 bad request - invalid Outcome Type code`() {
     val prisonNumber = givenValidPrisonNumber("S1234MF")
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
     val request = createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE")
 
     val response = createScreeningOutcomeResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -89,7 +88,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("S1234MF")
     val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.recordUuid
+    val recordUuid = csipRecord.uuid
     val request = createScreeningOutcomeRequest()
 
     val response = createScreeningOutcomeResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -127,7 +126,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     requireNotNull(record.referral).withSaferCustodyScreeningOutcome()
 
     val request = createScreeningOutcomeRequest()
-    val response = createScreeningOutcomeResponseSpec(record.recordUuid, request).errorResponse(HttpStatus.CONFLICT)
+    val response = createScreeningOutcomeResponseSpec(record.uuid, request).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
       assertThat(status).isEqualTo(409)
@@ -141,11 +140,10 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `create safer custody screening outcome via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("S1234CD")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createScreeningOutcomeRequest(recordedBy = "Safer")
 
-    val response = createScreeningOutcome(recordUuid, request)
+    val response = createScreeningOutcome(record.uuid, request)
 
     with(response) {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
@@ -155,12 +153,13 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
-    verifyAudit(csipRecord, UPDATE, setOf(Record, Referral, AffectedComponent.SaferCustodyScreeningOutcome))
+    val saved = getScreeningOutcome(record.uuid)
+    verifyAudit(saved, RevisionType.ADD, setOf(CsipComponent.SaferCustodyScreeningOutcome))
 
     verifyDomainEvents(
       prisonNumber,
-      csipRecord.recordUuid,
-      setOf(AffectedComponent.SaferCustodyScreeningOutcome),
+      record.uuid,
+      setOf(CsipComponent.SaferCustodyScreeningOutcome),
       setOf(DomainEventType.CSIP_UPDATED),
     )
   }
@@ -168,11 +167,10 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `create safer custody screening outcome via NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("S1234CN")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.recordUuid
+    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createScreeningOutcomeRequest()
 
-    val response = createScreeningOutcome(recordUuid, request, Source.NOMIS, NOMIS_SYS_USER)
+    val response = createScreeningOutcome(record.uuid, request, Source.NOMIS, NOMIS_SYS_USER)
 
     with(response) {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
@@ -182,17 +180,18 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
+    val saved = getScreeningOutcome(record.uuid)
     verifyAudit(
-      csipRecord,
-      UPDATE,
-      setOf(Record, Referral, AffectedComponent.SaferCustodyScreeningOutcome),
+      saved,
+      RevisionType.ADD,
+      setOf(CsipComponent.SaferCustodyScreeningOutcome),
       nomisContext(),
     )
 
     verifyDomainEvents(
       prisonNumber,
-      csipRecord.recordUuid,
-      setOf(AffectedComponent.SaferCustodyScreeningOutcome),
+      record.uuid,
+      setOf(CsipComponent.SaferCustodyScreeningOutcome),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
     )
@@ -217,6 +216,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     username: String = TEST_USER,
   ) = createScreeningOutcomeResponseSpec(recordUuid, request, source, username)
     .successResponse<SaferCustodyScreeningOutcome>(HttpStatus.CREATED)
+
+  private fun getScreeningOutcome(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.saferCustodyScreeningOutcome!!
 
   companion object {
     private fun createScreeningOutcomeRequest(

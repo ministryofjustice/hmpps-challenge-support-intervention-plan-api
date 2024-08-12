@@ -24,14 +24,14 @@ class PlanService(
   fun upsertPlan(recordUuid: UUID, request: UpsertPlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = record.plan
-    return csipRecordRepository.save(record.upsertPlan(csipRequestContext(), request)).plan!!.toModel()
+    return csipRecordRepository.save(record.upsertPlan(request)).plan!!.toModel()
       .apply { new = plan == null }
   }
 
   fun addIdentifiedNeed(recordUuid: UUID, request: CreateIdentifiedNeedRequest): IdentifiedNeed {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
-    val need = plan.addIdentifiedNeed(csipRequestContext(), request)
+    val need = plan.addIdentifiedNeed(request)
     csipRecordRepository.save(record)
     return need.toModel()
   }
@@ -40,15 +40,15 @@ class PlanService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     verifyDoesNotExist(record.plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
     val context = csipRequestContext()
-    val plan = record.upsertPlan(context, request).plan!!
-    request.identifiedNeeds.forEach { plan.addIdentifiedNeed(context, it) }
+    val plan = record.upsertPlan(request).plan!!
+    request.identifiedNeeds.forEach { plan.addIdentifiedNeed(it) }
     return csipRecordRepository.save(record).plan!!.toModel()
   }
 }
 
 private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed.toModel(): IdentifiedNeed =
   IdentifiedNeed(
-    identifiedNeedUuid,
+    uuid,
     identifiedNeed,
     responsiblePerson,
     createdDate,

@@ -34,7 +34,7 @@ class InvestigationService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = referral.investigation
-    return csipRecordRepository.save(referral.upsertInvestigation(csipRequestContext(), request))
+    return csipRecordRepository.save(referral.upsertInvestigation(request))
       .referral!!.investigation!!.toModel().apply { new = investigation == null }
   }
 
@@ -42,11 +42,11 @@ class InvestigationService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = verifyExists(referral.investigation) { MissingInvestigationException(recordUuid) }
-    val interview = investigation.addInterview(csipRequestContext(), request) { code ->
+    val interview = investigation.addInterview(request) { code ->
       referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
     }
     return csipRecordRepository.save(record).referral!!.investigation!!.interviews()
-      .find { it.interviewUuid == interview.interviewUuid }!!.toModel()
+      .find { it.uuid == interview.uuid }!!.toModel()
   }
 
   fun createInvestigationWithInterviews(recordUuid: UUID, request: CreateInvestigationRequest): Investigation {
@@ -56,9 +56,9 @@ class InvestigationService(
       ResourceAlreadyExistException("Referral already has an investigation")
     }
     val context = csipRequestContext()
-    val investigation = referral.upsertInvestigation(context, request).referral!!.investigation!!
+    val investigation = referral.upsertInvestigation(request).referral!!.investigation!!
     request.interviews.forEach {
-      investigation.addInterview(context, it) { code ->
+      investigation.addInterview(it) { code ->
         referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
       }
     }

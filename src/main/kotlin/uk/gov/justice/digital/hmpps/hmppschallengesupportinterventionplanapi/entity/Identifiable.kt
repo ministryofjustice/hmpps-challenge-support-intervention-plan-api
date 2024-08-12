@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity
 
-interface Parented {
-  fun parent(): Auditable
+import java.util.UUID
+
+interface Identifiable {
+  val uuid: UUID
 }

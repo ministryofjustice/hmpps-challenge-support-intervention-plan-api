@@ -55,7 +55,7 @@ fun CreateCsipRecordRequest.toInitialReferralEntity(
 
 fun ContributoryFactor.toModel() =
   ContributoryFactorModel(
-    factorUuid = contributoryFactorUuid,
+    factorUuid = uuid,
     factorType = contributoryFactorType.toReferenceDataModel(),
     comment = comment,
     createdAt = createdAt,
@@ -91,7 +91,7 @@ fun Referral.toModel() =
 
 fun CsipRecord.toModel() =
   CsipRecordModel(
-    recordUuid = recordUuid,
+    recordUuid = uuid,
     prisonNumber = prisonNumber,
     prisonCodeWhenRecorded = prisonCodeWhenRecorded,
     logCode = logCode,
