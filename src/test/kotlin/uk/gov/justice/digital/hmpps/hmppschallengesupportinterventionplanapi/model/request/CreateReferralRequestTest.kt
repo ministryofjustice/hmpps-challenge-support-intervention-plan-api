@@ -88,7 +88,7 @@ class CreateReferralRequestTest : RequestValidationTest() {
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
       completedDate = null,
-      completedBy = "n".repeat(33),
+      completedBy = "n".repeat(65),
       completedByDisplayName = "n".repeat(256),
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
@@ -105,7 +105,7 @@ class CreateReferralRequestTest : RequestValidationTest() {
       Pair("refererAreaCode", "Area code must be <= 12 characters"),
       Pair("incidentInvolvementCode", "Involvement code must be <= 12 characters"),
       Pair("assaultedStaffName", "Name or names must be <= 1000 characters"),
-      Pair("completedBy", "Completed by username must be <= 32 characters"),
+      Pair("completedBy", "Completed by username must be <= 64 characters"),
       Pair("completedByDisplayName", "Completed by display name must be <= 255 characters"),
     )
   }

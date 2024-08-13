@@ -246,8 +246,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
         "Validation failure(s): Reason for Decision must be <= 4000 characters",
       ),
       Arguments.of(
-        createScreeningOutcomeRequest(recordedBy = "n".repeat(101)),
-        "Validation failure(s): Recorded by username must be <= 100 characters",
+        createScreeningOutcomeRequest(recordedBy = "n".repeat(65)),
+        "Validation failure(s): Recorded by username must be <= 64 characters",
       ),
       Arguments.of(
         createScreeningOutcomeRequest(recordedByDisplayName = "n".repeat(256)),

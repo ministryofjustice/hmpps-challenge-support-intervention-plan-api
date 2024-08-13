@@ -11,11 +11,7 @@ class UpdateReviewRequestTest : RequestValidationTest() {
       recordedBy = "quaerendum",
       recordedByDisplayName = "Julie Nicholson",
       nextReviewDate = null,
-      isActionResponsiblePeopleInformed = null,
-      isActionCsipUpdated = null,
-      isActionRemainOnCsip = null,
-      isActionCaseNote = null,
-      isActionCloseCsip = null,
+      actions = setOf(),
       csipClosedDate = null,
       summary = null,
     )
@@ -26,20 +22,16 @@ class UpdateReviewRequestTest : RequestValidationTest() {
   fun `validation fails if size constraints are not met`() {
     val request = UpdateReviewRequest(
       reviewDate = null,
-      recordedBy = "n".repeat(33),
+      recordedBy = "n".repeat(65),
       recordedByDisplayName = "n".repeat(256),
       nextReviewDate = null,
-      isActionResponsiblePeopleInformed = null,
-      isActionCsipUpdated = null,
-      isActionRemainOnCsip = null,
-      isActionCaseNote = null,
-      isActionCloseCsip = null,
+      actions = setOf(),
       csipClosedDate = null,
       summary = "n".repeat(4001),
     )
     assertValidationErrors(
       validator.validate(request),
-      Pair("recordedBy", "Recorded By username must be <= 32 characters"),
+      Pair("recordedBy", "Recorded By username must be <= 64 characters"),
       Pair("recordedByDisplayName", "Recorded By display name must be <= 255 characters"),
       Pair("summary", "Summary must be <= 4000 characters"),
     )

@@ -21,7 +21,7 @@ data class CreateReviewRequest(
   @Schema(
     description = "The username of the person who recorded the review.",
   )
-  @field:Size(min = 0, max = 32, message = "Recorded By username must be <= 32 characters")
+  @field:Size(min = 0, max = 64, message = "Recorded By username must be <= 64 characters")
   val recordedBy: String,
 
   @Schema(

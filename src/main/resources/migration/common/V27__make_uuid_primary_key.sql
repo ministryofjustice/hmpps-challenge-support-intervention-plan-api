@@ -35,10 +35,10 @@ create table csip_record
                         'REFERRAL_PENDING', 'UNKNOWN')),
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 create index idx_csip_record_prison_number on csip_record (prison_number);
@@ -64,15 +64,15 @@ create table referral
         constraint safer_custody_team_informed_enum_check check
             (safer_custody_team_informed in ('YES', 'NO', 'DO_NOT_KNOW')),
     referral_complete                  boolean,
-    referral_completed_by              varchar(32),
+    referral_completed_by              varchar(64),
     referral_completed_by_display_name varchar(255),
     referral_completed_date            date,
     version                       int          not null,
     created_at                         timestamp    not null,
-    created_by                         varchar(32)  not null,
+    created_by                         varchar(64)  not null,
     created_by_display_name            varchar(255) not null,
     last_modified_at                   timestamp,
-    last_modified_by                   varchar(32),
+    last_modified_by                   varchar(64),
     last_modified_by_display_name      varchar(255)
 );
 create index idx_referral_incident_type_id on referral (incident_type_id);
@@ -90,10 +90,10 @@ create table safer_custody_screening_outcome
     reason_for_decision                text         not null,
     version                       int          not null,
     created_at                         timestamp    not null,
-    created_by                         varchar(32)  not null,
+    created_by                         varchar(64)  not null,
     created_by_display_name            varchar(255) not null,
     last_modified_at                   timestamp,
-    last_modified_by                   varchar(32),
+    last_modified_by                   varchar(64),
     last_modified_by_display_name      varchar(255)
 );
 create index idx_safer_custody_screening_outcome_outcome_id on safer_custody_screening_outcome (outcome_id);
@@ -108,11 +108,11 @@ create table investigation
     persons_trigger               text,
     protective_factors            text,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     version                       int          not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 
@@ -133,10 +133,10 @@ create table decision_and_actions
     action_other                  text,
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 create index idx_decision_and_actions_outcome_id on decision_and_actions (outcome_id);
@@ -150,10 +150,10 @@ create table plan
     first_case_review_date        date         not null,
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 
@@ -165,10 +165,10 @@ create table contributory_factor
     comment                       text,
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 create index idx_contributory_factor_record_id on contributory_factor (referral_id);
@@ -184,10 +184,10 @@ create table interview
     interview_text                text,
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 create index idx_interview_record_id on interview (investigation_id);
@@ -206,10 +206,10 @@ create table identified_need
     progression                   text,
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 create index idx_identified_need_record_id on identified_need (plan_id);
@@ -220,7 +220,7 @@ create table review
     plan_id                       uuid             not null references plan (plan_id),
     review_sequence               int              not null,
     review_date                   date,
-    recorded_by                   varchar(32)      not null,
+    recorded_by                   varchar(64)      not null,
     recorded_by_display_name      varchar(255)     not null,
     next_review_date              date,
     actions                       varchar[]        not null
@@ -231,10 +231,10 @@ create table review
     summary                       text,
     version                       int          not null,
     created_at                    timestamp        not null,
-    created_by                    varchar(32)      not null,
+    created_by                    varchar(64)      not null,
     created_by_display_name       varchar(255)     not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255),
     deleted                       boolean          not null default false
 );
@@ -250,10 +250,10 @@ create table attendee
     contribution                  text,
     version                       int          not null,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255)
 );
 create index idx_attendee_review_id on attendee (review_id);
@@ -262,7 +262,7 @@ create table audit_revision
 (
     id                  bigserial    not null primary key,
     timestamp           timestamp    not null,
-    username            varchar(32)  not null,
+    username            varchar(64)  not null,
     user_display_name   varchar(255) not null,
     caseload_id         varchar(10),
     source              varchar(6)
@@ -282,10 +282,10 @@ create table csip_record_audit
     prison_code_when_recorded     varchar(6),
     log_code                      varchar(10),
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255),
 
     log_code_modified             boolean,
@@ -313,14 +313,14 @@ create table referral_audit
     other_information                           text,
     safer_custody_team_informed                 varchar(12),
     referral_complete                           boolean,
-    referral_completed_by                       varchar(32),
+    referral_completed_by                       varchar(64),
     referral_completed_by_display_name          varchar(255),
     referral_completed_date                     date,
     created_at                                  timestamp    not null,
-    created_by                                  varchar(32)  not null,
+    created_by                                  varchar(64)  not null,
     created_by_display_name                     varchar(255) not null,
     last_modified_at                            timestamp,
-    last_modified_by                            varchar(32),
+    last_modified_by                            varchar(64),
     last_modified_by_display_name               varchar(255),
 
     incident_date_modified                      boolean,
@@ -351,15 +351,15 @@ create table safer_custody_screening_outcome_audit
     rev_type                           smallint     not null,
     safer_custody_screening_outcome_id uuid         not null,
     outcome_id                         bigint,
-    recorded_by                        varchar(100),
+    recorded_by                        varchar(64),
     recorded_by_display_name           varchar(255),
     date                               date,
     reason_for_decision                text,
     created_at                         timestamp    not null,
-    created_by                         varchar(32)  not null,
+    created_by                         varchar(64)  not null,
     created_by_display_name            varchar(255) not null,
     last_modified_at                   timestamp,
-    last_modified_by                   varchar(32),
+    last_modified_by                   varchar(64),
     last_modified_by_display_name      varchar(255),
 
     outcome_modified                   boolean,
@@ -382,10 +382,10 @@ create table investigation_audit
     persons_trigger                  text,
     protective_factors               text,
     created_at                       timestamp    not null,
-    created_by                       varchar(32)  not null,
+    created_by                       varchar(64)  not null,
     created_by_display_name          varchar(255) not null,
     last_modified_at                 timestamp,
-    last_modified_by                 varchar(32),
+    last_modified_by                 varchar(64),
     last_modified_by_display_name    varchar(255),
 
     staff_involved_modified          boolean,
@@ -405,17 +405,17 @@ create table decision_and_actions_audit
     conclusion                        text,
     outcome_id                        bigint,
     signed_off_by_role_id             bigint,
-    recorded_by                       varchar(100),
+    recorded_by                       varchar(64),
     recorded_by_display_name          varchar(255),
     date                              date,
     next_steps                        text,
     actions                           varchar[],
     action_other                      text,
     created_at                        timestamp    not null,
-    created_by                        varchar(32)  not null,
+    created_by                        varchar(64)  not null,
     created_by_display_name           varchar(255) not null,
     last_modified_at                  timestamp,
-    last_modified_by                  varchar(32),
+    last_modified_by                  varchar(64),
     last_modified_by_display_name     varchar(255),
 
     conclusion_modified               boolean,
@@ -439,10 +439,10 @@ create table plan_audit
     reason_for_plan                 varchar(240),
     first_case_review_date          date,
     created_at                      timestamp    not null,
-    created_by                      varchar(32)  not null,
+    created_by                      varchar(64)  not null,
     created_by_display_name         varchar(255) not null,
     last_modified_at                timestamp,
-    last_modified_by                varchar(32),
+    last_modified_by                varchar(64),
     last_modified_by_display_name   varchar(255),
 
     case_manager_modified           boolean,
@@ -460,10 +460,10 @@ create table contributory_factor_audit
     contributory_factor_type_id       bigint,
     comment                           text,
     created_at                        timestamp    not null,
-    created_by                        varchar(32)  not null,
+    created_by                        varchar(64)  not null,
     created_by_display_name           varchar(255) not null,
     last_modified_at                  timestamp,
-    last_modified_by                  varchar(32),
+    last_modified_by                  varchar(64),
     last_modified_by_display_name     varchar(255),
 
     contributory_factor_type_modified boolean,
@@ -482,10 +482,10 @@ create table interview_audit
     interviewee_role_id           bigint,
     interview_text                text,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255),
 
     interviewee_modified          boolean,
@@ -509,10 +509,10 @@ create table identified_need_audit
     intervention                  text,
     progression                   text,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255),
 
     identified_need_modified      boolean,
@@ -533,17 +533,17 @@ create table review_audit
     plan_id                           uuid         not null,
     review_sequence                   int,
     review_date                       date,
-    recorded_by                       varchar(32),
+    recorded_by                       varchar(64),
     recorded_by_display_name          varchar(255),
     next_review_date                  date,
     csip_closed_date                  date,
     summary                           text,
     actions                           varchar[],
     created_at                        timestamp    not null,
-    created_by                        varchar(32)  not null,
+    created_by                        varchar(64)  not null,
     created_by_display_name           varchar(255) not null,
     last_modified_at                  timestamp,
-    last_modified_by                  varchar(32),
+    last_modified_by                  varchar(64),
     last_modified_by_display_name     varchar(255),
 
     review_sequence_modified          boolean,
@@ -568,10 +568,10 @@ create table attendee_audit
     attended                      boolean,
     contribution                  text,
     created_at                    timestamp    not null,
-    created_by                    varchar(32)  not null,
+    created_by                    varchar(64)  not null,
     created_by_display_name       varchar(255) not null,
     last_modified_at              timestamp,
-    last_modified_by              varchar(32),
+    last_modified_by              varchar(64),
     last_modified_by_display_name varchar(255),
 
     name_modified                 boolean,
