@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -29,7 +30,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.InterviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getInterview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
@@ -39,6 +41,9 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 
 class AddInterviewIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var interviewRepository: InterviewRepository
 
   @Test
   fun `401 unauthorised`() {
@@ -197,7 +202,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val request = createInterviewRequest(notes = "Some notes about the interview")
     val response = addInterview(record.id, request)
 
-    val interview = getInterview(record.id, response.interviewUuid)
+    val interview = getInterview(response.interviewUuid)
     interview.verifyAgainst(request)
 
     verifyAudit(
@@ -227,7 +232,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val request = createInterviewRequest(notes = "Created By NOMIS")
     val response = addInterview(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val interview = getInterview(record.id, response.interviewUuid)
+    val interview = getInterview(response.interviewUuid)
     interview.verifyAgainst(request, NOMIS_SYS_USER, NOMIS_SYS_USER_DISPLAY_NAME)
 
     verifyAudit(
@@ -247,10 +252,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun getInterview(csipUuid: UUID, interviewUuid: UUID): Interview = transactionTemplate.execute {
-    val investigation = requireNotNull(csipRecordRepository.getCsipRecord(csipUuid).referral?.investigation)
-    investigation.interviews().first { it.id == interviewUuid }
-  }!!
+  private fun getInterview(uuid: UUID): Interview = interviewRepository.getInterview(uuid)
 
   private fun Interview.verifyAgainst(
     request: CreateInterviewRequest,

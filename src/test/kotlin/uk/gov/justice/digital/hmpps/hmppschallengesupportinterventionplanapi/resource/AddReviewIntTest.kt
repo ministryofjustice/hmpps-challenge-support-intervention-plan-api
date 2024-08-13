@@ -232,5 +232,5 @@ class AddReviewIntTest : IntegrationTestBase() {
     assertThat(attendees().size).isEqualTo(request.attendees?.size ?: 0)
   }
 
-  private fun getReview(reviewUuid: UUID): Review = reviewRepository.getReview(reviewUuid)
+  private fun getReview(uuid: UUID): Review = reviewRepository.getReview(uuid)
 }

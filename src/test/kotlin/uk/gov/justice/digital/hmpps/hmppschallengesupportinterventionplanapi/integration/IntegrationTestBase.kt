@@ -162,12 +162,10 @@ abstract class IntegrationTestBase {
 
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
     switchEventPublish(false)
-    val result = transactionTemplate.execute {
-      val res = code(givenCsipRecord(csipRecord))
-      res
-    }!!
+    val res = code(csipRecord)
+    csipRecordRepository.save(csipRecord)
     switchEventPublish(true)
-    return result
+    return res
   }
 
   internal fun verifyDomainEvents(

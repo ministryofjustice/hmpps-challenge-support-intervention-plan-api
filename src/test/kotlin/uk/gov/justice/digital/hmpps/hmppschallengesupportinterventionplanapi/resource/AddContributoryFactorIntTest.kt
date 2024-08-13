@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -28,7 +29,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ContributoryFactorRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
@@ -38,6 +40,9 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 
 class AddContributoryFactorIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var contributoryFactorRepository: ContributoryFactorRepository
 
   @Test
   fun `401 unauthorised`() {
@@ -192,7 +197,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(createdByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
-    val saved = getContributoryFactory(record.id, response.factorUuid)
+    val saved = getContributoryFactory(response.factorUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR))
 
     verifyDomainEvents(
@@ -220,7 +225,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
     }
 
-    val saved = getContributoryFactory(record.id, response.factorUuid)
+    val saved = getContributoryFactory(response.factorUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR), nomisContext())
 
     verifyDomainEvents(
@@ -257,9 +262,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor =
     addContributoryFactorResponseSpec(csipUuid, request, source, username, role).successResponse(CREATED)
 
-  private fun getContributoryFactory(recordUuid: UUID, factorUuid: UUID) = transactionTemplate.execute {
-    csipRecordRepository.getCsipRecord(recordUuid).referral!!.contributoryFactors().find { it.id == factorUuid }
-  }!!
+  private fun getContributoryFactory(uuid: UUID) = contributoryFactorRepository.getContributoryFactor(uuid)
 
   companion object {
     private const val INVALID = "is invalid"
