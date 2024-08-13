@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.upsertDecisionActionsRequest
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.util.UUID
@@ -379,6 +378,22 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   }
 
   fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/decision-and-actions"
+
+  private fun upsertDecisionActionsRequest(
+    outcomeTypeCode: String = "CUR",
+    outcomeSignedOffByRoleCode: String? = "CUSTMAN",
+    actions: Set<DecisionAction> = setOf(),
+  ) = UpsertDecisionAndActionsRequest(
+    conclusion = "a conclusion",
+    outcomeTypeCode = outcomeTypeCode,
+    signedOffByRoleCode = outcomeSignedOffByRoleCode,
+    recordedBy = "outcomeRecordedBy",
+    recordedByDisplayName = "outcomeRecordedByDisplayName",
+    date = LocalDate.now(),
+    nextSteps = "next steps",
+    actionOther = null,
+    actions = actions,
+  )
 
   private fun upsertDecisionResponseSpec(
     recordUuid: UUID,
