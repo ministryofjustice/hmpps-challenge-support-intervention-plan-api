@@ -56,7 +56,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       it.withCompletedReferral()
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
-        .withDecisionAndActions(conclusion = null)
+        .withInvestigation()
       it
     }
 
@@ -71,6 +71,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       it.withCompletedReferral()
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "ACC"))
+        .withInvestigation()
       it
     }
 
@@ -85,6 +86,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       it.withCompletedReferral()
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
+        .withInvestigation()
         .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "ACC"))
     }
 
@@ -139,6 +141,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       it.withCompletedReferral()
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "NFA"))
+        .withInvestigation()
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -152,6 +155,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       it.withCompletedReferral()
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
+        .withInvestigation()
         .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "NFA"))
     }
 
@@ -180,7 +184,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
   @Test
   fun `test updates update status`() {
     val prisonNumber = "S1246TS"
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
 
     var saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
@@ -193,7 +197,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status).isEqualTo(CsipStatus.INVESTIGATION_PENDING)
 
-    record.addDecisionWithoutConclusion()
+    record.addInvestigation()
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status).isEqualTo(CsipStatus.AWAITING_DECISION)
 
@@ -243,13 +247,16 @@ class CsipStatusIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun CsipRecord.addDecisionWithoutConclusion() = transactionTemplate.execute {
+  private fun CsipRecord.addInvestigation() = transactionTemplate.execute {
     val csip = csipRecordRepository.getCsipRecord(id)
-    requireNotNull(csip.referral).withDecisionAndActions(conclusion = null)
+    requireNotNull(csip.referral).withInvestigation()
   }
 
   private fun CsipRecord.changeDecision(code: String) = transactionTemplate.execute {
     val csip = csipRecordRepository.getCsipRecord(id)
+    if (csip.referral?.decisionAndActions == null) {
+      requireNotNull(csip.referral).withDecisionAndActions()
+    }
     requireNotNull(csip.referral!!.decisionAndActions).apply {
       set(::conclusion, "A simple conclusion")
       set(::outcome, givenReferenceData(ReferenceDataType.OUTCOME_TYPE, code))

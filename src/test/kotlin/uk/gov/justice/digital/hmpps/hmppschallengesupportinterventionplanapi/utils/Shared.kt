@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.within
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -56,6 +58,22 @@ fun createAttendeeRequest(
   isAttended: Boolean? = true,
   contribution: String? = "a small contribution",
 ) = CreateAttendeeRequest(name, role, isAttended, contribution)
+
+fun upsertDecisionActionsRequest(
+  outcomeTypeCode: String = "CUR",
+  outcomeSignedOffByRoleCode: String? = "CUSTMAN",
+  actions: Set<DecisionAction> = setOf(),
+) = UpsertDecisionAndActionsRequest(
+  conclusion = "a conclusion",
+  outcomeTypeCode = outcomeTypeCode,
+  signedOffByRoleCode = outcomeSignedOffByRoleCode,
+  recordedBy = "outcomeRecordedBy",
+  recordedByDisplayName = "outcomeRecordedByDisplayName",
+  date = LocalDate.now(),
+  nextSteps = "next steps",
+  actionOther = null,
+  actions = actions,
+)
 
 fun testUserContext() = CsipRequestContext(
   source = Source.DPS,

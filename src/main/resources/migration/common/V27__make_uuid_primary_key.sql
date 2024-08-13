@@ -67,7 +67,7 @@ create table referral
     referral_completed_by              varchar(64),
     referral_completed_by_display_name varchar(255),
     referral_completed_date            date,
-    version                       int          not null,
+    version                            int          not null,
     created_at                         timestamp    not null,
     created_by                         varchar(64)  not null,
     created_by_display_name            varchar(255) not null,
@@ -88,7 +88,7 @@ create table safer_custody_screening_outcome
     recorded_by_display_name           varchar(255) not null,
     date                               date         not null,
     reason_for_decision                text         not null,
-    version                       int          not null,
+    version                            int          not null,
     created_at                         timestamp    not null,
     created_by                         varchar(64)  not null,
     created_by_display_name            varchar(255) not null,
@@ -229,7 +229,7 @@ create table review
              array ['RESPONSIBLE_PEOPLE_INFORMED', 'CSIP_UPDATED', 'REMAIN_ON_CSIP', 'CASE_NOTE', 'CLOSE_CSIP']::varchar[]),
     csip_closed_date              date,
     summary                       text,
-    version                       int          not null,
+    version                       int              not null,
     created_at                    timestamp        not null,
     created_by                    varchar(64)      not null,
     created_by_display_name       varchar(255)     not null,
@@ -639,11 +639,11 @@ $$ language plpgsql;
 create or replace function calculate_csip_status(csip_id uuid) returns varchar as
 $$
 declare
-    actioned_to_close   boolean;
-    referral_complete   boolean;
-    screening_outcome   varchar;
-    decision_outcome    varchar;
-    decision_conclusion varchar;
+    actioned_to_close  boolean;
+    referral_complete  boolean;
+    screening_outcome  varchar;
+    decision_outcome   varchar;
+    investigation_made boolean;
 begin
     actioned_to_close = actioned_to_close(csip_id);
     if actioned_to_close then
@@ -657,23 +657,26 @@ begin
         return 'REFERRAL_PENDING';
     end if;
 
-    select sout.code, dout.code, da.conclusion
-    into screening_outcome, decision_outcome, decision_conclusion
+    select sout.code,
+           dout.code,
+           coalesce(inv.staff_involved, inv.evidence_secured, inv.occurrence_reason, inv.persons_usual_behaviour,
+                    inv.persons_trigger, inv.protective_factors) is not null
+    into screening_outcome, decision_outcome, investigation_made
     from referral r
              join safer_custody_screening_outcome scso on scso.safer_custody_screening_outcome_id = r.referral_id
              join reference_data sout on sout.reference_data_id = scso.outcome_id
              left join decision_and_actions da on da.decision_and_actions_id = r.referral_id
              left join reference_data dout on dout.reference_data_id = da.outcome_id
+             left join investigation inv on inv.investigation_id = r.referral_id
     where r.referral_id = csip_id;
 
     return case
-               when decision_conclusion is null and decision_outcome is not null and screening_outcome = 'OPE'
-                   then 'AWAITING_DECISION'
-               when is_acc_support(screening_outcome, decision_outcome) then 'ACCT_SUPPORT'
                when is_plan_pending(screening_outcome, decision_outcome) then 'PLAN_PENDING'
+               when screening_outcome = 'OPE' and decision_outcome is null and investigation_made then 'AWAITING_DECISION'
                when screening_outcome = 'OPE' and decision_outcome is null then 'INVESTIGATION_PENDING'
                when is_no_further_action(screening_outcome, decision_outcome) then 'NO_FURTHER_ACTION'
                when is_outside_support(screening_outcome, decision_outcome) then 'SUPPORT_OUTSIDE_CSIP'
+               when is_acc_support(screening_outcome, decision_outcome) then 'ACCT_SUPPORT'
                when screening_outcome is null then 'REFERRAL_SUBMITTED'
                else 'UNKNOWN'
         end;
@@ -777,7 +780,7 @@ create or replace trigger decision_actions_update_csip_status
     after update
     on decision_and_actions
     for each row
-    when ((old.outcome_id, old.conclusion) is distinct from (new.outcome_id, new.conclusion))
+    when (old.outcome_id is distinct from new.outcome_id)
 execute function update_status_from_decision();
 
 create or replace trigger decision_actions_delete_csip_status
@@ -785,6 +788,33 @@ create or replace trigger decision_actions_delete_csip_status
     on decision_and_actions
     for each row
 execute function update_status_from_decision();
+
+create or replace function update_status_from_investigation() returns trigger as
+$$
+begin
+    perform update_csip_status(coalesce(new.investigation_id, old.investigation_id));
+    return coalesce(new, old);
+end;
+$$ language plpgsql;
+
+create or replace trigger investigation_insert_csip_status
+    after insert
+    on investigation
+    for each row
+execute function update_status_from_investigation();
+
+create or replace trigger investigation_update_csip_status
+    after update
+    on investigation
+    for each row
+    when (old is distinct from new)
+execute function update_status_from_investigation();
+
+create or replace trigger investigation_delete_csip_status
+    after delete
+    on investigation
+    for each row
+execute function update_status_from_investigation();
 
 create or replace function update_status_from_plan() returns trigger as
 $$
