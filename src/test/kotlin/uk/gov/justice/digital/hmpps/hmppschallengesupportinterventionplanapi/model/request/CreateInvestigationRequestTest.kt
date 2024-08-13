@@ -11,7 +11,7 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       evidenceSecured = null,
       occurrenceReason = null,
       personsUsualBehaviour = null,
-      personsTrigger = null,
+      personsTrigger = "personsTrigger",
       protectiveFactors = null,
       listOf(),
     )

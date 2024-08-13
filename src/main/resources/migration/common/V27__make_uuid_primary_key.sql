@@ -598,16 +598,6 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function referral_complete(csip_id uuid) returns boolean as
-$$
-begin
-    return exists(select 1
-                  from referral ref
-                  where ref.referral_id = csip_id
-                    and ref.referral_complete = true);
-end;
-$$ language plpgsql;
-
 create or replace function is_acc_support(screening_outcome varchar, decision_outcome varchar) returns boolean as
 $$
 begin
@@ -640,7 +630,7 @@ create or replace function calculate_csip_status(csip_id uuid) returns varchar a
 $$
 declare
     actioned_to_close  boolean;
-    referral_complete  boolean;
+    ref_complete       boolean;
     screening_outcome  varchar;
     decision_outcome   varchar;
     investigation_made boolean;
@@ -652,19 +642,11 @@ begin
         return 'CSIP_OPEN';
     end if;
 
-    referral_complete = referral_complete(csip_id);
-    if not referral_complete then
-        return 'REFERRAL_PENDING';
-    end if;
-
-    select sout.code,
-           dout.code,
-           coalesce(inv.staff_involved, inv.evidence_secured, inv.occurrence_reason, inv.persons_usual_behaviour,
-                    inv.persons_trigger, inv.protective_factors) is not null
-    into screening_outcome, decision_outcome, investigation_made
+    select coalesce(r.referral_complete, false), sout.code, dout.code, inv.investigation_id is not null
+    into ref_complete, screening_outcome, decision_outcome, investigation_made
     from referral r
-             join safer_custody_screening_outcome scso on scso.safer_custody_screening_outcome_id = r.referral_id
-             join reference_data sout on sout.reference_data_id = scso.outcome_id
+             left join safer_custody_screening_outcome scso on scso.safer_custody_screening_outcome_id = r.referral_id
+             left join reference_data sout on sout.reference_data_id = scso.outcome_id
              left join decision_and_actions da on da.decision_and_actions_id = r.referral_id
              left join reference_data dout on dout.reference_data_id = da.outcome_id
              left join investigation inv on inv.investigation_id = r.referral_id
@@ -677,8 +659,8 @@ begin
                when is_no_further_action(screening_outcome, decision_outcome) then 'NO_FURTHER_ACTION'
                when is_outside_support(screening_outcome, decision_outcome) then 'SUPPORT_OUTSIDE_CSIP'
                when is_acc_support(screening_outcome, decision_outcome) then 'ACCT_SUPPORT'
-               when screening_outcome is null then 'REFERRAL_SUBMITTED'
-               else 'UNKNOWN'
+               when ref_complete then 'REFERRAL_SUBMITTED'
+               else 'REFERRAL_PENDING'
         end;
 
 end;
@@ -854,3 +836,7 @@ create or replace trigger review_delete_csip_status
     on review
     for each row
 execute function update_status_from_plan();
+
+-----
+
+drop function referral_complete;

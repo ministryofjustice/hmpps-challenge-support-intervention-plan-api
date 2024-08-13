@@ -102,6 +102,23 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - At least one field should be completed`() {
+    val prisonNumber = givenValidPrisonNumber("I2234NF")
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withCompletedReferral())
+
+    val response = upsertInvestigationResponseSpec(
+      record.id,
+      UpsertInvestigationRequest(null, null, null, null, null, null),
+    ).errorResponse(HttpStatus.BAD_REQUEST)
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure(s): At least one of staffInvolved, evidenceSecured, occurrenceReason, personsUsualBehaviour, personsTrigger, protectiveFactors must be non null.")
+    }
+  }
+
+  @Test
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("I2234MR")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber))
