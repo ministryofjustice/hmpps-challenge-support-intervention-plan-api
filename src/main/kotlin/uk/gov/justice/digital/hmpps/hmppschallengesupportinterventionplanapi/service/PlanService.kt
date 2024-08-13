@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
@@ -24,31 +23,28 @@ class PlanService(
   fun upsertPlan(recordUuid: UUID, request: UpsertPlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = record.plan
-    return csipRecordRepository.save(record.upsertPlan(request)).plan!!.toModel()
-      .apply { new = plan == null }
+    return record.upsertPlan(request).toModel().apply { new = plan == null }
   }
 
   fun addIdentifiedNeed(recordUuid: UUID, request: CreateIdentifiedNeedRequest): IdentifiedNeed {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
     val need = plan.addIdentifiedNeed(request)
-    csipRecordRepository.save(record)
     return need.toModel()
   }
 
   fun createPlanWithIdentifiedNeeds(recordUuid: UUID, request: CreatePlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     verifyDoesNotExist(record.plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
-    val context = csipRequestContext()
-    val plan = record.upsertPlan(request).plan!!
+    val plan = record.upsertPlan(request)
     request.identifiedNeeds.forEach { plan.addIdentifiedNeed(it) }
-    return csipRecordRepository.save(record).plan!!.toModel()
+    return plan.toModel()
   }
 }
 
 private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed.toModel(): IdentifiedNeed =
   IdentifiedNeed(
-    uuid,
+    id,
     identifiedNeed,
     responsiblePerson,
     createdDate,

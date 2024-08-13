@@ -13,6 +13,7 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import java.time.LocalDate
+import java.util.UUID
 
 @Entity
 @Table
@@ -41,11 +42,11 @@ class SaferCustodyScreeningOutcome(
 
   @Column(nullable = false)
   val reasonForDecision: String,
+) : SimpleAuditable(), CsipAware {
+  override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "safer_custody_screening_outcome_id")
-  val id: Long = 0,
-) : SimpleAuditable(), CsipAware {
-  override fun csipRecord() = referral.csipRecord
+  val id: UUID = referral.id
 }

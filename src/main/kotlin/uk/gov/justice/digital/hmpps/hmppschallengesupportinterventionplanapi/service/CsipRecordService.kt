@@ -40,6 +40,7 @@ class CsipRecordService(
     return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
+  @Transactional(readOnly = true)
   fun retrieveCsipRecord(recordUuid: UUID): CsipRecord = csipRecordRepository.getCsipRecord(recordUuid).toModel()
 
   fun updateCsipRecord(
@@ -54,5 +55,5 @@ class CsipRecordService(
   }
 
   fun deleteCsipRecord(recordUuid: UUID): Boolean =
-    csipRecordRepository.findByUuid(recordUuid)?.also(csipRecordRepository::delete) != null
+    csipRecordRepository.findById(recordUuid)?.also(csipRecordRepository::delete) != null
 }

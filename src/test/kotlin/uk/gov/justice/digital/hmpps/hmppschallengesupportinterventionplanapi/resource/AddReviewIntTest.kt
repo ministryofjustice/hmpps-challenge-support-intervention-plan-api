@@ -125,12 +125,12 @@ class AddReviewIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createReviewRequest(attendees = listOf(createAttendeeRequest(), createAttendeeRequest()))
-    val response = addReview(record.uuid, request)
+    val response = addReview(record.id, request)
 
     val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
 
-    val attendeeUuids = review.attendees().map { it.uuid }
+    val attendeeUuids = review.attendees().map { it.id }
     assertThat(attendeeUuids.size).isEqualTo(2)
 
     verifyAudit(
@@ -141,7 +141,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       record.prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE),
       setOf(REVIEW_CREATED, ATTENDEE_CREATED),
       setOf(response.reviewUuid) + attendeeUuids,
@@ -155,7 +155,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createReviewRequest(actions = setOf(ReviewAction.CASE_NOTE, ReviewAction.REMAIN_ON_CSIP))
-    val response = addReview(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addReview(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
     val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
@@ -169,7 +169,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       record.prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.REVIEW),
       setOf(REVIEW_CREATED),
       setOf(response.reviewUuid),

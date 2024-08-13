@@ -27,13 +27,13 @@ class ReferralService(
   ): ContributoryFactor {
     val record = csipRecordRepository.getCsipRecord(recordUuid)
     val referral = requireNotNull(record.referral) { MissingReferralException(recordUuid) }
-    val factorType =
-      referenceDataRepository.getActiveReferenceData(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, request.factorTypeCode)
+    val factorType = referenceDataRepository.getActiveReferenceData(
+      ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
+      request.factorTypeCode,
+    )
     verify(referral.contributoryFactors().none { it.contributoryFactorType.code == request.factorTypeCode }) {
       ResourceAlreadyExistException("Contributory factor already part of referral")
     }
-    val factor = referral.addContributoryFactor(request, factorType)
-    csipRecordRepository.save(record)
-    return factor.toModel()
+    return referral.addContributoryFactor(request, factorType).toModel()
   }
 }

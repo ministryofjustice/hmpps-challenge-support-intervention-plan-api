@@ -26,12 +26,8 @@ class DecisionActionsService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val decisionAndActions = referral.decisionAndActions
-    return with(referral) {
-      csipRecordRepository.save(
-        upsertDecisionAndActions(
-          request = request,
-        ) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) },
-      ).referral!!.decisionAndActions!!.toModel().apply { new = decisionAndActions == null }
-    }
+    return referral.upsertDecisionAndActions(request = request) { type, code ->
+      referenceDataRepository.getActiveReferenceData(type, code)
+    }.toModel().apply { new = decisionAndActions == null }
   }
 }

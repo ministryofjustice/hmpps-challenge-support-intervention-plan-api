@@ -128,29 +128,29 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
       it
     }
 
-    val factorUuids = record.referral!!.contributoryFactors().map { it.uuid }.toSet()
+    val factorUuids = record.referral!!.contributoryFactors().map { it.id }.toSet()
     assertThat(factorUuids).hasSize(2)
 
-    val interviewIds = record.referral!!.investigation!!.interviews().map { it.uuid }.toSet()
+    val interviewIds = record.referral!!.investigation!!.interviews().map { it.id }.toSet()
     assertThat(interviewIds).hasSize(3)
 
-    val needsIds = record.plan!!.identifiedNeeds().map { it.uuid }.toSet()
+    val needsIds = record.plan!!.identifiedNeeds().map { it.id }.toSet()
     assertThat(needsIds).hasSize(1)
 
-    val reviewIds = record.plan!!.reviews().map { it.uuid }.toSet()
+    val reviewIds = record.plan!!.reviews().map { it.id }.toSet()
     assertThat(reviewIds).hasSize(2)
 
-    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.uuid } }
+    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.id } }
     assertThat(attendeeIds).hasSize(1)
 
-    deleteCsipRecordResponseSpec(record.uuid).expectStatus().isNoContent
+    deleteCsipRecordResponseSpec(record.id).expectStatus().isNoContent
 
     val affectedComponents =
       setOf(
         RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW,
         CsipComponent.ATTENDEE,
       )
-    verifyDoesNotExist(csipRecordRepository.findByUuid(record.uuid)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
     verifyAudit(
       record,
       RevisionType.DEL,
@@ -159,7 +159,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       affectedComponents,
       setOf(
         DomainEventType.CSIP_DELETED,
@@ -179,9 +179,9 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
   fun `204 no content - CSIP record deleted by NOMIS`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
-    deleteCsipRecordResponseSpec(record.uuid, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent
+    deleteCsipRecordResponseSpec(record.id, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS).expectStatus().isNoContent
 
-    verifyDoesNotExist(csipRecordRepository.findByUuid(record.uuid)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
 
     verifyAudit(
       record,
@@ -192,7 +192,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(RECORD, REFERRAL),
       setOf(DomainEventType.CSIP_DELETED),
       source = NOMIS,

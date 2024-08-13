@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import java.time.LocalDate
+import java.util.UUID
 
 @Entity
 @Table
@@ -35,14 +36,13 @@ class Plan(
   caseManager: String,
   reasonForPlan: String,
   firstCaseReviewDate: LocalDate,
+) : SimpleAuditable(), CsipAware {
+  override fun csipRecord() = csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "plan_id")
-  val id: Long = 0,
-) : SimpleAuditable(), CsipAware {
-
-  override fun csipRecord() = csipRecord
+  val id: UUID = csipRecord.id
 
   var caseManager: String = caseManager
     private set

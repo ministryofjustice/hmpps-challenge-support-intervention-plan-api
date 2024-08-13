@@ -6,8 +6,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
@@ -40,18 +38,17 @@ class CsipRecord(
   @Column(length = 6, updatable = false)
   val prisonCodeWhenRecorded: String? = null,
 
-  @Column(length = 10) var logCode: String? = null,
-
-  @Audited(withModifiedFlag = false)
-  @Column(name = "recordUuid", unique = true, nullable = false)
-  override val uuid: UUID = UUID.randomUUID(),
+  logCode: String? = null,
+) : SimpleAuditable(), Identifiable {
 
   @Audited(withModifiedFlag = false)
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "record_id")
-  val id: Long = 0,
-) : SimpleAuditable(), Identifiable {
+  override val id: UUID = newUuid()
+
+  @Column(length = 10)
+  var logCode: String? = logCode
+    private set
 
   @NotAudited
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
@@ -100,13 +97,13 @@ class CsipRecord(
     request.referral?.also { referral.update(it, referenceProvider) }
   }
 
-  fun upsertPlan(request: PlanRequest) = apply {
-    val isNew = plan == null
-    if (isNew) {
+  fun upsertPlan(request: PlanRequest) = let {
+    if (plan == null) {
       plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
     } else {
       plan!!.upsert(request)
     }
+    plan!!
   }
 
   fun components(): Set<CsipComponent> = buildSet {

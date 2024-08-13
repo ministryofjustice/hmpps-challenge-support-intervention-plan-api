@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingInvestigationException
@@ -34,19 +33,16 @@ class InvestigationService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = referral.investigation
-    return csipRecordRepository.save(referral.upsertInvestigation(request))
-      .referral!!.investigation!!.toModel().apply { new = investigation == null }
+    return referral.upsertInvestigation(request).toModel().apply { new = investigation == null }
   }
 
   fun addInterview(recordUuid: UUID, request: CreateInterviewRequest): Interview {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = verifyExists(referral.investigation) { MissingInvestigationException(recordUuid) }
-    val interview = investigation.addInterview(request) { code ->
+    return investigation.addInterview(request) { code ->
       referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
-    }
-    return csipRecordRepository.save(record).referral!!.investigation!!.interviews()
-      .find { it.uuid == interview.uuid }!!.toModel()
+    }.toModel()
   }
 
   fun createInvestigationWithInterviews(recordUuid: UUID, request: CreateInvestigationRequest): Investigation {
@@ -55,13 +51,12 @@ class InvestigationService(
     verifyDoesNotExist(referral.investigation) {
       ResourceAlreadyExistException("Referral already has an investigation")
     }
-    val context = csipRequestContext()
-    val investigation = referral.upsertInvestigation(request).referral!!.investigation!!
+    val investigation = referral.upsertInvestigation(request)
     request.interviews.forEach {
       investigation.addInterview(it) { code ->
         referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
       }
     }
-    return csipRecordRepository.save(record).referral!!.investigation!!.toModel()
+    return investigation.toModel()
   }
 }

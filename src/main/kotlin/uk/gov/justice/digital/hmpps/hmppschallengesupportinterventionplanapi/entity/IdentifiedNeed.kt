@@ -4,8 +4,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -31,16 +29,11 @@ class IdentifiedNeed(
   val closedDate: LocalDate?,
   val intervention: String,
   val progression: String?,
-
-  @Audited(withModifiedFlag = false)
-  @Column(name = "identifiedNeedUuid", unique = true, nullable = false)
-  override val uuid: UUID = UUID.randomUUID(),
+) : SimpleAuditable(), Identifiable, CsipAware {
+  override fun csipRecord() = plan.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "identified_need_id")
-  val id: Long = 0,
-) : SimpleAuditable(), Identifiable, CsipAware {
-  override fun csipRecord() = plan.csipRecord
+  override val id: UUID = newUuid()
 }

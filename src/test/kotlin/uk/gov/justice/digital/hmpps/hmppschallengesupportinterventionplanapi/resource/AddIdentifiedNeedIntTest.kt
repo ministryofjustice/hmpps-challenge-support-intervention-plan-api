@@ -120,7 +120,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     }
 
     val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeedResponseSpec(record.uuid, request).errorResponse(HttpStatus.CONFLICT)
+    val response = addIdentifiedNeedResponseSpec(record.id, request).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
       assertThat(status).isEqualTo(409)
@@ -137,16 +137,16 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeed(record.uuid, request)
+    val response = addIdentifiedNeed(record.id, request)
 
-    val need = getIdentifiedNeed(record.uuid, response.identifiedNeedUuid)
+    val need = getIdentifiedNeed(record.id, response.identifiedNeedUuid)
     need.verifyAgainst(request)
 
     verifyAudit(need, RevisionType.ADD, setOf(CsipComponent.IDENTIFIED_NEED))
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.IDENTIFIED_NEED),
       setOf(IDENTIFIED_NEED_CREATED),
       setOf(response.identifiedNeedUuid),
@@ -159,9 +159,9 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
 
     val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeed(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addIdentifiedNeed(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val need = getIdentifiedNeed(record.uuid, response.identifiedNeedUuid)
+    val need = getIdentifiedNeed(record.id, response.identifiedNeedUuid)
     need.verifyAgainst(request)
 
     verifyAudit(
@@ -173,7 +173,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.IDENTIFIED_NEED),
       setOf(IDENTIFIED_NEED_CREATED),
       setOf(response.identifiedNeedUuid),
@@ -218,6 +218,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   private fun getIdentifiedNeed(recordUuid: UUID, identifiedNeedUuid: UUID): IdentifiedNeed =
     transactionTemplate.execute {
       csipRecordRepository.getCsipRecord(recordUuid).plan!!.identifiedNeeds()
-        .first { it.uuid == identifiedNeedUuid }
+        .first { it.id == identifiedNeedUuid }
     }!!
 }

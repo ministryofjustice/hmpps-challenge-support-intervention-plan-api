@@ -4,8 +4,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -36,16 +34,11 @@ class Interview(
   val intervieweeRole: ReferenceData,
 
   val interviewText: String?,
-
-  @Audited(withModifiedFlag = false)
-  @Column(name = "interview_uuid", unique = true, nullable = false)
-  override val uuid: UUID = UUID.randomUUID(),
+) : SimpleAuditable(), Identifiable, CsipAware {
+  override fun csipRecord() = investigation.referral.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "interview_id")
-  val id: Long = 0,
-) : SimpleAuditable(), Identifiable, CsipAware {
-  override fun csipRecord() = investigation.referral.csipRecord
+  override val id: UUID = newUuid()
 }

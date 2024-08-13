@@ -65,7 +65,7 @@ class EventInformation {
     csipChange?.also { changed ->
       val action: PersistenceAction = if (changed.component == RECORD) changed.action else PersistenceAction.UPDATED
       entityManager.find(CsipRecord::class.java, changed.id)?.also { csip ->
-        add(csipEvent(csip.prisonNumber, action, csip.uuid, changes.map { it.component }.toSet()))
+        add(csipEvent(csip.prisonNumber, action, csip.id, changes.map { it.component }.toSet()))
       }
     }
 
@@ -74,7 +74,7 @@ class EventInformation {
         val entity = entityManager.find(changed.component.clazz.java, changed.id)
         if (entity is Identifiable && entity is CsipAware) {
           val record = entity.csipRecord()
-          csipChildEvent(record.prisonNumber, changed.component, changed.action, record.uuid, entity.uuid)
+          csipChildEvent(record.prisonNumber, changed.component, changed.action, record.id, entity.id)
         } else {
           null
         }

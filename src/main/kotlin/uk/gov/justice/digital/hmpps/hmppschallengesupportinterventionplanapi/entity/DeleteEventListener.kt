@@ -28,7 +28,7 @@ class DeleteEventListener {
         csipEvent(
           identifiable.prisonNumber,
           PersistenceAction.DELETED,
-          identifiable.uuid,
+          identifiable.id,
           identifiable.components(),
         ),
       )
@@ -40,8 +40,8 @@ class DeleteEventListener {
           record.prisonNumber,
           component,
           PersistenceAction.DELETED,
-          record.uuid,
-          identifiable.uuid,
+          record.id,
+          identifiable.id,
         ),
       )
     }

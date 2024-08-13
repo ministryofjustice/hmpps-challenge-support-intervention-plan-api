@@ -69,11 +69,10 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
     val prisonNumber = givenValidPrisonNumber("S1234MF")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
     val request = createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE")
 
-    val response = createScreeningOutcomeResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = createScreeningOutcomeResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -87,18 +86,17 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("S1234MF")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
     val request = createScreeningOutcomeRequest()
 
-    val response = createScreeningOutcomeResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = createScreeningOutcomeResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a referral.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing a referral.")
-      assertThat(moreInfo).isEqualTo(recordUuid.toString())
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 
@@ -122,11 +120,14 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
     val prisonNumber = givenValidPrisonNumber("S1234AE")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(record.referral).withSaferCustodyScreeningOutcome()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withSaferCustodyScreeningOutcome()
+      it
+    }
 
     val request = createScreeningOutcomeRequest()
-    val response = createScreeningOutcomeResponseSpec(record.uuid, request).errorResponse(HttpStatus.CONFLICT)
+    val response = createScreeningOutcomeResponseSpec(record.id, request).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
       assertThat(status).isEqualTo(409)
@@ -143,7 +144,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createScreeningOutcomeRequest(recordedBy = "Safer")
 
-    val response = createScreeningOutcome(record.uuid, request)
+    val response = createScreeningOutcome(record.id, request)
 
     with(response) {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
@@ -153,12 +154,12 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
-    val saved = getScreeningOutcome(record.uuid)
+    val saved = getScreeningOutcome(record.id)
     verifyAudit(saved, RevisionType.ADD, setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME))
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
       setOf(DomainEventType.CSIP_UPDATED),
     )
@@ -170,7 +171,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createScreeningOutcomeRequest()
 
-    val response = createScreeningOutcome(record.uuid, request, Source.NOMIS, NOMIS_SYS_USER)
+    val response = createScreeningOutcome(record.id, request, Source.NOMIS, NOMIS_SYS_USER)
 
     with(response) {
       assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
@@ -180,7 +181,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
     }
 
-    val saved = getScreeningOutcome(record.uuid)
+    val saved = getScreeningOutcome(record.id)
     verifyAudit(
       saved,
       RevisionType.ADD,
@@ -190,7 +191,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
@@ -217,7 +218,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   ) = createScreeningOutcomeResponseSpec(recordUuid, request, source, username)
     .successResponse<SaferCustodyScreeningOutcome>(HttpStatus.CREATED)
 
-  private fun getScreeningOutcome(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.saferCustodyScreeningOutcome!!
+  private fun getScreeningOutcome(recordUuid: UUID) =
+    csipRecordRepository.getCsipRecord(recordUuid).referral!!.saferCustodyScreeningOutcome!!
 
   companion object {
     private fun createScreeningOutcomeRequest(

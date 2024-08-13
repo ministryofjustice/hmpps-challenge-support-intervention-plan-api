@@ -70,11 +70,10 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val request = planRequest()
 
-    val response = upsertPlanResponseSpec(recordUuid, request, username = null)
+    val response = upsertPlanResponseSpec(record.id, request, username = null)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -124,15 +123,15 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
     val request = planRequest()
 
-    upsertPlan(record.uuid, request, status = HttpStatus.CREATED)
+    upsertPlan(record.id, request, status = HttpStatus.CREATED)
 
-    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
+    val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
 
     verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN))
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
     )
@@ -146,7 +145,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val request = planRequest()
 
     upsertPlan(
-      record.uuid,
+      record.id,
       request,
       source = Source.NOMIS,
       username = NOMIS_SYS_USER,
@@ -154,7 +153,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
       status = HttpStatus.CREATED,
     )
 
-    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
+    val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
 
     verifyAudit(
@@ -166,7 +165,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
       source = Source.NOMIS,
@@ -180,8 +179,8 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
     val request = planRequest()
 
-    upsertPlan(record.uuid, request, status = HttpStatus.OK)
-    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
+    upsertPlan(record.id, request, status = HttpStatus.OK)
+    val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
 
     verifyAudit(
@@ -204,9 +203,9 @@ class UpsertPlanIntTest : IntegrationTestBase() {
       "Some other reason",
     )
 
-    upsertPlan(record.uuid, request, status = HttpStatus.OK)
+    upsertPlan(record.id, request, status = HttpStatus.OK)
 
-    val plan = csipRecordRepository.getCsipRecord(record.uuid).plan
+    val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
 
     verifyAudit(
@@ -217,7 +216,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.PLAN),
       setOf(DomainEventType.CSIP_UPDATED),
     )

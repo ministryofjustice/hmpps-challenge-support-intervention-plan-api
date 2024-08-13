@@ -23,21 +23,15 @@ class ReviewService(
   fun addReview(recordUuid: UUID, request: CreateReviewRequest): Review {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
-    val review = plan.addReview(request)
-    csipRecordRepository.save(record)
-    return review.toModel()
+    return plan.addReview(request).toModel()
   }
 
-  fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee {
-    val review = reviewRepository.getReview(reviewUuid)
-    val attendee = review.addAttendee(request)
-    csipRecordRepository.save(review.plan.csipRecord)
-    return attendee.toModel()
-  }
+  fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee =
+    reviewRepository.getReview(reviewUuid).addAttendee(request).toModel()
 }
 
 fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review.toModel() = Review(
-  uuid,
+  id,
   reviewSequence,
   reviewDate,
   recordedBy,
@@ -56,7 +50,7 @@ fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity
 )
 
 fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee.toModel() = Attendee(
-  uuid,
+  id,
   name,
   role,
   attended,
