@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 @Entity
 @Table
@@ -72,14 +73,13 @@ class Referral(
 
   refererAreaOfWork: ReferenceData,
   incidentInvolvement: ReferenceData?,
+) : SimpleAuditable(), CsipAware {
+  override fun csipRecord() = csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "referral_id")
-  val id: Long = 0,
-) : SimpleAuditable(), CsipAware {
-
-  override fun csipRecord() = csipRecord
+  val id: UUID = csipRecord.id
 
   @NotAudited
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
@@ -175,7 +175,7 @@ class Referral(
   fun upsertDecisionAndActions(
     request: UpsertDecisionAndActionsRequest,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
-  ): CsipRecord {
+  ): DecisionAndActions {
     val isNew = decisionAndActions == null
     val outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode)
     val signedOffBy = request.signedOffByRoleCode?.let {
@@ -185,13 +185,13 @@ class Referral(
       decisionAndActions = DecisionAndActions(this, outcome)
     }
     decisionAndActions!!.upsert(request, outcome, signedOffBy)
-    return csipRecord
+    return decisionAndActions!!
   }
 
   fun createSaferCustodyScreeningOutcome(
     request: CreateSaferCustodyScreeningOutcomeRequest,
     outcomeType: ReferenceData,
-  ): CsipRecord {
+  ): SaferCustodyScreeningOutcome {
     verifySaferCustodyScreeningOutcomeDoesNotExist()
 
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
@@ -202,15 +202,15 @@ class Referral(
       date = request.date,
       reasonForDecision = request.reasonForDecision,
     )
-    return csipRecord
+    return saferCustodyScreeningOutcome!!
   }
 
   fun upsertInvestigation(
     request: InvestigationRequest,
-  ): CsipRecord {
+  ): Investigation {
     investigation = investigation ?: Investigation(this)
     investigation!!.upsert(request)
-    return csipRecord
+    return investigation!!
   }
 
   fun addContributoryFactor(

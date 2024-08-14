@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.co
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.ValidationException
-import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
@@ -21,14 +20,9 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 @Configuration
 class CsipRequestContextConfiguration(private val csipRequestContextInterceptor: CsipRequestContextInterceptor) : WebMvcConfigurer {
   override fun addInterceptors(registry: InterceptorRegistry) {
-    log.info("Adding csip request context interceptor")
     registry.addInterceptor(csipRequestContextInterceptor).addPathPatterns("/csip-records/**")
     registry.addInterceptor(csipRequestContextInterceptor).addPathPatterns("/prisoners/**")
     registry.addInterceptor(csipRequestContextInterceptor).addPathPatterns("/reference-data/**")
-  }
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
   }
 }
 
@@ -70,7 +64,7 @@ class CsipRequestContextInterceptor(
 
   private fun HttpServletRequest.getUsername(source: Source): String =
     (getUsernameFromClaim() ?: getHeader(USERNAME))
-      ?.trim()?.takeUnless(String::isBlank)?.also { if (it.length > 32) throw ValidationException("Created by must be <= 32 characters") }
+      ?.trim()?.takeUnless(String::isBlank)?.also { if (it.length > 64) throw ValidationException("Created by must be <= 64 characters") }
       ?: if (source != Source.DPS) {
         source.name
       } else {

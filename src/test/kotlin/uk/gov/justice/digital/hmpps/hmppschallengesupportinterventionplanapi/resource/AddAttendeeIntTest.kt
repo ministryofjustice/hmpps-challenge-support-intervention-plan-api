@@ -124,9 +124,9 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     }
 
     val request = createAttendeeRequest(name = "A Person", role = "A special role")
-    val response = addAttendee(review.uuid, request)
+    val response = addAttendee(review.id, request)
 
-    val attendee = getAttendee(review.uuid, response.attendeeUuid)
+    val attendee = getAttendee(review.id, response.attendeeUuid)
     attendee.verifyAgainst(request)
 
     val record = review.plan.csipRecord
@@ -138,10 +138,10 @@ class AddAttendeeIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.ATTENDEE),
       setOf(ATTENDEE_CREATED),
-      setOf(attendee.uuid),
+      setOf(attendee.id),
     )
   }
 
@@ -155,9 +155,9 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     }
 
     val request = createAttendeeRequest(name = "A Person", role = "A special role")
-    val response = addAttendee(review.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addAttendee(review.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val attendee = getAttendee(review.uuid, response.attendeeUuid)
+    val attendee = getAttendee(review.id, response.attendeeUuid)
     attendee.verifyAgainst(request)
 
     val record = review.plan.csipRecord
@@ -170,10 +170,10 @@ class AddAttendeeIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.ATTENDEE),
       setOf(ATTENDEE_CREATED),
-      setOf(attendee.uuid),
+      setOf(attendee.id),
       source = NOMIS,
     )
   }
@@ -217,5 +217,5 @@ class AddAttendeeIntTest : IntegrationTestBase() {
   }
 
   private fun getAttendee(reviewUuid: UUID, attendeeUuid: UUID): Attendee =
-    reviewRepository.getReview(reviewUuid).attendees().first { it.uuid == attendeeUuid }
+    reviewRepository.getReview(reviewUuid).attendees().first { it.id == attendeeUuid }
 }

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import java.time.LocalDate
+import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions as DecisionAndActionsModel
 
 @Entity
@@ -34,13 +35,13 @@ class DecisionAndActions(
   val referral: Referral,
 
   outcome: ReferenceData,
+) : SimpleAuditable(), CsipAware {
+  override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "decision_and_actions_id")
-  val id: Long = 0,
-) : SimpleAuditable(), CsipAware {
-  override fun csipRecord() = referral.csipRecord
+  val id: UUID = referral.id
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne

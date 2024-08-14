@@ -12,14 +12,14 @@ interface CsipRecordRepository :
   JpaRepository<CsipRecord, Long>,
   RevisionRepository<CsipRecord, Long, Long>,
   RefreshRepository<CsipRecord, Long> {
-  fun findByUuid(recordId: UUID): CsipRecord?
+  fun findById(recordId: UUID): CsipRecord?
 }
 
 fun CsipRecordRepository.getCsipRecord(recordUuid: UUID) =
-  findByUuid(recordUuid) ?: throw NotFoundException("CSIP Record", recordUuid.toString())
+  findById(recordUuid) ?: throw NotFoundException("CSIP Record", recordUuid.toString())
 
 fun CsipRecordRepository.saveAndRefresh(record: CsipRecord): CsipRecord {
-  saveAndFlush(record)
-  refresh(record)
-  return record
+  val saved = saveAndFlush(record)
+  refresh(saved)
+  return saved
 }

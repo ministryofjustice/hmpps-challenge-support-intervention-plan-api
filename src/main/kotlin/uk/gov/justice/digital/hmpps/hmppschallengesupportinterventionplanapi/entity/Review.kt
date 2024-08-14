@@ -7,8 +7,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -43,18 +41,13 @@ class Review(
 
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   val actions: Set<ReviewAction>,
-
-  @Audited(withModifiedFlag = false)
-  @Column(name = "review_uuid", unique = true, nullable = false)
-  override val uuid: UUID = UUID.randomUUID(),
+) : SimpleAuditable(), Identifiable, CsipAware {
+  override fun csipRecord() = plan.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "review_id")
-  val id: Long = 0,
-) : SimpleAuditable(), Identifiable, CsipAware {
-  override fun csipRecord() = plan.csipRecord
+  override val id: UUID = newUuid()
 
   @NotAudited
   @OneToMany(mappedBy = "review", cascade = [CascadeType.ALL])

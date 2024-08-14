@@ -14,6 +14,6 @@ fun <T, E : RuntimeException> verifyExists(value: T?, exception: () -> E): T {
 }
 
 fun verifyCsipRecordExists(csipRecordRepository: CsipRecordRepository, uuid: UUID) =
-  verifyExists(csipRecordRepository.findByUuid(uuid)) {
+  verifyExists(csipRecordRepository.findById(uuid)) {
     NotFoundException("CSIP Record", uuid.toString())
   }

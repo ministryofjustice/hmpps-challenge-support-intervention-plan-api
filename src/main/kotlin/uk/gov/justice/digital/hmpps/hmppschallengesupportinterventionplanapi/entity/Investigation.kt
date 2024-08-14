@@ -16,6 +16,7 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
+import java.util.UUID
 
 @Entity
 @Table
@@ -27,14 +28,13 @@ class Investigation(
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
+) : SimpleAuditable(), CsipAware {
+  override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "investigation_id")
-  val id: Long = 0,
-) : SimpleAuditable(), CsipAware {
-
-  override fun csipRecord() = referral.csipRecord
+  val id: UUID = referral.id
 
   var staffInvolved: String? = null
     private set

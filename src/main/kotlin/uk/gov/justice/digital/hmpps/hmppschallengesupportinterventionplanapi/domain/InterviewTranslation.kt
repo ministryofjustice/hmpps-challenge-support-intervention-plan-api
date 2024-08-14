@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Interview as InterviewModel
 
 fun Interview.toModel() = InterviewModel(
-  interviewUuid = uuid,
+  interviewUuid = id,
   interviewee = interviewee,
   interviewDate = interviewDate,
   intervieweeRole = intervieweeRole.toReferenceDataModel(),

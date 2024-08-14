@@ -29,7 +29,7 @@ data class CreateSaferCustodyScreeningOutcomeRequest(
   @Schema(
     description = "The username of the user who recorded the screening outcome.",
   )
-  @field:Size(min = 0, max = 100, message = "Recorded by username must be <= 100 characters")
+  @field:Size(min = 0, max = 64, message = "Recorded by username must be <= 64 characters")
   val recordedBy: String,
 
   @Schema(

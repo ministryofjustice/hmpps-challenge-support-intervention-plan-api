@@ -26,12 +26,7 @@ class SaferCustodyScreeningOutcomeService(
     val outcomeType = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
-      csipRecordRepository.save(
-        this.createSaferCustodyScreeningOutcome(
-          request = request,
-          outcomeType = outcomeType,
-        ),
-      ).referral!!.saferCustodyScreeningOutcome!!.toModel()
+      createSaferCustodyScreeningOutcome(request = request, outcomeType = outcomeType).toModel()
     }
   }
 }

@@ -162,12 +162,10 @@ abstract class IntegrationTestBase {
 
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
     switchEventPublish(false)
-    val result = transactionTemplate.execute {
-      val res = code(givenCsipRecord(csipRecord))
-      res
-    }!!
+    val res = code(csipRecord)
+    csipRecordRepository.save(csipRecord)
     switchEventPublish(true)
-    return result
+    return res
   }
 
   internal fun verifyDomainEvents(
@@ -310,10 +308,8 @@ abstract class IntegrationTestBase {
         incidentLocation(),
         refererAreaOfWork(),
         incidentInvolvement(),
-        id,
       ),
     )
-    csipRecordRepository.save(this)
   }
 
   fun CsipRecord.withPlan(
@@ -321,8 +317,7 @@ abstract class IntegrationTestBase {
     reasonForPlan: String = "Reason for this plan",
     firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
   ) = apply {
-    set(::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate, id))
-    csipRecordRepository.save(this)
+    set(::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate))
   }
 
   fun Plan.withNeed(
@@ -345,7 +340,6 @@ abstract class IntegrationTestBase {
       progression,
     )
     getByName<MutableList<IdentifiedNeed>>("identifiedNeeds") += need
-    csipRecordRepository.save(csipRecord)
   }
 
   fun Plan.withReview(
@@ -364,7 +358,6 @@ abstract class IntegrationTestBase {
       reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions,
     )
     getByName<MutableList<Review>>("reviews") += review
-    csipRecordRepository.save(csipRecord)
   }
 
   fun Review.withAttendee(
@@ -375,7 +368,6 @@ abstract class IntegrationTestBase {
   ) = apply {
     val attendee = Attendee(this, name, role, attended, contribution)
     getByName<MutableList<Attendee>>("attendees") += attendee
-    csipRecordRepository.save(plan.csipRecord)
   }
 
   fun Referral.withSaferCustodyScreeningOutcome(
@@ -387,9 +379,8 @@ abstract class IntegrationTestBase {
   ) = apply {
     this.set(
       ::saferCustodyScreeningOutcome,
-      SaferCustodyScreeningOutcome(this, outcome, recordedBy, recordedByDisplayName, date, reasonForDecision, id),
+      SaferCustodyScreeningOutcome(this, outcome, recordedBy, recordedByDisplayName, date, reasonForDecision),
     )
-    csipRecordRepository.save(csipRecord)
   }
 
   fun Referral.withDecisionAndActions(
@@ -403,7 +394,7 @@ abstract class IntegrationTestBase {
     actions: Set<DecisionAction> = setOf(),
     actionOther: String? = null,
   ): Referral = apply {
-    val decision = DecisionAndActions(this, outcome, id)
+    val decision = DecisionAndActions(this, outcome)
       .upsert(
         UpsertDecisionAndActionsRequest(
           conclusion,
@@ -418,7 +409,6 @@ abstract class IntegrationTestBase {
         signedOffBy,
       )
     set(::decisionAndActions, decision)
-    csipRecordRepository.save(csipRecord)
   }
 
   fun Referral.withContributoryFactor(
@@ -427,7 +417,6 @@ abstract class IntegrationTestBase {
   ): Referral = apply {
     val factor = ContributoryFactor(this, type, comment)
     getByName<MutableList<ContributoryFactor>>("contributoryFactors") += factor
-    csipRecordRepository.save(csipRecord)
   }
 
   fun Referral.withInvestigation(
@@ -438,10 +427,7 @@ abstract class IntegrationTestBase {
     personsTrigger: String? = "personsTrigger",
     protectiveFactors: String? = "protectiveFactors",
   ): Referral = apply {
-    val investigation = Investigation(
-      this,
-      id,
-    ).upsert(
+    val investigation = Investigation(this).upsert(
       UpsertInvestigationRequest(
         staffInvolved,
         evidenceSecured,
@@ -452,7 +438,6 @@ abstract class IntegrationTestBase {
       ),
     )
     set(::investigation, investigation)
-    csipRecordRepository.save(csipRecord)
   }
 
   fun Investigation.withInterview(
@@ -463,7 +448,6 @@ abstract class IntegrationTestBase {
   ): Investigation = apply {
     val interview = Interview(this, interviewee, interviewDate, intervieweeRole, interviewText)
     getByName<MutableList<Interview>>("interviews") += interview
-    csipRecordRepository.save(referral.csipRecord)
   }
 
   companion object {

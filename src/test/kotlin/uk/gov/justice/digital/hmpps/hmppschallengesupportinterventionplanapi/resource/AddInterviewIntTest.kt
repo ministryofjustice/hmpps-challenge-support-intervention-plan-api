@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -29,7 +30,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.InterviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getInterview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
@@ -39,6 +41,9 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 
 class AddInterviewIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var interviewRepository: InterviewRepository
 
   @Test
   fun `401 unauthorised`() {
@@ -122,10 +127,13 @@ class AddInterviewIntTest : IntegrationTestBase() {
     invalid: InvalidRd,
   ) {
     val prisonNumber = givenValidPrisonNumber("R1234VI")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(record.referral).withInvestigation()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withInvestigation()
+      it
+    }
 
-    val response = addInterviewResponseSpec(record.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = addInterviewResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
@@ -155,30 +163,30 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("I1234MR")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber))
 
-    val response = addInterviewResponseSpec(record.uuid, createInterviewRequest())
+    val response = addInterviewResponseSpec(record.id, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a referral.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing a referral.")
-      assertThat(moreInfo).isEqualTo(record.uuid.toString())
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 
   @Test
   fun `400 bad request - missing investigation record`() {
     val prisonNumber = givenValidPrisonNumber("I1234MI")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
 
-    val response = addInterviewResponseSpec(record.uuid, createInterviewRequest())
+    val response = addInterviewResponseSpec(record.id, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing an investigation.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing an investigation.")
-      assertThat(moreInfo).isEqualTo(record.uuid.toString())
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 
@@ -192,9 +200,9 @@ class AddInterviewIntTest : IntegrationTestBase() {
     }
 
     val request = createInterviewRequest(notes = "Some notes about the interview")
-    val response = addInterview(record.uuid, request)
+    val response = addInterview(record.id, request)
 
-    val interview = getInterview(record.uuid, response.interviewUuid)
+    val interview = getInterview(response.interviewUuid)
     interview.verifyAgainst(request)
 
     verifyAudit(
@@ -205,7 +213,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.INTERVIEW),
       setOf(INTERVIEW_CREATED),
       setOf(response.interviewUuid),
@@ -222,9 +230,9 @@ class AddInterviewIntTest : IntegrationTestBase() {
     }
 
     val request = createInterviewRequest(notes = "Created By NOMIS")
-    val response = addInterview(record.uuid, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
+    val response = addInterview(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
 
-    val interview = getInterview(record.uuid, response.interviewUuid)
+    val interview = getInterview(response.interviewUuid)
     interview.verifyAgainst(request, NOMIS_SYS_USER, NOMIS_SYS_USER_DISPLAY_NAME)
 
     verifyAudit(
@@ -236,7 +244,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.INTERVIEW),
       setOf(INTERVIEW_CREATED),
       setOf(response.interviewUuid),
@@ -244,10 +252,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun getInterview(csipUuid: UUID, interviewUuid: UUID): Interview = transactionTemplate.execute {
-    val investigation = requireNotNull(csipRecordRepository.getCsipRecord(csipUuid).referral?.investigation)
-    investigation.interviews().first { it.uuid == interviewUuid }
-  }!!
+  private fun getInterview(uuid: UUID): Interview = interviewRepository.getInterview(uuid)
 
   private fun Interview.verifyAgainst(
     request: CreateInterviewRequest,

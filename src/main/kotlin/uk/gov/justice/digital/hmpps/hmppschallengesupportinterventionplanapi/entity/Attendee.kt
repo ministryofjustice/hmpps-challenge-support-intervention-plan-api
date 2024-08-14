@@ -4,8 +4,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -27,16 +25,11 @@ class Attendee(
   val role: String?,
   val attended: Boolean?,
   val contribution: String?,
-
-  @Audited(withModifiedFlag = false)
-  @Column(name = "attendee_uuid", unique = true, nullable = false)
-  override val uuid: UUID = UUID.randomUUID(),
+) : SimpleAuditable(), Identifiable, CsipAware {
+  override fun csipRecord() = review.plan.csipRecord
 
   @Audited(withModifiedFlag = false)
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "attendee_id")
-  val id: Long = 0,
-) : SimpleAuditable(), Identifiable, CsipAware {
-  override fun csipRecord() = review.plan.csipRecord
+  override val id: UUID = newUuid()
 }

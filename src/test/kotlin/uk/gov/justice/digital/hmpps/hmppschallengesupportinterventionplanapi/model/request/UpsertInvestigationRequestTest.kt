@@ -9,7 +9,7 @@ class UpsertInvestigationRequestTest : RequestValidationTest() {
     val request = UpsertInvestigationRequest(
       staffInvolved = null,
       evidenceSecured = null,
-      occurrenceReason = null,
+      occurrenceReason = "occurrenceReason",
       personsUsualBehaviour = null,
       personsTrigger = null,
       protectiveFactors = null,

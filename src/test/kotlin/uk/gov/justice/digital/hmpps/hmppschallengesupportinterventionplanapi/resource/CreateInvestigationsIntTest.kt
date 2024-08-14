@@ -65,11 +65,10 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val request = createInvestigationRequest()
 
-    val response = createInvestigationResponseSpec(recordUuid, request, username = null)
+    val response = createInvestigationResponseSpec(record.id, request, username = null)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -101,10 +100,9 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("I3234MR")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
 
-    val response = createInvestigationResponseSpec(recordUuid, createInvestigationRequest())
+    val response = createInvestigationResponseSpec(record.id, createInvestigationRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -112,7 +110,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a referral.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing a referral.")
-      assertThat(moreInfo).isEqualTo(recordUuid.toString())
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 
@@ -134,10 +132,13 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - Investigation already exists`() {
     val prisonNumber = givenValidPrisonNumber("I1234AE")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    requireNotNull(csipRecord.referral).withInvestigation()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral).withInvestigation()
+      it
+    }
 
-    val response = createInvestigationResponseSpec(csipRecord.uuid, createInvestigationRequest())
+    val response = createInvestigationResponseSpec(record.id, createInvestigationRequest())
       .errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -155,10 +156,10 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createInvestigationRequest()
 
-    val response = createInvestigation(record.uuid, request)
+    val response = createInvestigation(record.id, request)
     response.verifyAgainst(request)
 
-    val investigation = getInvestigation(record.uuid)
+    val investigation = getInvestigation(record.id)
     verifyAudit(
       investigation,
       RevisionType.ADD,
@@ -167,7 +168,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.INVESTIGATION),
       setOf(DomainEventType.CSIP_UPDATED),
     )
@@ -179,11 +180,11 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = createInvestigationRequest(interviews = listOf(createInterviewRequest(), createInterviewRequest()))
 
-    val response = createInvestigation(record.uuid, request)
+    val response = createInvestigation(record.id, request)
     val interviewUuids = response.interviews.map { it.interviewUuid }
     response.verifyAgainst(request)
 
-    val investigation = getInvestigation(record.uuid)
+    val investigation = getInvestigation(record.id)
     verifyAudit(
       investigation,
       RevisionType.ADD,
@@ -192,7 +193,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.INVESTIGATION, INTERVIEW),
       setOf(DomainEventType.CSIP_UPDATED, DomainEventType.INTERVIEW_CREATED),
       interviewUuids.toSet(),
@@ -242,5 +243,6 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   ) = createInvestigationResponseSpec(recordUuid, request, source, username, role)
     .successResponse<Investigation>(HttpStatus.CREATED)
 
-  private fun getInvestigation(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
+  private fun getInvestigation(recordUuid: UUID) =
+    csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
 }

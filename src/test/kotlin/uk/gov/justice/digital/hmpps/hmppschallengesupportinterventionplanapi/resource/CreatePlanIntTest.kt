@@ -64,11 +64,10 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val request = createPlanRequest()
 
-    val response = createPlanResponseSpec(recordUuid, request, username = null)
+    val response = createPlanResponseSpec(record.id, request, username = null)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -115,10 +114,11 @@ class CreatePlanIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - Plan already exists`() {
     val prisonNumber = givenValidPrisonNumber("P1234AE")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-      .withCompletedReferral().withPlan()
+    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withCompletedReferral().withPlan()
+    }
 
-    val response = createPlanResponseSpec(csipRecord.uuid, createPlanRequest())
+    val response = createPlanResponseSpec(record.id, createPlanRequest())
       .errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
@@ -134,12 +134,12 @@ class CreatePlanIntTest : IntegrationTestBase() {
   fun `201 created - create plan via DPS UI`() {
     val prisonNumber = givenValidPrisonNumber("P1234DS")
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
-    val recordUuid = record.uuid
+    val recordUuid = record.id
     val request = createPlanRequest()
 
     createPlan(recordUuid, request)
 
-    val plan = getPlan(record.uuid)
+    val plan = getPlan(record.id)
     plan.verifyAgainst(request)
 
     verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN))
@@ -157,11 +157,11 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
 
     val request = createPlanRequest(identifiedNeeds = listOf(createIdentifiedNeedRequest()))
-    val response = createPlan(record.uuid, request)
+    val response = createPlan(record.id, request)
 
     val needsIds = response.identifiedNeeds.map { it.identifiedNeedUuid }
 
-    val plan = getPlan(record.uuid)
+    val plan = getPlan(record.id)
     plan.verifyAgainst(request)
 
     verifyAudit(
@@ -172,7 +172,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       record.prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.PLAN, CsipComponent.IDENTIFIED_NEED),
       setOf(DomainEventType.CSIP_UPDATED, DomainEventType.IDENTIFIED_NEED_CREATED),
       needsIds.toSet(),
@@ -216,7 +216,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
     .successResponse<uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan>(HttpStatus.CREATED)
 
   private fun getPlan(recordUuid: UUID) = transactionTemplate.execute {
-    val plan = csipRecordRepository.findByUuid(recordUuid)!!.plan
+    val plan = csipRecordRepository.findById(recordUuid)!!.plan
     plan!!.identifiedNeeds()
     plan
   }!!

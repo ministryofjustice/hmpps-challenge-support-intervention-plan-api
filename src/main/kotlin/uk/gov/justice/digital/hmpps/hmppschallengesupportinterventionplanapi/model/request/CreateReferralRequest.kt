@@ -109,7 +109,7 @@ data class CreateReferralRequest(
   @Schema(
     description = "The username of the person who completed the referral.",
   )
-  @field:Size(min = 0, max = 32, message = "Completed by username must be <= 32 characters")
+  @field:Size(min = 0, max = 64, message = "Completed by username must be <= 64 characters")
   val completedBy: String?,
 
   @Schema(

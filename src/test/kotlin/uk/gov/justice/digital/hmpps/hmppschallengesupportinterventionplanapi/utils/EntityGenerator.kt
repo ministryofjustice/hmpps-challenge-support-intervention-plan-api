@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ut
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import java.time.LocalDateTime
-import java.util.UUID
 
 object EntityGenerator {
 
@@ -13,14 +12,10 @@ object EntityGenerator {
     createdAt: LocalDateTime = LocalDateTime.now().minusDays(1),
     createdBy: String = "createdBy",
     createdByDisplayName: String = "createdByDisplayName",
-    uuid: UUID = UUID.randomUUID(),
-    id: Long = IdGenerator.newId(),
   ) = CsipRecord(
     prisonNumber,
     prisonCodeWhenRecorded,
     logCode,
-    uuid,
-    id,
   ).apply {
     this.createdAt = createdAt
     this.createdBy = createdBy

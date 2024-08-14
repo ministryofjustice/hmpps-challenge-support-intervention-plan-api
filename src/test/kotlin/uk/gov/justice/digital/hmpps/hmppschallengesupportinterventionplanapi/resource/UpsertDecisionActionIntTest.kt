@@ -77,11 +77,10 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - username not supplied`() {
-    val csipRecord = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
     val request = upsertDecisionActionsRequest()
 
-    val response = upsertDecisionResponseSpec(recordUuid, request, username = null)
+    val response = upsertDecisionResponseSpec(record.id, request, username = null)
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -125,9 +124,9 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
     val prisonNumber = givenValidPrisonNumber("D1234OT")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
     val request = upsertDecisionActionsRequest(outcomeTypeCode = "WRONG_CODE", outcomeSignedOffByRoleCode = "CUR")
-    val response = upsertDecisionResponseSpec(csipRecord.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = upsertDecisionResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -141,9 +140,9 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - inactive Outcome Type code`() {
     val prisonNumber = givenValidPrisonNumber("D1234OT")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
     val request = upsertDecisionActionsRequest(outcomeTypeCode = "OT_INACT", outcomeSignedOffByRoleCode = "CUR")
-    val response = upsertDecisionResponseSpec(csipRecord.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = upsertDecisionResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -157,9 +156,9 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - inactive Outcome signed off by role code`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
     val request = upsertDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "DSR_INACT")
-    val response = upsertDecisionResponseSpec(csipRecord.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = upsertDecisionResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -173,9 +172,9 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - invalid Outcome signed off by role code`() {
     val prisonNumber = givenValidPrisonNumber("D1234IS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
     val request = upsertDecisionActionsRequest(outcomeTypeCode = "CUR", outcomeSignedOffByRoleCode = "WRONG_CODE")
-    val response = upsertDecisionResponseSpec(csipRecord.uuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = upsertDecisionResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -189,18 +188,17 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
     val prisonNumber = givenValidPrisonNumber("M1234RF")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber))
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
     val request = upsertDecisionActionsRequest()
 
-    val response = upsertDecisionResponseSpec(recordUuid, request).errorResponse(HttpStatus.BAD_REQUEST)
+    val response = upsertDecisionResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a referral.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing a referral.")
-      assertThat(moreInfo).isEqualTo(recordUuid.toString())
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 
@@ -222,11 +220,10 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   @Test
   fun `create decision and actions no signed off by role`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
-    val csipRecord = givenCsipRecord(generateCsipRecord(prisonNumber)).withReferral()
-    val recordUuid = csipRecord.uuid
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
     val request = upsertDecisionActionsRequest("CUR", null)
 
-    val response = upsertDecisionActions(recordUuid, request, status = HttpStatus.CREATED)
+    val response = upsertDecisionActions(record.id, request, status = HttpStatus.CREATED)
 
     response.verifyAgainst(request)
   }
@@ -242,7 +239,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       DecisionAction.entries.toSet(),
     )
 
-    val response = upsertDecisionActions(record.uuid, request, status = HttpStatus.CREATED)
+    val response = upsertDecisionActions(record.id, request, status = HttpStatus.CREATED)
 
     response.verifyAgainst(request)
   }
@@ -253,10 +250,10 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = upsertDecisionActionsRequest()
 
-    val response = upsertDecisionActions(record.uuid, request, status = HttpStatus.CREATED)
+    val response = upsertDecisionActions(record.id, request, status = HttpStatus.CREATED)
     response.verifyAgainst(request)
 
-    val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.uuid))
+    val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.id))
     val decision = requireNotNull(csip.referral?.decisionAndActions)
     assertThat(decision.createdBy).isEqualTo(TEST_USER)
     assertThat(decision.createdByDisplayName).isEqualTo(TEST_USER_NAME)
@@ -269,7 +266,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.DECISION_AND_ACTIONS),
       setOf(CSIP_UPDATED),
     )
@@ -282,7 +279,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val request = upsertDecisionActionsRequest()
 
     val response = upsertDecisionActions(
-      record.uuid,
+      record.id,
       request,
       source = NOMIS,
       username = NOMIS_SYS_USER,
@@ -292,7 +289,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     response.verifyAgainst(request)
 
-    val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.uuid))
+    val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.id))
     val decision = requireNotNull(csip.referral?.decisionAndActions)
     assertThat(decision.createdBy).isEqualTo(NOMIS_SYS_USER)
     assertThat(decision.createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
@@ -306,7 +303,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.DECISION_AND_ACTIONS),
       setOf(CSIP_UPDATED),
       source = NOMIS,
@@ -334,7 +331,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val decision = requireNotNull(record.referral?.decisionAndActions)
     val request = upsertDecisionActionsRequest(decision.outcome.code, decision.signedOffBy?.code, decision.actions)
 
-    val response = upsertDecisionActions(record.uuid, request, status = HttpStatus.OK)
+    val response = upsertDecisionActions(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
 
     verifyAudit(
@@ -363,7 +360,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       setOf(DecisionAction.UNIT_OR_CELL_MOVE),
     )
 
-    val response = upsertDecisionActions(record.uuid, request, status = HttpStatus.OK)
+    val response = upsertDecisionActions(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
 
     verifyAudit(
@@ -374,11 +371,13 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     verifyDomainEvents(
       prisonNumber,
-      record.uuid,
+      record.id,
       setOf(CsipComponent.DECISION_AND_ACTIONS),
       setOf(CSIP_UPDATED),
     )
   }
+
+  fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/decision-and-actions"
 
   private fun upsertDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
@@ -395,8 +394,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     actionOther = null,
     actions = actions,
   )
-
-  fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/decision-and-actions"
 
   private fun upsertDecisionResponseSpec(
     recordUuid: UUID,
