@@ -63,7 +63,7 @@ class SaferCustodyScreeningOutcome(
   val id: UUID = referral.id
 
   fun update(request: ScreeningOutcomeRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
-    outcome = rdSupplier(ReferenceDataType.OUTCOME_TYPE, request.outcomeTypeCode)
+    outcome = rdSupplier(ReferenceDataType.SCREENING_OUTCOME_TYPE, request.outcomeTypeCode)
     date = request.date
     recordedBy = request.recordedBy
     recordedByDisplayName = request.recordedByDisplayName
