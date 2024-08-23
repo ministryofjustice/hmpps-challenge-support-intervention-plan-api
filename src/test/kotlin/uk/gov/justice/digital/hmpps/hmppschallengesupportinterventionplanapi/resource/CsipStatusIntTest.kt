@@ -55,7 +55,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
         .withInvestigation()
       it
     }
@@ -70,7 +70,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "ACC"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "ACC"))
         .withInvestigation()
       it
     }
@@ -85,9 +85,9 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
         .withInvestigation()
-        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "ACC"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "ACC"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -100,7 +100,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "CUR"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -113,8 +113,8 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
-        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "CUR"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -127,7 +127,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -140,7 +140,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "NFA"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"))
         .withInvestigation()
     }
 
@@ -154,9 +154,9 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withCompletedReferral()
       requireNotNull(it.referral)
-        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"))
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
         .withInvestigation()
-        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "NFA"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -243,7 +243,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
   private fun CsipRecord.addSaferCustodyScreeningOutcome() = transactionTemplate.execute {
     val csip = csipRecordRepository.getCsipRecord(id)
     requireNotNull(csip.referral).withSaferCustodyScreeningOutcome(
-      outcome = givenReferenceData(ReferenceDataType.OUTCOME_TYPE, "OPE"),
+      outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"),
     )
   }
 
@@ -259,14 +259,14 @@ class CsipStatusIntTest : IntegrationTestBase() {
     }
     requireNotNull(csip.referral!!.decisionAndActions).apply {
       set(::conclusion, "A simple conclusion")
-      set(::outcome, givenReferenceData(ReferenceDataType.OUTCOME_TYPE, code))
+      set(::outcome, givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, code))
     }
   }
 
   private fun CsipRecord.changeScreeningOutcome(code: String) = transactionTemplate.execute {
     val csip = csipRecordRepository.getCsipRecord(id)
     requireNotNull(csip.referral!!.saferCustodyScreeningOutcome).apply {
-      set(::outcome, givenReferenceData(ReferenceDataType.OUTCOME_TYPE, code))
+      set(::outcome, givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, code))
     }
   }
 

@@ -131,8 +131,8 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
-      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
+      assertThat(userMessage).isEqualTo("Validation failure: DECISION_OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => DECISION_OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }
@@ -147,8 +147,8 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is not active")
-      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:OT_INACT")
+      assertThat(userMessage).isEqualTo("Validation failure: DECISION_OUTCOME_TYPE is not active")
+      assertThat(developerMessage).isEqualTo("Details => DECISION_OUTCOME_TYPE:OT_INACT")
       assertThat(moreInfo).isNull()
     }
   }
@@ -316,7 +316,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withReferral()
       requireNotNull(it.referral).withDecisionAndActions(
-        outcome = givenRandom(ReferenceDataType.OUTCOME_TYPE),
+        outcome = givenRandom(ReferenceDataType.DECISION_OUTCOME_TYPE),
         signedOffBy = givenRandom(ReferenceDataType.DECISION_SIGNER_ROLE),
         actions = setOf(DecisionAction.OPEN_CSIP_ALERT),
         conclusion = "a conclusion",

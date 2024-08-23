@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getOutcomeType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getScreeningOutcomeType
 import java.util.UUID
 
 @Service
@@ -23,7 +23,7 @@ class SaferCustodyScreeningOutcomeService(
     recordUuid: UUID,
     request: CreateSaferCustodyScreeningOutcomeRequest,
   ): SaferCustodyScreeningOutcome {
-    val outcomeType = referenceDataRepository.getOutcomeType(request.outcomeTypeCode)
+    val outcomeType = referenceDataRepository.getScreeningOutcomeType(request.outcomeTypeCode)
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       createSaferCustodyScreeningOutcome(request = request, outcomeType = outcomeType).toModel()

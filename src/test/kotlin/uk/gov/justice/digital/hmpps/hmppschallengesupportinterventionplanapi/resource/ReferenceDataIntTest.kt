@@ -20,13 +20,13 @@ class ReferenceDataIntTest : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no roles`() {
-    webTestClient.get().uri("/reference-data/outcome-type").headers(setAuthorisation()).exchange()
+    webTestClient.get().uri("/reference-data/screening-outcome-type").headers(setAuthorisation()).exchange()
       .expectStatus().isForbidden
   }
 
   @Test
   fun `403 forbidden - incorrect role`() {
-    webTestClient.get().uri("/reference-data/outcome-type").headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
+    webTestClient.get().uri("/reference-data/screening-outcome-type").headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
       .exchange().expectStatus().isForbidden
   }
 
@@ -39,22 +39,22 @@ class ReferenceDataIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(404)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("No resource found failure: Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: area-of-work, contributory-factor-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or outcome-type")
-      assertThat(developerMessage).isEqualTo("Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: area-of-work, contributory-factor-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or outcome-type")
+      assertThat(userMessage).isEqualTo("No resource found failure: Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: area-of-work, contributory-factor-type, decision-outcome-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or screening-outcome-type")
+      assertThat(developerMessage).isEqualTo("Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: area-of-work, contributory-factor-type, decision-outcome-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or screening-outcome-type")
       assertThat(moreInfo).isNull()
     }
   }
 
   @Test
   fun `get reference excludes inactive codes by default - return active codes only`() {
-    val referenceData = webTestClient.getReferenceData(ReferenceDataType.OUTCOME_TYPE, null)
+    val referenceData = webTestClient.getReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, null)
     assertThat(referenceData).isNotEmpty()
     assertThat(referenceData.none { it.deactivatedAt?.isBefore(LocalDateTime.now()) ?: false }).isTrue()
   }
 
   @Test
   fun `get reference include inactive codes - return both active and inactive codes`() {
-    val referenceData = webTestClient.getReferenceData(ReferenceDataType.OUTCOME_TYPE, true)
+    val referenceData = webTestClient.getReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, true)
     val inactiveReferenceData = referenceData.filter { it.deactivatedAt?.isBefore(LocalDateTime.now()) ?: false }
     assertThat(inactiveReferenceData).isNotEmpty()
     assertThat(referenceData).hasSizeGreaterThan(inactiveReferenceData.size)

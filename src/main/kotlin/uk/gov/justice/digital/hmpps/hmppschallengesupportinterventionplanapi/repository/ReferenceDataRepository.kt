@@ -26,8 +26,8 @@ fun ReferenceDataRepository.getActiveReferenceData(type: ReferenceDataType, code
     verify(it.isActive()) { NotActiveException(type.name, code) }
   }
 
-fun ReferenceDataRepository.getOutcomeType(code: String) =
-  getActiveReferenceData(ReferenceDataType.OUTCOME_TYPE, code)
+fun ReferenceDataRepository.getScreeningOutcomeType(code: String) =
+  getActiveReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, code)
 
 fun ReferenceDataRepository.verifyAllReferenceData(
   type: ReferenceDataType,
