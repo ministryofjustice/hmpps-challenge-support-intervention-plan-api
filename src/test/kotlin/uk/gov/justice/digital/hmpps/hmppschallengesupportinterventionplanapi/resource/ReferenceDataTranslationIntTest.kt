@@ -21,7 +21,7 @@ class ReferenceDataTranslationIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `OUTCOME_TYPE reference data items are bought back in the correct sequence`() {
+  fun `reference data for outcome type are bought back in the correct sequence`() {
     val referenceData = webTestClient.getReferenceData(ReferenceDataType.OUTCOME_TYPE, null)
     assertThat(referenceData[0].code).isEqualTo("CUR")
     assertThat(referenceData[1].code).isEqualTo("OPE")
