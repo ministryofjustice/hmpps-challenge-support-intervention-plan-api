@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.BatchSize
 import org.hibernate.envers.Audited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
@@ -18,6 +19,7 @@ import java.util.UUID
 @Table
 @Audited(withModifiedFlag = true)
 @EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
+@BatchSize(size = 20)
 class IdentifiedNeed(
   @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)

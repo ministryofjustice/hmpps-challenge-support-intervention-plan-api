@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.annotations.BatchSize
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
@@ -27,6 +28,7 @@ import java.util.UUID
 @Table
 @Audited(withModifiedFlag = true)
 @EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
+@BatchSize(size = 20)
 class Review(
   @Audited(withModifiedFlag = false)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
