@@ -27,27 +27,47 @@ update reference_data
 
 update reference_data
     set list_sequence = 10
-    where domain = 'OUTCOME_TYPE'
+    where domain = 'SCREENING_OUTCOME_TYPE'
       and code = 'CUR';
 
 update reference_data
     set list_sequence = 20
-    where domain = 'OUTCOME_TYPE'
+    where domain = 'SCREENING_OUTCOME_TYPE'
       and code = 'OPE';
 
 update reference_data
     set list_sequence = 30
-    where domain = 'OUTCOME_TYPE'
+    where domain = 'SCREENING_OUTCOME_TYPE'
       and code = 'WIN';
 
 update reference_data
     set list_sequence = 40
-    where domain = 'OUTCOME_TYPE'
+    where domain = 'SCREENING_OUTCOME_TYPE'
       and code = 'ACC';
 
 update reference_data
     set list_sequence = 50
-    where domain = 'OUTCOME_TYPE'
+    where domain = 'SCREENING_OUTCOME_TYPE'
+      and code = 'NFA';
+
+update reference_data
+    set list_sequence = 10
+    where domain = 'DECISION_OUTCOME_TYPE'
+      and code = 'CUR';
+
+update reference_data
+    set list_sequence = 20
+    where domain = 'DECISION_OUTCOME_TYPE'
+      and code = 'WIN';
+
+update reference_data
+    set list_sequence = 30
+    where domain = 'DECISION_OUTCOME_TYPE'
+      and code = 'ACC';
+
+update reference_data
+    set list_sequence = 40
+    where domain = 'DECISION_OUTCOME_TYPE'
       and code = 'NFA';
 
 update reference_data
