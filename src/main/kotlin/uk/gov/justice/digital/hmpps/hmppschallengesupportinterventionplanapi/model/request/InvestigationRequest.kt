@@ -48,9 +48,7 @@ data class CreateInvestigationRequest(
   val interviews: Collection<CreateInterviewRequest> = listOf(),
 ) : InvestigationRequest
 
-@Schema(
-  description = "The request body to update an investigation on the incident that motivated the CSIP referral.",
-)
+@Schema(description = "The request body to update an investigation on the incident that motivated the CSIP referral.")
 @ValidInvestigationDetail
 data class UpsertInvestigationRequest(
   @Schema(description = "The names of the staff involved in the investigation.")
