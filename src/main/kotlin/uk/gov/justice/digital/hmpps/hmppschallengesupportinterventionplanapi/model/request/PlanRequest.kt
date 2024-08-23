@@ -6,7 +6,7 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
-sealed interface PlanRequest {
+interface PlanRequest {
   val caseManager: String
   val reasonForPlan: String
   val firstCaseReviewDate: LocalDate

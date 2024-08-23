@@ -116,7 +116,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
     with(response) {
       assertThat(status).isEqualTo(400)
-      assertThat(userMessage).isEqualTo("Validation failure(s): Interviewee Role Code must be <= 12 characters")
+      assertThat(userMessage).isEqualTo("Validation failure: Interviewee Role Code must be <= 12 characters")
     }
   }
 
@@ -240,15 +240,6 @@ class AddInterviewIntTest : IntegrationTestBase() {
       RevisionType.ADD,
       setOf(CsipComponent.INTERVIEW),
       nomisContext(),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INTERVIEW),
-      setOf(INTERVIEW_CREATED),
-      setOf(response.interviewUuid),
-      source = NOMIS,
     )
   }
 

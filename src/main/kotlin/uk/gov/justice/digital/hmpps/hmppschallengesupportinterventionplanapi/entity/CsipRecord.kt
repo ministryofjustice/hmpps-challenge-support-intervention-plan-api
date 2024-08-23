@@ -12,16 +12,17 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toInitialReferralEntity
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.verifyAllReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PrisonNumberChangeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
 import java.util.UUID
 
 @Entity
@@ -30,21 +31,29 @@ import java.util.UUID
 @EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
 class CsipRecord(
 
-  @Audited(withModifiedFlag = false)
-  @Column(nullable = false, length = 10, updatable = false)
-  val prisonNumber: String,
+  prisonNumber: String,
 
   @Audited(withModifiedFlag = false)
   @Column(length = 6, updatable = false)
   val prisonCodeWhenRecorded: String? = null,
 
   logCode: String? = null,
+
+  legacyId: Long? = null,
 ) : SimpleAuditable(), Identifiable {
 
   @Audited(withModifiedFlag = false)
   @Id
   @Column(name = "record_id")
   override val id: UUID = newUuid()
+
+  @Audited(withModifiedFlag = false)
+  override var legacyId: Long? = legacyId
+    private set
+
+  @Column(nullable = false, length = 10)
+  var prisonNumber: String = prisonNumber
+    private set
 
   @Column(length = 10)
   var logCode: String? = logCode
@@ -66,30 +75,27 @@ class CsipRecord(
   var status: CsipStatus = CsipStatus.UNKNOWN
     private set
 
-  fun create(
-    request: CreateCsipRecordRequest,
+  fun createReferral(
+    request: ReferralRequest,
     csipRequestContext: CsipRequestContext,
-    referenceDataRepository: ReferenceDataRepository,
-  ): CsipRecord = apply {
-    referral = request.toInitialReferralEntity(
-      this,
-      csipRequestContext,
-      referenceDataRepository,
-    ).apply {
-      val factorTypeCodes = request.referral.contributoryFactors.map { it.factorTypeCode }.toSet()
-      val contributoryFactors =
-        referenceDataRepository.verifyAllReferenceData(CONTRIBUTORY_FACTOR_TYPE, factorTypeCodes)
-      request.referral.contributoryFactors.forEach { factor ->
-        addContributoryFactor(
-          createRequest = factor,
-          factorType = requireNotNull(contributoryFactors[factor.factorTypeCode]),
-        )
-      }
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
+  ): Referral = let {
+    referral = referral(csipRequestContext, request, rdSupplier)
+    referral!!
+  }
+
+  fun update(request: CsipRequest): CsipRecord = apply {
+    logCode = request.logCode
+    if (request is PrisonNumberChangeRequest) {
+      prisonNumber = request.prisonNumber
+    }
+    if (request is LegacyIdAware) {
+      legacyId = request.legacyId
     }
   }
 
-  fun update(
-    request: UpdateCsipRecordRequest,
+  fun updateWithReferral(
+    request: CsipRequest,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
   ): CsipRecord = apply {
     val referral = requireNotNull(referral)
@@ -101,7 +107,7 @@ class CsipRecord(
     if (plan == null) {
       plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
     } else {
-      plan!!.upsert(request)
+      plan!!.update(request)
     }
     plan!!
   }
@@ -111,4 +117,31 @@ class CsipRecord(
     referral?.also { addAll(it.components()) }
     plan?.also { addAll(it.components()) }
   }
+
+  private fun referral(
+    csipRequestContext: CsipRequestContext,
+    request: ReferralRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
+  ) = Referral(
+    csipRecord = this,
+    referralDate = csipRequestContext.requestAt.toLocalDate(),
+    incidentDate = request.incidentDate,
+    incidentTime = request.incidentTime,
+    referredBy = request.referredBy,
+    proactiveReferral = request.isProactiveReferral,
+    staffAssaulted = request.isStaffAssaulted,
+    assaultedStaffName = request.assaultedStaffName,
+    descriptionOfConcern = request.descriptionOfConcern,
+    knownReasons = request.knownReasons,
+    otherInformation = request.otherInformation,
+    saferCustodyTeamInformed = request.isSaferCustodyTeamInformed,
+    incidentType = rdSupplier(INCIDENT_TYPE, request.incidentTypeCode),
+    incidentLocation = rdSupplier(INCIDENT_LOCATION, request.incidentLocationCode),
+    refererAreaOfWork = rdSupplier(ReferenceDataType.AREA_OF_WORK, request.refererAreaCode),
+    incidentInvolvement = request.incidentInvolvementCode?.let { rdSupplier(INCIDENT_INVOLVEMENT, it) },
+    referralComplete = request.isReferralComplete,
+    referralCompletedDate = request.completedDate,
+    referralCompletedBy = request.completedBy,
+    referralCompletedByDisplayName = request.completedByDisplayName,
+  )
 }

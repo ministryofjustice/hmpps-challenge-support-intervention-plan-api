@@ -16,9 +16,11 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.AttendeesRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReviewRequest
 import java.time.LocalDate
 import java.util.UUID
 
@@ -65,13 +67,13 @@ class Plan(
 
   fun reviews() = reviews.toList()
 
-  fun upsert(request: PlanRequest): Plan = apply {
+  fun update(request: PlanRequest): Plan = apply {
     caseManager = request.caseManager
     reasonForPlan = request.reasonForPlan
     firstCaseReviewDate = request.firstCaseReviewDate
   }
 
-  fun addIdentifiedNeed(request: CreateIdentifiedNeedRequest): IdentifiedNeed =
+  fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed =
     IdentifiedNeed(
       this,
       request.identifiedNeed,
@@ -81,6 +83,7 @@ class Plan(
       request.closedDate,
       request.intervention,
       request.progression,
+      legacyId = if (request is LegacyIdAware) request.legacyId else null,
     ).apply {
       verify(identifiedNeeds.none { it.identifiedNeed == identifiedNeed }) {
         ResourceAlreadyExistException("Identified need already part of plan")
@@ -88,7 +91,7 @@ class Plan(
       identifiedNeeds.add(this)
     }
 
-  fun addReview(request: CreateReviewRequest): Review = Review(
+  fun addReview(request: ReviewRequest): Review = Review(
     this,
     (reviews.maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
     request.reviewDate,
@@ -97,10 +100,13 @@ class Plan(
     request.nextReviewDate,
     request.csipClosedDate,
     request.summary,
-    request.actions ?: setOf(),
+    request.actions,
+    legacyId = if (request is LegacyIdAware) request.legacyId else null,
   ).apply {
     reviews.add(this)
-    request.attendees?.forEach { addAttendee(it) }
+    if (request is AttendeesRequest) {
+      request.attendees.forEach { addAttendee(it) }
+    }
   }
 
   fun components(): Set<CsipComponent> = buildSet {

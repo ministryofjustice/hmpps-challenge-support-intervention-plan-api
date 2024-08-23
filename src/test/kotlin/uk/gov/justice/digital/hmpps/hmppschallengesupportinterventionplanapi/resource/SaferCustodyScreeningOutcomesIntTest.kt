@@ -69,7 +69,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
     val prisonNumber = givenValidPrisonNumber("S1234MF")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
     val request = createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE")
 
     val response = createScreeningOutcomeResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -188,14 +188,6 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
       setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
       nomisContext(),
     )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
-      setOf(DomainEventType.CSIP_UPDATED),
-      source = Source.NOMIS,
-    )
   }
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/safer-custody-screening"
@@ -239,19 +231,19 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     fun invalidRequests() = listOf(
       Arguments.of(
         createScreeningOutcomeRequest(outcomeTypeCode = "n".repeat(13)),
-        "Validation failure(s): Outcome Type code must be <= 12 characters",
+        "Validation failure: Outcome Type code must be <= 12 characters",
       ),
       Arguments.of(
         createScreeningOutcomeRequest(reasonForDecision = "n".repeat(4001)),
-        "Validation failure(s): Reason for Decision must be <= 4000 characters",
+        "Validation failure: Reason for Decision must be <= 4000 characters",
       ),
       Arguments.of(
         createScreeningOutcomeRequest(recordedBy = "n".repeat(65)),
-        "Validation failure(s): Recorded by username must be <= 64 characters",
+        "Validation failure: Recorded by username must be <= 64 characters",
       ),
       Arguments.of(
         createScreeningOutcomeRequest(recordedByDisplayName = "n".repeat(256)),
-        "Validation failure(s): Recorded by display name must be <= 255 characters",
+        "Validation failure: Recorded by display name must be <= 255 characters",
       ),
     )
   }

@@ -66,7 +66,7 @@ class CsipEventServiceTest {
     prisonNumber = PRISON_NUMBER,
     type = DomainEventType.CSIP_UPDATED,
     occurredAt = LocalDateTime.now(),
-    source = Source.NOMIS,
+    source = Source.DPS,
     affectedComponents = setOf(CsipComponent.REFERRAL),
   )
 }

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidInputException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MultipleInvalidException
@@ -12,18 +13,21 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 
 @Repository
 interface ReferenceDataRepository : JpaRepository<ReferenceData, Long> {
-  fun findByDomain(domain: ReferenceDataType): Collection<ReferenceData>
+  fun findByKeyDomain(domain: ReferenceDataType): Collection<ReferenceData>
 
-  fun findByDomainAndCode(domain: ReferenceDataType, code: String): ReferenceData?
+  fun findByKey(key: ReferenceDataKey): ReferenceData?
 
-  fun findByDomainAndCodeIn(domain: ReferenceDataType, code: Set<String>): Collection<ReferenceData>
+  fun findByKeyIn(keys: Set<ReferenceDataKey>): Collection<ReferenceData>
 }
 
 fun ReferenceDataRepository.getActiveReferenceData(type: ReferenceDataType, code: String) =
-  verifyExists(findByDomainAndCode(type, code)) {
-    InvalidInputException(type.name, code)
+  getActiveReferenceData(ReferenceDataKey(type, code))
+
+fun ReferenceDataRepository.getActiveReferenceData(key: ReferenceDataKey) =
+  verifyExists(findByKey(key)) {
+    InvalidInputException(key.domain.name, key.code)
   }.also {
-    verify(it.isActive()) { NotActiveException(type.name, code) }
+    verify(it.isActive()) { NotActiveException(key.domain.name, key.code) }
   }
 
 fun ReferenceDataRepository.getScreeningOutcomeType(code: String) =
@@ -32,12 +36,12 @@ fun ReferenceDataRepository.getScreeningOutcomeType(code: String) =
 fun ReferenceDataRepository.verifyAllReferenceData(
   type: ReferenceDataType,
   codes: Set<String>,
-): Map<String, ReferenceData> {
-  val referenceData = findByDomainAndCodeIn(type, codes).associateBy { it.code }
-  val invalid = codes.filter { referenceData[it]?.isActive() != true }
+): Map<ReferenceDataKey, ReferenceData> {
+  val referenceData = findByKeyIn(codes.map { ReferenceDataKey(type, it) }.toSet()).associateBy { it.key }
+  val invalid = codes.filter { referenceData[ReferenceDataKey(type, it)]?.isActive() != true }
   return when (invalid.size) {
     0 -> return referenceData
-    1 -> referenceData.singleValidation(type, invalid.single())
+    1 -> referenceData.singleValidation(ReferenceDataKey(type, invalid.first()))
     else -> throw MultipleInvalidException(
       type.name,
       invalid.joinToString(prefix = "[", postfix = "]", separator = ","),
@@ -45,11 +49,11 @@ fun ReferenceDataRepository.verifyAllReferenceData(
   }
 }
 
-private fun Map<String, ReferenceData>.singleValidation(type: ReferenceDataType, code: String) = mapOf(
-  code to
-    verifyExists(this[code]) {
-      InvalidInputException(type.name, code)
+private fun Map<ReferenceDataKey, ReferenceData>.singleValidation(key: ReferenceDataKey) = mapOf(
+  key to
+    verifyExists(this[key]) {
+      InvalidInputException(key.domain.name, key.code)
     }.also {
-      verify(it.isActive()) { NotActiveException(type.name, code) }
+      verify(it.isActive()) { NotActiveException(key.domain.name, key.code) }
     },
 )

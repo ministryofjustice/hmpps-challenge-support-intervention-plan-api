@@ -117,7 +117,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     with(response) {
       assertThat(status).isEqualTo(400)
-      assertThat(userMessage).isEqualTo("Validation failure(s): Outcome Type code must be <= 12 characters")
+      assertThat(userMessage).isEqualTo("Validation failure: Outcome Type code must be <= 12 characters")
     }
   }
 
@@ -299,14 +299,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       RevisionType.ADD,
       setOf(CsipComponent.DECISION_AND_ACTIONS),
       nomisContext(),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.DECISION_AND_ACTIONS),
-      setOf(CSIP_UPDATED),
-      source = NOMIS,
     )
   }
 

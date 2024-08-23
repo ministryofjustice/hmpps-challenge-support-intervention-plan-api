@@ -7,28 +7,19 @@ import java.time.LocalDate
 
 @Schema(description = "The request body to update an interview")
 data class UpdateInterviewRequest(
-  @Schema(
-    description = "Name of the person being interviewed.",
-  )
+  @Schema(description = "Name of the person being interviewed.")
   @field:Size(min = 0, max = 100, message = "Interviewee name must be <= 100 characters")
-  val interviewee: String,
+  override val interviewee: String,
 
-  @Schema(
-    description = "The date the interview took place.",
-    example = "2021-09-27",
-  )
+  @Schema(description = "The date the interview took place.", example = "2021-09-27")
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val interviewDate: LocalDate,
+  override val interviewDate: LocalDate,
 
-  @Schema(
-    description = "What role the interviewee played in the incident or referral.",
-  )
+  @Schema(description = "What role the interviewee played in the incident or referral.")
   @field:Size(min = 1, max = 12, message = "Interviewee Role Code must be <= 12 characters")
-  val intervieweeRoleCode: String,
+  override val intervieweeRoleCode: String,
 
-  @Schema(
-    description = "Information provided in interview.",
-  )
+  @Schema(description = "Information provided in interview.")
   @field:Size(min = 0, max = 4000, message = "Interview Text must be <= 4000 characters")
-  val interviewText: String?,
-)
+  override val interviewText: String?,
+) : InterviewRequest

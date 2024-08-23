@@ -162,14 +162,6 @@ class UpsertPlanIntTest : IntegrationTestBase() {
       setOf(CsipComponent.PLAN),
       nomisContext(),
     )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.PLAN),
-      setOf(DomainEventType.CSIP_UPDATED),
-      source = Source.NOMIS,
-    )
   }
 
   @Test

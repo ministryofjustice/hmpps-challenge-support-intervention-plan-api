@@ -2,10 +2,11 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.saveAndRefresh
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.verifyAllReferenceData
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord as CsipEntity
 
@@ -22,21 +24,21 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 class CsipRecordService(
   private val referenceDataRepository: ReferenceDataRepository,
   private val csipRecordRepository: CsipRecordRepository,
-  private val prisonerSearchClient: PrisonerSearchClient,
 ) {
   fun createCsipRecord(
-    prisonNumber: String,
+    prisoner: PrisonerDto,
     request: CreateCsipRecordRequest,
   ): CsipRecord {
     val context = csipRequestContext()
-    val prisoner = requireNotNull(prisonerSearchClient.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
-    val referral = request.referral
-    if (context.source != Source.NOMIS) {
-      require(referral.contributoryFactors.isNotEmpty()) { "A referral must have at least one contributory factor." }
+    val rdMap = referenceDataRepository.verifyAllReferenceData(
+      ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
+      request.referral.contributoryFactors.map { it.factorTypeCode }.toSet(),
+    )
+    val record = CsipEntity(prisoner.prisonerNumber, prisoner.prisonId, request.logCode)
+    val referral = record.createReferral(request.referral, context, referenceDataRepository::getActiveReferenceData)
+    request.referral.contributoryFactors.forEach {
+      referral.addContributoryFactor(it) { type, code -> requireNotNull(rdMap[ReferenceDataKey(type, code)]) }
     }
-
-    val record = CsipEntity(prisonNumber, prisoner.prisonId, request.logCode)
-      .create(request, context, referenceDataRepository)
     return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
@@ -47,10 +49,9 @@ class CsipRecordService(
     recordUuid: UUID,
     request: UpdateCsipRecordRequest,
   ): CsipRecord {
-    val record = csipRecordRepository.getCsipRecord(recordUuid)
-      .update(request) { type, code ->
-        referenceDataRepository.getActiveReferenceData(type, code)
-      }
+    val record = csipRecordRepository.getCsipRecord(recordUuid).updateWithReferral(request) { type, code ->
+      referenceDataRepository.getActiveReferenceData(type, code)
+    }
     return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
