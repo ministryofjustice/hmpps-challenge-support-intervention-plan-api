@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -19,12 +23,36 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.internal.SyncCsipRecord
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
 @RestController
 @RequestMapping(path = ["/sync/csip-records"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "Sync CSIP Record Controller", description = "Endpoint for sync operations")
 class SyncController(private val csip: SyncCsipRecord) {
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "CSIP record merged",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
   @PutMapping
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
@@ -33,6 +61,24 @@ class SyncController(private val csip: SyncCsipRecord) {
     return csip.sync(request)
   }
 
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "CSIP record merged",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
