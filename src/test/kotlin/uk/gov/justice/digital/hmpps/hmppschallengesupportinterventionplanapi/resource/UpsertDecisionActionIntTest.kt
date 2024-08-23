@@ -221,7 +221,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   fun `create decision and actions no signed off by role`() {
     val prisonNumber = givenValidPrisonNumber("D1234NS")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
-    val request = upsertDecisionActionsRequest("CUR", null)
+    val request = upsertDecisionActionsRequest("CUR", "OTHER")
 
     val response = upsertDecisionActions(record.id, request, status = HttpStatus.CREATED)
 
@@ -321,7 +321,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     }
 
     val decision = requireNotNull(record.referral?.decisionAndActions)
-    val request = upsertDecisionActionsRequest(decision.outcome.code, decision.signedOffBy?.code, decision.actions)
+    val request = upsertDecisionActionsRequest(decision.outcome.code, decision.signedOffBy.code, decision.actions)
 
     val response = upsertDecisionActions(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
@@ -348,7 +348,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val decision = requireNotNull(record.referral?.decisionAndActions)
     val request = upsertDecisionActionsRequest(
       decision.outcome.code,
-      decision.signedOffBy?.code,
+      decision.signedOffBy.code,
       setOf(DecisionAction.UNIT_OR_CELL_MOVE),
     )
 
@@ -373,7 +373,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
   private fun upsertDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
-    outcomeSignedOffByRoleCode: String? = "CUSTMAN",
+    outcomeSignedOffByRoleCode: String = "CUSTMAN",
     actions: Set<DecisionAction> = setOf(),
   ) = UpsertDecisionAndActionsRequest(
     conclusion = "a conclusion",

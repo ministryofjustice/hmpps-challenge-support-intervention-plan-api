@@ -396,7 +396,7 @@ abstract class IntegrationTestBase {
     actions: Set<DecisionAction> = setOf(),
     actionOther: String? = null,
   ): Referral = apply {
-    val decision = DecisionAndActions(this, outcome)
+    val decision = DecisionAndActions(this, outcome, signedOffBy)
       .upsert(
         UpsertDecisionAndActionsRequest(
           conclusion,

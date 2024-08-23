@@ -9,7 +9,7 @@ class UpsertDecisionAndActionsRequestTest : RequestValidationTest() {
     val request = UpsertDecisionAndActionsRequest(
       conclusion = null,
       outcomeTypeCode = "suscipiantur",
-      signedOffByRoleCode = null,
+      signedOffByRoleCode = "OTHER",
       recordedBy = null,
       recordedByDisplayName = null,
       date = null,

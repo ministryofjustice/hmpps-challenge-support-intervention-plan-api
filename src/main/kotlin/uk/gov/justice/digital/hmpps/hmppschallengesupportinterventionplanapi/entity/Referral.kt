@@ -181,11 +181,10 @@ class Referral(
   ): DecisionAndActions {
     val isNew = decisionAndActions == null
     val outcome = rdSupplier(DECISION_OUTCOME_TYPE, request.outcomeTypeCode)
-    val signedOffBy = request.signedOffByRoleCode?.let {
-      rdSupplier(ReferenceDataType.DECISION_SIGNER_ROLE, it)
-    }
+    val signedOffByCode = request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER
+    val signedOffBy = rdSupplier(ReferenceDataType.DECISION_SIGNER_ROLE, signedOffByCode)
     if (isNew) {
-      decisionAndActions = DecisionAndActions(this, outcome)
+      decisionAndActions = DecisionAndActions(this, outcome, signedOffBy)
     }
     decisionAndActions!!.upsert(request, outcome, signedOffBy)
     return decisionAndActions!!
