@@ -1,133 +1,392 @@
-TRUNCATE TABLE reference_data RESTART IDENTITY CASCADE;
-
--- Reference data from production as of 28 Jun 2024 extracted using the following SQL
--- SELECT
---     '   (''' || CASE WHEN domain = 'CSIP_FAC' THEN 'CONTRIBUTORY_FACTOR_TYPE'
---         WHEN domain = 'CSIP_FUNC' THEN 'AREA_OF_WORK'
---         WHEN domain = 'CSIP_INTVROL' THEN 'INTERVIEWEE_ROLE'
---         WHEN domain = 'CSIP_INV' THEN 'INCIDENT_INVOLVEMENT'
---         WHEN domain = 'CSIP_LOC' THEN 'INCIDENT_LOCATION'
---         WHEN domain = 'CSIP_OUT' THEN 'OUTCOME_TYPE'
---         WHEN domain = 'CSIP_ROLE' THEN 'DECISION_SIGNER_ROLE'
---         WHEN domain = 'CSIP_TYP' THEN 'INCIDENT_TYPE' ELSE '' END || ''', '''
---         || code || ''', ''' || description || ''', ' || list_seq || ', '''
---         || TO_CHAR(create_datetime, 'YYYY-MM-DD HH24:MI:SS') || ''', ''' || create_user_id || ''', '
---         || CASE WHEN modify_datetime IS NOT NULL THEN '''' || TO_CHAR(modify_datetime, 'YYYY-MM-DD HH24:MI:SS') || ''', ''' || modify_user_id || ''', ' ELSE 'NULL, NULL, ' END
---         || CASE WHEN expired_date IS NOT NULL THEN '''' || TO_CHAR(expired_date, 'YYYY-MM-DD') || ''', ''' || audit_user_id || '''' ELSE 'NULL, NULL' END
---         || '),'
---         AS values_sql
--- FROM REFERENCE_CODES
--- WHERE domain IN (
---     'CSIP_FAC',
---     'CSIP_FUNC',
---     'CSIP_INTVROL',
---     'CSIP_INV',
---     'CSIP_LOC',
---     'CSIP_OUT',
---     'CSIP_ROLE',
---     'CSIP_TYP'
--- )
--- ORDER BY domain, code;
--- And applying custom ordering
-
-INSERT INTO reference_data
-    (domain, code, description, list_sequence, created_at, created_by, last_modified_at, last_modified_by, deactivated_at, deactivated_by)
-VALUES
-    ('CONTRIBUTORY_FACTOR_TYPE', 'AFL', 'Alcohol or fermenting liquid', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'BAS', 'Basic needs (property or cell)', 20, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'BUL', 'Bullying', 30, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'DEB', 'Debt', 40, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'FTC', 'First time in custody', 50, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'GAN', 'Gang related', 60, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'MED', 'Medication', 70, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'MEN', 'Mental health', 80, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'PIS', 'Psychoactive or illicit substance', 90, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'RAC', 'Racially motivated', 100, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'REL', 'Religiously motivated', 110, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'SEX', 'Sexually motivated', 120, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'SMO', 'Smoking withdrawal', 130, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'STA', 'Staff issues', 140, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('CONTRIBUTORY_FACTOR_TYPE', 'NRT', 'Vaporiser or NRT debt', 150, '2018-10-30 15:56:35', 'HQU53Y_CEN', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'ACT', 'Activities', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'CEN', 'Censors', 20, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'CHA', 'Chaplaincy', 30, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'CON', 'Control room', 40, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'EDU', 'Education', 50, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'EST', 'Estates', 60, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'FIN', 'Finance', 70, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'GAR', 'Gardens or grounds', 80, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'GRO', 'Grounds', 90, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'GYM', 'Gymnasium', 100, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'HEA', 'Health care', 110, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'H', 'Health', 120, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'IMB', 'IMB', 130, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'KIT', 'Kitchen', 140, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'LIB', 'Library', 150, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'MEN', 'Mental health', 160, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'OFF', 'Offender management', 170, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'OPE', 'Operations', 180, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'OTH', 'Other', 190, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'PEO', 'People HUB', 200, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'PRO', 'Probation', 210, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'PRG', 'Programmes', 220, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'PSY', 'Psychology', 230, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'REC', 'Reception', 240, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'RES', 'Resettlement', 250, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'RSD', 'Residential', 260, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'SAF', 'Safety Team', 270, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'SEC', 'Security', 280, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'STO', 'Stores', 290, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'SUB', 'Substance Misuse Team', 300, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'VIS', 'Visits', 310, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('AREA_OF_WORK', 'WOR', 'Workshop', 320, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INTERVIEWEE_ROLE', 'PERP', 'Perpetrator', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INTERVIEWEE_ROLE', 'VICTIM', 'Victim', 20, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INTERVIEWEE_ROLE', 'WITNESS', 'Witness', 30, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INTERVIEWEE_ROLE', 'OTHER', 'Other', 40, '2018-10-30 15:59:28', 'HQU53Y_CEN', NULL, NULL, NULL, NULL),
-    ('INCIDENT_INVOLVEMENT', 'PER', 'Perpetrator', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_INVOLVEMENT', 'VIC', 'Victim', 20, '2018-10-30 16:00:46', 'HQU53Y_CEN', NULL, NULL, NULL, NULL),
-    ('INCIDENT_INVOLVEMENT', 'WIT', 'Witness', 30, '2018-10-30 16:00:46', 'HQU53Y_CEN', NULL, NULL, NULL, NULL),
-    ('INCIDENT_INVOLVEMENT', 'OTH', 'Other', 40, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'EDU', 'Education', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'EXY', 'Exercise yard', 20, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'GRO', 'Grounds', 30, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'GYM', 'Gym', 40, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'HEA', 'Health care', 50, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'KIT', 'Kitchen', 60, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'LIB', 'Library', 70, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'MUF', 'Multi-faith', 80, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'NOI', 'No incident', 90, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'OMU', 'OMU', 100, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'OTH', 'Other', 110, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'REC', 'Reception', 120, '2018-10-27 18:11:30', 'OMS_OWNER', '2018-10-30 15:55:15', 'HQU53Y_CEN', NULL, NULL),
-    ('INCIDENT_LOCATION', 'VIS', 'Visits', 130, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'WIC', 'Wing - cell', 140, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'WIL', 'Wing - landing', 150, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_LOCATION', 'WOR', 'Workshop', 160, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('OUTCOME_TYPE', 'CUR', 'Progress to CSIP', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('OUTCOME_TYPE', 'OPE', 'Progress to investigation', 20, '2018-10-27 18:11:30', 'OMS_OWNER', '2019-09-21 18:37:19', 'OMS_OWNER', NULL, NULL),
-    ('OUTCOME_TYPE', 'WIN', 'Support outside of CSIP', 30, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('OUTCOME_TYPE', 'ACC', 'ACCT supporting', 40, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('OUTCOME_TYPE', 'NFA', 'No further action', 50, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('DECISION_SIGNER_ROLE', 'CUSTMAN', 'Custodial Manager', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('DECISION_SIGNER_ROLE', 'THEHOFF', 'Head of Function', 20, '2018-10-30 15:57:22', 'HQU53Y_CEN', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'ATO', 'Abuse or threats - other', 10, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'ATS', 'Abuse or threats - staff', 20, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'FTE', 'Failure to engage', 30, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'FEB', 'Frequent or escalating behaviour', 40, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'FPB', 'Frequent periods on Basic', 50, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'INT', 'Intimidation', 60, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'ISO', 'Isolation', 70, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'MDO', 'Multiple disciplinary offences', 80, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'OTH', 'Other', 90, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'PRS', 'Prisoner statement', 100, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'RPS', 'Repeat periods of segregation', 110, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'SEC', 'Security intelligence', 120, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'SEX', 'Sexual assault', 130, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'THR', 'Threats - staff', 140, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'UWI', 'Unwitnessed injury', 150, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'VIP', 'VIPER score', 160, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'VPA', 'Violence - prisoner assault', 170, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'VPF', 'Violence - prisoner fight', 180, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'VSA', 'Violence - staff assault', 190, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL),
-    ('INCIDENT_TYPE', 'WIT', 'Witness', 200, '2018-10-27 18:11:30', 'OMS_OWNER', NULL, NULL, NULL, NULL);
+update reference_data
+    set list_sequence = 10
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'AFL'
+update reference_data
+    set list_sequence = 20
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'BAS'
+update reference_data
+    set list_sequence = 30
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'BUL'
+update reference_data
+    set list_sequence = 40
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'DEB'
+update reference_data
+    set list_sequence = 50
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'FTC'
+update reference_data
+    set list_sequence = 60
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'GAN'
+update reference_data
+    set list_sequence = 70
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'MED'
+update reference_data
+    set list_sequence = 80
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'MEN'
+update reference_data
+    set list_sequence = 90
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'PIS'
+update reference_data
+    set list_sequence = 100
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'RAC'
+update reference_data
+    set list_sequence = 110
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'REL'
+update reference_data
+    set list_sequence = 120
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'SEX'
+update reference_data
+    set list_sequence = 130
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'SMO'
+update reference_data
+    set list_sequence = 140
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'STA'
+update reference_data
+    set list_sequence = 150
+    where domain = 'CONTRIBUTORY_FACTOR_TYPE'
+      and code = 'NRT'
+update reference_data
+    set list_sequence = 10
+    where domain = 'AREA_OF_WORK'
+      and code = 'ACT'
+update reference_data
+    set list_sequence = 20
+    where domain = 'AREA_OF_WORK'
+      and code = 'CEN'
+update reference_data
+    set list_sequence = 30
+    where domain = 'AREA_OF_WORK'
+      and code = 'CHA'
+update reference_data
+    set list_sequence = 40
+    where domain = 'AREA_OF_WORK'
+      and code = 'CON'
+update reference_data
+    set list_sequence = 50
+    where domain = 'AREA_OF_WORK'
+      and code = 'EDU'
+update reference_data
+    set list_sequence = 60
+    where domain = 'AREA_OF_WORK'
+      and code = 'EST'
+update reference_data
+    set list_sequence = 70
+    where domain = 'AREA_OF_WORK'
+      and code = 'FIN'
+update reference_data
+    set list_sequence = 80
+    where domain = 'AREA_OF_WORK'
+      and code = 'GAR'
+update reference_data
+    set list_sequence = 90
+    where domain = 'AREA_OF_WORK'
+      and code = 'GRO'
+update reference_data
+    set list_sequence = 100
+    where domain = 'AREA_OF_WORK'
+      and code = 'GYM'
+update reference_data
+    set list_sequence = 110
+    where domain = 'AREA_OF_WORK'
+      and code = 'HEA'
+update reference_data
+    set list_sequence = 120
+    where domain = 'AREA_OF_WORK'
+      and code = 'H'
+update reference_data
+    set list_sequence = 130
+    where domain = 'AREA_OF_WORK'
+      and code = 'IMB'
+update reference_data
+    set list_sequence = 140
+    where domain = 'AREA_OF_WORK'
+      and code = 'KIT'
+update reference_data
+    set list_sequence = 150
+    where domain = 'AREA_OF_WORK'
+      and code = 'LIB'
+update reference_data
+    set list_sequence = 160
+    where domain = 'AREA_OF_WORK'
+      and code = 'MEN'
+update reference_data
+    set list_sequence = 170
+    where domain = 'AREA_OF_WORK'
+      and code = 'OFF'
+update reference_data
+    set list_sequence = 180
+    where domain = 'AREA_OF_WORK'
+      and code = 'OPE'
+update reference_data
+    set list_sequence = 190
+    where domain = 'AREA_OF_WORK'
+      and code = 'OTH'
+update reference_data
+    set list_sequence = 200
+    where domain = 'AREA_OF_WORK'
+      and code = 'PEO'
+update reference_data
+    set list_sequence = 210
+    where domain = 'AREA_OF_WORK'
+      and code = 'PRO'
+update reference_data
+    set list_sequence = 220
+    where domain = 'AREA_OF_WORK'
+      and code = 'PRG'
+update reference_data
+    set list_sequence = 230
+    where domain = 'AREA_OF_WORK'
+      and code = 'PSY'
+update reference_data
+    set list_sequence = 240
+    where domain = 'AREA_OF_WORK'
+      and code = 'REC'
+update reference_data
+    set list_sequence = 250
+    where domain = 'AREA_OF_WORK'
+      and code = 'RES'
+update reference_data
+    set list_sequence = 260
+    where domain = 'AREA_OF_WORK'
+      and code = 'RSD'
+update reference_data
+    set list_sequence = 270
+    where domain = 'AREA_OF_WORK'
+      and code = 'SAF'
+update reference_data
+    set list_sequence = 280
+    where domain = 'AREA_OF_WORK'
+      and code = 'SEC'
+update reference_data
+    set list_sequence = 290
+    where domain = 'AREA_OF_WORK'
+      and code = 'STO'
+update reference_data
+    set list_sequence = 300
+    where domain = 'AREA_OF_WORK'
+      and code = 'SUB'
+update reference_data
+    set list_sequence = 310
+    where domain = 'AREA_OF_WORK'
+      and code = 'VIS'
+update reference_data
+    set list_sequence = 320
+    where domain = 'AREA_OF_WORK'
+      and code = 'WOR'
+update reference_data
+    set list_sequence = 10
+    where domain = 'INTERVIEWEE_ROLE'
+      and code = 'PERP'
+update reference_data
+    set list_sequence = 20
+    where domain = 'INTERVIEWEE_ROLE'
+      and code = 'VICTIM'
+update reference_data
+    set list_sequence = 30
+    where domain = 'INTERVIEWEE_ROLE'
+      and code = 'WITNESS'
+update reference_data
+    set list_sequence = 40
+    where domain = 'INTERVIEWEE_ROLE'
+      and code = 'OTHER'
+update reference_data
+    set list_sequence = 10
+    where domain = 'INCIDENT_INVOLVEMENT'
+      and code = 'PER'
+update reference_data
+    set list_sequence = 20
+    where domain = 'INCIDENT_INVOLVEMENT'
+      and code = 'VIC'
+update reference_data
+    set list_sequence = 30
+    where domain = 'INCIDENT_INVOLVEMENT'
+      and code = 'WIT'
+update reference_data
+    set list_sequence = 40
+    where domain = 'INCIDENT_INVOLVEMENT'
+      and code = 'OTH'
+update reference_data
+    set list_sequence = 10
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'EDU'
+update reference_data
+    set list_sequence = 20
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'EXY'
+update reference_data
+    set list_sequence = 30
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'GRO'
+update reference_data
+    set list_sequence = 40
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'GYM'
+update reference_data
+    set list_sequence = 50
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'HEA'
+update reference_data
+    set list_sequence = 60
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'KIT'
+update reference_data
+    set list_sequence = 70
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'LIB'
+update reference_data
+    set list_sequence = 80
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'MUF'
+update reference_data
+    set list_sequence = 90
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'NOI'
+update reference_data
+    set list_sequence = 100
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'OMU'
+update reference_data
+    set list_sequence = 110
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'OTH'
+update reference_data
+    set list_sequence = 120
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'REC'
+update reference_data
+    set list_sequence = 130
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'VIS'
+update reference_data
+    set list_sequence = 140
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'WIC'
+update reference_data
+    set list_sequence = 150
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'WIL'
+update reference_data
+    set list_sequence = 160
+    where domain = 'INCIDENT_LOCATION'
+      and code = 'WOR'
+update reference_data
+    set list_sequence = 10
+    where domain = 'OUTCOME_TYPE'
+      and code = 'CUR'
+update reference_data
+    set list_sequence = 20
+    where domain = 'OUTCOME_TYPE'
+      and code = 'OPE'
+update reference_data
+    set list_sequence = 30
+    where domain = 'OUTCOME_TYPE'
+      and code = 'WIN'
+update reference_data
+    set list_sequence = 40
+    where domain = 'OUTCOME_TYPE'
+      and code = 'ACC'
+update reference_data
+    set list_sequence = 50
+    where domain = 'OUTCOME_TYPE'
+      and code = 'NFA'
+update reference_data
+    set list_sequence = 10
+    where domain = 'DECISION_SIGNER_ROLE'
+      and code = 'CUSTMAN'
+update reference_data
+    set list_sequence = 20
+    where domain = 'DECISION_SIGNER_ROLE'
+      and code = 'THEHOFF'
+update reference_data
+    set list_sequence = 10
+    where domain = 'INCIDENT_TYPE'
+      and code = 'ATO'
+update reference_data
+    set list_sequence = 20
+    where domain = 'INCIDENT_TYPE'
+      and code = 'ATS'
+update reference_data
+    set list_sequence = 30
+    where domain = 'INCIDENT_TYPE'
+      and code = 'FTE'
+update reference_data
+    set list_sequence = 40
+    where domain = 'INCIDENT_TYPE'
+      and code = 'FEB'
+update reference_data
+    set list_sequence = 50
+    where domain = 'INCIDENT_TYPE'
+      and code = 'FPB'
+update reference_data
+    set list_sequence = 60
+    where domain = 'INCIDENT_TYPE'
+      and code = 'INT'
+update reference_data
+    set list_sequence = 70
+    where domain = 'INCIDENT_TYPE'
+      and code = 'ISO'
+update reference_data
+    set list_sequence = 80
+    where domain = 'INCIDENT_TYPE'
+      and code = 'MDO'
+update reference_data
+    set list_sequence = 90
+    where domain = 'INCIDENT_TYPE'
+      and code = 'OTH'
+update reference_data
+    set list_sequence = 100
+    where domain = 'INCIDENT_TYPE'
+      and code = 'PRS'
+update reference_data
+    set list_sequence = 110
+    where domain = 'INCIDENT_TYPE'
+      and code = 'RPS'
+update reference_data
+    set list_sequence = 120
+    where domain = 'INCIDENT_TYPE'
+      and code = 'SEC'
+update reference_data
+    set list_sequence = 130
+    where domain = 'INCIDENT_TYPE'
+      and code = 'SEX'
+update reference_data
+    set list_sequence = 140
+    where domain = 'INCIDENT_TYPE'
+      and code = 'THR'
+update reference_data
+    set list_sequence = 150
+    where domain = 'INCIDENT_TYPE'
+      and code = 'UWI'
+update reference_data
+    set list_sequence = 160
+    where domain = 'INCIDENT_TYPE'
+      and code = 'VIP'
+update reference_data
+    set list_sequence = 170
+    where domain = 'INCIDENT_TYPE'
+      and code = 'VPA'
+update reference_data
+    set list_sequence = 180
+    where domain = 'INCIDENT_TYPE'
+      and code = 'VPF'
+update reference_data
+    set list_sequence = 190
+    where domain = 'INCIDENT_TYPE'
+      and code = 'VSA'
+update reference_data
+    set list_sequence = 200
+    where domain = 'INCIDENT_TYPE'
+      and code = 'WIT'
