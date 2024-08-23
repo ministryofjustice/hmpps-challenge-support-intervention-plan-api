@@ -160,21 +160,11 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     val attendee = getAttendee(review.id, response.attendeeUuid)
     attendee.verifyAgainst(request)
 
-    val record = review.plan.csipRecord
     verifyAudit(
       attendee,
       RevisionType.ADD,
       setOf(CsipComponent.ATTENDEE),
       nomisContext(),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.ATTENDEE),
-      setOf(ATTENDEE_CREATED),
-      setOf(attendee.id),
-      source = NOMIS,
     )
   }
 

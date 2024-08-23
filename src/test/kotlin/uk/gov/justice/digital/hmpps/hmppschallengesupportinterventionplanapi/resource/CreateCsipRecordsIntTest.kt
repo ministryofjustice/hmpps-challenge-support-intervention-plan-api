@@ -321,44 +321,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       nomisContext(),
     )
-
-    verifyDomainEvents(
-      prisonNumber,
-      response.recordUuid,
-      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
-      setOf(DomainEventType.CSIP_CREATED, DomainEventType.CONTRIBUTORY_FACTOR_CREATED),
-      response.referral.contributoryFactors.map { it.factorUuid }.toSet(),
-      2,
-      NOMIS,
-    )
-  }
-
-  @Test
-  fun `201 created - no contributory factors with source NOMIS`() {
-    val request = createCsipRecordRequest(
-      createReferralRequest(
-        contributoryFactorTypeCode = listOf(),
-        referralComplete = true,
-        completedDate = LocalDate.now(),
-        completedBy = "CompletedBy",
-        completedByDisplayName = "Some Longer Display Name",
-      ),
-    )
-
-    val prisonNumber = givenValidPrisonNumber("C1237SP")
-    val response = webTestClient.createCsipRecord(prisonNumber, request, NOMIS, NOMIS_SYS_USER)
-    val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
-    saved.verifyAgainst(request)
-
-    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL), nomisContext())
-
-    verifyDomainEvents(
-      prisonNumber,
-      response.recordUuid,
-      setOf(RECORD, REFERRAL),
-      setOf(DomainEventType.CSIP_CREATED),
-      source = NOMIS,
-    )
   }
 
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"

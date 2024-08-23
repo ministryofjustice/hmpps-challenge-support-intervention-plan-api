@@ -166,15 +166,6 @@ class AddReviewIntTest : IntegrationTestBase() {
       setOf(CsipComponent.REVIEW),
       nomisContext(),
     )
-
-    verifyDomainEvents(
-      record.prisonNumber,
-      record.id,
-      setOf(CsipComponent.REVIEW),
-      setOf(REVIEW_CREATED),
-      setOf(response.reviewUuid),
-      source = NOMIS,
-    )
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/plan/reviews"
@@ -209,7 +200,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     csipClosedDate: LocalDate? = null,
     summary: String? = "A brief summary of the review",
     actions: Set<ReviewAction> = setOf(),
-    attendees: Collection<CreateAttendeeRequest>? = null,
+    attendees: List<CreateAttendeeRequest> = listOf(),
   ) = CreateReviewRequest(
     reviewDate,
     recordedBy,
@@ -229,7 +220,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     assertThat(csipClosedDate).isEqualTo(request.csipClosedDate)
     assertThat(summary).isEqualTo(request.summary)
     assertThat(actions).isEqualTo(request.actions)
-    assertThat(attendees().size).isEqualTo(request.attendees?.size ?: 0)
+    assertThat(attendees().size).isEqualTo(request.attendees.size)
   }
 
   private fun getReview(uuid: UUID): Review = reviewRepository.getReview(uuid)

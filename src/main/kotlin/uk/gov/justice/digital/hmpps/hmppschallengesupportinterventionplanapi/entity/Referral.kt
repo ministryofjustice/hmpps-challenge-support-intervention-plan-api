@@ -21,17 +21,19 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReferral
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ScreeningOutcomeRequest
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -82,13 +84,12 @@ class Referral(
   val id: UUID = csipRecord.id
 
   @NotAudited
-  @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
-  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
-    private set
+  @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL])
+  private var contributoryFactors: MutableList<ContributoryFactor> = mutableListOf()
 
   @NotAudited
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
-  var decisionAndActions: DecisionAndActions? = null
+  var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
     private set
 
   @NotAudited
@@ -97,8 +98,9 @@ class Referral(
     private set
 
   @NotAudited
-  @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL])
-  private var contributoryFactors: MutableList<ContributoryFactor> = mutableListOf()
+  @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
+  var decisionAndActions: DecisionAndActions? = null
+    private set
 
   fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.id }
 
@@ -173,13 +175,13 @@ class Referral(
     private set
 
   fun upsertDecisionAndActions(
-    request: UpsertDecisionAndActionsRequest,
-    referenceProvider: (ReferenceDataType, String) -> ReferenceData,
+    request: DecisionAndActionsRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ): DecisionAndActions {
     val isNew = decisionAndActions == null
-    val outcome = referenceProvider(OUTCOME_TYPE, request.outcomeTypeCode)
+    val outcome = rdSupplier(OUTCOME_TYPE, request.outcomeTypeCode)
     val signedOffBy = request.signedOffByRoleCode?.let {
-      referenceProvider(ReferenceDataType.DECISION_SIGNER_ROLE, it)
+      rdSupplier(ReferenceDataType.DECISION_SIGNER_ROLE, it)
     }
     if (isNew) {
       decisionAndActions = DecisionAndActions(this, outcome)
@@ -189,17 +191,16 @@ class Referral(
   }
 
   fun createSaferCustodyScreeningOutcome(
-    request: CreateSaferCustodyScreeningOutcomeRequest,
-    outcomeType: ReferenceData,
+    request: ScreeningOutcomeRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ): SaferCustodyScreeningOutcome {
     verifySaferCustodyScreeningOutcomeDoesNotExist()
-
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
-      outcome = outcomeType,
+      outcome = rdSupplier(OUTCOME_TYPE, request.outcomeTypeCode),
+      date = request.date,
       recordedBy = request.recordedBy,
       recordedByDisplayName = request.recordedByDisplayName,
-      date = request.date,
       reasonForDecision = request.reasonForDecision,
     )
     return saferCustodyScreeningOutcome!!
@@ -214,12 +215,13 @@ class Referral(
   }
 
   fun addContributoryFactor(
-    createRequest: CreateContributoryFactorRequest,
-    factorType: ReferenceData,
+    request: ContributoryFactorRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ) = ContributoryFactor(
     referral = this,
-    contributoryFactorType = factorType,
-    comment = createRequest.comment,
+    contributoryFactorType = rdSupplier(CONTRIBUTORY_FACTOR_TYPE, request.factorTypeCode),
+    comment = request.comment,
+    legacyId = if (request is LegacyIdAware) request.legacyId else null,
   ).apply {
     contributoryFactors.add(this)
   }
@@ -230,18 +232,14 @@ class Referral(
     }
 
   fun update(
-    update: UpdateReferral,
-    referenceProvider: (ReferenceDataType, String) -> ReferenceData,
-  ) {
-    incidentType = updateReferenceData(incidentType, referenceProvider, INCIDENT_TYPE, update.incidentTypeCode)
+    update: ReferralRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
+  ): Referral = apply {
+    incidentType = updateReferenceData(incidentType, rdSupplier, INCIDENT_TYPE, update.incidentTypeCode)
     incidentLocation =
-      updateReferenceData(incidentLocation, referenceProvider, INCIDENT_LOCATION, update.incidentLocationCode)
-    refererAreaOfWork = updateReferenceData(refererAreaOfWork, referenceProvider, AREA_OF_WORK, update.refererAreaCode)
-    incidentInvolvement = if (update.incidentInvolvementCode == null) {
-      null
-    } else {
-      referenceProvider(INCIDENT_INVOLVEMENT, update.incidentInvolvementCode)
-    }
+      updateReferenceData(incidentLocation, rdSupplier, INCIDENT_LOCATION, update.incidentLocationCode)
+    refererAreaOfWork = updateReferenceData(refererAreaOfWork, rdSupplier, AREA_OF_WORK, update.refererAreaCode)
+    incidentInvolvement = update.incidentInvolvementCode?.let { rdSupplier(INCIDENT_INVOLVEMENT, it) }
 
     incidentDate = update.incidentDate
     incidentTime = update.incidentTime

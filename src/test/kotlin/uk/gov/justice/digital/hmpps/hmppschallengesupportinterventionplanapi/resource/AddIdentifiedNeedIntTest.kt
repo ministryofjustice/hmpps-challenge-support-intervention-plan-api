@@ -175,15 +175,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
       setOf(CsipComponent.IDENTIFIED_NEED),
       nomisContext(),
     )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.IDENTIFIED_NEED),
-      setOf(IDENTIFIED_NEED_CREATED),
-      setOf(response.identifiedNeedUuid),
-      source = NOMIS,
-    )
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/plan/identified-needs"

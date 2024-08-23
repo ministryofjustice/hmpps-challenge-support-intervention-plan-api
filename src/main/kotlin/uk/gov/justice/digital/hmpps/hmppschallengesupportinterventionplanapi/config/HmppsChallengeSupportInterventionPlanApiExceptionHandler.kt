@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.co
 
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.StringUtils
+import org.springframework.context.MessageSourceResolvable
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.CONFLICT
@@ -81,17 +82,8 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
     )
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
-  fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(BAD_REQUEST)
-    .body(
-      ErrorResponse(
-        status = BAD_REQUEST,
-        userMessage = "Validation failure(s): ${
-          e.allErrors.map { it.defaultMessage }.distinct().sorted().joinToString(System.lineSeparator())
-        }",
-        developerMessage = e.message,
-      ),
-    )
+  fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> =
+    e.allErrors.mapErrors()
 
   @ExceptionHandler(IllegalArgumentException::class, IllegalStateException::class)
   fun handleIllegalArgumentOrStateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
@@ -122,27 +114,7 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
 
   @ExceptionHandler(HandlerMethodValidationException::class)
   fun handleHandlerMethodValidationException(e: HandlerMethodValidationException): ResponseEntity<ErrorResponse> =
-    e.allErrors.map { it.defaultMessage }.distinct().sorted().let {
-      val validationFailure = "Validation failure"
-      val message = if (it.size > 1) {
-        """
-              |${validationFailure}s: 
-              |${it.joinToString(System.lineSeparator())}
-              |
-        """.trimMargin()
-      } else {
-        "$validationFailure: ${it.joinToString(System.lineSeparator())}"
-      }
-      ResponseEntity
-        .status(BAD_REQUEST)
-        .body(
-          ErrorResponse(
-            status = BAD_REQUEST,
-            userMessage = message,
-            developerMessage = "400 BAD_REQUEST $message",
-          ),
-        )
-    }
+    e.allErrors.mapErrors()
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> =
@@ -206,4 +178,27 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
         developerMessage = "${e::class.simpleName} => ${e.message}",
       ),
     )
+
+  private fun List<MessageSourceResolvable>.mapErrors() =
+    map { it.defaultMessage }.distinct().sorted().let {
+      val validationFailure = "Validation failure"
+      val message = if (it.size > 1) {
+        """
+              |${validationFailure}s: 
+              |${it.joinToString(System.lineSeparator())}
+              |
+        """.trimMargin()
+      } else {
+        "$validationFailure: ${it.joinToString(System.lineSeparator())}"
+      }
+      ResponseEntity
+        .status(BAD_REQUEST)
+        .body(
+          ErrorResponse(
+            status = BAD_REQUEST,
+            userMessage = message,
+            developerMessage = "400 BAD_REQUEST $message",
+          ),
+        )
+    }
 }

@@ -8,6 +8,7 @@ import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 
 @Service
 class EntityEventService(
@@ -17,7 +18,7 @@ class EntityEventService(
 ) {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   fun handleEvent(event: CsipBaseEvent) {
-    if (eventProperties.publish) {
+    if (eventProperties.publish && event.source != Source.NOMIS) {
       val domainEvent = event.toDomainEvent(eventProperties.baseUrl)
       domainEventPublisher.publish(domainEvent)
       telemetryClient.trackEvent(

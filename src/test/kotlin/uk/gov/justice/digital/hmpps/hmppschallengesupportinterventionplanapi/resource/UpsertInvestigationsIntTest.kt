@@ -114,7 +114,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure(s): At least one of staffInvolved, evidenceSecured, occurrenceReason, personsUsualBehaviour, personsTrigger, protectiveFactors must be non null.")
+      assertThat(userMessage).isEqualTo("Validation failure: At least one of staffInvolved, evidenceSecured, occurrenceReason, personsUsualBehaviour, personsTrigger, protectiveFactors must be non null.")
     }
   }
 
@@ -197,14 +197,6 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
       RevisionType.ADD,
       setOf(CsipComponent.INVESTIGATION),
       nomisContext(),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INVESTIGATION),
-      setOf(DomainEventType.CSIP_UPDATED),
-      source = Source.NOMIS,
     )
   }
 

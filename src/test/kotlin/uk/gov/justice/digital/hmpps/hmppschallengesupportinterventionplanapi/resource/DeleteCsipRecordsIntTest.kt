@@ -189,14 +189,6 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
       setOf(RECORD, REFERRAL),
       nomisContext(),
     )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(RECORD, REFERRAL),
-      setOf(DomainEventType.CSIP_DELETED),
-      source = NOMIS,
-    )
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid"
