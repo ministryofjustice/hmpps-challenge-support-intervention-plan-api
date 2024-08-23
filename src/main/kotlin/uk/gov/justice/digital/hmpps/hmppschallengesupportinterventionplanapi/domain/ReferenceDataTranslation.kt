@@ -11,5 +11,5 @@ fun ReferenceData.toReferenceDataModel() = ReferenceDataModel(
 )
 
 fun Collection<ReferenceData>.toReferenceDataModels(includeInactive: Boolean) =
-  filter { includeInactive || it.isActive() }.sortedWith(compareBy({ it.listSequence }, { it.code }))
+  filter { includeInactive || it.isActive() }.sortedWith(compareBy(ReferenceData::listSequence))
     .map { it.toReferenceDataModel() }
