@@ -10,7 +10,6 @@ interface NomisIdentifiable {
 }
 
 abstract class NomisAudited {
-  var activeCaseloadId: Long? = null
   lateinit var createdAt: LocalDateTime
   lateinit var createdBy: String
   lateinit var createdByDisplayName: String

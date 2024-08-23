@@ -31,7 +31,11 @@ class SyncController(private val csip: SyncCsipRecord) {
       IllegalStateException("Context should not be set")
     }
     RequestContextHolder.getRequestAttributes()!!
-      .setAttribute(contextName, csipRequestContext().copy(source = Source.NOMIS), 0)
+      .setAttribute(
+        contextName,
+        csipRequestContext().copy(source = Source.NOMIS, activeCaseLoadId = request.activeCaseloadId),
+        0,
+      )
     return csip.sync(request)
   }
 }

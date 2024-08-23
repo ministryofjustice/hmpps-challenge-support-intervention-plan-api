@@ -18,6 +18,8 @@ data class SyncCsipRequest(
   override val referral: SyncReferralRequest?,
   @field:Valid
   val plan: SyncPlanRequest?,
+
+  val activeCaseloadId: String?,
   override val legacyId: Long,
   override val id: UUID?,
 ) : NomisAudited(), NomisIdentifiable, CsipRequest, PrisonNumberChangeRequest, LegacyIdAware {

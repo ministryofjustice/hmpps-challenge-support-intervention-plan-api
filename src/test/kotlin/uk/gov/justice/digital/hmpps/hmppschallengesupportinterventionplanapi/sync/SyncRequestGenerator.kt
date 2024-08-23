@@ -16,9 +16,10 @@ object SyncRequestGenerator {
     referral: SyncReferralRequest? = null,
     plan: SyncPlanRequest? = null,
     prisonNumber: String = NomisIdGenerator.prisonNumber(),
+    activeCaseloadId: String? = null,
     id: Long = newId(),
     uuid: UUID? = null,
-  ) = SyncCsipRequest(prisonNumber, logCode, referral, plan, id, uuid).withAuditDetail()
+  ) = SyncCsipRequest(prisonNumber, logCode, referral, plan, activeCaseloadId, id, uuid).withAuditDetail()
 
   fun syncReferralRequest(
     incidentDate: LocalDate = LocalDate.now(),
