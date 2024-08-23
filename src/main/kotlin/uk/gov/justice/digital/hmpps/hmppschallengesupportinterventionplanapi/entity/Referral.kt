@@ -22,10 +22,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
@@ -179,7 +180,7 @@ class Referral(
     rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ): DecisionAndActions {
     val isNew = decisionAndActions == null
-    val outcome = rdSupplier(OUTCOME_TYPE, request.outcomeTypeCode)
+    val outcome = rdSupplier(DECISION_OUTCOME_TYPE, request.outcomeTypeCode)
     val signedOffByCode = request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER
     val signedOffBy = rdSupplier(ReferenceDataType.DECISION_SIGNER_ROLE, signedOffByCode)
     if (isNew) {
@@ -196,7 +197,7 @@ class Referral(
     verifySaferCustodyScreeningOutcomeDoesNotExist()
     saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
       referral = this,
-      outcome = rdSupplier(OUTCOME_TYPE, request.outcomeTypeCode),
+      outcome = rdSupplier(SCREENING_OUTCOME_TYPE, request.outcomeTypeCode),
       date = request.date,
       recordedBy = request.recordedBy,
       recordedByDisplayName = request.recordedByDisplayName,

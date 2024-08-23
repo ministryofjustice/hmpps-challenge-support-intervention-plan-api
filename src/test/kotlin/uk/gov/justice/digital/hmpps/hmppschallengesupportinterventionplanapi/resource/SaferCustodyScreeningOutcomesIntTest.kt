@@ -77,8 +77,8 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: OUTCOME_TYPE is invalid")
-      assertThat(developerMessage).isEqualTo("Details => OUTCOME_TYPE:WRONG_CODE")
+      assertThat(userMessage).isEqualTo("Validation failure: SCREENING_OUTCOME_TYPE is invalid")
+      assertThat(developerMessage).isEqualTo("Details => SCREENING_OUTCOME_TYPE:WRONG_CODE")
       assertThat(moreInfo).isNull()
     }
   }

@@ -94,5 +94,5 @@ data class SyncScreeningOutcomeRequest(
   @field:Size(min = 0, max = 255, message = "Recorded by display name must be <= 255 characters")
   override val recordedByDisplayName: String,
 ) : ScreeningOutcomeRequest {
-  fun findRequiredReferenceDataKeys() = setOf(ReferenceDataKey(ReferenceDataType.OUTCOME_TYPE, outcomeTypeCode))
+  fun findRequiredReferenceDataKeys() = setOf(ReferenceDataKey(ReferenceDataType.SCREENING_OUTCOME_TYPE, outcomeTypeCode))
 }

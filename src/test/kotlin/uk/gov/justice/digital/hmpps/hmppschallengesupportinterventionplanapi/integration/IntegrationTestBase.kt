@@ -65,11 +65,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_SIGNER_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.OUTCOME_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
@@ -372,7 +373,7 @@ abstract class IntegrationTestBase {
   }
 
   fun Referral.withSaferCustodyScreeningOutcome(
-    outcome: ReferenceData = givenRandom(OUTCOME_TYPE),
+    outcome: ReferenceData = givenRandom(SCREENING_OUTCOME_TYPE),
     recordedBy: String = "recordedBy",
     recordedByDisplayName: String = "recordedByDisplayName",
     date: LocalDate = LocalDate.now(),
@@ -385,7 +386,7 @@ abstract class IntegrationTestBase {
   }
 
   fun Referral.withDecisionAndActions(
-    outcome: ReferenceData = givenRandom(OUTCOME_TYPE),
+    outcome: ReferenceData = givenRandom(DECISION_OUTCOME_TYPE),
     signedOffBy: ReferenceData = givenRandom(DECISION_SIGNER_ROLE),
     conclusion: String? = "a comprehensive conclusion",
     recordedBy: String = "recordedBy",
