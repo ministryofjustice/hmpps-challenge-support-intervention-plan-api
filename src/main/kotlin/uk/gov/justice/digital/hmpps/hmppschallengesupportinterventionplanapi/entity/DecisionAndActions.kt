@@ -35,6 +35,7 @@ class DecisionAndActions(
   val referral: Referral,
 
   outcome: ReferenceData,
+  signedOffBy: ReferenceData,
 ) : SimpleAuditable(), CsipAware {
   override fun csipRecord() = referral.csipRecord
 
@@ -52,7 +53,7 @@ class DecisionAndActions(
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "signed_off_by_role_id")
-  var signedOffBy: ReferenceData? = null
+  var signedOffBy: ReferenceData = signedOffBy
     private set
 
   @Column(length = 4000)
@@ -86,7 +87,7 @@ class DecisionAndActions(
   fun upsert(
     request: DecisionAndActionsRequest,
     outcomeType: ReferenceData,
-    signedOffByRole: ReferenceData?,
+    signedOffByRole: ReferenceData,
   ): DecisionAndActions {
     outcome = outcomeType
     signedOffBy = signedOffByRole
