@@ -73,7 +73,7 @@ data class SyncDecisionAndActionsRequest(
   override val actions: Set<DecisionAction>,
 ) : DecisionAndActionsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
-    add(ReferenceDataKey(ReferenceDataType.OUTCOME_TYPE, outcomeTypeCode))
+    add(ReferenceDataKey(ReferenceDataType.DECISION_OUTCOME_TYPE, outcomeTypeCode))
     signedOffByRoleCode?.also { add(ReferenceDataKey(ReferenceDataType.DECISION_SIGNER_ROLE, it)) }
   }
 }

@@ -404,14 +404,14 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
           ),
         ),
         InvalidRd(
-          ReferenceDataType.OUTCOME_TYPE,
+          ReferenceDataType.SCREENING_OUTCOME_TYPE,
           { it.referral!!.saferCustodyScreeningOutcome!!.outcomeTypeCode },
           INVALID,
         ),
       ),
       Arguments.of(
         syncCsipRequest(referral = syncReferralRequest(decisionAndActions = syncDecisionRequest(outcomeCode = NON_EXISTENT))),
-        InvalidRd(ReferenceDataType.OUTCOME_TYPE, { it.referral!!.decisionAndActions!!.outcomeTypeCode }, INVALID),
+        InvalidRd(ReferenceDataType.DECISION_OUTCOME_TYPE, { it.referral!!.decisionAndActions!!.outcomeTypeCode }, INVALID),
       ),
     )
 
