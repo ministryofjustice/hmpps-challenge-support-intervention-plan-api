@@ -64,6 +64,3 @@ update reference_data
     set list_sequence = 30
     where domain = 'DECISION_SIGNER_ROLE'
       and code = 'OTHER';
-
-alter table reference_data
-    add constraint unq_reference_data_domain_list_sequence unique (domain, list_sequence);
