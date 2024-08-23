@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.syn
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncCsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.withAuditInfo
+import java.util.UUID
 
 @Service
 @Transactional
@@ -64,6 +65,10 @@ class SyncCsipRecord(
       responseMappings.filter { RequestMapping(it.component, it.id, it.uuid) !in requestMappings }
         .toSet(),
     )
+  }
+
+  fun deleteCsipRecord(id: UUID) {
+    csipRepository.findById(id)?.also(csipRepository::delete)
   }
 
   private fun validatedReferenceData(keys: Set<ReferenceDataKey>): Map<ReferenceDataKey, ReferenceData> {

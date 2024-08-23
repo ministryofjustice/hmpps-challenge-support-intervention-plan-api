@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
@@ -21,6 +22,7 @@ import java.util.UUID
 
 data class SyncReferralRequest(
   override val incidentDate: LocalDate,
+  @JsonFormat(pattern = "HH:mm:ss")
   override val incidentTime: LocalTime?,
   @field:Size(min = 1, max = 12, message = "Incident Type code must be <= 12 characters")
   override val incidentTypeCode: String,
