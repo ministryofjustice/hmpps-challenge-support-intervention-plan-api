@@ -18,7 +18,7 @@ import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
 import java.time.LocalDate
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions as DecisionAndActionsModel
@@ -84,7 +84,7 @@ class DecisionAndActions(
     private set
 
   fun upsert(
-    request: UpsertDecisionAndActionsRequest,
+    request: DecisionAndActionsRequest,
     outcomeType: ReferenceData,
     signedOffByRole: ReferenceData?,
   ): DecisionAndActions {

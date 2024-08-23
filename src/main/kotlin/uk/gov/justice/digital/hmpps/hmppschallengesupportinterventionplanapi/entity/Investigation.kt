@@ -14,8 +14,10 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.util.UUID
 
 @Entity
@@ -61,14 +63,15 @@ class Investigation(
   fun interviews() = interviews.toList().sortedByDescending { it.id }
 
   fun addInterview(
-    createRequest: CreateInterviewRequest,
-    roleProvider: (String) -> ReferenceData,
+    request: InterviewRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ) = Interview(
     investigation = this,
-    interviewee = createRequest.interviewee,
-    interviewDate = createRequest.interviewDate,
-    intervieweeRole = roleProvider.invoke(createRequest.intervieweeRoleCode),
-    interviewText = createRequest.interviewText,
+    interviewee = request.interviewee,
+    interviewDate = request.interviewDate,
+    intervieweeRole = rdSupplier(ReferenceDataType.INTERVIEWEE_ROLE, request.intervieweeRoleCode),
+    interviewText = request.interviewText,
+    legacyId = if (request is LegacyIdAware) request.legacyId else null,
   ).apply {
     interviews.add(this)
   }

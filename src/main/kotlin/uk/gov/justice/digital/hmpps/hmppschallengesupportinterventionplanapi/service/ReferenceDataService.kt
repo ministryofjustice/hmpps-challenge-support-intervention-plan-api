@@ -13,5 +13,5 @@ class ReferenceDataService(
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
   fun getReferenceDataForDomain(domain: ReferenceDataType, includeInactive: Boolean): Collection<ReferenceData> =
-    referenceDataRepository.findByDomain(domain).toReferenceDataModels(includeInactive)
+    referenceDataRepository.findByKeyDomain(domain).toReferenceDataModels(includeInactive)
 }

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingInvestigationException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
@@ -40,9 +39,7 @@ class InvestigationService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = verifyExists(referral.investigation) { MissingInvestigationException(recordUuid) }
-    return investigation.addInterview(request) { code ->
-      referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
-    }.toModel()
+    return investigation.addInterview(request, referenceDataRepository::getActiveReferenceData).toModel()
   }
 
   fun createInvestigationWithInterviews(recordUuid: UUID, request: CreateInvestigationRequest): Investigation {
@@ -53,9 +50,7 @@ class InvestigationService(
     }
     val investigation = referral.upsertInvestigation(request)
     request.interviews.forEach {
-      investigation.addInterview(it) { code ->
-        referenceDataRepository.getActiveReferenceData(ReferenceDataType.INTERVIEWEE_ROLE, code)
-      }
+      investigation.addInterview(it, referenceDataRepository::getActiveReferenceData)
     }
     return investigation.toModel()
   }

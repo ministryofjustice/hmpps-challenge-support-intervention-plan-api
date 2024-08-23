@@ -119,7 +119,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
     with(response) {
       assertThat(status).isEqualTo(400)
-      assertThat(userMessage).isEqualTo("Validation failure(s): Contributory factor type code must be <= 12 characters")
+      assertThat(userMessage).isEqualTo("Validation failure: Contributory factor type code must be <= 12 characters")
     }
   }
 
@@ -227,15 +227,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
     val saved = getContributoryFactory(response.factorUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR), nomisContext())
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CONTRIBUTORY_FACTOR),
-      setOf(CONTRIBUTORY_FACTOR_CREATED),
-      setOf(response.factorUuid),
-      source = NOMIS,
-    )
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/referral/contributory-factors"

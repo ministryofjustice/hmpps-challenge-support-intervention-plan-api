@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
@@ -240,10 +241,10 @@ abstract class IntegrationTestBase {
   }
 
   fun givenRandom(type: ReferenceDataType) =
-    referenceDataRepository.findByDomain(type).filter { it.isActive() }.random()
+    referenceDataRepository.findByKeyDomain(type).filter { it.isActive() }.random()
 
   fun givenReferenceData(type: ReferenceDataType, code: String) =
-    requireNotNull(referenceDataRepository.findByDomainAndCode(type, code))
+    requireNotNull(referenceDataRepository.findByKey(ReferenceDataKey(type, code)))
 
   fun givenValidPrisonNumber(prisonNumber: String): String {
     prisonerSearch.stubGetPrisoner(prisonNumber)
@@ -379,7 +380,7 @@ abstract class IntegrationTestBase {
   ) = apply {
     this.set(
       ::saferCustodyScreeningOutcome,
-      SaferCustodyScreeningOutcome(this, outcome, recordedBy, recordedByDisplayName, date, reasonForDecision),
+      SaferCustodyScreeningOutcome(this, outcome, date, recordedBy, recordedByDisplayName, reasonForDecision),
     )
   }
 

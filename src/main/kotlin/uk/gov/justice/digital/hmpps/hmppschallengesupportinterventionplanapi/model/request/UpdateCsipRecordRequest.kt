@@ -16,11 +16,11 @@ data class UpdateCsipRecordRequest(
     description = "User entered identifier for the CSIP record. Defaults to the prison code.",
   )
   @field:Size(max = 10, message = "Log code must be <= 10 characters")
-  val logCode: String?,
+  override val logCode: String?,
 
   @field:Valid
-  val referral: UpdateReferral?,
-)
+  override val referral: UpdateReferral?,
+) : CsipRequest
 
 @Schema(
   description = "The detail for updating a CSIP referral",
@@ -31,7 +31,7 @@ data class UpdateReferral(
     example = "2021-09-27",
   )
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val incidentDate: LocalDate,
+  override val incidentDate: LocalDate,
 
   @Schema(
     description = "The time the incident that motivated the CSIP referral occurred",
@@ -40,95 +40,95 @@ data class UpdateReferral(
     pattern = "HH:mm:SS",
   )
   @JsonFormat(pattern = "HH:mm:ss")
-  val incidentTime: LocalTime?,
+  override val incidentTime: LocalTime?,
 
   @Schema(
     description = "The type of incident that motivated the CSIP referral.",
   )
   @field:Size(min = 1, max = 12, message = "Incident Type code must be <= 12 characters")
-  val incidentTypeCode: String,
+  override val incidentTypeCode: String,
 
   @Schema(
     description = "The location of incident that motivated the CSIP referral.",
   )
   @field:Size(min = 1, max = 12, message = "Incident Location code must be <= 12 characters")
-  val incidentLocationCode: String,
+  override val incidentLocationCode: String,
 
   @Schema(
     description = "The person reporting the incident or creating the CSIP referral.",
   )
   @field:Size(min = 1, max = 240, message = "Referer name must be <= 240 characters")
-  val referredBy: String,
+  override val referredBy: String,
 
   @Schema(
     description = "The area of work of the person reporting the incident or creating the CSIP referral.",
   )
   @field:Size(min = 1, max = 12, message = "Area code must be <= 12 characters")
-  val refererAreaCode: String,
+  override val refererAreaCode: String,
 
   @Schema(
     description = "Was this referral proactive or preventative.",
   )
-  val isProactiveReferral: Boolean?,
+  override val isProactiveReferral: Boolean?,
 
   @Schema(
     description = "Were any members of staff assaulted in the incident.",
   )
-  val isStaffAssaulted: Boolean?,
+  override val isStaffAssaulted: Boolean?,
 
   @Schema(
     description = "Name or names of assaulted members of staff if any.",
   )
   @field:Size(min = 0, max = 1000, message = "Name or names must be <= 1000 characters")
-  val assaultedStaffName: String?,
+  override val assaultedStaffName: String?,
 
   @Schema(
     description = "The type of involvement the person had in the incident",
   )
   @field:Size(min = 1, max = 12, message = "Involvement code must be <= 12 characters")
-  val incidentInvolvementCode: String?,
+  override val incidentInvolvementCode: String?,
 
   @Schema(
     description = "The reasons why there is cause for concern.",
   )
-  val descriptionOfConcern: String?,
+  override val descriptionOfConcern: String?,
 
   @Schema(
     description = "The reasons already known about the causes of the incident or motivation for CSIP referral.",
   )
-  val knownReasons: String?,
+  override val knownReasons: String?,
 
   @Schema(
     description = "Any other information about the incident or reasons for CSIP referral.",
   )
-  val otherInformation: String?,
+  override val otherInformation: String?,
 
   @Schema(
     description = "Records whether the safer custody team been informed.",
   )
-  val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
+  override val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
 
   @Schema(
     description = "Is the referral complete.",
   )
-  val isReferralComplete: Boolean?,
+  override val isReferralComplete: Boolean?,
 
   @Schema(
     description = "The date the referral was completed.",
     example = "2024-07-29",
   )
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val completedDate: LocalDate?,
+  override val completedDate: LocalDate?,
 
   @Schema(
     description = "The username of the person who completed the referral.",
   )
   @field:Size(min = 0, max = 32, message = "Completed by username must be <= 32 characters")
-  val completedBy: String?,
+  override val completedBy: String?,
 
   @Schema(
     description = "The displayable name of the person who completed the referral.",
   )
   @field:Size(min = 0, max = 255, message = "Completed by display name must be <= 255 characters")
-  val completedByDisplayName: String?,
-)
+  override val completedByDisplayName: String?,
+) : ReferralRequest
