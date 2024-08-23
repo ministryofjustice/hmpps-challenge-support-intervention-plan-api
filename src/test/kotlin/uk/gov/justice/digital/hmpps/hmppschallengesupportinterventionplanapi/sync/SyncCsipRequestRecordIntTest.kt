@@ -404,7 +404,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
       record,
       RevisionType.DEL,
       affectedComponents,
-      nomisContext()
+      nomisContext(),
     )
   }
 
