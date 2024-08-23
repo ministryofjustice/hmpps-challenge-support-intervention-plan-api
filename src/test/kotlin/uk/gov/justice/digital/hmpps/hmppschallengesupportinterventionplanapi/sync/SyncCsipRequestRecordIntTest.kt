@@ -5,6 +5,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
+import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -13,8 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.IDENTIFIED_NEED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INTERVIEW
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INVESTIGATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.PLAN
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REVIEW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.AttendeeRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ContributoryFactorRepository
@@ -38,7 +48,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.syn
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.withModifiedDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
+import java.time.LocalDate
+import java.time.LocalTime
+import java.util.UUID
 
 class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
@@ -272,6 +286,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
       uuid = initial.id,
       logCode = LOG_CODE,
       referral = syncReferralRequest(
+        incidentTime = LocalTime.now(),
         contributoryFactors = listOf(
           syncContributoryFactorRequest(
             uuid = initial.referral!!.contributoryFactors().first().id,
@@ -343,6 +358,56 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
+  @Test
+  fun `204 no content - delete csip record`() {
+    val record = dataSetup(generateCsipRecord(prisonNumber())) {
+      val referral = requireNotNull(it.withReferral().referral)
+        .withContributoryFactor()
+        .withContributoryFactor()
+        .withInvestigation()
+      requireNotNull(referral.investigation)
+        .withInterview(interviewDate = LocalDate.now().minusDays(2))
+        .withInterview(interviewDate = LocalDate.now().minusDays(1))
+        .withInterview()
+      val plan = requireNotNull(it.withPlan().plan)
+        .withNeed()
+        .withReview()
+        .withReview()
+      plan.reviews().first().withAttendee()
+      it
+    }
+
+    val factorUuids = record.referral!!.contributoryFactors().map { it.id }.toSet()
+    assertThat(factorUuids).hasSize(2)
+
+    val interviewIds = record.referral!!.investigation!!.interviews().map { it.id }.toSet()
+    assertThat(interviewIds).hasSize(3)
+
+    val needsIds = record.plan!!.identifiedNeeds().map { it.id }.toSet()
+    assertThat(needsIds).hasSize(1)
+
+    val reviewIds = record.plan!!.reviews().map { it.id }.toSet()
+    assertThat(reviewIds).hasSize(2)
+
+    val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.id } }
+    assertThat(attendeeIds).hasSize(1)
+
+    deleteCsip(record.id)
+
+    val affectedComponents =
+      setOf(
+        RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW,
+        CsipComponent.ATTENDEE,
+      )
+    verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
+    verifyAudit(
+      record,
+      RevisionType.DEL,
+      affectedComponents,
+      nomisContext()
+    )
+  }
+
   private fun urlToTest() = "/sync/csip-records"
 
   private fun syncCsipResponseSpec(
@@ -350,6 +415,10 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   ) = webTestClient.put().uri(urlToTest())
     .bodyValue(request)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
+
+  private fun deleteCsip(uuid: UUID) = webTestClient.delete().uri("${urlToTest()}/$uuid")
+    .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS)))
+    .exchange().expectStatus().isNoContent
 
   private fun syncCsipRecord(request: SyncCsipRequest) = syncCsipResponseSpec(request).successResponse<SyncResponse>()
 
@@ -411,7 +480,11 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
       ),
       Arguments.of(
         syncCsipRequest(referral = syncReferralRequest(decisionAndActions = syncDecisionRequest(outcomeCode = NON_EXISTENT))),
-        InvalidRd(ReferenceDataType.DECISION_OUTCOME_TYPE, { it.referral!!.decisionAndActions!!.outcomeTypeCode }, INVALID),
+        InvalidRd(
+          ReferenceDataType.DECISION_OUTCOME_TYPE,
+          { it.referral!!.decisionAndActions!!.outcomeTypeCode },
+          INVALID,
+        ),
       ),
     )
 

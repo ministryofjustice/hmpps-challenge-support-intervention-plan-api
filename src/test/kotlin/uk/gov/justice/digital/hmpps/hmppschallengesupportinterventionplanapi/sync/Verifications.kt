@@ -26,7 +26,7 @@ fun CsipRecord.verifyAgainst(request: SyncCsipRequest) {
 
 fun Referral.verifyAgainst(request: SyncReferralRequest) {
   assertThat(incidentDate).isEqualTo(request.incidentDate)
-  assertThat(incidentTime).isEqualTo(request.incidentTime)
+  request.incidentTime?.also { assertThat(incidentTime).isCloseTo(it, within(1, ChronoUnit.SECONDS)) }
   assertThat(referredBy).isEqualTo(request.referredBy)
   assertThat(proactiveReferral).isEqualTo(request.isProactiveReferral)
   assertThat(staffAssaulted).isEqualTo(request.isStaffAssaulted)
