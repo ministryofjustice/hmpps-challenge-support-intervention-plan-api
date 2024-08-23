@@ -20,7 +20,7 @@ data class UpsertDecisionAndActionsRequest(
 
   @Schema(description = "The role of the person making the outcome decision.")
   @field:Size(min = 0, max = 12, message = "Outcome Sign Off By Role code must be <= 12 characters")
-  override val signedOffByRoleCode: String?,
+  override val signedOffByRoleCode: String,
 
   @Schema(description = "The username of the user who recorded the outcome decision.")
   @field:Size(min = 0, max = 64, message = "Outcome Recorded By username must be <= 64 characters")

@@ -26,6 +26,10 @@ class ReferenceData(
   val id: Long = 0,
 ) : ReferenceDataLookup by key {
   fun isActive() = deactivatedAt?.isBefore(LocalDateTime.now()) != true
+
+  companion object {
+    const val SIGNED_OFF_BY_OTHER = "OTHER"
+  }
 }
 
 interface ReferenceDataLookup {
