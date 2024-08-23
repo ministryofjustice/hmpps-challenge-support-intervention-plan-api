@@ -26,7 +26,7 @@ update reference_data
       and code = 'OTH';
 
 update reference_data
-    set list_sequence = 9
+    set list_sequence = 10
     where domain = 'SCREENING_OUTCOME_TYPE'
       and code = 'CUR';
 
