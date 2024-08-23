@@ -26,7 +26,7 @@ update reference_data
       and code = 'OTH';
 
 update reference_data
-    set list_sequence = 10
+    set list_sequence = 9
     where domain = 'SCREENING_OUTCOME_TYPE'
       and code = 'CUR';
 
@@ -86,4 +86,4 @@ update reference_data
       and code = 'OTHER';
 
 alter table reference_data
-    add constraint unq_reference_data_domain_list_sequence unique (domain, list_sequence);
+    add constraint unq_reference_data_domain_list_sequence unique (domain, list_sequence, code);
