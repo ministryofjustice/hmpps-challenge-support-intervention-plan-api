@@ -18,7 +18,6 @@ import org.hibernate.envers.RevisionEntity
 import org.hibernate.envers.RevisionNumber
 import org.hibernate.envers.RevisionTimestamp
 import org.hibernate.envers.RevisionType
-import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Companion.fromClass
@@ -88,5 +87,3 @@ class AuditRevisionEntityListener : EntityTrackingRevisionListener {
     }
   }
 }
-
-interface AuditRevisionRepository : JpaRepository<AuditRevision, Long>

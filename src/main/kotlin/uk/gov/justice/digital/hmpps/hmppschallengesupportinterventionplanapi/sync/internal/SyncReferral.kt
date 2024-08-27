@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.ResponseMapping
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncReferralRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.withAuditInfo
 import java.util.UUID
 
 @Service

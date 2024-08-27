@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Auditable
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -18,11 +17,16 @@ abstract class NomisAudited {
   var lastModifiedByDisplayName: String? = null
 }
 
-fun <T : Auditable> T.withAuditInfo(request: NomisAudited): T = apply {
-  createdAt = request.createdAt
-  createdBy = request.createdBy
-  createdByDisplayName = request.createdByDisplayName
-  lastModifiedAt = request.lastModifiedAt
-  lastModifiedBy = request.lastModifiedBy
-  lastModifiedByDisplayName = request.lastModifiedByDisplayName
+interface LegacyActioned {
+  val actionedAt: LocalDateTime
+  val actionedBy: String
+  val actionedByDisplayName: String
+  val activeCaseloadId: String?
 }
+
+data class DefaultLegacyActioned(
+  override val actionedAt: LocalDateTime,
+  override val actionedBy: String,
+  override val actionedByDisplayName: String,
+  override val activeCaseloadId: String?,
+) : LegacyActioned

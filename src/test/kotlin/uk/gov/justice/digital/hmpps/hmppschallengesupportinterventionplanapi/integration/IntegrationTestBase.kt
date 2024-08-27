@@ -206,6 +206,7 @@ abstract class IntegrationTestBase {
     revisionType: RevisionType,
     affectedComponents: Set<CsipComponent>,
     context: CsipRequestContext = testUserContext(),
+    validateEntityWithContext: Boolean = true,
   ) = transactionTemplate.execute {
     val auditReader = AuditReaderFactory.get(entityManager)
     assertTrue(auditReader.isEntityClassAudited(entity::class.java))
@@ -228,15 +229,17 @@ abstract class IntegrationTestBase {
       assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
     }
 
-    val audited = entityRevision[0] as Auditable
-    with(audited) {
-      if (revisionType == RevisionType.ADD) {
-        assertThat(createdBy).isEqualTo(context.username)
-        assertThat(createdByDisplayName).isEqualTo(context.userDisplayName)
-      }
-      if (revisionType == RevisionType.MOD) {
-        assertThat(lastModifiedBy).isEqualTo(context.username)
-        assertThat(lastModifiedByDisplayName).isEqualTo(context.userDisplayName)
+    if (validateEntityWithContext) {
+      val audited = entityRevision[0] as Auditable
+      with(audited) {
+        if (revisionType == RevisionType.ADD) {
+          assertThat(createdBy).isEqualTo(context.username)
+          assertThat(createdByDisplayName).isEqualTo(context.userDisplayName)
+        }
+        if (revisionType == RevisionType.MOD) {
+          assertThat(lastModifiedBy).isEqualTo(context.username)
+          assertThat(lastModifiedByDisplayName).isEqualTo(context.userDisplayName)
+        }
       }
     }
   }

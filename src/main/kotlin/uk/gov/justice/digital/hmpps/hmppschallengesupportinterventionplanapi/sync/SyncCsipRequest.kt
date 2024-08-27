@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PrisonNumberChangeRequest
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class SyncCsipRequest(
@@ -19,10 +20,14 @@ data class SyncCsipRequest(
   @field:Valid
   val plan: SyncPlanRequest?,
 
-  val activeCaseloadId: String?,
+  val prisonCodeWhenRecorded: String?,
+  override val actionedAt: LocalDateTime,
+  override val actionedBy: String,
+  override val actionedByDisplayName: String,
+  override val activeCaseloadId: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisAudited(), NomisIdentifiable, CsipRequest, PrisonNumberChangeRequest, LegacyIdAware {
+) : NomisAudited(), NomisIdentifiable, CsipRequest, PrisonNumberChangeRequest, LegacyIdAware, LegacyActioned {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     referral?.also { addAll(it.findRequiredReferenceDataKeys()) }
   }
