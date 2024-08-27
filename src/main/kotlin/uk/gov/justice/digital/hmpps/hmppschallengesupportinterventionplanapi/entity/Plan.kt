@@ -109,6 +109,11 @@ class Plan(
     }
   }
 
+  fun nextReviewDate(): LocalDate {
+    val nextReviewDate = reviews().mapNotNull(Review::nextReviewDate).maxOrNull() ?: firstCaseReviewDate
+    return maxOf(firstCaseReviewDate, nextReviewDate)
+  }
+
   fun components(): Set<CsipComponent> = buildSet {
     add(CsipComponent.PLAN)
     if (identifiedNeeds.isNotEmpty()) {
