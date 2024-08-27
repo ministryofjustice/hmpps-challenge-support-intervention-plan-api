@@ -11,9 +11,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ATTENDEE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.IDENTIFIED_NEED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INTERVIEW
@@ -51,6 +53,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 
@@ -219,7 +222,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val response = syncCsipRecord(request)
     assertThat(response.mappings.size).isEqualTo(9)
 
-    val csipMapping = response.mappings.first { it.component == CsipComponent.RECORD }
+    val csipMapping = response.mappings.first { it.component == RECORD }
     assertThat(csipMapping).isNotNull()
 
     val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
@@ -228,39 +231,52 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     saved.verifyAgainst(request)
 
     val factorRequests = request.referral!!.contributoryFactors
-    val factorMappings = response.mappings.filter { it.component == CsipComponent.CONTRIBUTORY_FACTOR }
+    val factorMappings = response.mappings.filter { it.component == CONTRIBUTORY_FACTOR }
     assertThat(factorRequests.size).isEqualTo(factorMappings.size)
     val factors = contributoryFactorRepository.findAllById(factorMappings.map { it.uuid })
     assertThat(factors.size).isEqualTo(factorMappings.size)
     factors.forEach { i -> i.verifyAgainst(requireNotNull(factorRequests.find { it.legacyId == i.legacyId })) }
 
     val interviewRequests = request.referral!!.investigation!!.interviews
-    val interviewMappings = response.mappings.filter { it.component == CsipComponent.INTERVIEW }
+    val interviewMappings = response.mappings.filter { it.component == INTERVIEW }
     assertThat(interviewRequests.size).isEqualTo(interviewMappings.size)
     val interviews = interviewRepository.findAllById(interviewMappings.map { it.uuid })
     assertThat(interviews.size).isEqualTo(interviewMappings.size)
     interviews.forEach { i -> i.verifyAgainst(requireNotNull(interviewRequests.find { it.legacyId == i.legacyId })) }
 
     val needRequests = request.plan!!.identifiedNeeds
-    val needMappings = response.mappings.filter { it.component == CsipComponent.IDENTIFIED_NEED }
+    val needMappings = response.mappings.filter { it.component == IDENTIFIED_NEED }
     assertThat(needRequests.size).isEqualTo(needMappings.size)
     val needs = identifiedNeedRepository.findAllById(needMappings.map { it.uuid })
     assertThat(needs.size).isEqualTo(needMappings.size)
     needs.forEach { i -> i.verifyAgainst(requireNotNull(needRequests.find { it.legacyId == i.legacyId })) }
 
     val reviewRequests = request.plan!!.reviews
-    val reviewMappings = response.mappings.filter { it.component == CsipComponent.REVIEW }
+    val reviewMappings = response.mappings.filter { it.component == REVIEW }
     assertThat(reviewRequests.size).isEqualTo(reviewMappings.size)
     val reviews = reviewRepository.findAllById(reviewMappings.map { it.uuid })
     assertThat(reviews.size).isEqualTo(reviewMappings.size)
     reviews.forEach { i -> i.verifyAgainst(requireNotNull(reviewRequests.find { it.legacyId == i.legacyId })) }
 
     val attendeeRequests = request.plan!!.reviews.flatMap { it.attendees }
-    val attendeeMappings = response.mappings.filter { it.component == CsipComponent.ATTENDEE }
+    val attendeeMappings = response.mappings.filter { it.component == ATTENDEE }
     assertThat(attendeeRequests.size).isEqualTo(attendeeMappings.size)
     val attendees = attendeeRepository.findAllById(attendeeMappings.map { it.uuid })
     assertThat(attendees.size).isEqualTo(attendeeMappings.size)
     attendees.forEach { i -> i.verifyAgainst(requireNotNull(attendeeRequests.find { it.legacyId == i.legacyId })) }
+
+    verifyAudit(
+      saved,
+      RevisionType.ADD,
+      CsipComponent.entries.toSet(),
+      nomisContext().copy(
+        requestAt = request.actionedAt,
+        username = request.actionedBy,
+        userDisplayName = request.actionedByDisplayName,
+        activeCaseLoadId = request.activeCaseloadId,
+      ),
+      validateEntityWithContext = false,
+    )
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
@@ -392,19 +408,24 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.id } }
     assertThat(attendeeIds).hasSize(1)
 
-    deleteCsip(record.id)
+    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), "actionedBy", "actionedByDisplayName", "LEI")
+    deleteCsip(record.id, legacyActioned)
 
     val affectedComponents =
       setOf(
-        RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW,
-        CsipComponent.ATTENDEE,
+        RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW, ATTENDEE,
       )
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
     verifyAudit(
       record,
       RevisionType.DEL,
       affectedComponents,
-      nomisContext(),
+      nomisContext().copy(
+        requestAt = legacyActioned.actionedAt,
+        username = legacyActioned.actionedBy,
+        userDisplayName = legacyActioned.actionedByDisplayName,
+        activeCaseLoadId = legacyActioned.activeCaseloadId,
+      ),
     )
   }
 
@@ -416,7 +437,9 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     .bodyValue(request)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
 
-  private fun deleteCsip(uuid: UUID) = webTestClient.delete().uri("${urlToTest()}/$uuid")
+  private fun deleteCsip(uuid: UUID, legacyActioned: LegacyActioned) = webTestClient.method(HttpMethod.DELETE)
+    .uri("${urlToTest()}/$uuid")
+    .bodyValue(legacyActioned)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS)))
     .exchange().expectStatus().isNoContent
 

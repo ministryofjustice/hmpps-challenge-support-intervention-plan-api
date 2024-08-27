@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.RequestContextHolder
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
@@ -57,7 +56,7 @@ class SyncController(private val csip: SyncCsipRecord) {
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
   fun syncCsipRecord(@Valid @RequestBody request: SyncCsipRequest): SyncResponse {
-    setSyncContext(request.activeCaseloadId)
+    setSyncContext(request)
     return csip.sync(request)
   }
 
@@ -82,12 +81,12 @@ class SyncController(private val csip: SyncCsipRecord) {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
-  fun deleteCsipRecord(@PathVariable id: UUID) {
-    setSyncContext()
+  fun deleteCsipRecord(@PathVariable id: UUID, @RequestBody request: DefaultLegacyActioned) {
+    setSyncContext(request)
     csip.deleteCsipRecord(id)
   }
 
-  private fun setSyncContext(activeCaseloadId: String? = null) {
+  private fun setSyncContext(actioned: LegacyActioned) {
     val contextName = CsipRequestContext::class.simpleName!!
     verifyDoesNotExist(RequestContextHolder.getRequestAttributes()?.getAttribute(contextName, 0)) {
       IllegalStateException("Context should not be set")
@@ -95,7 +94,13 @@ class SyncController(private val csip: SyncCsipRecord) {
     RequestContextHolder.getRequestAttributes()!!
       .setAttribute(
         contextName,
-        csipRequestContext().copy(source = Source.NOMIS, activeCaseLoadId = activeCaseloadId),
+        CsipRequestContext(
+          source = Source.NOMIS,
+          requestAt = actioned.actionedAt,
+          username = actioned.actionedBy,
+          userDisplayName = actioned.actionedByDisplayName,
+          activeCaseLoadId = actioned.activeCaseloadId,
+        ),
         0,
       )
   }
