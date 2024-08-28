@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
@@ -139,7 +140,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun retrieveCsipRecord(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
   ): CsipRecord = csipRecordService.retrieveCsipRecord(recordUuid)
