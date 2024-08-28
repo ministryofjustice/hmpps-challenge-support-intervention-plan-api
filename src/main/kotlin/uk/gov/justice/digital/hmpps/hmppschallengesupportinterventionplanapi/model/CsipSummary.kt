@@ -22,4 +22,4 @@ data class CsipSummary(
   val status: CsipStatus,
 )
 
-data class CsipSummaries(val content: List<CsipSummary>, val page: PageMeta)
+data class CsipSummaries(val content: List<CsipSummary>, val metadata: PageMeta)
