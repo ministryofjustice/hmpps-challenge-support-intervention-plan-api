@@ -126,6 +126,78 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `200 ok - default sort is desc`() {
+    val prisonNumber = "D1234ST"
+    dataSetup(
+      generateCsipRecord(
+        prisonNumber,
+        createdAt = LocalDateTime.now().minusDays(3),
+        logCode = "TWO",
+      ).withReferral(),
+    ) { it }
+    dataSetup(
+      generateCsipRecord(
+        prisonNumber,
+        createdAt = LocalDateTime.now().minusDays(1),
+        logCode = "ONE",
+      ).withReferral(),
+    ) { it }
+    dataSetup(
+      generateCsipRecord(
+        prisonNumber,
+        createdAt = LocalDateTime.now().minusDays(7),
+        logCode = "THREE",
+      ).withReferral(),
+    ) { it }
+
+    with(
+      getCsipRecords(
+        prisonNumber,
+        mapOf("sort" to "createdAt"),
+      ),
+    ) {
+      assertThat(content.size).isEqualTo(3)
+      assertThat(content.map { it.logCode }).containsExactly("ONE", "TWO", "THREE")
+    }
+  }
+
+  @Test
+  fun `200 ok - can sort asc`() {
+    val prisonNumber = "A1234ST"
+    dataSetup(
+      generateCsipRecord(
+        prisonNumber,
+        createdAt = LocalDateTime.now().minusDays(3),
+        logCode = "TWO",
+      ).withReferral(),
+    ) { it }
+    dataSetup(
+      generateCsipRecord(
+        prisonNumber,
+        createdAt = LocalDateTime.now().minusDays(7),
+        logCode = "ONE",
+      ).withReferral(),
+    ) { it }
+    dataSetup(
+      generateCsipRecord(
+        prisonNumber,
+        createdAt = LocalDateTime.now().minusDays(1),
+        logCode = "THREE",
+      ).withReferral(),
+    ) { it }
+
+    with(
+      getCsipRecords(
+        prisonNumber,
+        mapOf("sort" to "createdAt,asc"),
+      ),
+    ) {
+      assertThat(content.size).isEqualTo(3)
+      assertThat(content.map { it.logCode }).containsExactly("ONE", "TWO", "THREE")
+    }
+  }
+
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"
 
   private fun getCsipRecordsResponseSpec(
