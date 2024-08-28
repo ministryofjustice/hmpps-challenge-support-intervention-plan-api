@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config
 
+import io.swagger.v3.core.util.PrimitiveType
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
@@ -73,6 +74,9 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
       ),
     )
     .addSecurityItem(SecurityRequirement().addList("bearer-jwt", listOf("read", "write")))
+    .also {
+      PrimitiveType.enablePartialTime() // Prevents generation of a LocalTime schema which causes conflicts with java.time.LocalTime
+    }
 
   @Bean
   fun preAuthorizeCustomizer(): OperationCustomizer {
