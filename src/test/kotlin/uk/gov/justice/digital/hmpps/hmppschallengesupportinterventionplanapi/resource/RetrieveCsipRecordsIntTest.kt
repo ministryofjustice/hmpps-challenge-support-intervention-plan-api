@@ -153,6 +153,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
       Arguments.of(mapOf("page" to 0.toString()), "Page number must be at least 1"),
       Arguments.of(mapOf("size" to 0.toString()), "Page size must be at least 1"),
       Arguments.of(mapOf("size" to 101.toString()), "Page size must not be more than 100"),
+      Arguments.of(mapOf("sort" to "lastModifiedAt"), "sort is invalid"),
     )
   }
 }
