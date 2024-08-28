@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.DecisionActionsService
@@ -79,7 +78,7 @@ class DecisionAndActionsController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun upsertDecision(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: UpsertDecisionAndActionsRequest,

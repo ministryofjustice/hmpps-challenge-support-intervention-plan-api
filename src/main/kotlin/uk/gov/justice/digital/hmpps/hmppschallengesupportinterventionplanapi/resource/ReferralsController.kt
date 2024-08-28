@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateContributoryFactorRequest
@@ -66,7 +65,7 @@ class ReferralsController(private val referralService: ReferralService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createContributoryFactor(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody createContributoryFactorRequest: CreateContributoryFactorRequest,

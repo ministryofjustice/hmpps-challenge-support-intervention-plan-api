@@ -17,7 +17,7 @@ import java.util.UUID
 class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   @ParameterizedTest
   @NullSource
-  @ValueSource(strings = ["WRONG_ROLE"])
+  @ValueSource(strings = [ROLE_NOMIS])
   fun `403 forbidden - no required role`(role: String?) {
     val response = getCsipRecordResponseSpec(UUID.randomUUID(), role).errorResponse(HttpStatus.FORBIDDEN)
 
@@ -50,7 +50,7 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [ROLE_CSIP_UI, ROLE_NOMIS])
+  @ValueSource(strings = [ROLE_CSIP_UI])
   fun `200 ok - returns matching CSIP record`(role: String) {
     val prisonNumber = givenValidPrisonNumber("G1234CR")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())

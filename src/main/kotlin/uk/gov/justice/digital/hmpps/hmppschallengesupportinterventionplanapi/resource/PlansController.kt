@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
@@ -114,7 +113,7 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun upsertPlan(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: UpsertPlanRequest,
@@ -160,7 +159,7 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createIdentifiedNeed(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: CreateIdentifiedNeedRequest,
