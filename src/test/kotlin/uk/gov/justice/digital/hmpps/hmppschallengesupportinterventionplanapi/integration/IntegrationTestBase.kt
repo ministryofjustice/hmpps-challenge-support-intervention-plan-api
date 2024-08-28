@@ -87,6 +87,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event.EntityEventService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.getByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
@@ -164,10 +165,13 @@ abstract class IntegrationTestBase {
 
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
     switchEventPublish(false)
-    val res = code(csipRecord)
-    csipRecordRepository.save(csipRecord)
+    val t = transactionTemplate.execute {
+      val res = code(csipRecord)
+      csipRecordRepository.saveAndRefresh(csipRecord)
+      res
+    }!!
     switchEventPublish(true)
-    return res
+    return t
   }
 
   internal fun verifyDomainEvents(

@@ -21,8 +21,6 @@ data class Referral(
   @Schema(
     description = "The time the incident that motivated the CSIP referral occurred",
     example = "14:19:25",
-    type = "String",
-    pattern = "HH:mm:SS",
   )
   @JsonFormat(pattern = "HH:mm:ss")
   val incidentTime: LocalTime?,

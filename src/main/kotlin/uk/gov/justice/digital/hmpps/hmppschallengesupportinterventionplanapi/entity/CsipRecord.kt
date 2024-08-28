@@ -144,4 +144,10 @@ class CsipRecord(
     referralCompletedBy = request.completedBy,
     referralCompletedByDisplayName = request.completedByDisplayName,
   )
+
+  companion object {
+    val PRISON_NUMBER: String = CsipRecord::prisonNumber.name
+    val LOG_CODE: String = CsipRecord::logCode.name
+    val CREATED_AT: String = CsipRecord::createdAt.name
+  }
 }

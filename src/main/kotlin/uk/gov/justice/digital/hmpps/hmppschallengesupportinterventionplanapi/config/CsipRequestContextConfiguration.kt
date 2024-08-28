@@ -20,9 +20,11 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 @Configuration
 class CsipRequestContextConfiguration(private val csipRequestContextInterceptor: CsipRequestContextInterceptor) : WebMvcConfigurer {
   override fun addInterceptors(registry: InterceptorRegistry) {
-    registry.addInterceptor(csipRequestContextInterceptor).addPathPatterns("/csip-records/**")
-    registry.addInterceptor(csipRequestContextInterceptor).addPathPatterns("/prisoners/**")
-    registry.addInterceptor(csipRequestContextInterceptor).addPathPatterns("/reference-data/**")
+    registry.addInterceptor(csipRequestContextInterceptor)
+      .addPathPatterns("/reference-data/**")
+      .addPathPatterns("/csip-records/**")
+      .addPathPatterns("/prisoners/*/csip-records")
+      .excludePathPatterns("/prisoners/csip-records")
   }
 }
 

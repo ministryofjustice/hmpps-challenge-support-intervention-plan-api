@@ -53,8 +53,11 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no required role`() {
-    val response = webTestClient.get().uri(urlToTest("A1234BC"))
-      .headers(setAuthorisation(roles = listOf("WRONG_ROLE"))).exchange().errorResponse(HttpStatus.FORBIDDEN)
+    val response = webTestClient.post().uri(urlToTest("A1234BC"))
+      .headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
+      .headers(setCsipRequestContext())
+      .bodyValue(createCsipRecordRequest())
+      .exchange().errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
       assertThat(status).isEqualTo(403)
