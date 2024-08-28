@@ -11,8 +11,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
@@ -20,12 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.NO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_NOT_FOUND
@@ -37,7 +30,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -55,7 +47,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   fun `403 forbidden - no required role`() {
     val response = webTestClient.post().uri(urlToTest("A1234BC"))
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
-      .headers(setCsipRequestContext())
       .bodyValue(createCsipRecordRequest())
       .exchange().errorResponse(HttpStatus.FORBIDDEN)
 
@@ -71,43 +62,13 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `403 forbidden - no roles`() {
     webTestClient.post().uri(urlToTest("A1234BC")).bodyValue(createCsipRecordRequest())
-      .headers(setAuthorisation()).headers(setCsipRequestContext()).exchange().errorResponse(HttpStatus.FORBIDDEN)
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri(urlToTest("A1234BC"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }.exchange()
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val response = webTestClient.post().uri(urlToTest("A1234BC"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange()
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(moreInfo).isNull()
-    }
+      .headers(setAuthorisation(roles = listOf())).exchange().errorResponse(HttpStatus.FORBIDDEN)
   }
 
   @Test
   fun `400 bad request - username not found`() {
     val response = webTestClient.post().uri(urlToTest("A1234BC")).bodyValue(createCsipRecordRequest())
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext(username = USER_NOT_FOUND))
+      .headers(setAuthorisation(user = USER_NOT_FOUND, roles = listOf(ROLE_CSIP_UI)))
       .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -122,7 +83,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - no body`() {
     val response = webTestClient.post().uri(urlToTest("A1234BC"))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers(setCsipRequestContext()).exchange()
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange()
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -296,66 +257,25 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
   }
 
-  @Test
-  fun `201 created - CSIP record created via NOMIS`() {
-    val request = createCsipRecordRequest(
-      createReferralRequest(
-        contributoryFactorTypeCode = listOf("AFL"),
-      ),
-    )
-
-    val prisonNumber = givenValidPrisonNumber("C1236SP")
-    val response = webTestClient.createCsipRecord(prisonNumber, request, NOMIS, NOMIS_SYS_USER)
-
-    with(response) {
-      assertThat(logCode).isEqualTo(LOG_CODE)
-      assertThat(recordUuid).isNotNull()
-      assertThat(referral).isNotNull()
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
-      assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
-    }
-
-    val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
-
-    verifyAudit(
-      saved,
-      RevisionType.ADD,
-      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
-      nomisContext(),
-    )
-  }
-
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"
 
   private fun WebTestClient.createCsipResponseSpec(
-    source: Source = DPS,
     user: String = TEST_USER,
+    roles: List<String> = listOf(ROLE_CSIP_UI),
     request: CreateCsipRecordRequest,
     prisonNumber: String = PRISON_NUMBER,
-  ) = post()
-    .uri(urlToTest(prisonNumber))
-    .bodyValue(request).headers(
-      setAuthorisation(
-        roles = listOf(
-          source.let {
-            if (it == NOMIS) {
-              ROLE_NOMIS
-            } else {
-              ROLE_CSIP_UI
-            }
-          },
-        ),
-      ),
-    ).headers(setCsipRequestContext(source = source, username = user)).exchange().expectHeader()
-    .contentType(MediaType.APPLICATION_JSON)
+  ) = post().uri(urlToTest(prisonNumber)).bodyValue(request).headers(setAuthorisation(user = user, roles = roles))
+    .exchange().expectHeader().contentType(MediaType.APPLICATION_JSON)
 
   private fun WebTestClient.createCsipRecord(
     prisonNumber: String,
     request: CreateCsipRecordRequest,
-    source: Source = DPS,
     user: String = TEST_USER,
-  ) = createCsipResponseSpec(source, user, request, prisonNumber).successResponse<CsipRecord>(HttpStatus.CREATED)
+  ) = createCsipResponseSpec(
+    user,
+    request = request,
+    prisonNumber = prisonNumber,
+  ).successResponse<CsipRecord>(HttpStatus.CREATED)
 
   companion object {
     private const val INVALID = "is invalid"

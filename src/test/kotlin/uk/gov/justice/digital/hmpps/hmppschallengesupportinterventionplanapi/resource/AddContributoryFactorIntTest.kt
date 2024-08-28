@@ -13,18 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CONTRIBUTORY_FACTOR_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
@@ -33,7 +26,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -61,35 +53,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Authentication problem. Check token and roles - Access Denied")
       assertThat(developerMessage).isEqualTo("Access Denied")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri(urlToTest(randomUUID()))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }
-      .exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val response = addContributoryFactorResponseSpec(randomUUID(), createContributoryFactorRequest(), username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
       assertThat(moreInfo).isNull()
     }
   }
@@ -209,49 +172,26 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     )
   }
 
-  @Test
-  fun `201 created - contributory factor added NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("C1234NM")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
-
-    val request = createContributoryFactorRequest(comment = "This was done by nomis")
-    val response = addContributoryFactor(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
-
-    with(response) {
-      assertThat(factorType.code).isEqualTo(request.factorTypeCode)
-      assertThat(comment).isEqualTo(request.comment)
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(createdBy).isEqualTo(NOMIS_SYS_USER)
-      assertThat(createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
-    }
-
-    val saved = getContributoryFactory(response.factorUuid)
-    verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR), nomisContext())
-  }
-
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/referral/contributory-factors"
 
   private fun addContributoryFactorResponseSpec(
     csipUuid: UUID,
     request: CreateContributoryFactorRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.post()
     .uri(urlToTest(csipUuid))
     .bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username))
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role)))
     .exchange()
 
   private fun addContributoryFactor(
     csipUuid: UUID,
     request: CreateContributoryFactorRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor =
-    addContributoryFactorResponseSpec(csipUuid, request, source, username, role).successResponse(CREATED)
+    addContributoryFactorResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun getContributoryFactory(uuid: UUID) = contributoryFactorRepository.getContributoryFactor(uuid)
 

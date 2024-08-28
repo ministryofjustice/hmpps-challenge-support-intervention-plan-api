@@ -9,18 +9,14 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.util.UUID
@@ -35,7 +31,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   @Test
   fun `403 forbidden - no roles`() {
     webTestClient.post().uri(urlToTest(UUID.randomUUID()))
-      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation()).headers(setCsipRequestContext())
+      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf()))
       .exchange().expectStatus().isForbidden
   }
 
@@ -43,14 +39,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   fun `403 forbidden - incorrect role`() {
     webTestClient.post().uri(urlToTest(UUID.randomUUID()))
       .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
-      .headers(setCsipRequestContext()).exchange().expectStatus().isForbidden
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    webTestClient.post().uri(urlToTest(UUID.randomUUID()))
-      .bodyValue(createScreeningOutcomeRequest()).headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
-      .headers { it.set(SOURCE, "INVALID") }.exchange().expectStatus().isBadRequest
+      .exchange().expectStatus().isForbidden
   }
 
   @ParameterizedTest
@@ -165,49 +154,22 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     )
   }
 
-  @Test
-  fun `create safer custody screening outcome via NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("S1234CN")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
-    val request = createScreeningOutcomeRequest()
-
-    val response = createScreeningOutcome(record.id, request, Source.NOMIS, NOMIS_SYS_USER)
-
-    with(response) {
-      assertThat(reasonForDecision).isEqualTo(request.reasonForDecision)
-      assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
-      assertThat(date).isEqualTo(request.date)
-      assertThat(recordedBy).isEqualTo(request.recordedBy)
-      assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
-    }
-
-    val saved = getScreeningOutcome(record.id)
-    verifyAudit(
-      saved,
-      RevisionType.ADD,
-      setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME),
-      nomisContext(),
-    )
-  }
-
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/safer-custody-screening"
 
   private fun createScreeningOutcomeResponseSpec(
     recordUuid: UUID,
     request: CreateSaferCustodyScreeningOutcomeRequest,
-    source: Source = Source.DPS,
     username: String = TEST_USER,
   ) = webTestClient.post().uri(urlToTest(recordUuid))
     .bodyValue(request)
-    .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI), isUserToken = true))
-    .headers(setCsipRequestContext(source, username)).exchange()
+    .headers(setAuthorisation(user = username, roles = listOf(ROLE_CSIP_UI), isUserToken = true))
+    .exchange()
 
   private fun createScreeningOutcome(
     recordUuid: UUID,
     request: CreateSaferCustodyScreeningOutcomeRequest,
-    source: Source = Source.DPS,
     username: String = TEST_USER,
-  ) = createScreeningOutcomeResponseSpec(recordUuid, request, source, username)
+  ) = createScreeningOutcomeResponseSpec(recordUuid, request, username)
     .successResponse<SaferCustodyScreeningOutcome>(HttpStatus.CREATED)
 
   private fun getScreeningOutcome(recordUuid: UUID) =

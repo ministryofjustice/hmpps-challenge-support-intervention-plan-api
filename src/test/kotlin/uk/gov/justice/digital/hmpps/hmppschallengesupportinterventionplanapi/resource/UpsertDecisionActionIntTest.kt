@@ -13,19 +13,12 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.DecisionAndActions
@@ -56,38 +49,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Authentication problem. Check token and roles - Access Denied")
       assertThat(developerMessage).isEqualTo("Access Denied")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.put().uri(urlToTest(UUID.randomUUID()))
-      .bodyValue(upsertDecisionActionsRequest()).headers(setAuthorisation())
-      .headers { it.set(SOURCE, "INVALID") }.exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val request = upsertDecisionActionsRequest()
-
-    val response = upsertDecisionResponseSpec(record.id, request, username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
       assertThat(moreInfo).isNull()
     }
   }
@@ -273,36 +234,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `create decision and actions via NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("D1234CD")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
-    val request = upsertDecisionActionsRequest()
-
-    val response = upsertDecisionActions(
-      record.id,
-      request,
-      source = NOMIS,
-      username = NOMIS_SYS_USER,
-      role = ROLE_NOMIS,
-      status = HttpStatus.CREATED,
-    )
-
-    response.verifyAgainst(request)
-
-    val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.id))
-    val decision = requireNotNull(csip.referral?.decisionAndActions)
-    assertThat(decision.createdBy).isEqualTo(NOMIS_SYS_USER)
-    assertThat(decision.createdByDisplayName).isEqualTo(NOMIS_SYS_USER_DISPLAY_NAME)
-
-    verifyAudit(
-      decision,
-      RevisionType.ADD,
-      setOf(CsipComponent.DECISION_AND_ACTIONS),
-      nomisContext(),
-    )
-  }
-
-  @Test
   fun `200 ok - no changes made to decisions`() {
     val prisonNumber = givenValidPrisonNumber("D1234NC")
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
@@ -390,23 +321,20 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   private fun upsertDecisionResponseSpec(
     recordUuid: UUID,
     request: UpsertDecisionAndActionsRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ): WebTestClient.ResponseSpec = webTestClient.put()
     .uri(urlToTest(recordUuid))
     .bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username)).exchange()
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role))).exchange()
 
   fun upsertDecisionActions(
     recordUuid: UUID,
     request: UpsertDecisionAndActionsRequest,
-    source: Source = DPS,
     username: String = TEST_USER,
     role: String? = ROLE_CSIP_UI,
     status: HttpStatus,
-  ) = upsertDecisionResponseSpec(recordUuid, request, source, username, role)
+  ) = upsertDecisionResponseSpec(recordUuid, request, username, role)
     .successResponse<DecisionAndActions>(status)
 
   private fun DecisionAndActions.verifyAgainst(request: UpsertDecisionAndActionsRequest) {

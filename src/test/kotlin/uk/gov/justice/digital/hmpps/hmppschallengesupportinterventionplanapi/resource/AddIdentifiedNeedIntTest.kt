@@ -10,16 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_CREATED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
@@ -27,7 +21,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getIdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createIdentifiedNeedRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -53,35 +46,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Authentication problem. Check token and roles - Access Denied")
       assertThat(developerMessage).isEqualTo("Access Denied")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri(urlToTest(randomUUID()))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }
-      .exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val response = addIdentifiedNeedResponseSpec(randomUUID(), createIdentifiedNeedRequest(), username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
       assertThat(moreInfo).isNull()
     }
   }
@@ -158,48 +122,26 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     )
   }
 
-  @Test
-  fun `201 created - identified need added NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("N1234NM")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
-
-    val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeed(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
-
-    val need = getIdentifiedNeed(response.identifiedNeedUuid)
-    need.verifyAgainst(request)
-
-    verifyAudit(
-      need,
-      RevisionType.ADD,
-      setOf(CsipComponent.IDENTIFIED_NEED),
-      nomisContext(),
-    )
-  }
-
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/plan/identified-needs"
 
   private fun addIdentifiedNeedResponseSpec(
     csipUuid: UUID,
     request: CreateIdentifiedNeedRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.post()
     .uri(urlToTest(csipUuid))
     .bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username))
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role)))
     .exchange()
 
   private fun addIdentifiedNeed(
     csipUuid: UUID,
     request: CreateIdentifiedNeedRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed =
-    addIdentifiedNeedResponseSpec(csipUuid, request, source, username, role).successResponse(CREATED)
+    addIdentifiedNeedResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun IdentifiedNeed.verifyAgainst(request: CreateIdentifiedNeedRequest) {
     assertThat(identifiedNeed).isEqualTo(request.identifiedNeed)

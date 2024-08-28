@@ -16,7 +16,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
@@ -65,35 +64,6 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `401 unauthorised`() {
     webTestClient.post().uri("/csip-records/${UUID.randomUUID()}").exchange().expectStatus().isUnauthorized
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.patch().uri("/csip-records/${UUID.randomUUID()}")
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }
-      .exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val response = updateCsipRecordResponseSpec(UUID.randomUUID(), updateCsipRecordRequest(), username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(moreInfo).isNull()
-    }
   }
 
   @Test
@@ -311,23 +281,20 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   private fun updateCsipRecordResponseSpec(
     uuid: UUID,
     request: UpdateCsipRecordRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.patch()
     .uri("/csip-records/$uuid")
     .bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username))
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role)))
     .exchange()
 
   private fun updateCsipRecord(
     uuid: UUID,
     request: UpdateCsipRecordRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): CsipRecord = updateCsipRecordResponseSpec(uuid, request, source, username, role).successResponse()
+  ): CsipRecord = updateCsipRecordResponseSpec(uuid, request, username, role).successResponse()
 
   companion object {
     private const val INVALID = "is invalid"

@@ -9,13 +9,10 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreatePlanRequest
@@ -43,38 +40,6 @@ class CreatePlanIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Authentication problem. Check token and roles - Access Denied")
       assertThat(developerMessage).isEqualTo("Access Denied")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.put().uri(urlToTest(UUID.randomUUID()))
-      .bodyValue(createPlanRequest()).headers(setAuthorisation()).headers { it.set(SOURCE, "INVALID") }
-      .exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val request = createPlanRequest()
-
-    val response = createPlanResponseSpec(record.id, request, username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
       assertThat(moreInfo).isNull()
     }
   }
@@ -199,20 +164,17 @@ class CreatePlanIntTest : IntegrationTestBase() {
   private fun createPlanResponseSpec(
     recordUuid: UUID,
     request: CreatePlanRequest,
-    source: Source = Source.DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.post().uri(urlToTest(recordUuid)).bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username)).exchange()
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role))).exchange()
 
   private fun createPlan(
     recordUuid: UUID,
     request: CreatePlanRequest,
-    source: Source = Source.DPS,
     role: String? = ROLE_CSIP_UI,
     username: String = TEST_USER,
-  ) = createPlanResponseSpec(recordUuid, request, source, username, role)
+  ) = createPlanResponseSpec(recordUuid, request, username, role)
     .successResponse<uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan>(HttpStatus.CREATED)
 
   private fun getPlan(recordUuid: UUID) = transactionTemplate.execute {

@@ -20,7 +20,7 @@ class ReferenceDataIntTest : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no roles`() {
-    webTestClient.get().uri("/reference-data/screening-outcome-type").headers(setAuthorisation()).exchange()
+    webTestClient.get().uri("/reference-data/screening-outcome-type").headers(setAuthorisation(roles = listOf())).exchange()
       .expectStatus().isForbidden
   }
 
