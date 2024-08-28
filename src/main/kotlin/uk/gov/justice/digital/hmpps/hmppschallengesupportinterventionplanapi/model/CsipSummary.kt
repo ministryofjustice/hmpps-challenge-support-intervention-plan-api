@@ -1,10 +1,15 @@
-package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model
 
-import org.springframework.data.web.PagedModel.PageMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referenceData.ReferenceData
 import java.time.LocalDate
 import java.util.UUID
+
+interface PagedResponse {
+  val totalElements: Long
+}
+
+data class PageMeta(override val totalElements: Long) : PagedResponse
 
 data class CsipSummary(
   val id: UUID,
@@ -17,4 +22,4 @@ data class CsipSummary(
   val status: CsipStatus,
 )
 
-data class CsipSummaries(val content: List<CsipSummary>, val page: PageMetadata)
+data class CsipSummaries(val content: List<CsipSummary>, val page: PageMeta)

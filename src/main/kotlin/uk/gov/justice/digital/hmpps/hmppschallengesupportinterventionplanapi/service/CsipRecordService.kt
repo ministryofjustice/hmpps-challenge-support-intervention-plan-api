@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.data.domain.Page
 import org.springframework.data.jpa.domain.Specification
-import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
@@ -12,10 +11,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.PageMeta
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaries
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummary
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FindCsipRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.createdBefore
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.matchesLogCode
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.prisonNumberIn
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.isLikeLogCode
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.matchesPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.verifyAllReferenceData
 import java.util.UUID
@@ -69,15 +69,16 @@ class CsipRecordService(
   fun deleteCsipRecord(recordUuid: UUID): Boolean =
     csipRecordRepository.findById(recordUuid)?.also(csipRecordRepository::delete) != null
 
-  fun findCsipRecords(request: FindCsipRequest): CsipSummaries =
-    csipRecordRepository.findAll(request.toSpecification(), request.pageable).map { it.toSummary() }.asCsipSummaries()
+  fun findCsipRecordsForPrisoner(prisonNumber: String, request: CsipSummaryRequest): CsipSummaries =
+    csipRecordRepository.findAll(request.toSpecification(prisonNumber), request.pageable()).map { it.toSummary() }
+      .asCsipSummaries()
 }
 
-private fun FindCsipRequest.toSpecification(): Specification<CsipEntity> = listOfNotNull(
-  prisonNumberIn(prisonNumbers),
-  logCode?.let { matchesLogCode(it) },
-  from?.let { createdAfter(it) },
-  to?.let { createdBefore(it) },
+private fun CsipSummaryRequest.toSpecification(prisonNumber: String): Specification<CsipEntity> = listOfNotNull(
+  matchesPrisonNumber(prisonNumber),
+  logCode?.let { isLikeLogCode(it) },
+  createdAtStart?.let { createdAfter(it) },
+  createdAtEnd?.let { createdBefore(it) },
 ).reduce { spec, current -> spec.and(current) }
 
 private fun CsipEntity.toSummary(): CsipSummary {
@@ -96,5 +97,5 @@ private fun CsipEntity.toSummary(): CsipSummary {
 
 private fun Page<CsipSummary>.asCsipSummaries() = CsipSummaries(
   content,
-  PagedModel.PageMetadata(size.toLong(), number.toLong(), totalElements, totalPages.toLong()),
+  PageMeta(totalElements),
 )

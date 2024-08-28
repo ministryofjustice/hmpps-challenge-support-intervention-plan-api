@@ -8,11 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotEmpty
 import org.springdoc.core.annotations.ParameterObject
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort.Direction
-import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -24,30 +20,24 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod.GET
-import org.springframework.web.bind.annotation.RequestMethod.POST
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaries
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FindCsipRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CsipRecordService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
-import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "1. CSIP Record Controller", description = "Endpoints for CSIP Record operations")
 class CsipRecordsController(val csipRecordService: CsipRecordService, val prisonerSearchClient: PrisonerSearchClient) {
-  @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(path = ["/prisoners/csip-records"], method = [GET, POST])
   @Operation(
     summary = "Retrieve and filter all CSIP records for a prisoner.",
     description = "Returns the CSIP records for a prisoner. Supports log code filtering.",
@@ -75,34 +65,13 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/prisoners/{prisonNumber}/csip-records")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun getCsipRecordsByPrisonNumber(
-    @RequestBody @NotEmpty(message = "At least one prison number must be provided") prisonNumbers: Set<String>,
-    @RequestParam(required = false)
-    @Parameter(
-      description = "Filter CSIP records that contain the search text in their Log Code. The search is case insensitive.",
-      example = "Search text",
-    ) logCode: String?,
-    @RequestParam(required = false)
-    @Parameter(
-      description = "Filter CSIP records that have a created timestamp at or after the supplied time.",
-      example = "2021-09-27T14:19:25",
-    ) createdAtStart: LocalDateTime?,
-    @RequestParam(required = false)
-    @Parameter(
-      description = "Filter CSIP records that have a created timestamp at or before the supplied time.",
-      example = "2021-09-27T14:19:25",
-    ) createdAtEnd: LocalDateTime?,
-    @ParameterObject @PageableDefault(sort = ["createdAt"], direction = Direction.DESC) pageable: Pageable,
-  ): CsipSummaries = csipRecordService.findCsipRecords(
-    FindCsipRequest(
-      prisonNumbers,
-      logCode,
-      createdAtStart,
-      createdAtEnd,
-      pageable,
-    ),
-  )
+  fun getCsipRecordsByPrisonNumbers(
+    @PathVariable prisonNumber: String,
+    @Valid @ParameterObject request: CsipSummaryRequest,
+  ): CsipSummaries = csipRecordService.findCsipRecordsForPrisoner(prisonNumber, request)
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/prisoners/{prisonNumber}/csip-records")

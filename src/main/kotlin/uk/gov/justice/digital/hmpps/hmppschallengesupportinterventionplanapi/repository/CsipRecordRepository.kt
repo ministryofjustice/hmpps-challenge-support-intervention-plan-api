@@ -31,14 +31,14 @@ fun CsipRecordRepository.saveAndRefresh(record: CsipRecord): CsipRecord {
   return saved
 }
 
-fun prisonNumberIn(prisonNumbers: Set<String>) =
-  Specification<CsipRecord> { csip, _, _ -> csip.get<String>(PRISON_NUMBER).`in`(prisonNumbers) }
+fun matchesPrisonNumber(prisonNumber: String) =
+  Specification<CsipRecord> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_NUMBER]), prisonNumber.lowercase()) }
 
-fun matchesLogCode(value: String) =
+fun isLikeLogCode(value: String) =
   Specification<CsipRecord> { csip, _, cb -> cb.like(cb.lower(csip[LOG_CODE]), "%${value.lowercase()}%") }
 
 fun createdBefore(to: LocalDateTime) =
-  Specification<CsipRecord> { csip, _, cb -> cb.lessThan(csip[CREATED_AT], to) }
+  Specification<CsipRecord> { csip, _, cb -> cb.lessThanOrEqualTo(csip[CREATED_AT], to) }
 
 fun createdAfter(from: LocalDateTime) =
-  Specification<CsipRecord> { csip, _, cb -> cb.greaterThan(csip[CREATED_AT], from) }
+  Specification<CsipRecord> { csip, _, cb -> cb.greaterThanOrEqualTo(csip[CREATED_AT], from) }
