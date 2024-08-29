@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class UpsertPlanRequestTest : RequestValidationTest() {
+class UpdatePlanRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
     val request = UpsertPlanRequest(

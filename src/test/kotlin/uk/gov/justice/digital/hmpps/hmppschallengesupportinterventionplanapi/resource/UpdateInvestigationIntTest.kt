@@ -124,7 +124,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing an investigation.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing an investigation.")
-      assertThat(moreInfo).isEqualTo(record.id)
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 

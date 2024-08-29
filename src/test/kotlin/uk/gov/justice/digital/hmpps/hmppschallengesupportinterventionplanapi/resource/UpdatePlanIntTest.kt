@@ -93,7 +93,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a plan.")
       assertThat(developerMessage).isEqualTo("CSIP Record is missing a plan.")
-      assertThat(moreInfo).isEqualTo(record.id)
+      assertThat(moreInfo).isEqualTo(record.id.toString())
     }
   }
 
