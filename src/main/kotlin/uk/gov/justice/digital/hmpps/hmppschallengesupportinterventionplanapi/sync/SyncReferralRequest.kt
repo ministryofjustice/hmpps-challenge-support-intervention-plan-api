@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralDateRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ScreeningOutcomeRequest
 import java.time.LocalDate
@@ -21,6 +22,7 @@ import java.time.LocalTime
 import java.util.UUID
 
 data class SyncReferralRequest(
+  override val referralDate: LocalDate,
   override val incidentDate: LocalDate,
   @JsonFormat(pattern = "HH:mm:ss")
   override val incidentTime: LocalTime?,
@@ -56,7 +58,7 @@ data class SyncReferralRequest(
   val investigation: SyncInvestigationRequest?,
   @field:Valid
   val decisionAndActions: SyncDecisionAndActionsRequest?,
-) : ReferralRequest, ContributoryFactorsRequest {
+) : ReferralRequest, ReferralDateRequest, ContributoryFactorsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     add(ReferenceDataKey(INCIDENT_TYPE, incidentTypeCode))
     add(ReferenceDataKey(INCIDENT_LOCATION, incidentLocationCode))

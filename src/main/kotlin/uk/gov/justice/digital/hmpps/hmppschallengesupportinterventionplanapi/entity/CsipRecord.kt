@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PrisonNumberChangeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralDateRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
 import java.util.UUID
 
@@ -119,12 +120,12 @@ class CsipRecord(
   }
 
   private fun referral(
-    csipRequestContext: CsipRequestContext,
+    context: CsipRequestContext,
     request: ReferralRequest,
     rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ) = Referral(
     csipRecord = this,
-    referralDate = csipRequestContext.requestAt.toLocalDate(),
+    referralDate = if (request is ReferralDateRequest) request.referralDate else context.requestAt.toLocalDate(),
     incidentDate = request.incidentDate,
     incidentTime = request.incidentTime,
     referredBy = request.referredBy,
