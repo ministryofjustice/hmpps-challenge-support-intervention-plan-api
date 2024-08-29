@@ -37,15 +37,12 @@ class SyncCsipRecord(
     val csip: CsipRecord = request.id?.let { csipRepository.getCsipRecord(it).update(request).withAuditInfo(request) }
       ?: request.toCsipRecord()
     val referralMappings = request.referral?.let {
-      val referral = if (csip.referral == null) {
-        csip.createReferral(it, csipRequestContext(), rdSupplier)
-      } else {
-        csip.referral!!.update(it, rdSupplier)
-      }
+      val referral = csip.referral?.update(it, rdSupplier) ?: csip.createReferral(it, csipRequestContext(), rdSupplier)
       referralSync.sync(referral, it, rdSupplier)
     } ?: emptySet()
     val planMappings = request.plan?.let {
-      planSync.sync(csip.upsertPlan(it), it)
+      val plan = csip.plan?.update(it) ?: csip.createPlan(it)
+      planSync.sync(plan, it)
     } ?: emptySet()
 
     csipRepository.save(csip)

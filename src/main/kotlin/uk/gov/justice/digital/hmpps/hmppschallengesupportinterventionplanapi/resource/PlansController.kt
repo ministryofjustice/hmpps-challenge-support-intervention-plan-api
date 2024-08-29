@@ -10,13 +10,10 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -36,8 +33,6 @@ import java.util.UUID
 @RequestMapping(path = ["/csip-records"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "6. Plans Controller", description = "Endpoints for Plans And Identified Needs operations")
 class PlansController(private val planService: PlanService) {
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/{recordUuid}/plan")
   @Operation(
     summary = "Create the CSIP plan",
     description = "Create the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan and IdentifiedNeed",
@@ -70,13 +65,14 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/{recordUuid}/plan")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createPlan(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: CreatePlanRequest,
   ): Plan = planService.createPlanWithIdentifiedNeeds(recordUuid, request)
 
-  @PutMapping("/{recordUuid}/plan")
   @Operation(
     summary = "Create or update the CSIP plan",
     description = "Create or update the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan",
@@ -113,20 +109,13 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
+  @PatchMapping("/{recordUuid}/plan")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun upsertPlan(
+  fun updatePlan(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: UpsertPlanRequest,
-  ): ResponseEntity<Plan> = planService.upsertPlan(recordUuid, request).let {
-    if (it.new) {
-      ResponseEntity.status(HttpStatus.CREATED).body(it)
-    } else {
-      ResponseEntity.ok(it)
-    }
-  }
+  ): Plan = planService.updatePlan(recordUuid, request)
 
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/{recordUuid}/plan/identified-needs")
   @Operation(
     summary = "Add an identified need to the plan.",
     description = "Add an identified need to the plan. Publishes prisoner-csip.identified-need.created event",
@@ -159,14 +148,14 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/{recordUuid}/plan/identified-needs")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createIdentifiedNeed(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: CreateIdentifiedNeedRequest,
   ): IdentifiedNeed = planService.addIdentifiedNeed(recordUuid, request)
 
-  @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/plan/identified-needs/{identifiedNeedUuid}")
   @Operation(
     summary = "Update an identified need on the plan.",
     description = "Update an identified need on the plan. Publishes prisoner-csip.identified-need-updated event",
@@ -199,6 +188,8 @@ class PlansController(private val planService: PlanService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @PatchMapping("/plan/identified-needs/{identifiedNeedUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateIdentifiedNeed(
     @PathVariable @Parameter(
@@ -207,41 +198,4 @@ class PlansController(private val planService: PlanService) {
     ) identifiedNeedUuid: UUID,
     @Valid @RequestBody updateIdentifiedNeed: UpdateIdentifiedNeedRequest,
   ): IdentifiedNeed = throw NotImplementedError()
-
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/plan/identified-needs/{identifiedNeedUuid}")
-  @Operation(
-    summary = "Remove an identified need from the plan.",
-    description = "Remove an identified need from the plan. Publishes prisoner-csip.identified-need-deleted event",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "204",
-        description = "Identified need deleted",
-      ),
-      ApiResponse(
-        responseCode = "401",
-        description = "Unauthorised, requires a valid Oauth2 token",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "403",
-        description = "Forbidden, requires an appropriate role",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "The identified need associated with this identifier was not found.",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-    ],
-  )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun deleteIdentifiedNeed(
-    @PathVariable @Parameter(
-      description = "Identified Need unique identifier",
-      required = true,
-    ) identifiedNeedUuid: UUID,
-  ): Nothing = throw NotImplementedError()
 }

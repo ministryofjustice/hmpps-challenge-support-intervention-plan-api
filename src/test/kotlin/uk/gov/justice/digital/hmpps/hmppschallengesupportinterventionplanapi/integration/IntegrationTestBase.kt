@@ -435,7 +435,7 @@ abstract class IntegrationTestBase {
     personsTrigger: String? = "personsTrigger",
     protectiveFactors: String? = "protectiveFactors",
   ): Referral = apply {
-    val investigation = Investigation(this).upsert(
+    val investigation = Investigation(this).update(
       UpsertInvestigationRequest(
         staffInvolved,
         evidenceSecured,

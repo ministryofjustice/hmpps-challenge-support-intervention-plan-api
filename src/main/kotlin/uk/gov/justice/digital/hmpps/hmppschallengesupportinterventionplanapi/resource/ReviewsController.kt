@@ -11,7 +11,6 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -31,17 +30,9 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
 
 @RestController
-@RequestMapping(
-  path = ["/csip-records"],
-  produces = [MediaType.APPLICATION_JSON_VALUE],
-)
-@Tag(
-  name = "6. Reviews Controller",
-  description = "Endpoints for Reviews And Attendees operations",
-)
+@RequestMapping(path = ["/csip-records"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@Tag(name = "6. Reviews Controller", description = "Endpoints for Reviews And Attendees operations")
 class ReviewsController(private val reviewService: ReviewService) {
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/{recordUuid}/plan/reviews")
   @Operation(
     summary = "Add a review of the plan and any attendees.",
     description = "Create a review of the plan and any attendees. Publishes prisoner-csip.review-created and prisoner-csip.attendee-created events",
@@ -74,14 +65,14 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/{recordUuid}/plan/reviews")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createReview(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: CreateReviewRequest,
   ): Review = reviewService.addReview(recordUuid, request)
 
-  @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/plan/reviews/{reviewUuid}")
   @Operation(
     summary = "Update a review of the plan.",
     description = "Update a review of the plan only. Cannot update attendees with this endpoint. Publishes prisoner-csip.review-updated event",
@@ -114,14 +105,14 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @PatchMapping("/plan/reviews/{reviewUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateReview(
     @PathVariable @Parameter(description = "Review unique identifier", required = true) reviewUuid: UUID,
     @Valid @RequestBody updateReviewRequest: UpdateReviewRequest,
   ): Review = throw NotImplementedError()
 
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/plan/reviews/{reviewUuid}/attendees")
   @Operation(
     summary = "Add an attendee to a review of the plan.",
     description = "Add an attendee to a review of the plan. Publishes prisoner-csip.attendee-created event",
@@ -154,14 +145,14 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/plan/reviews/{reviewUuid}/attendees")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createAttendee(
     @PathVariable @Parameter(description = "Review unique identifier", required = true) reviewUuid: UUID,
     @Valid @RequestBody request: CreateAttendeeRequest,
   ): Attendee = reviewService.addAttendee(reviewUuid, request)
 
-  @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/plan/reviews/attendees/{attendeeUuid}")
   @Operation(
     summary = "Update an attendee on a review of the plan.",
     description = "Update an attendee on a review of the plan. Publishes prisoner-csip.attendee-updated event",
@@ -194,46 +185,11 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @PatchMapping("/plan/reviews/attendees/{attendeeUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateAttendee(
     @PathVariable @Parameter(description = "Attendee unique identifier", required = true) attendeeUuid: UUID,
     @Valid @RequestBody updateAttendeeRequest: UpdateAttendeeRequest,
   ): Attendee = throw NotImplementedError()
-
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/plan/reviews/attendees/{attendeeUuid}")
-  @Operation(
-    summary = "Remove an attendee from a review of the plan.",
-    description = "Remove an attendee from a review of the plan. Publishes prisoner-csip.attendee-deleted event",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "204",
-        description = "Attendee deleted",
-      ),
-      ApiResponse(
-        responseCode = "401",
-        description = "Unauthorised, requires a valid Oauth2 token",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "403",
-        description = "Forbidden, requires an appropriate role",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "The attendee associated with this identifier was not found.",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-    ],
-  )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun deleteAttendee(
-    @PathVariable @Parameter(
-      description = "Attendee unique identifier",
-      required = true,
-    ) attendeeUuid: UUID,
-  ): Nothing = throw NotImplementedError()
 }

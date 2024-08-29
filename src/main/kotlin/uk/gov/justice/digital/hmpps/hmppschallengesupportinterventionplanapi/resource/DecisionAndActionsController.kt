@@ -29,14 +29,10 @@ import java.util.UUID
   path = ["/csip-records/{recordUuid}/referral/decision-and-actions"],
   produces = [MediaType.APPLICATION_JSON_VALUE],
 )
-@Tag(
-  name = "5. Decision And Actions Controller",
-  description = "Endpoints for Decision And Actions operations",
-)
+@Tag(name = "5. Decision And Actions Controller", description = "Endpoints for Decision And Actions operations")
 class DecisionAndActionsController(
   private val decisionActionsService: DecisionActionsService,
 ) {
-  @PutMapping
   @Operation(
     summary = "Add decision and actions to the referral.",
     description = "Create or update the decision and actions. Publishes person.csip.record.updated event with affected component of DecisionAndActions",
@@ -78,6 +74,7 @@ class DecisionAndActionsController(
       ),
     ],
   )
+  @PutMapping
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun upsertDecision(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,

@@ -26,18 +26,18 @@ import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.util.UUID
 
-class UpsertPlanIntTest : IntegrationTestBase() {
+class UpdatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.put().uri(urlToTest(UUID.randomUUID())).exchange().expectStatus().isUnauthorized
+    webTestClient.patch().uri(urlToTest(UUID.randomUUID())).exchange().expectStatus().isUnauthorized
   }
 
   @ParameterizedTest
   @NullSource
   @ValueSource(strings = ["WRONG_ROLE"])
   fun `403 forbidden - no required role`(role: String?) {
-    val response = upsertPlanResponseSpec(UUID.randomUUID(), planRequest(), role = role)
+    val response = updatePlanResponseSpec(UUID.randomUUID(), planRequest(), role = role)
       .errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
@@ -54,7 +54,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
     val recordUuid = UUID.randomUUID()
     val request = planRequest()
 
-    val response = upsertPlanResponseSpec(recordUuid, request, username = "UNKNOWN")
+    val response = updatePlanResponseSpec(recordUuid, request, username = "UNKNOWN")
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -69,7 +69,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   @Test
   fun `404 not found - CSIP record not found`() {
     val recordUuid = UUID.randomUUID()
-    val response = upsertPlanResponseSpec(recordUuid, planRequest())
+    val response = updatePlanResponseSpec(recordUuid, planRequest())
       .errorResponse(HttpStatus.NOT_FOUND)
 
     with(response) {
@@ -82,23 +82,19 @@ class UpsertPlanIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - create plan via DPS UI`() {
+  fun `400 bad request - plan does not exist`() {
     val prisonNumber = givenValidPrisonNumber("P1234DS")
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
     val request = planRequest()
 
-    upsertPlan(record.id, request, status = HttpStatus.CREATED)
-
-    val plan = csipRecordRepository.getCsipRecord(record.id).plan
-    requireNotNull(plan).verifyAgainst(request)
-
-    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN))
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.PLAN),
-      setOf(DomainEventType.CSIP_UPDATED),
-    )
+    val response = updatePlanResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing a plan.")
+      assertThat(developerMessage).isEqualTo("CSIP Record is missing a plan.")
+      assertThat(moreInfo).isEqualTo(record.id.toString())
+    }
   }
 
   @Test
@@ -108,7 +104,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
     val request = planRequest()
 
-    upsertPlan(record.id, request, status = HttpStatus.OK)
+    updatePlan(record.id, request, status = HttpStatus.OK)
     val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
 
@@ -132,7 +128,7 @@ class UpsertPlanIntTest : IntegrationTestBase() {
       "Some other reason",
     )
 
-    upsertPlan(record.id, request, status = HttpStatus.OK)
+    updatePlan(record.id, request, status = HttpStatus.OK)
 
     val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
@@ -165,20 +161,20 @@ class UpsertPlanIntTest : IntegrationTestBase() {
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/plan"
 
-  private fun upsertPlanResponseSpec(
+  private fun updatePlanResponseSpec(
     recordUuid: UUID,
     request: UpsertPlanRequest,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
-  ) = webTestClient.put().uri(urlToTest(recordUuid)).bodyValue(request)
+  ) = webTestClient.patch().uri(urlToTest(recordUuid)).bodyValue(request)
     .headers(setAuthorisation(user = username, roles = listOfNotNull(role))).exchange()
 
-  private fun upsertPlan(
+  private fun updatePlan(
     recordUuid: UUID,
     request: UpsertPlanRequest,
     role: String? = ROLE_CSIP_UI,
     username: String = TEST_USER,
     status: HttpStatus,
-  ) = upsertPlanResponseSpec(recordUuid, request, username, role)
+  ) = updatePlanResponseSpec(recordUuid, request, username, role)
     .successResponse<uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan>(status)
 }

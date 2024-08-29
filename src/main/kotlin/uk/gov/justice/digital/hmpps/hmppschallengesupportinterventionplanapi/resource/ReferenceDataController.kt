@@ -22,19 +22,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
-@RequestMapping(
-  path = ["/reference-data/{domain}"],
-  produces = [MediaType.APPLICATION_JSON_VALUE],
-)
-@Tag(
-  name = "7. Reference Data Controller",
-  description = "Endpoints for Reference Data operations",
-)
+@RequestMapping(path = ["/reference-data/{domain}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@Tag(name = "7. Reference Data Controller", description = "Endpoints for Reference Data operations")
 class ReferenceDataController(
   private val referenceDataService: ReferenceDataService,
 ) {
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping
   @Operation(
     summary = "Retrieve all reference data fo a domain.",
     description = "Get all reference data for a domain e.g. area-of-work",
@@ -62,14 +54,11 @@ class ReferenceDataController(
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun getReferenceData(
-    @PathVariable @Parameter(
-      description = "Reference data domain.",
-      required = true,
-    ) domain: ReferenceDataType,
-    @Parameter(
-      description = "Include inactive reference data. Defaults to false",
-    ) includeInactive: Boolean = false,
+    @PathVariable @Parameter(description = "Reference data domain.", required = true) domain: ReferenceDataType,
+    @Parameter(description = "Include inactive reference data. Defaults to false") includeInactive: Boolean = false,
   ): Collection<ReferenceData> = referenceDataService.getReferenceDataForDomain(domain, includeInactive)
 }
