@@ -24,8 +24,7 @@ class ReferenceDataTranslationIntTest : IntegrationTestBase() {
     assertThat(referenceData[0].code).isEqualTo("CUR")
     assertThat(referenceData[1].code).isEqualTo("OPE")
     assertThat(referenceData[2].code).isEqualTo("WIN")
-    assertThat(referenceData[3].code).isEqualTo("ACC")
-    assertThat(referenceData[4].code).isEqualTo("NFA")
+    assertThat(referenceData[3].code).isEqualTo("NFA")
   }
 
   private fun WebTestClient.getReferenceData(
