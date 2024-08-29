@@ -91,7 +91,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - contributory factor updated`() {
-    val prisonNumber = givenValidPrisonNumber("F1234UP")
+    val prisonNumber = givenValidPrisonNumber("F1234NC")
     val factor = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       val referral = requireNotNull(it.referral).withContributoryFactor()
       referral.contributoryFactors().first()
