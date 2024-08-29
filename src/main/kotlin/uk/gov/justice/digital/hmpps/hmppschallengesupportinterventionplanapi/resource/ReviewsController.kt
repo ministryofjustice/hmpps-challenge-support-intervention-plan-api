@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
@@ -75,7 +74,7 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createReview(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: CreateReviewRequest,
@@ -155,7 +154,7 @@ class ReviewsController(private val reviewService: ReviewService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createAttendee(
     @PathVariable @Parameter(description = "Review unique identifier", required = true) reviewUuid: UUID,
     @Valid @RequestBody request: CreateAttendeeRequest,

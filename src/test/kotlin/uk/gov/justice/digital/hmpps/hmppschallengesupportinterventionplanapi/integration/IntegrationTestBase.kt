@@ -31,8 +31,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.USERNAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Auditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
@@ -484,19 +483,11 @@ abstract class IntegrationTestBase {
   }
 
   internal fun setAuthorisation(
-    user: String? = null,
+    user: String? = TEST_USER,
     client: String = CLIENT_ID,
-    roles: List<String> = listOf(),
-    isUserToken: Boolean = true,
+    roles: List<String> = listOf(ROLE_CSIP_UI),
+    isUserToken: Boolean = false,
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, client, roles, isUserToken = isUserToken)
-
-  internal fun setCsipRequestContext(
-    source: Source? = null,
-    username: String? = TEST_USER,
-  ): (HttpHeaders) -> Unit = {
-    it.set(SOURCE, source?.name)
-    it.set(USERNAME, username)
-  }
 
   internal fun WebTestClient.ResponseSpec.errorResponse(status: HttpStatus) =
     expectStatus().isEqualTo(status)

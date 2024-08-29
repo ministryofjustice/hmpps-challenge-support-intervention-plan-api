@@ -102,7 +102,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createCsipRecord(
     @PathVariable @Parameter(description = "Prison Number of the prisoner", required = true) prisonNumber: String,
     @Valid @RequestBody createCsipRecordRequest: CreateCsipRecordRequest,
@@ -179,7 +179,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateCsipRecord(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody updateCsipRecordRequest: UpdateCsipRecordRequest,
@@ -217,7 +217,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun deleteCsipRecord(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
   ): ResponseEntity<Unit> = when (csipRecordService.deleteCsipRecord(recordUuid)) {

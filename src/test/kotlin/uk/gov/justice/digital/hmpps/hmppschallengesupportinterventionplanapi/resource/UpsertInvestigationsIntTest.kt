@@ -12,20 +12,14 @@ import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.util.UUID
 
@@ -48,38 +42,6 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Authentication problem. Check token and roles - Access Denied")
       assertThat(developerMessage).isEqualTo("Access Denied")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.put().uri(urlToTest(UUID.randomUUID()))
-      .bodyValue(investigationRequest()).headers(setAuthorisation()).headers { it.set(SOURCE, "INVALID") }
-      .exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val record = givenCsipRecord(generateCsipRecord(PRISON_NUMBER)).withReferral()
-    val request = investigationRequest()
-
-    val response = upsertInvestigationResponseSpec(record.id, request, username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
       assertThat(moreInfo).isNull()
     }
   }
@@ -175,32 +137,6 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - create investigation via NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("I1234NS")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
-    val request = investigationRequest()
-
-    val response = upsertInvestigation(
-      record.id,
-      request,
-      source = Source.NOMIS,
-      username = NOMIS_SYS_USER,
-      role = ROLE_NOMIS,
-      status = HttpStatus.CREATED,
-    )
-
-    response.verifyAgainst(request)
-
-    val investigation = getInvestigation(record.id)
-    verifyAudit(
-      investigation,
-      RevisionType.ADD,
-      setOf(CsipComponent.INVESTIGATION),
-      nomisContext(),
-    )
-  }
-
-  @Test
   fun `200 ok - no changes made to investigation`() {
     val prisonNumber = givenValidPrisonNumber("I1234NC")
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
@@ -280,20 +216,17 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   private fun upsertInvestigationResponseSpec(
     recordUuid: UUID,
     request: UpsertInvestigationRequest,
-    source: Source = Source.DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.put().uri(urlToTest(recordUuid)).bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username)).exchange()
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role))).exchange()
 
   private fun upsertInvestigation(
     recordUuid: UUID,
     request: UpsertInvestigationRequest,
-    source: Source = Source.DPS,
     role: String? = ROLE_CSIP_UI,
     username: String = TEST_USER,
     status: HttpStatus,
-  ) = upsertInvestigationResponseSpec(recordUuid, request, source, username, role)
+  ) = upsertInvestigationResponseSpec(recordUuid, request, username, role)
     .successResponse<Investigation>(status)
 }

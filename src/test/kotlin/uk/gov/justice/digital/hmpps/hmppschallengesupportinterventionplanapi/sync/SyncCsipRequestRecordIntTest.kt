@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ATTENDEE
@@ -98,7 +99,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - no body`() {
     val response = webTestClient.put().uri(urlToTest())
-      .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
+      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI)))
       .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {

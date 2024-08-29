@@ -13,19 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.SOURCE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.INTERVIEW_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
@@ -34,7 +27,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getInterview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -62,35 +54,6 @@ class AddInterviewIntTest : IntegrationTestBase() {
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("Authentication problem. Check token and roles - Access Denied")
       assertThat(developerMessage).isEqualTo("Access Denied")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - invalid source`() {
-    val response = webTestClient.post().uri(urlToTest(randomUUID()))
-      .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).headers { it.set(SOURCE, "INVALID") }
-      .exchange().errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(developerMessage).isEqualTo("No enum constant uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.INVALID")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
-  fun `400 bad request - username not supplied`() {
-    val response = addInterviewResponseSpec(randomUUID(), createInterviewRequest(), username = null)
-      .errorResponse(HttpStatus.BAD_REQUEST)
-
-    with(response) {
-      assertThat(status).isEqualTo(400)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: Could not find non empty username from user_name or username token claims or Username header")
-      assertThat(developerMessage).isEqualTo("Could not find non empty username from user_name or username token claims or Username header")
       assertThat(moreInfo).isNull()
     }
   }
@@ -220,29 +183,6 @@ class AddInterviewIntTest : IntegrationTestBase() {
     )
   }
 
-  @Test
-  fun `201 created - interview added NOMIS`() {
-    val prisonNumber = givenValidPrisonNumber("C1234NM")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
-      requireNotNull(it.referral).withInvestigation()
-      it
-    }
-
-    val request = createInterviewRequest(notes = "Created By NOMIS")
-    val response = addInterview(record.id, request, NOMIS, NOMIS_SYS_USER, ROLE_NOMIS)
-
-    val interview = getInterview(response.interviewUuid)
-    interview.verifyAgainst(request, NOMIS_SYS_USER, NOMIS_SYS_USER_DISPLAY_NAME)
-
-    verifyAudit(
-      interview,
-      RevisionType.ADD,
-      setOf(CsipComponent.INTERVIEW),
-      nomisContext(),
-    )
-  }
-
   private fun getInterview(uuid: UUID): Interview = interviewRepository.getInterview(uuid)
 
   private fun Interview.verifyAgainst(
@@ -264,24 +204,21 @@ class AddInterviewIntTest : IntegrationTestBase() {
   private fun addInterviewResponseSpec(
     csipUuid: UUID,
     request: CreateInterviewRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.post()
     .uri(urlToTest(csipUuid))
     .bodyValue(request)
-    .headers(setAuthorisation(roles = listOfNotNull(role)))
-    .headers(setCsipRequestContext(source = source, username = username))
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role)))
     .exchange()
 
   private fun addInterview(
     csipUuid: UUID,
     request: CreateInterviewRequest,
-    source: Source = DPS,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Interview =
-    addInterviewResponseSpec(csipUuid, request, source, username, role).successResponse(CREATED)
+    addInterviewResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   companion object {
     private const val INVALID = "is invalid"
