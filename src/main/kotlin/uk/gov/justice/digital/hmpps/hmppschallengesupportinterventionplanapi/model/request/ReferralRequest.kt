@@ -29,11 +29,14 @@ interface ReferralRequest {
   val completedByDisplayName: String?
 }
 
-interface ContributoryFactorRequest {
+interface ContributoryFactorRequest : CommentRequest {
   val factorTypeCode: String
-  val comment: String?
 }
 
 interface ContributoryFactorsRequest {
   val contributoryFactors: List<ContributoryFactorRequest>
+}
+
+interface CommentRequest {
+  val comment: String?
 }

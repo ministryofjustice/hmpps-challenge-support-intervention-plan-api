@@ -12,6 +12,7 @@ import org.hibernate.annotations.BatchSize
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CommentRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.util.UUID
@@ -54,10 +55,14 @@ class ContributoryFactor(
     private set
 
   fun update(request: ContributoryFactorRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
+    update(request)
     contributoryFactorType = rdSupplier(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, request.factorTypeCode)
-    comment = request.comment
     if (request is LegacyIdAware) {
       legacyId = request.legacyId
     }
+  }
+
+  fun update(request: CommentRequest) = apply {
+    comment = request.comment
   }
 }
