@@ -23,18 +23,18 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import java.time.Duration.ofSeconds
 import java.util.UUID
 
-class UpsertInvestigationsIntTest : IntegrationTestBase() {
+class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.put().uri(urlToTest(UUID.randomUUID())).exchange().expectStatus().isUnauthorized
+    webTestClient.patch().uri(urlToTest(UUID.randomUUID())).exchange().expectStatus().isUnauthorized
   }
 
   @ParameterizedTest
   @NullSource
   @ValueSource(strings = ["WRONG_ROLE"])
   fun `403 forbidden - no required role`(role: String?) {
-    val response = upsertInvestigationResponseSpec(UUID.randomUUID(), investigationRequest(), role = role)
+    val response = updateInvestigationResponseSpec(UUID.randomUUID(), investigationRequest(), role = role)
       .errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
@@ -51,7 +51,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     val recordUuid = UUID.randomUUID()
     val request = investigationRequest()
 
-    val response = upsertInvestigationResponseSpec(recordUuid, request, username = "UNKNOWN")
+    val response = updateInvestigationResponseSpec(recordUuid, request, username = "UNKNOWN")
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -68,7 +68,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("I2234NF")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber).withCompletedReferral())
 
-    val response = upsertInvestigationResponseSpec(
+    val response = updateInvestigationResponseSpec(
       record.id,
       UpsertInvestigationRequest(null, null, null, null, null, null),
     ).errorResponse(HttpStatus.BAD_REQUEST)
@@ -85,7 +85,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("I2234MR")
     val record = givenCsipRecord(generateCsipRecord(prisonNumber))
 
-    val response = upsertInvestigationResponseSpec(record.id, investigationRequest())
+    val response = updateInvestigationResponseSpec(record.id, investigationRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -100,7 +100,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   @Test
   fun `404 not found - CSIP record not found`() {
     val recordUuid = UUID.randomUUID()
-    val response = upsertInvestigationResponseSpec(recordUuid, investigationRequest())
+    val response = updateInvestigationResponseSpec(recordUuid, investigationRequest())
       .errorResponse(HttpStatus.NOT_FOUND)
 
     with(response) {
@@ -113,27 +113,19 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `201 created - create investigation via DPS UI`() {
+  fun `400 bad request - investigation does not exist`() {
     val prisonNumber = givenValidPrisonNumber("I1234DS")
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
     val request = investigationRequest()
 
-    val response = upsertInvestigation(record.id, request, status = HttpStatus.CREATED)
-    response.verifyAgainst(request)
-
-    val investigation = getInvestigation(record.id)
-    verifyAudit(
-      investigation,
-      RevisionType.ADD,
-      setOf(CsipComponent.INVESTIGATION),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INVESTIGATION),
-      setOf(DomainEventType.CSIP_UPDATED),
-    )
+    val response = updateInvestigationResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Invalid request: CSIP Record is missing an investigation.")
+      assertThat(developerMessage).isEqualTo("CSIP Record is missing an investigation.")
+      assertThat(moreInfo).isEqualTo(record.id)
+    }
   }
 
   @Test
@@ -148,7 +140,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     requireNotNull(record.referral?.investigation)
     val request = investigationRequest()
 
-    val response = upsertInvestigation(record.id, request, status = HttpStatus.OK)
+    val response = updateInvestigation(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
@@ -172,7 +164,7 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
     requireNotNull(record.referral?.investigation)
     val request = investigationRequest()
 
-    val response = upsertInvestigation(record.id, request, status = HttpStatus.OK)
+    val response = updateInvestigation(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
 
     val investigation = getInvestigation(record.id)
@@ -213,20 +205,20 @@ class UpsertInvestigationsIntTest : IntegrationTestBase() {
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/investigation"
 
-  private fun upsertInvestigationResponseSpec(
+  private fun updateInvestigationResponseSpec(
     recordUuid: UUID,
     request: UpsertInvestigationRequest,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
-  ) = webTestClient.put().uri(urlToTest(recordUuid)).bodyValue(request)
+  ) = webTestClient.patch().uri(urlToTest(recordUuid)).bodyValue(request)
     .headers(setAuthorisation(user = username, roles = listOfNotNull(role))).exchange()
 
-  private fun upsertInvestigation(
+  private fun updateInvestigation(
     recordUuid: UUID,
     request: UpsertInvestigationRequest,
     role: String? = ROLE_CSIP_UI,
     username: String = TEST_USER,
     status: HttpStatus,
-  ) = upsertInvestigationResponseSpec(recordUuid, request, username, role)
+  ) = updateInvestigationResponseSpec(recordUuid, request, username, role)
     .successResponse<Investigation>(status)
 }

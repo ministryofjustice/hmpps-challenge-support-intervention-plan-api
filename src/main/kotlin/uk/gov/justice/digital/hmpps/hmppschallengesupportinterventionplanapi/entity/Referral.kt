@@ -180,62 +180,6 @@ class Referral(
   var referralCompletedByDisplayName: String? = referralCompletedByDisplayName
     private set
 
-  fun upsertDecisionAndActions(
-    request: DecisionAndActionsRequest,
-    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
-  ): DecisionAndActions {
-    val isNew = decisionAndActions == null
-    val outcome = rdSupplier(DECISION_OUTCOME_TYPE, request.outcomeTypeCode)
-    val signedOffByCode = request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER
-    val signedOffBy = rdSupplier(ReferenceDataType.DECISION_SIGNER_ROLE, signedOffByCode)
-    if (isNew) {
-      decisionAndActions = DecisionAndActions(this, outcome, signedOffBy)
-    }
-    decisionAndActions!!.upsert(request, outcome, signedOffBy)
-    return decisionAndActions!!
-  }
-
-  fun createSaferCustodyScreeningOutcome(
-    request: ScreeningOutcomeRequest,
-    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
-  ): SaferCustodyScreeningOutcome {
-    verifySaferCustodyScreeningOutcomeDoesNotExist()
-    saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
-      referral = this,
-      outcome = rdSupplier(SCREENING_OUTCOME_TYPE, request.outcomeTypeCode),
-      date = request.date,
-      recordedBy = request.recordedBy,
-      recordedByDisplayName = request.recordedByDisplayName,
-      reasonForDecision = request.reasonForDecision,
-    )
-    return saferCustodyScreeningOutcome!!
-  }
-
-  fun upsertInvestigation(
-    request: InvestigationRequest,
-  ): Investigation {
-    investigation = investigation ?: Investigation(this)
-    investigation!!.upsert(request)
-    return investigation!!
-  }
-
-  fun addContributoryFactor(
-    request: ContributoryFactorRequest,
-    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
-  ) = ContributoryFactor(
-    referral = this,
-    contributoryFactorType = rdSupplier(CONTRIBUTORY_FACTOR_TYPE, request.factorTypeCode),
-    comment = request.comment,
-    legacyId = if (request is LegacyIdAware) request.legacyId else null,
-  ).apply {
-    contributoryFactors.add(this)
-  }
-
-  private fun verifySaferCustodyScreeningOutcomeDoesNotExist() =
-    verifyDoesNotExist(saferCustodyScreeningOutcome) {
-      ResourceAlreadyExistException("Referral already has a Safer Custody Screening Outcome")
-    }
-
   fun update(
     update: ReferralRequest,
     rdSupplier: (ReferenceDataType, String) -> ReferenceData,
@@ -264,6 +208,61 @@ class Referral(
     if (update is ReferralDateRequest) {
       referralDate = update.referralDate
     }
+  }
+
+  fun addContributoryFactor(
+    request: ContributoryFactorRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
+  ) = ContributoryFactor(
+    referral = this,
+    contributoryFactorType = rdSupplier(CONTRIBUTORY_FACTOR_TYPE, request.factorTypeCode),
+    comment = request.comment,
+    legacyId = if (request is LegacyIdAware) request.legacyId else null,
+  ).apply {
+    contributoryFactors.add(this)
+  }
+
+  fun createSaferCustodyScreeningOutcome(
+    request: ScreeningOutcomeRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
+  ): SaferCustodyScreeningOutcome {
+    verifyDoesNotExist(saferCustodyScreeningOutcome) {
+      ResourceAlreadyExistException("Referral already has a Safer Custody Screening Outcome")
+    }
+    saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
+      referral = this,
+      outcome = rdSupplier(SCREENING_OUTCOME_TYPE, request.outcomeTypeCode),
+      date = request.date,
+      recordedBy = request.recordedBy,
+      recordedByDisplayName = request.recordedByDisplayName,
+      reasonForDecision = request.reasonForDecision,
+    )
+    return saferCustodyScreeningOutcome!!
+  }
+
+  fun createInvestigation(
+    request: InvestigationRequest,
+  ): Investigation {
+    verifyDoesNotExist(investigation) {
+      ResourceAlreadyExistException("Referral already has an investigation")
+    }
+    investigation = Investigation(this).update(request)
+    return investigation!!
+  }
+
+  fun upsertDecisionAndActions(
+    request: DecisionAndActionsRequest,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
+  ): DecisionAndActions {
+    val isNew = decisionAndActions == null
+    val outcome = rdSupplier(DECISION_OUTCOME_TYPE, request.outcomeTypeCode)
+    val signedOffByCode = request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER
+    val signedOffBy = rdSupplier(ReferenceDataType.DECISION_SIGNER_ROLE, signedOffByCode)
+    if (isNew) {
+      decisionAndActions = DecisionAndActions(this, outcome, signedOffBy)
+    }
+    decisionAndActions!!.upsert(request, outcome, signedOffBy)
+    return decisionAndActions!!
   }
 
   private fun updateReferenceData(

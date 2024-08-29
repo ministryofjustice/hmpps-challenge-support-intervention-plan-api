@@ -18,6 +18,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
@@ -99,17 +103,14 @@ class CsipRecord(
     request: CsipRequest,
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
   ): CsipRecord = apply {
-    val referral = requireNotNull(referral)
+    val referral = verifyExists(referral) { MissingReferralException(id) }
     logCode = request.logCode
     request.referral?.also { referral.update(it, referenceProvider) }
   }
 
-  fun upsertPlan(request: PlanRequest) = let {
-    if (plan == null) {
-      plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
-    } else {
-      plan!!.update(request)
-    }
+  fun createPlan(request: PlanRequest) = let {
+    verifyDoesNotExist(plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
+    plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
     plan!!
   }
 

@@ -11,7 +11,6 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -31,8 +30,6 @@ import java.util.UUID
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "2. Referral Controller", description = "Endpoints for Referral and Contributory Factor operations")
 class ReferralsController(private val referralService: ReferralService) {
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/csip-records/{recordUuid}/referral/contributory-factors")
   @Operation(
     summary = "Add a contributory factor to the referral.",
     description = "Add a contributory factor to the referral. Publishes person.csip.contributory-factor.created event",
@@ -65,14 +62,14 @@ class ReferralsController(private val referralService: ReferralService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/csip-records/{recordUuid}/referral/contributory-factors")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createContributoryFactor(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody createContributoryFactorRequest: CreateContributoryFactorRequest,
   ): ContributoryFactor = referralService.addContributoryFactor(recordUuid, createContributoryFactorRequest)
 
-  @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/csip-records/referral/contributory-factors/{contributoryFactorUuid}")
   @Operation(
     summary = "Update a contributory factor on the referral.",
     description = "Update a contributory factor on the referral. Publishes prisoner-csip.contributory-factor-updated event",
@@ -105,6 +102,8 @@ class ReferralsController(private val referralService: ReferralService) {
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @PatchMapping("/csip-records/referral/contributory-factors/{contributoryFactorUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateContributoryFactor(
     @PathVariable @Parameter(
@@ -113,41 +112,4 @@ class ReferralsController(private val referralService: ReferralService) {
     ) contributoryFactorUuid: UUID,
     @Valid @RequestBody updateContributoryFactorRequest: UpdateContributoryFactorRequest,
   ): ContributoryFactor = throw NotImplementedError()
-
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/csip-records/referral/contributory-factors/{contributoryFactorUuid}")
-  @Operation(
-    summary = "Remove a contributory factor on the referral.",
-    description = "Remove a contributory factor from the referral. Publishes prisoner-csip.contributory-factor-deleted event",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "204",
-        description = "Contributory factor deleted",
-      ),
-      ApiResponse(
-        responseCode = "401",
-        description = "Unauthorised, requires a valid Oauth2 token",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "403",
-        description = "Forbidden, requires an appropriate role",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "The contributory factor associated with this identifier was not found.",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-    ],
-  )
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun deleteContributoryFactor(
-    @PathVariable @Parameter(
-      description = "Contributory Factor unique identifier",
-      required = true,
-    ) contributoryFactorUuid: UUID,
-  ): Nothing = throw NotImplementedError()
 }

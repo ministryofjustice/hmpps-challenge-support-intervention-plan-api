@@ -3,9 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan
@@ -20,10 +18,10 @@ import java.util.UUID
 class PlanService(
   private val csipRecordRepository: CsipRecordRepository,
 ) {
-  fun upsertPlan(recordUuid: UUID, request: UpsertPlanRequest): Plan {
+  fun updatePlan(recordUuid: UUID, request: UpsertPlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
-    val plan = record.plan
-    return record.upsertPlan(request).toModel().apply { new = plan == null }
+    val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
+    return plan.update(request).toModel()
   }
 
   fun addIdentifiedNeed(recordUuid: UUID, request: CreateIdentifiedNeedRequest): IdentifiedNeed {
@@ -35,8 +33,7 @@ class PlanService(
 
   fun createPlanWithIdentifiedNeeds(recordUuid: UUID, request: CreatePlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
-    verifyDoesNotExist(record.plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
-    val plan = record.upsertPlan(request)
+    val plan = record.createPlan(request)
     request.identifiedNeeds.forEach { plan.addIdentifiedNeed(it) }
     return plan.toModel()
   }

@@ -73,8 +73,6 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
     @Valid @ParameterObject request: CsipSummaryRequest,
   ): CsipSummaries = csipRecordService.findCsipRecordsForPrisoner(prisonNumber, request)
 
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/prisoners/{prisonNumber}/csip-records")
   @Operation(
     summary = "Create a CSIP record for a prisoner.",
     description = "Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes person.csip.record.created and person.csip.contributory-factor.created events",
@@ -102,6 +100,8 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/prisoners/{prisonNumber}/csip-records")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createCsipRecord(
     @PathVariable @Parameter(description = "Prison Number of the prisoner", required = true) prisonNumber: String,
@@ -111,8 +111,6 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
     return csipRecordService.createCsipRecord(prisoner, createCsipRecordRequest)
   }
 
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/csip-records/{recordUuid}")
   @Operation(
     summary = "Get a CSIP record by its unique identifier",
     description = "Returns the CSIP record with the matching identifier.",
@@ -140,13 +138,13 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/csip-records/{recordUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI', '$ROLE_NOMIS')")
   fun retrieveCsipRecord(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
   ): CsipRecord = csipRecordService.retrieveCsipRecord(recordUuid)
 
-  @ResponseStatus(HttpStatus.OK)
-  @PatchMapping("/csip-records/{recordUuid}")
   @Operation(
     summary = "Update the log code for a CSIP record and/or optionally the referral.",
     description = "Update the log code for a CSIP record. Publishes person.csip.record.updated event with affected component of `Record`",
@@ -179,13 +177,14 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.OK)
+  @PatchMapping("/csip-records/{recordUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateCsipRecord(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody updateCsipRecordRequest: UpdateCsipRecordRequest,
   ): CsipRecord = csipRecordService.updateCsipRecord(recordUuid, updateCsipRecordRequest)
 
-  @DeleteMapping("/csip-records/{recordUuid}")
   @Operation(
     summary = "Delete a complete CSIP record.",
     description = "Delete the whole of a CSIP record, including its referral and plan. Publishes prisoner-csip.csip-record-deleted event",
@@ -217,6 +216,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
       ),
     ],
   )
+  @DeleteMapping("/csip-records/{recordUuid}")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun deleteCsipRecord(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,

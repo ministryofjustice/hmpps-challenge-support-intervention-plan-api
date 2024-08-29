@@ -33,7 +33,7 @@ class SyncReferral {
         ?: referral.createSaferCustodyScreeningOutcome(request.saferCustodyScreeningOutcome, rdSupplier)
     }
     val interviewMappings = request.investigation?.let { inv ->
-      val investigation = referral.upsertInvestigation(inv)
+      val investigation = referral.investigation?.update(inv) ?: referral.createInvestigation(inv)
       inv.interviews.map {
         val interview = investigation.findInterview(it.id, it.legacyId)?.update(it, rdSupplier)
           ?: investigation.addInterview(it, rdSupplier)

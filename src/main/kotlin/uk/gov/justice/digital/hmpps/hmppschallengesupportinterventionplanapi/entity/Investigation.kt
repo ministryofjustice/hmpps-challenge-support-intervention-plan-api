@@ -76,7 +76,7 @@ class Investigation(
     interviews.add(this)
   }
 
-  fun upsert(request: InvestigationRequest) = apply {
+  fun update(request: InvestigationRequest) = apply {
     staffInvolved = request.staffInvolved
     evidenceSecured = request.evidenceSecured
     occurrenceReason = request.occurrenceReason

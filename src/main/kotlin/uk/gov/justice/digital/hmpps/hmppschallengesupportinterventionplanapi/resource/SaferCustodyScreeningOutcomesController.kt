@@ -36,8 +36,6 @@ import java.util.UUID
 class SaferCustodyScreeningOutcomesController(
   private val screeningOutcomeService: SaferCustodyScreeningOutcomeService,
 ) {
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping
   @Operation(
     summary = "Add safer custody screening outcome to the referral.",
     description = "Create the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true",
@@ -75,6 +73,8 @@ class SaferCustodyScreeningOutcomesController(
       ),
     ],
   )
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun createScreeningOutcome(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
