@@ -4,6 +4,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import java.time.LocalDate
 import java.time.LocalTime
 
+interface ReferralDateRequest {
+  val referralDate: LocalDate
+}
+
 interface ReferralRequest {
   val incidentDate: LocalDate
   val incidentTime: LocalTime?

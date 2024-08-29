@@ -38,7 +38,8 @@ object SyncRequestGenerator {
   ).withAuditDetail()
 
   fun syncReferralRequest(
-    incidentDate: LocalDate = LocalDate.now(),
+    referralDate: LocalDate = LocalDate.now().minusDays(1),
+    incidentDate: LocalDate = LocalDate.now().minusDays(3),
     incidentTime: LocalTime? = null,
     incidentTypeCode: String = "FTE",
     incidentLocationCode: String = "OMU",
@@ -61,6 +62,7 @@ object SyncRequestGenerator {
     investigation: SyncInvestigationRequest? = null,
     decisionAndActions: SyncDecisionAndActionsRequest? = null,
   ) = SyncReferralRequest(
+    referralDate,
     incidentDate,
     incidentTime,
     incidentTypeCode,

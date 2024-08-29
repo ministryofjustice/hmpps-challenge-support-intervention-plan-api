@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralDateRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ScreeningOutcomeRequest
 import java.time.LocalDate
@@ -50,7 +51,7 @@ class Referral(
   @JoinColumn(name = "referral_id")
   val csipRecord: CsipRecord,
 
-  @Column(nullable = false) val referralDate: LocalDate,
+  referralDate: LocalDate,
 
   incidentDate: LocalDate,
   incidentTime: LocalTime? = null,
@@ -104,6 +105,10 @@ class Referral(
     private set
 
   fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.id }
+
+  @Column(nullable = false)
+  var referralDate: LocalDate = referralDate
+    private set
 
   var incidentDate: LocalDate = incidentDate
     private set
@@ -255,6 +260,10 @@ class Referral(
     referralCompletedDate = update.completedDate
     referralCompletedBy = update.completedBy
     referralCompletedByDisplayName = update.completedByDisplayName
+
+    if (update is ReferralDateRequest) {
+      referralDate = update.referralDate
+    }
   }
 
   private fun updateReferenceData(
