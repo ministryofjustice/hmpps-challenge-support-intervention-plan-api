@@ -46,15 +46,9 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
             "The majority of the endpoints in this API require the user to be identified via their username. " +
             "This is to correctly populate the change history of CSIP records e.g. who created or updated a CSIP record and for auditing purposes. " +
             "The username is required when the service is called directly by a user or when another service is acting on behalf of a user. " +
-            "The following methods for supplying the username are supported to cater for these scenarios:\n\n" +
-            "1. **Token claim** - The username can be passed in via a `user_name` or `username` claim in the JWT.\n" +
-            "2. **Username header** - The username can be passed in via a `Username` header in the request.\n\n" +
-            "The username is taken in priority order from the `user_name` or `username` claim in the JWT if present, followed by the `Username` header if no claim is found.\n\n" +
+            "The method to supply the username is via the `subject` claim in the JWT.\n" +
             "### 4XX response codes related to username:\n\n" +
-            "- A 400 Bad Request response will be returned if the username cannot be found via any of the above methods.\n" +
-            "- A 400 Bad Request response will be returned if the username cannot be found in the user management service.\n" +
-            "- A 403 Forbidden response will also be returned if the user identified by the username does not have " +
-            "access to the caseload associated with the person.",
+            "- A 400 Bad Request response will be returned if the username cannot be found in the user management service.\n",
         )
         .contact(
           Contact()
