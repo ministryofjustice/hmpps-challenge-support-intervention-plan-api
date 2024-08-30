@@ -19,7 +19,7 @@ class CreateContributoryFactorRequestTest : RequestValidationTest() {
     assertValidationErrors(
       validator.validate(request),
       Pair("factorTypeCode", "Contributory factor type code must be <= 12 characters"),
-      Pair("comment", "Comment must be less than 4000 characters"),
+      Pair("comment", "Comment must not be more than 4000 characters"),
     )
   }
 }

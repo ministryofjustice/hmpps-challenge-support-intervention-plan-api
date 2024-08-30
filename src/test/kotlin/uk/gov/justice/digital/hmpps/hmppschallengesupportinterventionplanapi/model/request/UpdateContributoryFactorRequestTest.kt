@@ -15,7 +15,7 @@ class UpdateContributoryFactorRequestTest : RequestValidationTest() {
     val request = UpdateContributoryFactorRequest(comment = "n".repeat(4001))
     assertValidationErrors(
       validator.validate(request),
-      Pair("comment", "Comment must be less than 4000 characters"),
+      Pair("comment", "Comment must not be more than 4000 characters"),
     )
   }
 }
