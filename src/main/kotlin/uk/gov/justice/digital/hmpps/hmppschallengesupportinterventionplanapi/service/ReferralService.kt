@@ -8,9 +8,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ContributoryFactorRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import java.util.UUID
 
@@ -19,6 +22,7 @@ import java.util.UUID
 class ReferralService(
   private val csipRecordRepository: CsipRecordRepository,
   private val referenceDataRepository: ReferenceDataRepository,
+  private val factorRepository: ContributoryFactorRepository,
 ) {
   fun addContributoryFactor(
     recordUuid: UUID,
@@ -31,4 +35,7 @@ class ReferralService(
     }
     return referral.addContributoryFactor(request, referenceDataRepository::getActiveReferenceData).toModel()
   }
+
+  fun updateContributoryFactor(factorId: UUID, request: UpdateContributoryFactorRequest): ContributoryFactor =
+    factorRepository.getContributoryFactor(factorId).update(request).toModel()
 }

@@ -110,6 +110,6 @@ class ReferralsController(private val referralService: ReferralService) {
       description = "Contributory Factor unique identifier",
       required = true,
     ) contributoryFactorUuid: UUID,
-    @Valid @RequestBody updateContributoryFactorRequest: UpdateContributoryFactorRequest,
-  ): ContributoryFactor = throw NotImplementedError()
+    @Valid @RequestBody request: UpdateContributoryFactorRequest,
+  ): ContributoryFactor = referralService.updateContributoryFactor(contributoryFactorUuid, request)
 }

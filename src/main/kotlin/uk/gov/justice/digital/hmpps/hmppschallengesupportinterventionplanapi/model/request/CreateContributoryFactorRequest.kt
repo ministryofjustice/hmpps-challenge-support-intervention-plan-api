@@ -10,5 +10,6 @@ data class CreateContributoryFactorRequest(
   override val factorTypeCode: String,
 
   @Schema(description = "Additional information about the contributory factor to the incident or motivation for CSIP referral.")
+  @field:Size(max = 4000, message = "Comment must not be more than 4000 characters")
   override val comment: String?,
 ) : ContributoryFactorRequest
