@@ -207,5 +207,5 @@ class InvestigationsController(
   fun updateInterview(
     @PathVariable @Parameter(description = "Interview unique identifier", required = true) interviewUuid: UUID,
     @Valid @RequestBody updateInterviewRequest: UpdateInterviewRequest,
-  ): Interview = throw NotImplementedError()
+  ): Interview = investigationService.updateInterview(interviewUuid, updateInterviewRequest)
 }

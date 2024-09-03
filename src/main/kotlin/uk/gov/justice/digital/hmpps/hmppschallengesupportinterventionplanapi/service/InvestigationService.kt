@@ -11,16 +11,20 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.InterviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getActiveReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getInterview
 import java.util.UUID
 
 @Service
 @Transactional
 class InvestigationService(
   private val csipRecordRepository: CsipRecordRepository,
+  private val interviewRepository: InterviewRepository,
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
   fun createInvestigationWithInterviews(recordUuid: UUID, request: CreateInvestigationRequest): Investigation {
@@ -48,5 +52,10 @@ class InvestigationService(
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
     val investigation = verifyExists(referral.investigation) { MissingInvestigationException(recordUuid) }
     return investigation.addInterview(request, referenceDataRepository::getActiveReferenceData).toModel()
+  }
+
+  fun updateInterview(interviewUuid: UUID, request: UpdateInterviewRequest): Interview {
+    val interview = interviewRepository.getInterview(interviewUuid)
+    return interview.update(request, referenceDataRepository::getActiveReferenceData).toModel()
   }
 }
