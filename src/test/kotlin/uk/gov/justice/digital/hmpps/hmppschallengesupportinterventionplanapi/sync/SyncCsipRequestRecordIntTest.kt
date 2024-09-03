@@ -130,6 +130,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         |Contribution must be <= 4000 characters
         |Contributory factor type code must be <= 12 characters
         |Decision outcome code must be <= 12 characters
+        |Description of concern must be <= 4000 characters
         |Evidence secured must be <= 4000 characters
         |Identified need must be <= 1000 characters
         |Incident Location code must be <= 12 characters
@@ -139,10 +140,12 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         |Interviewee name must be <= 100 characters
         |Interviewee role code must be <= 12 characters
         |Involvement code must be <= 12 characters
+        |Known reasons must be <= 4000 characters
         |Log code must be <= 10 characters
         |Name or names must be <= 1000 characters
         |Next step must be <= 4000 characters
         |Occurrence reason must be <= 4000 characters
+        |Other information must be <= 4000 characters
         |Person's trigger must be <= 4000 characters
         |Person's usual behaviour must be <= 4000 characters
         |Prison number must be <= 10 characters
