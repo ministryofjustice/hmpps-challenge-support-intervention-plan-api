@@ -143,7 +143,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `404 not found - CSIP record not found`() {
+  fun `404 not found - Interview not found`() {
     val interviewUuid = UUID.randomUUID()
     val response = updateInterviewResponseSpec(interviewUuid, interviewRequest()).errorResponse(HttpStatus.NOT_FOUND)
 
@@ -157,7 +157,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - no changes made to investigation`() {
+  fun `200 ok - no changes made to interview`() {
     val request = interviewRequest()
 
     val prisonNumber = givenValidPrisonNumber("I1234NC")
@@ -180,7 +180,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - update investigation`() {
+  fun `200 ok - update interview`() {
     val prisonNumber = givenValidPrisonNumber("I1234UI")
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withReferral()
