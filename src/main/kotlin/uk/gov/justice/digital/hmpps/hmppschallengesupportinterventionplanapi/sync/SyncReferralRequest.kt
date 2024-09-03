@@ -40,8 +40,11 @@ data class SyncReferralRequest(
   override val assaultedStaffName: String?,
   @field:Size(min = 1, max = 12, message = "Involvement code must be <= 12 characters")
   override val incidentInvolvementCode: String?,
+  @field:Size(min = 0, max = 4000, message = "Description of concern must be <= 4000 characters")
   override val descriptionOfConcern: String?,
+  @field:Size(min = 0, max = 4000, message = "Known reasons must be <= 4000 characters")
   override val knownReasons: String?,
+  @field:Size(min = 0, max = 4000, message = "Other information must be <= 4000 characters")
   override val otherInformation: String?,
   override val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
   override val isReferralComplete: Boolean?,

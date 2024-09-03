@@ -53,12 +53,15 @@ data class CreateReferralRequest(
   override val incidentInvolvementCode: String?,
 
   @Schema(description = "The reasons why there is cause for concern.")
+  @field:Size(min = 0, max = 4000, message = "Description of concern must be <= 4000 characters")
   override val descriptionOfConcern: String?,
 
   @Schema(description = "The reasons already known about the causes of the incident or motivation for CSIP referral.")
+  @field:Size(min = 0, max = 4000, message = "Known reasons must be <= 4000 characters")
   override val knownReasons: String?,
 
   @Schema(description = "Any other information about the incident or reasons for CSIP referral.")
+  @field:Size(min = 0, max = 4000, message = "Other information must be <= 4000 characters")
   override val otherInformation: String?,
 
   @Schema(description = "Records whether the safer custody team been informed.")
