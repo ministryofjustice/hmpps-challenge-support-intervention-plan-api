@@ -9,9 +9,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.AttendeeRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getAttendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getReview
 import java.util.UUID
 
@@ -20,6 +23,7 @@ import java.util.UUID
 class ReviewService(
   private val csipRecordRepository: CsipRecordRepository,
   private val reviewRepository: ReviewRepository,
+  private val attendeeRepository: AttendeeRepository,
 ) {
   fun addReview(recordUuid: UUID, request: CreateReviewRequest): Review {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
@@ -32,6 +36,9 @@ class ReviewService(
 
   fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee =
     reviewRepository.getReview(reviewUuid).addAttendee(request).toModel()
+
+  fun updateAttendee(attendeeUuid: UUID, request: UpdateAttendeeRequest): Attendee =
+    attendeeRepository.getAttendee(attendeeUuid).update(request).toModel()
 }
 
 fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review.toModel() = Review(
