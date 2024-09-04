@@ -197,5 +197,5 @@ class PlansController(private val planService: PlanService) {
       required = true,
     ) identifiedNeedUuid: UUID,
     @Valid @RequestBody updateIdentifiedNeed: UpdateIdentifiedNeedRequest,
-  ): IdentifiedNeed = throw NotImplementedError()
+  ): IdentifiedNeed = planService.updateIdentifiedNeed(identifiedNeedUuid, updateIdentifiedNeed)
 }

@@ -54,8 +54,7 @@ class InvestigationService(
     return investigation.addInterview(request, referenceDataRepository::getActiveReferenceData).toModel()
   }
 
-  fun updateInterview(interviewUuid: UUID, request: UpdateInterviewRequest): Interview {
-    val interview = interviewRepository.getInterview(interviewUuid)
-    return interview.update(request, referenceDataRepository::getActiveReferenceData).toModel()
-  }
+  fun updateInterview(interviewUuid: UUID, request: UpdateInterviewRequest): Interview =
+    interviewRepository.getInterview(interviewUuid).update(request, referenceDataRepository::getActiveReferenceData)
+      .toModel()
 }
