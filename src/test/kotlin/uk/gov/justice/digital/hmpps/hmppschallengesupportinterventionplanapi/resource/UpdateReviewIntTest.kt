@@ -108,7 +108,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     )
     val response = updateReview(review.id, request)
 
-    val saved = getReviewFactory(response.reviewUuid)
+    val saved = getReview(response.reviewUuid)
     assertThat(saved.summary).isEqualTo(request.summary)
     assertThat(saved.actions).contains(ReviewAction.RESPONSIBLE_PEOPLE_INFORMED)
     assertThat(saved.actions.size).isEqualTo(1)
@@ -155,7 +155,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     )
     val response = updateReview(review.id, request)
 
-    val saved = getReviewFactory(response.reviewUuid)
+    val saved = getReview(response.reviewUuid)
     assertThat(saved.lastModifiedAt).isNull()
     assertThat(saved.lastModifiedBy).isNull()
     assertThat(saved.lastModifiedByDisplayName).isNull()
@@ -205,5 +205,5 @@ class UpdateReviewIntTest : IntegrationTestBase() {
   ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review =
     updateReviewResponseSpec(reviewUuid, request, username, role).successResponse(OK)
 
-  private fun getReviewFactory(uuid: UUID) = reviewRepository.getReview(uuid)
+  private fun getReview(uuid: UUID) = reviewRepository.getReview(uuid)
 }
