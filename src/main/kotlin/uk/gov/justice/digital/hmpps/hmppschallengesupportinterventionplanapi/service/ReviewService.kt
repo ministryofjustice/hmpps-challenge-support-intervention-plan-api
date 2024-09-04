@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getReview
@@ -25,6 +26,9 @@ class ReviewService(
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
     return plan.addReview(request).toModel()
   }
+
+  fun updateReview(reviewUuid: UUID, request: UpdateReviewRequest): Review =
+    reviewRepository.getReview(reviewUuid).update(request).toModel()
 
   fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee =
     reviewRepository.getReview(reviewUuid).addAttendee(request).toModel()
