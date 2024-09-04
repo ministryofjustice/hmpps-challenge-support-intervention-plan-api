@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getReview
@@ -24,6 +26,11 @@ class ReviewService(
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
     return plan.addReview(request).toModel()
+  }
+
+  fun updateReview(reviewUuid: UUID, request: UpdateReviewRequest): Review {
+    val review = verifyExists(reviewRepository.getReview(reviewUuid)) { NotFoundException("Review", reviewUuid.toString()) }
+    return review.update(request).toModel()
   }
 
   fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee =
