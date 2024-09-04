@@ -191,5 +191,5 @@ class ReviewsController(private val reviewService: ReviewService) {
   fun updateAttendee(
     @PathVariable @Parameter(description = "Attendee unique identifier", required = true) attendeeUuid: UUID,
     @Valid @RequestBody updateAttendeeRequest: UpdateAttendeeRequest,
-  ): Attendee = throw NotImplementedError()
+  ): Attendee = reviewService.updateAttendee(attendeeUuid, updateAttendeeRequest)
 }
