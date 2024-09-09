@@ -70,21 +70,6 @@ data class CreateReferralRequest(
   @Schema(description = "Is the referral complete.")
   override val isReferralComplete: Boolean?,
 
-  @Schema(
-    description = "The date the referral was completed.",
-    example = "2024-07-29",
-  )
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  override val completedDate: LocalDate?,
-
-  @Schema(description = "The username of the person who completed the referral.")
-  @field:Size(min = 0, max = 64, message = "Completed by username must be <= 64 characters")
-  override val completedBy: String?,
-
-  @Schema(description = "The displayable name of the person who completed the referral.")
-  @field:Size(min = 0, max = 255, message = "Completed by display name must be <= 255 characters")
-  override val completedByDisplayName: String?,
-
   @Schema(description = "Contributory factors to the incident that motivated the referral.")
   @field:Valid
   @field:NotEmpty(message = "A referral must have at least one contributory factor.")

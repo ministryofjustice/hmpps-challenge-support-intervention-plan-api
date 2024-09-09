@@ -25,9 +25,6 @@ class CreateReferralRequestTest : RequestValidationTest() {
       otherInformation = null,
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
-      completedDate = null,
-      completedBy = null,
-      completedByDisplayName = null,
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
@@ -56,9 +53,6 @@ class CreateReferralRequestTest : RequestValidationTest() {
       otherInformation = null,
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
-      completedDate = null,
-      completedBy = null,
-      completedByDisplayName = null,
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
@@ -87,9 +81,6 @@ class CreateReferralRequestTest : RequestValidationTest() {
       otherInformation = "n".repeat(4001),
       isSaferCustodyTeamInformed = DO_NOT_KNOW,
       isReferralComplete = null,
-      completedDate = null,
-      completedBy = "n".repeat(65),
-      completedByDisplayName = "n".repeat(256),
       contributoryFactors = listOf(
         CreateContributoryFactorRequest(
           factorTypeCode = "pericula",
@@ -108,8 +99,6 @@ class CreateReferralRequestTest : RequestValidationTest() {
       Pair("descriptionOfConcern", "Description of concern must be <= 4000 characters"),
       Pair("knownReasons", "Known reasons must be <= 4000 characters"),
       Pair("otherInformation", "Other information must be <= 4000 characters"),
-      Pair("completedBy", "Completed by username must be <= 64 characters"),
-      Pair("completedByDisplayName", "Completed by display name must be <= 255 characters"),
     )
   }
 }
