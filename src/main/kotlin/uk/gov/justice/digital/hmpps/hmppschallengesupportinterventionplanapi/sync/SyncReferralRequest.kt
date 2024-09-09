@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
@@ -61,7 +62,7 @@ data class SyncReferralRequest(
   val investigation: SyncInvestigationRequest?,
   @field:Valid
   val decisionAndActions: SyncDecisionAndActionsRequest?,
-) : ReferralRequest, ReferralDateRequest, ContributoryFactorsRequest {
+) : ReferralRequest, CompletableRequest, ReferralDateRequest, ContributoryFactorsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     add(ReferenceDataKey(INCIDENT_TYPE, incidentTypeCode))
     add(ReferenceDataKey(INCIDENT_LOCATION, incidentLocationCode))
@@ -77,6 +78,8 @@ data class SyncReferralRequest(
     addAll(contributoryFactors.map { RequestMapping(CsipComponent.CONTRIBUTORY_FACTOR, it.legacyId, it.id) })
     investigation?.also { addAll(it.requestMappings()) }
   }
+
+  override val completed: Boolean? = isReferralComplete
 }
 
 data class SyncContributoryFactorRequest(
@@ -101,5 +104,6 @@ data class SyncScreeningOutcomeRequest(
   @field:Size(min = 0, max = 255, message = "Recorded by display name must be <= 255 characters")
   override val recordedByDisplayName: String,
 ) : ScreeningOutcomeRequest {
-  fun findRequiredReferenceDataKeys() = setOf(ReferenceDataKey(ReferenceDataType.SCREENING_OUTCOME_TYPE, outcomeTypeCode))
+  fun findRequiredReferenceDataKeys() =
+    setOf(ReferenceDataKey(ReferenceDataType.SCREENING_OUTCOME_TYPE, outcomeTypeCode))
 }

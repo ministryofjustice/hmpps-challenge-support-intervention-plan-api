@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
@@ -257,6 +258,24 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
   }
 
+  @Test
+  fun `201 created - completed details returned`() {
+    val request = createCsipRecordRequest(createReferralRequest(referralComplete = true))
+
+    val prisonNumber = givenValidPrisonNumber("C1235SP")
+    val response = webTestClient.createCsipRecord(prisonNumber, request)
+
+    with(response.referral) {
+      assertThat(isReferralComplete).isEqualTo(true)
+      assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
+      assertThat(referralCompletedBy).isEqualTo(TEST_USER)
+      assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
+    }
+
+    val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
+  }
+
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"
 
   private fun WebTestClient.createCsipResponseSpec(
@@ -352,9 +371,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       incidentInvolvementCode: String = "OTH",
       contributoryFactorTypeCode: Collection<String> = listOf("AFL"),
       referralComplete: Boolean? = null,
-      completedDate: LocalDate? = null,
-      completedBy: String? = null,
-      completedByDisplayName: String? = null,
     ) = CreateReferralRequest(
       LocalDate.now(),
       LocalTime.now(),
@@ -371,9 +387,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       "",
       NO,
       referralComplete,
-      completedDate,
-      completedBy,
-      completedByDisplayName,
       contributoryFactorTypeCode.map { createContributoryFactorRequest(it) },
     )
   }
