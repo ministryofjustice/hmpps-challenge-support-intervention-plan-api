@@ -5,9 +5,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
-import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.publish
 
 @Service
 class DomainEventPublisher(
@@ -19,14 +19,12 @@ class DomainEventPublisher(
   }
 
   fun publish(domainEvent: DomainEvent) {
-    val request = PublishRequest.builder()
-      .topicArn(domainEventsTopic.arn)
-      .message(objectMapper.writeValueAsString(domainEvent))
-      .messageAttributes(domainEvent.attributes())
-      .build()
-
     runCatching {
-      domainEventsTopic.snsClient.publish(request).get()
+      domainEventsTopic.publish(
+        domainEvent.eventType,
+        objectMapper.writeValueAsString(domainEvent),
+        domainEvent.attributes(),
+      )
     }.onFailure {
       log.error("Failed to publish '$domainEvent'", it)
     }
