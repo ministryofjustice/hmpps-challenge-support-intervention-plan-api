@@ -1,7 +1,10 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.4"
   kotlin("plugin.spring") version "2.0.20"
   kotlin("plugin.jpa") version "2.0.20"
+  id("com.google.cloud.tools.jib") version "3.4.3"
   jacoco
 }
 
@@ -50,6 +53,26 @@ tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
   }
+
+  val copyAgentJar by registering(Copy::class) {
+    from("${project.layout.buildDirectory}/libs")
+    include("applicationinsights-agent*.jar")
+    into("${project.layout.buildDirectory}/agent")
+    rename("applicationinsights-agent(.+).jar", "agent.jar")
+    dependsOn("assemble")
+  }
+
+  val jib by getting {
+    dependsOn += copyAgentJar
+  }
+
+  val jibBuildTar by getting {
+    dependsOn += copyAgentJar
+  }
+
+  val jibDockerBuild by getting {
+    dependsOn += copyAgentJar
+  }
 }
 
 tasks.named("test") {
@@ -60,5 +83,30 @@ tasks.named<JacocoReport>("jacocoTestReport") {
   reports {
     html.required.set(true)
     xml.required.set(true)
+  }
+}
+
+jib {
+  container {
+    creationTime.set("USE_CURRENT_TIMESTAMP")
+    jvmFlags = mutableListOf("-Duser.timezone=Europe/London")
+    mainClass = "uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.HmppsChallengeSupportInterventionPlanApiKt"
+    user = "2000:2000"
+  }
+  from {
+    image = "eclipse-temurin:21-jre-alpine"
+  }
+  extraDirectories {
+    paths {
+      path {
+        setFrom(project.layout.buildDirectory)
+        includes.add("agent/agent.jar")
+      }
+      path {
+        setFrom(project.rootDir)
+        includes.add("applicationinsights*.json")
+        into = "/agent"
+      }
+    }
   }
 }
