@@ -21,6 +21,12 @@ generic-service:
     EVENTS_BASE_URL: "https://csip-api-dev.hmpps.service.justice.gov.uk"
     SERVICE_ACTIVE_PRISONS: "LEI"
 
+  allowlist:
+    groups:
+      - digital_staff_and_mojo
+      - moj_cloud_platform
+      - prisons
+
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:

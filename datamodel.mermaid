@@ -22,6 +22,7 @@ erDiagram
 
     csip_record {
         uuid record_id PK "not null unique. Mapped to OFFENDER_CSIP_REPORTS"
+        bigint legacy_id "unique. Prevents duplicate records via NOMIS -> DPS sync"
         varchar(10) prison_number "not null. The prison number of the person the CSIP record is for"
         varchar(6) prison_code_when_recorded "The prison code where the person was resident at the time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.AGY_LOC_ID"
         varchar(10) log_code "User entered identifier for the CSIP record. Defaults to the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ"
@@ -55,7 +56,7 @@ erDiagram
         boolean referral_complete "Is the referral complete. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETE_FLAG where the default is 'N'"
         varchar(64) referral_completed_by "The username of the user who completed the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_BY"
         varchar(255) referral_completed_by_display_name "The displayable name of the user who completed the CSIP referral. Not mapped"
-        date referral_completed_date "The date the referral was completed. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE",
+        date referral_completed_date "The date the referral was completed. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE"
         int version "increments on each update"
         timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
         varchar(64) created_by "not null. The username of the user who created the CSIP record. Maps to OFFENDER_CSIP_REPORTS.CREATE_USER_ID"
@@ -67,6 +68,7 @@ erDiagram
 
     contributory_factor {
         uuid contributory_factor_id PK "not null unique. Mapped to OFFENDER_CSIP_FACTORS"
+        bigint legacy_id "unique. Prevents duplicate contributory factors via NOMIS -> DPS sync"
         uuid referral_id FK "not null"
         bigint contributory_factor_type_id FK "not null. FK to reference_data. The type of contributory factor to the incident or motivation for CSIP referral. Mapped to OFFENDER_CSIP_FACTORS.CSIP_FACTOR"
         text comment "Additional information about the contributory factor to the incident or motivation for CSIP referral. Maps to OFFENDER_CSIP_FACTORS.COMMENTS"
@@ -114,6 +116,7 @@ erDiagram
 
     interview {
         uuid interview_id PK "not null unique. Mapped to OFFENDER_CSIP_INTVW"
+        bigint legacy_id "unique. Prevents duplicate interviews via NOMIS -> DPS sync"
         uuid investigation_id FK "not null"
         varchar(100) interviewee "not null. Name of the person being interviewed. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE"
         date interview_date "not null. The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE"
@@ -164,6 +167,7 @@ erDiagram
 
     identified_need {
         uuid identified_need_id PK "not null unique. Mapped to OFFENDER_CSIP_PLANS"
+        bigint legacy_id "unique. Prevents duplicate identified needs via NOMIS -> DPS sync"
         uuid plan_id FK "not null"
         text identified_need "not null. Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED. 1000 character limit"
         varchar(100) responsible_person "not null. The name of the person who is responsible for taking action on the intervention. Maps to OFFENDER_CSIP_PLANS.BY_WHOM. Who identified the need (free text)"
@@ -183,6 +187,7 @@ erDiagram
 
     review {
         uuid review_id PK "not null unique. Mapped to OFFENDER_CSIP_REVIEWS"
+        bigint legacy_id "unique. Prevents duplicate reviews via NOMIS -> DPS sync"
         uuid plan_id FK "not null"
         int review_sequence "not null. The review number. Maps to OFFENDER_CSIP_REVIEWS.REVIEW_SEQ"
         date review_date "The date of the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATE"
@@ -203,6 +208,7 @@ erDiagram
 
     attendee {
         uuid attendee_id PK "not null unique. Mapped to OFFENDER_CSIP_ATTENDEES"
+        bigint legacy_id "unique. Prevents duplicate attendees via NOMIS -> DPS sync"
         uuid review_id FK "not null"
         varchar(100) name "not null. Name of review attendee/contributor. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDEE_NAME"
         varchar(50) role "not null. Role of review attendee/contributor. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDEE_ROLE"

@@ -17,6 +17,7 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
@@ -36,6 +38,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralDateRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.asCompletable
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -200,14 +203,23 @@ class Referral(
     knownReasons = update.knownReasons
     otherInformation = update.otherInformation
     saferCustodyTeamInformed = update.isSaferCustodyTeamInformed
-    referralComplete = update.isReferralComplete
-    referralCompletedDate = update.completedDate
-    referralCompletedBy = update.completedBy
-    referralCompletedByDisplayName = update.completedByDisplayName
+
+    if (update is CompletableRequest) {
+      complete(update)
+    } else if (update.isReferralComplete != referralComplete) {
+      complete(csipRequestContext().asCompletable(update.isReferralComplete))
+    }
 
     if (update is ReferralDateRequest) {
       referralDate = update.referralDate
     }
+  }
+
+  fun complete(request: CompletableRequest): Referral = apply {
+    referralCompletedDate = request.completedDate
+    referralCompletedBy = request.completedBy
+    referralCompletedByDisplayName = request.completedByDisplayName
+    referralComplete = request.completed
   }
 
   fun addContributoryFactor(

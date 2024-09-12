@@ -22,12 +22,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PrisonNumberChangeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralDateRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.asCompletable
 import java.util.UUID
 
 @Entity
@@ -124,28 +126,33 @@ class CsipRecord(
     context: CsipRequestContext,
     request: ReferralRequest,
     rdSupplier: (ReferenceDataType, String) -> ReferenceData,
-  ) = Referral(
-    csipRecord = this,
-    referralDate = if (request is ReferralDateRequest) request.referralDate else context.requestAt.toLocalDate(),
-    incidentDate = request.incidentDate,
-    incidentTime = request.incidentTime,
-    referredBy = request.referredBy,
-    proactiveReferral = request.isProactiveReferral,
-    staffAssaulted = request.isStaffAssaulted,
-    assaultedStaffName = request.assaultedStaffName,
-    descriptionOfConcern = request.descriptionOfConcern,
-    knownReasons = request.knownReasons,
-    otherInformation = request.otherInformation,
-    saferCustodyTeamInformed = request.isSaferCustodyTeamInformed,
-    incidentType = rdSupplier(INCIDENT_TYPE, request.incidentTypeCode),
-    incidentLocation = rdSupplier(INCIDENT_LOCATION, request.incidentLocationCode),
-    refererAreaOfWork = rdSupplier(ReferenceDataType.AREA_OF_WORK, request.refererAreaCode),
-    incidentInvolvement = request.incidentInvolvementCode?.let { rdSupplier(INCIDENT_INVOLVEMENT, it) },
-    referralComplete = request.isReferralComplete,
-    referralCompletedDate = request.completedDate,
-    referralCompletedBy = request.completedBy,
-    referralCompletedByDisplayName = request.completedByDisplayName,
-  )
+  ): Referral {
+    val completable = if (request is CompletableRequest) {
+      request
+    } else {
+      context.asCompletable(request.isReferralComplete)
+    }
+
+    return Referral(
+      csipRecord = this,
+      referralDate = if (request is ReferralDateRequest) request.referralDate else context.requestAt.toLocalDate(),
+      incidentDate = request.incidentDate,
+      incidentTime = request.incidentTime,
+      referredBy = request.referredBy,
+      proactiveReferral = request.isProactiveReferral,
+      staffAssaulted = request.isStaffAssaulted,
+      assaultedStaffName = request.assaultedStaffName,
+      descriptionOfConcern = request.descriptionOfConcern,
+      knownReasons = request.knownReasons,
+      otherInformation = request.otherInformation,
+      saferCustodyTeamInformed = request.isSaferCustodyTeamInformed,
+      incidentType = rdSupplier(INCIDENT_TYPE, request.incidentTypeCode),
+      incidentLocation = rdSupplier(INCIDENT_LOCATION, request.incidentLocationCode),
+      refererAreaOfWork = rdSupplier(ReferenceDataType.AREA_OF_WORK, request.refererAreaCode),
+      incidentInvolvement = request.incidentInvolvementCode?.let { rdSupplier(INCIDENT_INVOLVEMENT, it) },
+      referralComplete = request.isReferralComplete,
+    ).apply { complete(completable) }
+  }
 
   companion object {
     val PRISON_NUMBER: String = CsipRecord::prisonNumber.name

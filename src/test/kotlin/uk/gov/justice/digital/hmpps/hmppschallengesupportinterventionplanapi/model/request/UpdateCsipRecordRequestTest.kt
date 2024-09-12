@@ -26,9 +26,6 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
-        completedDate = null,
-        completedBy = null,
-        completedByDisplayName = null,
       ),
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -63,9 +60,6 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = "n".repeat(4001),
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = true,
-        completedDate = LocalDate.now(),
-        completedBy = "n".repeat(33),
-        completedByDisplayName = "n".repeat(256),
       ),
     )
     assertValidationErrors(
@@ -80,8 +74,6 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
       Pair("referral.descriptionOfConcern", "Description of concern must be <= 4000 characters"),
       Pair("referral.knownReasons", "Known reasons must be <= 4000 characters"),
       Pair("referral.otherInformation", "Other information must be <= 4000 characters"),
-      Pair("referral.completedBy", "Completed by username must be <= 32 characters"),
-      Pair("referral.completedByDisplayName", "Completed by display name must be <= 255 characters"),
     )
   }
 
@@ -105,9 +97,6 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
         otherInformation = null,
         isSaferCustodyTeamInformed = DO_NOT_KNOW,
         isReferralComplete = null,
-        completedDate = null,
-        completedBy = null,
-        completedByDisplayName = null,
       ),
     )
     assertThat(validator.validate(request)).isEmpty()

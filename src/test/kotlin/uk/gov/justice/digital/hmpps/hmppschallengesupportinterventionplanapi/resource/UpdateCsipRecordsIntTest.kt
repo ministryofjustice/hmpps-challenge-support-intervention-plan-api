@@ -216,7 +216,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - CSIP record updates csip and completes referral`() {
     val prisonNumber = givenValidPrisonNumber("U5463BT")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) { it }
     val referral = requireNotNull(record.referral)
 
     val request = updateCsipRecordRequest(
@@ -233,11 +233,25 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       ),
     )
 
-    updateCsipRecord(record.id, request)
+    val response = updateCsipRecord(record.id, request)
+    assertThat(response.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+    with(response.referral) {
+      assertThat(isReferralComplete).isEqualTo(true)
+      assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
+      assertThat(referralCompletedBy).isEqualTo(TEST_USER)
+      assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
+    }
+
     val saved = csipRecordRepository.getCsipRecord(record.id)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
       assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      with(requireNotNull(saved.referral)) {
+        assertThat(referralComplete).isEqualTo(true)
+        assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
+        assertThat(referralCompletedBy).isEqualTo(TEST_USER)
+        assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
+      }
     }
 
     verifyAudit(
@@ -379,9 +393,6 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       otherInformation,
       isSaferCustodyTeamInformed,
       isReferralComplete,
-      isReferralComplete?.let { if (it) LocalDate.now() else null },
-      isReferralComplete?.let { if (it) "completedBy" else null },
-      isReferralComplete?.let { if (it) "completedByDisplayName" else null },
     )
   }
 
