@@ -12,6 +12,7 @@ import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipInformation
@@ -25,11 +26,13 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.LocalDateTime
 import java.util.UUID
+import java.util.concurrent.CompletableFuture.completedFuture
 
 class CsipEventTypePublisherTest {
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val domainEventsTopic = mock<HmppsTopic>()
   private val domainEventsSnsClient = mock<SnsAsyncClient>()
+  private val publisherResponse = mock<PublishResponse>()
   private val objectMapper = jacksonMapperBuilder().addModule(JavaTimeModule()).build()
 
   private val domainEventsTopicArn = "arn:aws:sns:eu-west-2:000000000000:${UUID.randomUUID()}"
@@ -48,6 +51,8 @@ class CsipEventTypePublisherTest {
     whenever(hmppsQueueService.findByTopicId("hmppseventtopic")).thenReturn(domainEventsTopic)
     whenever(domainEventsTopic.snsClient).thenReturn(domainEventsSnsClient)
     whenever(domainEventsTopic.arn).thenReturn(domainEventsTopicArn)
+    whenever(domainEventsSnsClient.publish(any<PublishRequest>())).thenReturn(completedFuture(publisherResponse))
+
     val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
     val recordUuid = UUID.randomUUID()
     val occurredAt = LocalDateTime.now()
@@ -87,8 +92,12 @@ class CsipEventTypePublisherTest {
     whenever(domainEventsTopic.arn).thenReturn(domainEventsTopicArn)
     val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
     val domainEvent = mock<HmppsDomainEvent<CsipInformation>>()
-    whenever(domainEventsSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException("Failed to publish"))
+    whenever(domainEvent.eventType).thenReturn("some.event.type")
 
-    domainEventPublisher.publish(domainEvent)
+    val exceptionMessage = "Failed to publish domain event using library"
+    whenever(domainEventsSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException(exceptionMessage))
+
+    val ex = assertThrows<RuntimeException> { domainEventPublisher.publish(domainEvent) }
+    assertThat(ex.message).isEqualTo(exceptionMessage)
   }
 }
