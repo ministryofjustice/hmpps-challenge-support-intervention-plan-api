@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
@@ -45,30 +46,3 @@ class PlanService(
     return plan.toModel()
   }
 }
-
-private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed.toModel(): IdentifiedNeed =
-  IdentifiedNeed(
-    id,
-    identifiedNeed,
-    responsiblePerson,
-    createdDate,
-    targetDate,
-    closedDate,
-    intervention,
-    progression,
-    createdAt,
-    createdBy,
-    createdByDisplayName,
-    lastModifiedAt,
-    lastModifiedBy,
-    lastModifiedByDisplayName,
-  )
-
-private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan.toModel(): Plan =
-  Plan(
-    caseManager,
-    reasonForPlan,
-    firstCaseReviewDate,
-    identifiedNeeds().map { it.toModel() },
-    reviews().map { it.toModel() },
-  )

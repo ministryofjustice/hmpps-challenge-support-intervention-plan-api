@@ -1,12 +1,15 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor as ContributoryFactorModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipRecordModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Referral as ReferralModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ContributoryFactor as ContributoryFactorModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipRecordModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Referral as ReferralModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.toModel
 
 fun ContributoryFactor.toModel() =
   ContributoryFactorModel(
@@ -60,6 +63,33 @@ fun CsipRecord.toModel() =
     lastModifiedBy = lastModifiedBy,
     lastModifiedByDisplayName = lastModifiedByDisplayName,
     referral = referral!!.toModel(),
-    plan = null,
+    plan = plan?.toModel(),
     status = status,
+  )
+
+fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan.toModel(): Plan =
+  Plan(
+    caseManager,
+    reasonForPlan,
+    firstCaseReviewDate,
+    identifiedNeeds().map { it.toModel() },
+    reviews().map { it.toModel() },
+  )
+
+fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed.toModel(): IdentifiedNeed =
+  IdentifiedNeed(
+    id,
+    identifiedNeed,
+    responsiblePerson,
+    createdDate,
+    targetDate,
+    closedDate,
+    intervention,
+    progression,
+    createdAt,
+    createdBy,
+    createdByDisplayName,
+    lastModifiedAt,
+    lastModifiedBy,
+    lastModifiedByDisplayName,
   )
