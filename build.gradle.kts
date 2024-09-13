@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.4"
@@ -50,8 +51,8 @@ kotlin {
 }
 
 tasks {
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+  withType<KotlinCompile> {
+    compilerOptions.jvmTarget = JVM_21
   }
 
   val copyAgentJar by registering(Copy::class) {
@@ -94,7 +95,17 @@ jib {
     user = "2000:2000"
   }
   from {
-    image = "eclipse-temurin:21-jre-alpine"
+    image = "eclipse-temurin:21-jre-jammy"
+    platforms {
+      platform {
+        architecture = "amd64"
+        os = "linux"
+      }
+      platform {
+        architecture = "arm64"
+        os = "linux"
+      }
+    }
   }
   extraDirectories {
     paths {
