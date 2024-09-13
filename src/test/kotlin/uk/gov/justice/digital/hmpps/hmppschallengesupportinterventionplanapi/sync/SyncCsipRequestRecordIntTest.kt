@@ -204,6 +204,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   fun `200 success - save a new csip record with children`() {
     val request = syncCsipRequest(
       logCode = LOG_CODE,
+      prisonCodeWhenRecorded = "MDI",
       referral = syncReferralRequest(
         contributoryFactors = listOf(syncContributoryFactorRequest(), syncContributoryFactorRequest(typeCode = "BAS")),
         saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),

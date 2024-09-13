@@ -85,5 +85,5 @@ class SyncCsipRecord(
   }
 
   private fun SyncCsipRequest.toCsipRecord(): CsipRecord =
-    CsipRecord(prisonNumber, logCode = logCode, legacyId = legacyId).withAuditInfo(this)
+    CsipRecord(prisonNumber, prisonCodeWhenRecorded, logCode, legacyId).withAuditInfo(this)
 }
