@@ -1,7 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.4"
   kotlin("plugin.spring") version "2.0.20"
   kotlin("plugin.jpa") version "2.0.20"
+  id("com.google.cloud.tools.jib") version "3.4.3"
   jacoco
 }
 
@@ -47,8 +51,28 @@ kotlin {
 }
 
 tasks {
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+  withType<KotlinCompile> {
+    compilerOptions.jvmTarget = JVM_21
+  }
+
+  val copyAgentJar by registering(Copy::class) {
+    from("${project.layout.buildDirectory}/libs")
+    include("applicationinsights-agent*.jar")
+    into("${project.layout.buildDirectory}/agent")
+    rename("applicationinsights-agent(.+).jar", "agent.jar")
+    dependsOn("assemble")
+  }
+
+  val jib by getting {
+    dependsOn += copyAgentJar
+  }
+
+  val jibBuildTar by getting {
+    dependsOn += copyAgentJar
+  }
+
+  val jibDockerBuild by getting {
+    dependsOn += copyAgentJar
   }
 }
 
@@ -60,5 +84,40 @@ tasks.named<JacocoReport>("jacocoTestReport") {
   reports {
     html.required.set(true)
     xml.required.set(true)
+  }
+}
+
+jib {
+  container {
+    creationTime.set("USE_CURRENT_TIMESTAMP")
+    jvmFlags = mutableListOf("-Duser.timezone=Europe/London")
+    mainClass = "uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.HmppsChallengeSupportInterventionPlanApiKt"
+    user = "2000:2000"
+  }
+  from {
+    image = "eclipse-temurin:21-jre-jammy"
+    platforms {
+      platform {
+        architecture = "amd64"
+        os = "linux"
+      }
+      platform {
+        architecture = "arm64"
+        os = "linux"
+      }
+    }
+  }
+  extraDirectories {
+    paths {
+      path {
+        setFrom(project.layout.buildDirectory)
+        includes.add("agent/agent.jar")
+      }
+      path {
+        setFrom(project.rootDir)
+        includes.add("applicationinsights*.json")
+        into = "/agent"
+      }
+    }
   }
 }
