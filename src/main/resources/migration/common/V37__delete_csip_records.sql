@@ -136,7 +136,7 @@ begin
     end if;
 
     if (delete_audit) then
-        select remove_orphan_revisions();
+        perform remove_orphan_revisions();
     end if;
 end;
 $$ language plpgsql;
