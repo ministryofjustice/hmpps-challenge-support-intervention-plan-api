@@ -1,4 +1,41 @@
-create or replace function delete_csip_records(csip_ids uuid[], delete_audit boolean = true) returns void as
+create or replace function remove_orphan_revisions() returns void as
+$$
+begin
+    delete
+    from audit_revision
+    where id not in (select rev_id
+                     from attendee_audit
+                     union all
+                     select rev_id
+                     from review_audit
+                     union all
+                     select rev_id
+                     from identified_need_audit
+                     union all
+                     select rev_id
+                     from interview_audit
+                     union all
+                     select rev_id
+                     from contributory_factor_audit
+                     union all
+                     select rev_id
+                     from decision_and_actions_audit
+                     union all
+                     select rev_id
+                     from investigation_audit
+                     union all
+                     select rev_id
+                     from safer_custody_screening_outcome_audit
+                     union all
+                     select rev_id
+                     from referral_audit
+                     union all
+                     select rev_id
+                     from csip_record_audit);
+end;
+$$ language plpgsql;
+
+create or replace function delete_csip_records(csip_ids uuid[], delete_audit boolean default true) returns void as
 $$
 declare
     attendee_ids  uuid[];
@@ -98,6 +135,9 @@ begin
         delete from csip_record_audit where csip_record_audit.record_id = any (csip_ids);
     end if;
 
+    if (delete_audit) then
+        select remove_orphan_revisions();
+    end if;
 end;
 $$ language plpgsql;
 
