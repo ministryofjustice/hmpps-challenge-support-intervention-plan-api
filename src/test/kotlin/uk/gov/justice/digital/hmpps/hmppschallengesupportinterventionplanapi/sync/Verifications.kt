@@ -19,6 +19,7 @@ import java.time.temporal.ChronoUnit
 fun CsipRecord.verifyAgainst(request: SyncCsipRequest) {
   assertThat(prisonNumber).isEqualTo(request.prisonNumber)
   assertThat(logCode).isEqualTo(request.logCode)
+  assertThat(prisonCodeWhenRecorded).isEqualTo(prisonCodeWhenRecorded)
   request.referral?.also { requireNotNull(referral).verifyAgainst(it) }
   request.plan?.also { requireNotNull(plan).verifyAgainst(it) }
   verifyAuditFields(request)
