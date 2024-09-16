@@ -31,7 +31,7 @@ class SaferCustodyScreeningOutcome(
   date: LocalDate,
   recordedBy: String,
   recordedByDisplayName: String,
-  reasonForDecision: String,
+  reasonForDecision: String?,
 ) : SimpleAuditable(), CsipAware {
   override fun csipRecord() = referral.csipRecord
 
@@ -53,8 +53,7 @@ class SaferCustodyScreeningOutcome(
   var recordedByDisplayName: String = recordedByDisplayName
     private set
 
-  @Column(nullable = false)
-  var reasonForDecision: String = reasonForDecision
+  var reasonForDecision: String? = reasonForDecision
     private set
 
   @Audited(withModifiedFlag = false)

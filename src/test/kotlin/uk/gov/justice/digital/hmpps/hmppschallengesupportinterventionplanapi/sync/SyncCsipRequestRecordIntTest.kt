@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.InterviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.NomisIdGenerator.newId
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.badSyncRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncAttendeeRequest
@@ -287,6 +288,21 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `200 success - save a new csip record with null reason for screening decision`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(
+        saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(reasonForDecision = null),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    assertThat(saved).isNotNull()
+    saved.verifyAgainst(request)
+  }
+
+  @Test
   fun `200 success - can update an existing csip record`() {
     val initial = dataSetup(generateCsipRecord(prisonNumber())) {
       val referral = requireNotNull(it.withReferral().referral)
@@ -375,6 +391,82 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val attendeeRequests = request.plan!!.reviews.flatMap { it.attendees }
     val attendees = attendeeRepository.findAllById(attendeeRequests.map { it.id })
     attendees.forEach { i -> i.verifyAgainst(requireNotNull(attendeeRequests.find { it.legacyId == i.legacyId })) }
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+  }
+
+  @Test
+  fun `200 success - existing ids returned when updating an existing record from legacy id`() {
+    val initial = dataSetup(generateCsipRecord(prisonNumber(), legacyId = newId())) {
+      val referral = requireNotNull(it.withReferral().referral)
+        .withSaferCustodyScreeningOutcome()
+        .withContributoryFactor(legacyId = newId())
+        .withInvestigation()
+        .withDecisionAndActions()
+      requireNotNull(referral.investigation)
+        .withInterview(legacyId = newId())
+      val plan = requireNotNull(it.withPlan().plan)
+        .withNeed(legacyId = newId())
+        .withReview(legacyId = newId())
+      plan.reviews().first().withAttendee(legacyId = newId())
+      it
+    }
+
+    val referral = checkNotNull(initial.referral)
+    val factor = referral.contributoryFactors().first()
+    val interview = referral.investigation!!.interviews().first()
+    val plan = checkNotNull(initial.plan)
+    val need = plan.identifiedNeeds().first()
+    val review = plan.reviews().first()
+    val attendee = review.attendees().first()
+
+    val request = syncCsipRequest(
+      id = checkNotNull(initial.legacyId),
+      logCode = LOG_CODE,
+      referral = syncReferralRequest(
+        incidentTime = LocalTime.now(),
+        contributoryFactors = listOf(syncContributoryFactorRequest(id = factor.legacyId!!)),
+        saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),
+        investigation = syncInvestigationRequest(interviews = listOf(syncInterviewRequest(id = interview.legacyId!!))),
+        decisionAndActions = syncDecisionRequest(),
+      ),
+      plan = syncPlanRequest(
+        identifiedNeeds = listOf(syncNeedRequest(id = need.legacyId!!)),
+        reviews = listOf(
+          syncReviewRequest(
+            id = review.legacyId!!,
+            actions = setOf(ReviewAction.CASE_NOTE),
+            attendees = listOf(syncAttendeeRequest(id = attendee.legacyId!!)),
+          ),
+        ),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    assertThat(response.mappings.size).isEqualTo(6)
+
+    assertThat(response.mappings.single { it.component == RECORD })
+      .isEqualTo(ResponseMapping(RECORD, request.legacyId, initial.id))
+
+    val factorRequest = request.referral!!.contributoryFactors.first()
+    assertThat(response.mappings.single { it.component == CONTRIBUTORY_FACTOR })
+      .isEqualTo(ResponseMapping(CONTRIBUTORY_FACTOR, factorRequest.legacyId, factor.id))
+
+    val interviewRequest = request.referral!!.investigation!!.interviews.first()
+    assertThat(response.mappings.single { it.component == INTERVIEW })
+      .isEqualTo(ResponseMapping(INTERVIEW, interviewRequest.legacyId, interview.id))
+
+    val needRequest = request.plan!!.identifiedNeeds.first()
+    assertThat(response.mappings.single { it.component == IDENTIFIED_NEED })
+      .isEqualTo(ResponseMapping(IDENTIFIED_NEED, needRequest.legacyId, need.id))
+
+    val reviewRequest = request.plan!!.reviews.first()
+    assertThat(response.mappings.single { it.component == REVIEW })
+      .isEqualTo(ResponseMapping(REVIEW, reviewRequest.legacyId, review.id))
+
+    val attendeeRequest = reviewRequest.attendees.first()
+    assertThat(response.mappings.single { it.component == ATTENDEE })
+      .isEqualTo(ResponseMapping(ATTENDEE, attendeeRequest.legacyId, attendee.id))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }

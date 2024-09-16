@@ -96,7 +96,7 @@ object SyncRequestGenerator {
 
   fun syncScreeningOutcomeRequest(
     outcomeCode: String = "OPE",
-    reasonForDecision: String = "A reason for the decision",
+    reasonForDecision: String? = "A reason for the decision",
     date: LocalDate = LocalDate.now(),
     recordedBy: String = "recordedBy",
     recordedByDisplayName: String = "recordedByDisplayName",

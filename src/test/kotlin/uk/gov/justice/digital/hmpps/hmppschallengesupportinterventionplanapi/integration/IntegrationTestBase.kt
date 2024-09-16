@@ -336,6 +336,7 @@ abstract class IntegrationTestBase {
     closedDate: LocalDate? = null,
     intervention: String = "intervention description",
     progression: String? = null,
+    legacyId: Long? = null,
   ) = apply {
     val need = IdentifiedNeed(
       this,
@@ -346,6 +347,7 @@ abstract class IntegrationTestBase {
       closedDate,
       intervention,
       progression,
+      legacyId,
     )
     getByName<MutableList<IdentifiedNeed>>("identifiedNeeds") += need
   }
@@ -359,11 +361,12 @@ abstract class IntegrationTestBase {
     summary: String? = "A brief summary of the review",
     actions: Set<ReviewAction> = setOf(),
     attendees: Collection<CreateAttendeeRequest>? = null,
+    legacyId: Long? = null,
   ) = apply {
     val review = Review(
       this,
       (reviews().maxOfOrNull(Review::reviewSequence) ?: 0) + 1,
-      reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions,
+      reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions, legacyId,
     )
     getByName<MutableList<Review>>("reviews") += review
   }
@@ -373,8 +376,9 @@ abstract class IntegrationTestBase {
     role: String? = "role",
     attended: Boolean? = true,
     contribution: String? = "a small contribution",
+    legacyId: Long? = null,
   ) = apply {
-    val attendee = Attendee(this, name, role, attended, contribution)
+    val attendee = Attendee(this, name, role, attended, contribution, legacyId)
     getByName<MutableList<Attendee>>("attendees") += attendee
   }
 
@@ -422,8 +426,9 @@ abstract class IntegrationTestBase {
   fun Referral.withContributoryFactor(
     type: ReferenceData = givenRandom(CONTRIBUTORY_FACTOR_TYPE),
     comment: String? = "A comment about the factor",
+    legacyId: Long? = null,
   ): Referral = apply {
-    val factor = ContributoryFactor(this, type, comment)
+    val factor = ContributoryFactor(this, type, comment, legacyId)
     getByName<MutableList<ContributoryFactor>>("contributoryFactors") += factor
   }
 
@@ -453,8 +458,9 @@ abstract class IntegrationTestBase {
     interviewDate: LocalDate = LocalDate.now(),
     intervieweeRole: ReferenceData = givenRandom(INTERVIEWEE_ROLE),
     interviewText: String? = "interviewText",
+    legacyId: Long? = null,
   ): Investigation = apply {
-    val interview = Interview(this, interviewee, interviewDate, intervieweeRole, interviewText)
+    val interview = Interview(this, interviewee, interviewDate, intervieweeRole, interviewText, legacyId)
     getByName<MutableList<Interview>>("interviews") += interview
   }
 

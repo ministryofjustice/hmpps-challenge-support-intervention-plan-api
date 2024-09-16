@@ -34,7 +34,7 @@ class SyncCsipRecord(
     val rdSupplier: (ReferenceDataType, String) -> ReferenceData = { type, code ->
       requireNotNull(rdMap[ReferenceDataKey(type, code)])
     }
-    val csip: CsipRecord = request.id?.let { csipRepository.getCsipRecord(it).update(request).withAuditInfo(request) }
+    val csip: CsipRecord = findCsipRecord(request.id, request.legacyId)?.update(request)?.withAuditInfo(request)
       ?: request.toCsipRecord()
     val referralMappings = request.referral?.let {
       val referral = csip.referral?.update(it, rdSupplier) ?: csip.createReferral(it, csipRequestContext(), rdSupplier)
@@ -67,7 +67,12 @@ class SyncCsipRecord(
     csipRepository.findById(id)?.also(csipRepository::delete)
   }
 
-  private fun validatedReferenceData(keys: Set<ReferenceDataKey>): Map<ReferenceDataKey, ReferenceData> {
+  private fun findCsipRecord(uuid: UUID?, legacyId: Long): CsipRecord? =
+    uuid?.let { csipRepository.getCsipRecord(it) } ?: csipRepository.findByLegacyId(legacyId)?.also {
+      telemetry.trackEvent("CsipLegacyLookup", mapOf("legacyId" to legacyId.toString()), mapOf())
+    }
+
+  fun validatedReferenceData(keys: Set<ReferenceDataKey>): Map<ReferenceDataKey, ReferenceData> {
     val rd = referenceDaRepository.findByKeyIn(keys).associateBy { it.key }
     val missing = keys.subtract(rd.keys)
     return when (missing.size) {
