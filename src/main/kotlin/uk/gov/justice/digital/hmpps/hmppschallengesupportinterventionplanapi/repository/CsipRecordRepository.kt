@@ -20,6 +20,8 @@ interface CsipRecordRepository :
   RevisionRepository<CsipRecord, Long, Long>,
   RefreshRepository<CsipRecord, Long> {
   fun findById(recordId: UUID): CsipRecord?
+
+  fun findByLegacyId(legacyId: Long): CsipRecord?
 }
 
 fun CsipRecordRepository.getCsipRecord(recordUuid: UUID) =

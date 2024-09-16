@@ -14,10 +14,12 @@ object EntityGenerator {
     createdAt: LocalDateTime = CONTEXT.requestAt,
     createdBy: String = CONTEXT.username,
     createdByDisplayName: String = CONTEXT.userDisplayName,
+    legacyId: Long? = null,
   ) = CsipRecord(
     prisonNumber,
     prisonCodeWhenRecorded,
     logCode,
+    legacyId,
   ).apply {
     this.createdAt = createdAt
     this.createdBy = createdBy

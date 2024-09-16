@@ -97,7 +97,7 @@ data class SyncScreeningOutcomeRequest(
   @field:Size(min = 1, max = 12, message = "Screening outcome code must be <= 12 characters")
   override val outcomeTypeCode: String,
   @field:Size(min = 0, max = 4000, message = "Reason for decision must be <= 4000 characters")
-  override val reasonForDecision: String,
+  override val reasonForDecision: String?,
   override val date: LocalDate,
   @field:Size(min = 0, max = 64, message = "Recorded by username must be <= 64 characters")
   override val recordedBy: String,
