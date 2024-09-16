@@ -80,27 +80,6 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `409 conflict - identified need already present`() {
-    val prisonNumber = givenValidPrisonNumber("N1234AA")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withPlan()
-      requireNotNull(it.plan).withNeed()
-      it
-    }
-
-    val request = createIdentifiedNeedRequest()
-    val response = addIdentifiedNeedResponseSpec(record.id, request).errorResponse(HttpStatus.CONFLICT)
-
-    with(response) {
-      assertThat(status).isEqualTo(409)
-      assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Conflict failure: Identified need already part of plan")
-      assertThat(developerMessage).isEqualTo("Identified need already part of plan")
-      assertThat(moreInfo).isNull()
-    }
-  }
-
-  @Test
   fun `201 created - identified need added DPS`() {
     val prisonNumber = givenValidPrisonNumber("N1234DP")
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }

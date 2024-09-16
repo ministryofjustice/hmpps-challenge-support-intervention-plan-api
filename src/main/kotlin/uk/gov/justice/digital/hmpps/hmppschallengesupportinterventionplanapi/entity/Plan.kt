@@ -14,8 +14,6 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.AttendeesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
@@ -85,9 +83,6 @@ class Plan(
       request.progression,
       legacyId = if (request is LegacyIdAware) request.legacyId else null,
     ).apply {
-      verify(identifiedNeeds.none { it.identifiedNeed == identifiedNeed }) {
-        ResourceAlreadyExistException("Identified need already part of plan")
-      }
       identifiedNeeds.add(this)
     }
 
