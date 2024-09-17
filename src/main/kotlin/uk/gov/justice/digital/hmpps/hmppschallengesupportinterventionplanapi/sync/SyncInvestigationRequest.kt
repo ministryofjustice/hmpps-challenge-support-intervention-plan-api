@@ -7,14 +7,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InterviewsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.time.LocalDate
 import java.util.UUID
 
-@ValidInvestigationDetail
+@ValidInvestigationDetail(message = WITH_INTERVIEW_MESSAGE)
 data class SyncInvestigationRequest(
   @field:Size(min = 0, max = 4000, message = "Staff involved must be <= 4000 characters")
   override val staffInvolved: String?,
@@ -29,8 +31,8 @@ data class SyncInvestigationRequest(
   @field:Size(min = 0, max = 4000, message = "Protective factors must be <= 4000 characters")
   override val protectiveFactors: String?,
   @field:Valid
-  val interviews: List<SyncInterviewRequest>,
-) : InvestigationRequest {
+  override val interviews: List<SyncInterviewRequest>,
+) : InvestigationRequest, InterviewsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> =
     interviews.flatMap { it.findRequiredReferenceDataKeys() }.toSet()
 

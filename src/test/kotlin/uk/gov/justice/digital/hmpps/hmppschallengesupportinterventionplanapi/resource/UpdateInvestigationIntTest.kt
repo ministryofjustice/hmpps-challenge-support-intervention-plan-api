@@ -17,7 +17,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.DEFAULT_MESSAGE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import java.time.Duration.ofSeconds
@@ -70,13 +71,13 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
     val response = updateInvestigationResponseSpec(
       record.id,
-      UpsertInvestigationRequest(null, null, null, null, null, null),
+      UpdateInvestigationRequest(null, null, null, null, null, null),
     ).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
       assertThat(status).isEqualTo(400)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("Validation failure: At least one of staffInvolved, evidenceSecured, occurrenceReason, personsUsualBehaviour, personsTrigger, protectiveFactors must be non null.")
+      assertThat(userMessage).isEqualTo("Validation failure: $DEFAULT_MESSAGE")
     }
   }
 
@@ -185,7 +186,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
   private fun getInvestigation(recordUuid: UUID) =
     csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
 
-  private fun Investigation.verifyAgainst(request: UpsertInvestigationRequest) {
+  private fun Investigation.verifyAgainst(request: UpdateInvestigationRequest) {
     assertThat(staffInvolved).isEqualTo(request.staffInvolved)
     assertThat(evidenceSecured).isEqualTo(request.evidenceSecured)
     assertThat(occurrenceReason).isEqualTo(request.occurrenceReason)
@@ -194,7 +195,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
     assertThat(protectiveFactors).isEqualTo(request.protectiveFactors)
   }
 
-  private fun investigationRequest() = UpsertInvestigationRequest(
+  private fun investigationRequest() = UpdateInvestigationRequest(
     staffInvolved = "staffInvolved",
     evidenceSecured = "evidenceSecured",
     occurrenceReason = "occurrenceReason",
@@ -207,7 +208,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   private fun updateInvestigationResponseSpec(
     recordUuid: UUID,
-    request: UpsertInvestigationRequest,
+    request: UpdateInvestigationRequest,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.patch().uri(urlToTest(recordUuid)).bodyValue(request)
@@ -215,7 +216,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   private fun updateInvestigation(
     recordUuid: UUID,
-    request: UpsertInvestigationRequest,
+    request: UpdateInvestigationRequest,
     role: String? = ROLE_CSIP_UI,
     username: String = TEST_USER,
     status: HttpStatus,

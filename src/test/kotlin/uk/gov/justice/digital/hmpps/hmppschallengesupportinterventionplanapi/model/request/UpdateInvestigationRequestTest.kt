@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 class UpdateInvestigationRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = UpsertInvestigationRequest(
+    val request = UpdateInvestigationRequest(
       staffInvolved = null,
       evidenceSecured = null,
       occurrenceReason = "occurrenceReason",
@@ -19,7 +19,7 @@ class UpdateInvestigationRequestTest : RequestValidationTest() {
 
   @Test
   fun `validation fails if size constraints are not met`() {
-    val request = UpsertInvestigationRequest(
+    val request = UpdateInvestigationRequest(
       staffInvolved = "n".repeat(4001),
       evidenceSecured = "n".repeat(4001),
       occurrenceReason = "n".repeat(4001),
