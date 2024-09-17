@@ -202,6 +202,28 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - save a new csip record with empty investigation and no interview`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(
+        saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),
+        investigation = syncInvestigationRequest(
+          staffInvolved = null,
+          evidenceSecured = null,
+          occurrenceReason = null,
+          personsUsualBehaviour = null,
+          personsTrigger = null,
+          protectiveFactors = null,
+        ),
+      ),
+    )
+
+    val response = syncCsipResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
+      assertThat(userMessage).isEqualTo("Validation failure: At least one of staffInvolved, evidenceSecured, occurrenceReason, personsUsualBehaviour, personsTrigger, protectiveFactors must be non null.")
+    }
+  }
+
+  @Test
   fun `200 success - save a new csip record with children`() {
     val request = syncCsipRequest(
       logCode = LOG_CODE,
@@ -292,6 +314,30 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val request = syncCsipRequest(
       referral = syncReferralRequest(
         saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(reasonForDecision = null),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    assertThat(saved).isNotNull()
+    saved.verifyAgainst(request)
+  }
+
+  @Test
+  fun `200 success - save a new csip record with empty investigation with interview`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(
+        saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),
+        investigation = syncInvestigationRequest(
+          staffInvolved = null,
+          evidenceSecured = null,
+          occurrenceReason = null,
+          personsUsualBehaviour = null,
+          personsTrigger = null,
+          protectiveFactors = null,
+          interviews = listOf(syncInterviewRequest()),
+        ),
       ),
     )
 

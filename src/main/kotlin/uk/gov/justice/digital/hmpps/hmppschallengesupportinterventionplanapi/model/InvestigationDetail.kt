@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import jakarta.validation.Constraint
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InterviewsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.InvestigationRequest
 import kotlin.reflect.KClass
 
@@ -18,7 +19,7 @@ annotation class ValidInvestigationDetail(
 class InvestigationRequestValidator : ConstraintValidator<ValidInvestigationDetail, InvestigationRequest> {
   override fun isValid(request: InvestigationRequest, context: ConstraintValidatorContext): Boolean {
     return with(request) {
-      listOfNotNull(
+      val oneFieldNotNull = listOfNotNull(
         staffInvolved,
         evidenceSecured,
         occurrenceReason,
@@ -26,6 +27,10 @@ class InvestigationRequestValidator : ConstraintValidator<ValidInvestigationDeta
         personsTrigger,
         protectiveFactors,
       ).isNotEmpty()
+
+      val atLeastOneInterview = request is InterviewsRequest && request.interviews.isNotEmpty()
+
+      oneFieldNotNull || atLeastOneInterview
     }
   }
 }

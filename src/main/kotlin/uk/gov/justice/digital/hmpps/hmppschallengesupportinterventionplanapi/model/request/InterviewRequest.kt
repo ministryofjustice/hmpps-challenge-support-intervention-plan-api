@@ -8,3 +8,7 @@ interface InterviewRequest {
   val intervieweeRoleCode: String
   val interviewText: String?
 }
+
+interface InterviewsRequest {
+  val interviews: List<InterviewRequest>
+}

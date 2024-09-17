@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateInterviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertInvestigationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.InvestigationService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
@@ -126,7 +126,7 @@ class InvestigationsController(
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updateInvestigation(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
-    @Valid @RequestBody request: UpsertInvestigationRequest,
+    @Valid @RequestBody request: UpdateInvestigationRequest,
   ): Investigation = investigationService.updateInvestigation(recordUuid, request)
 
   @Operation(

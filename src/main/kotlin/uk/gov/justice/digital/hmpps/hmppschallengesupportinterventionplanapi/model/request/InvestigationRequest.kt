@@ -45,12 +45,12 @@ data class CreateInvestigationRequest(
 
   @Schema(description = "The interviews in relation to the investigation")
   @field:Valid
-  val interviews: Collection<CreateInterviewRequest> = listOf(),
-) : InvestigationRequest
+  override val interviews: List<CreateInterviewRequest> = listOf(),
+) : InvestigationRequest, InterviewsRequest
 
 @Schema(description = "The request body to update an investigation on the incident that motivated the CSIP referral.")
 @ValidInvestigationDetail
-data class UpsertInvestigationRequest(
+data class UpdateInvestigationRequest(
   @Schema(description = "The names of the staff involved in the investigation.")
   @field:Size(min = 0, max = 4000, message = "Staff involved must be <= 4000 characters")
   override val staffInvolved: String?,
