@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 
 interface InvestigationRequest {
   val staffInvolved: String?
@@ -15,7 +16,7 @@ interface InvestigationRequest {
 }
 
 @Schema(description = "The request body to create an investigation on the incident that motivated the CSIP referral.")
-@ValidInvestigationDetail
+@ValidInvestigationDetail(message = WITH_INTERVIEW_MESSAGE)
 data class CreateInvestigationRequest(
   @Schema(description = "The names of the staff involved in the investigation.")
   @field:Size(min = 0, max = 4000, message = "Staff involved must be <= 4000 characters")

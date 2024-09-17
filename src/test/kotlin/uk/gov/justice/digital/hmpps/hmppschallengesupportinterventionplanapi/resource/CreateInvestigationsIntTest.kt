@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
@@ -95,6 +96,20 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - attempt to create investigation without interviews or fields populated`() {
+    val recordUuid = UUID.randomUUID()
+    val response = createInvestigationResponseSpec(
+      recordUuid,
+      createInvestigationRequest(null, null, null, null, null, null),
+    ).errorResponse(HttpStatus.BAD_REQUEST)
+
+    with(response) {
+      assertThat(userMessage).isEqualTo("Validation failure: $WITH_INTERVIEW_MESSAGE")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: $WITH_INTERVIEW_MESSAGE")
+    }
+  }
+
+  @Test
   fun `409 conflict - Investigation already exists`() {
     val prisonNumber = givenValidPrisonNumber("I1234AE")
     val record = dataSetup(generateCsipRecord(prisonNumber)) {
@@ -152,16 +167,23 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     assertThat(interviews.size).isEqualTo(request.interviews.size)
   }
 
-  private fun createInvestigationRequest(interviews: List<CreateInterviewRequest> = listOf()) =
-    CreateInvestigationRequest(
-      staffInvolved = "staffInvolved",
-      evidenceSecured = "evidenceSecured",
-      occurrenceReason = "occurrenceReason",
-      personsUsualBehaviour = "personsUsualBehaviour",
-      personsTrigger = "personsTrigger",
-      protectiveFactors = "protectiveFactors",
-      interviews,
-    )
+  private fun createInvestigationRequest(
+    staffInvolved: String? = "staffInvolved",
+    evidenceSecured: String? = "evidenceSecured",
+    occurrenceReason: String? = "occurrenceReason",
+    personsUsualBehaviour: String? = "personsUsualBehaviour",
+    personsTrigger: String? = "personsTrigger",
+    protectiveFactors: String? = "protectiveFactors",
+    interviews: List<CreateInterviewRequest> = listOf(),
+  ) = CreateInvestigationRequest(
+    staffInvolved,
+    evidenceSecured,
+    occurrenceReason,
+    personsUsualBehaviour,
+    personsTrigger,
+    protectiveFactors,
+    interviews,
+  )
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/investigation"
 

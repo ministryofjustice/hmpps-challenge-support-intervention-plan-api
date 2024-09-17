@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.AttendeeRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ContributoryFactorRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.IdentifiedNeedRepository
@@ -219,7 +220,8 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
     val response = syncCsipResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
-      assertThat(userMessage).isEqualTo("Validation failure: At least one of staffInvolved, evidenceSecured, occurrenceReason, personsUsualBehaviour, personsTrigger, protectiveFactors must be non null.")
+      assertThat(userMessage).isEqualTo("Validation failure: $WITH_INTERVIEW_MESSAGE")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: $WITH_INTERVIEW_MESSAGE")
     }
   }
 
