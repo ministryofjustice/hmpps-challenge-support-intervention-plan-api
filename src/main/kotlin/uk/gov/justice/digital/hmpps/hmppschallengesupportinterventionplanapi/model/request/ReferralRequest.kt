@@ -27,16 +27,13 @@ interface ReferralRequest {
   val isReferralComplete: Boolean?
 }
 
-interface ContributoryFactorRequest : CommentRequest {
+interface ContributoryFactorRequest {
   val factorTypeCode: String
+  val comment: String?
 }
 
 interface ContributoryFactorsRequest {
   val contributoryFactors: List<ContributoryFactorRequest>
-}
-
-interface CommentRequest {
-  val comment: String?
 }
 
 interface CompletableRequest {

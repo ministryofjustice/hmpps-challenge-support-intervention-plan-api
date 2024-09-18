@@ -36,6 +36,14 @@ class ReferralService(
     return referral.addContributoryFactor(request, referenceDataRepository::getActiveReferenceData).toModel()
   }
 
-  fun updateContributoryFactor(factorId: UUID, request: UpdateContributoryFactorRequest): ContributoryFactor =
-    factorRepository.getContributoryFactor(factorId).update(request).toModel()
+  fun updateContributoryFactor(factorId: UUID, request: UpdateContributoryFactorRequest): ContributoryFactor {
+    val factor = factorRepository.getContributoryFactor(factorId)
+    verify(
+      factor.referral.contributoryFactors()
+        .none { it.contributoryFactorType.code == request.factorTypeCode && it.id != factorId },
+    ) {
+      ResourceAlreadyExistException("Contributory factor already part of referral")
+    }
+    return factor.update(request, referenceDataRepository::getActiveReferenceData).toModel()
+  }
 }

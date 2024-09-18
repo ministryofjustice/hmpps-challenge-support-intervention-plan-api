@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CONTRIBUTORY_FACTOR_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -90,6 +91,38 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `409 conflict - contributory factor already present`() {
+    val prisonNumber = givenValidPrisonNumber("C1234FE")
+    val factorUuid = dataSetup(generateCsipRecord(prisonNumber)) {
+      it.withReferral()
+      requireNotNull(it.referral)
+        .withContributoryFactor(
+          type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"),
+        )
+        .withContributoryFactor(
+          type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "BAS"),
+        )
+      it
+    }.referral!!.contributoryFactors().find { it.contributoryFactorType.code == "AFL" }!!.id
+
+    val response = updateContributoryFactorResponseSpec(
+      factorUuid,
+      updateContributoryFactorRequest(
+        factorTypeCode = "BAS",
+      ),
+    )
+      .errorResponse(HttpStatus.CONFLICT)
+
+    with(response) {
+      assertThat(status).isEqualTo(409)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Conflict failure: Contributory factor already part of referral")
+      assertThat(developerMessage).isEqualTo("Contributory factor already part of referral")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `200 ok - contributory factor updated`() {
     val prisonNumber = givenValidPrisonNumber("F1234NC")
     val factor = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
@@ -124,7 +157,8 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
       referral.contributoryFactors().first()
     }
 
-    val request = updateContributoryFactorRequest(comment = factor.comment)
+    val request =
+      updateContributoryFactorRequest(factorTypeCode = factor.contributoryFactorType.code, comment = factor.comment)
     val response = updateContributoryFactor(factor.id, request)
 
     val saved = getContributoryFactory(response.factorUuid)
@@ -141,8 +175,11 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
 
   private fun urlToTest(factorId: UUID) = "/csip-records/referral/contributory-factors/$factorId"
 
-  private fun updateContributoryFactorRequest(comment: String? = "comment about the factor") =
-    UpdateContributoryFactorRequest(comment)
+  private fun updateContributoryFactorRequest(
+    factorTypeCode: String = "BAS",
+    comment: String? = "comment about the factor",
+  ) =
+    UpdateContributoryFactorRequest(factorTypeCode, comment)
 
   private fun updateContributoryFactorResponseSpec(
     factorId: UUID,
