@@ -13,6 +13,10 @@ interface ReviewRequest {
   val actions: Set<ReviewAction>
 }
 
+interface ReviewsRequest {
+  val reviews: List<ReviewRequest>
+}
+
 interface AttendeeRequest {
   val name: String?
   val role: String?

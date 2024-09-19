@@ -153,9 +153,9 @@ object SyncRequestGenerator {
   )
 
   fun syncPlanRequest(
-    caseManager: String = "Case Manager",
-    reasonForPlan: String = "Reason for the plan",
-    firstCaseReviewDate: LocalDate = LocalDate.now(),
+    caseManager: String? = "Case Manager",
+    reasonForPlan: String? = "Reason for the plan",
+    firstCaseReviewDate: LocalDate? = LocalDate.now(),
     identifiedNeeds: List<SyncNeedRequest> = listOf(),
     reviews: List<SyncReviewRequest> = listOf(),
   ) = SyncPlanRequest(caseManager, reasonForPlan, firstCaseReviewDate, identifiedNeeds, reviews)

@@ -11,3 +11,7 @@ interface IdentifiedNeedRequest {
   val intervention: String
   val progression: String?
 }
+
+interface IdentifiedNeedsRequest {
+  val identifiedNeeds: List<IdentifiedNeedRequest>
+}

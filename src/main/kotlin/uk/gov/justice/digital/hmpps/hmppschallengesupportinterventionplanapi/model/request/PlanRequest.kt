@@ -7,9 +7,9 @@ import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
 interface PlanRequest {
-  val caseManager: String
-  val reasonForPlan: String
-  val firstCaseReviewDate: LocalDate
+  val caseManager: String?
+  val reasonForPlan: String?
+  val firstCaseReviewDate: LocalDate?
 }
 
 @Schema(description = "The request for creating a CSIP Plan for a CSIP record")
@@ -28,11 +28,11 @@ data class CreatePlanRequest(
 
   @Schema(description = "The needs identified in the CSIP plan.")
   @field:Valid
-  val identifiedNeeds: Collection<CreateIdentifiedNeedRequest> = listOf(),
-) : PlanRequest
+  override val identifiedNeeds: List<CreateIdentifiedNeedRequest> = listOf(),
+) : PlanRequest, IdentifiedNeedsRequest
 
 @Schema(description = "The request for creating a CSIP Plan for a CSIP record")
-data class UpsertPlanRequest(
+data class UpdatePlanRequest(
   @Schema(description = "The case manager assigned to the CSIP plan.")
   @field:Size(min = 0, max = 100, message = "Case Manager name must be <= 100 characters")
   override val caseManager: String,

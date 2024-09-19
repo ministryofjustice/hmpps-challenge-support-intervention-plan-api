@@ -33,9 +33,9 @@ class Plan(
   @JoinColumn(name = "plan_id")
   val csipRecord: CsipRecord,
 
-  caseManager: String,
-  reasonForPlan: String,
-  firstCaseReviewDate: LocalDate,
+  caseManager: String?,
+  reasonForPlan: String?,
+  firstCaseReviewDate: LocalDate?,
 ) : SimpleAuditable(), CsipAware {
   override fun csipRecord() = csipRecord
 
@@ -44,13 +44,13 @@ class Plan(
   @Column(name = "plan_id")
   val id: UUID = csipRecord.id
 
-  var caseManager: String = caseManager
+  var caseManager: String? = caseManager
     private set
 
-  var reasonForPlan: String = reasonForPlan
+  var reasonForPlan: String? = reasonForPlan
     private set
 
-  var firstCaseReviewDate: LocalDate = firstCaseReviewDate
+  var firstCaseReviewDate: LocalDate? = firstCaseReviewDate
     private set
 
   @NotAudited
@@ -104,9 +104,9 @@ class Plan(
     }
   }
 
-  fun nextReviewDate(): LocalDate {
-    val nextReviewDate = reviews().mapNotNull(Review::nextReviewDate).maxOrNull() ?: firstCaseReviewDate
-    return maxOf(firstCaseReviewDate, nextReviewDate)
+  fun nextReviewDate(): LocalDate? {
+    val nextReviewDate = reviews().mapNotNull(Review::nextReviewDate).maxOrNull()
+    return listOfNotNull(firstCaseReviewDate, nextReviewDate).maxOrNull()
   }
 
   fun components(): Set<CsipComponent> = buildSet {

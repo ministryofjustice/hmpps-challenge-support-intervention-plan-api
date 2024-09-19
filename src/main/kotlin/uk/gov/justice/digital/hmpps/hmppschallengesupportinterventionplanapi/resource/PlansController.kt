@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateIdentifiedNeedRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdatePlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.PlanService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.util.UUID
@@ -113,7 +113,7 @@ class PlansController(private val planService: PlanService) {
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun updatePlan(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
-    @Valid @RequestBody request: UpsertPlanRequest,
+    @Valid @RequestBody request: UpdatePlanRequest,
   ): Plan = planService.updatePlan(recordUuid, request)
 
   @Operation(

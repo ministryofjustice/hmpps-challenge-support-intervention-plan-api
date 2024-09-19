@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertPlanRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdatePlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
@@ -147,7 +147,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun Plan.verifyAgainst(request: UpsertPlanRequest) {
+  private fun Plan.verifyAgainst(request: UpdatePlanRequest) {
     assertThat(caseManager).isEqualTo(request.caseManager)
     assertThat(reasonForPlan).isEqualTo(request.reasonForPlan)
     assertThat(firstCaseReviewDate).isEqualTo(request.firstCaseReviewDate)
@@ -157,13 +157,13 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     caseManager: String = "Case Manager",
     reasonForPlan: String = "Reason for this plan",
     firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
-  ) = UpsertPlanRequest(caseManager, reasonForPlan, firstCaseReviewDate)
+  ) = UpdatePlanRequest(caseManager, reasonForPlan, firstCaseReviewDate)
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/plan"
 
   private fun updatePlanResponseSpec(
     recordUuid: UUID,
-    request: UpsertPlanRequest,
+    request: UpdatePlanRequest,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
   ) = webTestClient.patch().uri(urlToTest(recordUuid)).bodyValue(request)
@@ -171,7 +171,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
 
   private fun updatePlan(
     recordUuid: UUID,
-    request: UpsertPlanRequest,
+    request: UpdatePlanRequest,
     role: String? = ROLE_CSIP_UI,
     username: String = TEST_USER,
     status: HttpStatus,

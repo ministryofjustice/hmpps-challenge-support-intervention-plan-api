@@ -226,6 +226,20 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - save a new csip record with empty plan and no children`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(),
+      plan = syncPlanRequest(caseManager = null, reasonForPlan = null, firstCaseReviewDate = null),
+    )
+
+    val response = syncCsipResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
+      assertThat(userMessage).isEqualTo("Validation failure: At least one of caseManager, reasonForPlan, firstCaseReviewDate, must be non null or at least one child record should be provided (identified need or review)")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: At least one of caseManager, reasonForPlan, firstCaseReviewDate, must be non null or at least one child record should be provided (identified need or review)")
+    }
+  }
+
+  @Test
   fun `200 success - save a new csip record with children`() {
     val request = syncCsipRequest(
       logCode = LOG_CODE,
@@ -517,6 +531,24 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
       .isEqualTo(ResponseMapping(ATTENDEE, attendeeRequest.legacyId, attendee.id))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+  }
+
+  @Test
+  fun `200 success - save a new csip record with empty plan with identified needs`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(),
+      plan = syncPlanRequest(
+        caseManager = null,
+        reasonForPlan = null,
+        firstCaseReviewDate = null,
+        identifiedNeeds = listOf(syncNeedRequest()),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    saved.verifyAgainst(request)
   }
 
   @Test
