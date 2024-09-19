@@ -132,7 +132,7 @@ object SyncRequestGenerator {
 
   fun syncDecisionRequest(
     conclusion: String? = "conclusion",
-    outcomeCode: String = "ACC",
+    outcomeCode: String? = "ACC",
     signedOffByRole: String? = "CUSTMAN",
     date: LocalDate? = LocalDate.now(),
     recordedBy: String? = "recordedBy",

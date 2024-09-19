@@ -226,6 +226,19 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - attempt to save invalid decision`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(decisionAndActions = syncDecisionRequest(outcomeCode = null, conclusion = null)),
+    )
+
+    val response = syncCsipResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
+    with(response) {
+      assertThat(userMessage).isEqualTo("Validation failure: Either outcome type code or conclusion must be provided")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: Either outcome type code or conclusion must be provided")
+    }
+  }
+
+  @Test
   fun `400 bad request - save a new csip record with empty plan and no children`() {
     val request = syncCsipRequest(
       referral = syncReferralRequest(),
@@ -552,6 +565,24 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `200 success - save a new csip record with conclusion and no outcome`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(
+        decisionAndActions = syncDecisionRequest(
+          outcomeCode = null,
+          signedOffByRole = null,
+          conclusion = "A conclusion without outcome",
+        ),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    saved.verifyAgainst(request)
+  }
+
+  @Test
   fun `204 no content - delete csip record`() {
     val record = dataSetup(generateCsipRecord(prisonNumber())) {
       val referral = requireNotNull(it.withReferral().referral)
@@ -682,7 +713,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         syncCsipRequest(referral = syncReferralRequest(decisionAndActions = syncDecisionRequest(outcomeCode = NON_EXISTENT))),
         InvalidRd(
           ReferenceDataType.DECISION_OUTCOME_TYPE,
-          { it.referral!!.decisionAndActions!!.outcomeTypeCode },
+          { it.referral!!.decisionAndActions!!.outcomeTypeCode!! },
           INVALID,
         ),
       ),

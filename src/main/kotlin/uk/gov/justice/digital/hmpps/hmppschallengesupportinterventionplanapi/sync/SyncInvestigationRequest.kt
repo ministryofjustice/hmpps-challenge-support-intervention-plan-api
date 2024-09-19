@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidDecisionDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
@@ -56,11 +57,12 @@ data class SyncInterviewRequest(
     setOf(ReferenceDataKey(ReferenceDataType.INTERVIEWEE_ROLE, intervieweeRoleCode))
 }
 
+@ValidDecisionDetail
 data class SyncDecisionAndActionsRequest(
   @field:Size(min = 0, max = 4000, message = "Conclusion must be <= 4000 characters")
   override val conclusion: String?,
   @field:Size(min = 1, max = 12, message = "Decision outcome code must be <= 12 characters")
-  override val outcomeTypeCode: String,
+  override val outcomeTypeCode: String?,
   @field:Size(min = 0, max = 12, message = "Signed off by role code must be <= 12 characters")
   override val signedOffByRoleCode: String?,
   override val date: LocalDate?,
@@ -75,7 +77,7 @@ data class SyncDecisionAndActionsRequest(
   override val actions: Set<DecisionAction>,
 ) : DecisionAndActionsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
-    add(ReferenceDataKey(ReferenceDataType.DECISION_OUTCOME_TYPE, outcomeTypeCode))
+    outcomeTypeCode?.also { add(ReferenceDataKey(ReferenceDataType.DECISION_OUTCOME_TYPE, it)) }
     signedOffByRoleCode?.also { add(ReferenceDataKey(ReferenceDataType.DECISION_SIGNER_ROLE, it)) }
   }
 }

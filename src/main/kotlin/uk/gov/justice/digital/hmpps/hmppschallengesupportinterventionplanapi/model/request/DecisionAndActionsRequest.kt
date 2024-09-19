@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 interface DecisionAndActionsRequest {
   val conclusion: String?
-  val outcomeTypeCode: String
+  val outcomeTypeCode: String?
   val signedOffByRoleCode: String?
   val recordedBy: String?
   val recordedByDisplayName: String?

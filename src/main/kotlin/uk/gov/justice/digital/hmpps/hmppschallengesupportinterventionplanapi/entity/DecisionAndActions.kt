@@ -34,8 +34,8 @@ class DecisionAndActions(
   @JoinColumn(name = "decision_and_actions_id")
   val referral: Referral,
 
-  outcome: ReferenceData,
-  signedOffBy: ReferenceData,
+  outcome: ReferenceData?,
+  signedOffBy: ReferenceData?,
 ) : SimpleAuditable(), CsipAware {
   override fun csipRecord() = referral.csipRecord
 
@@ -47,13 +47,13 @@ class DecisionAndActions(
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "outcome_id", nullable = false)
-  var outcome: ReferenceData = outcome
+  var outcome: ReferenceData? = outcome
     private set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "signed_off_by_role_id")
-  var signedOffBy: ReferenceData = signedOffBy
+  var signedOffBy: ReferenceData? = signedOffBy
     private set
 
   @Column(length = 4000)
@@ -86,9 +86,9 @@ class DecisionAndActions(
 
   fun upsert(
     request: DecisionAndActionsRequest,
-    outcomeType: ReferenceData,
-    signedOffByRole: ReferenceData,
-  ): DecisionAndActions {
+    outcomeType: ReferenceData?,
+    signedOffByRole: ReferenceData?,
+  ): DecisionAndActions = apply {
     outcome = outcomeType
     signedOffBy = signedOffByRole
     conclusion = request.conclusion
@@ -98,14 +98,13 @@ class DecisionAndActions(
     nextSteps = request.nextSteps
     actions = request.actions
     actionOther = request.actionOther
-    return this
   }
 }
 
 fun DecisionAndActions.toModel() =
   DecisionAndActionsModel(
     conclusion,
-    outcome.toReferenceDataModel(),
+    outcome?.toReferenceDataModel(),
     signedOffBy?.toReferenceDataModel(),
     recordedBy,
     recordedByDisplayName,
