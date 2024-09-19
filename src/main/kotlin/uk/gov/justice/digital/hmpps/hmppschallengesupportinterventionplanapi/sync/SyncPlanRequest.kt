@@ -4,25 +4,29 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidPlanDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.AttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReviewsRequest
 import java.time.LocalDate
 import java.util.UUID
 
+@ValidPlanDetail
 data class SyncPlanRequest(
   @field:Size(min = 0, max = 100, message = "Case manager must be <= 100 characters")
-  override val caseManager: String,
+  override val caseManager: String?,
   @field:Size(min = 0, max = 240, message = "Reason for plan must be <= 240 characters")
-  override val reasonForPlan: String,
-  override val firstCaseReviewDate: LocalDate,
+  override val reasonForPlan: String?,
+  override val firstCaseReviewDate: LocalDate?,
   @field:Valid
-  val identifiedNeeds: List<SyncNeedRequest>,
+  override val identifiedNeeds: List<SyncNeedRequest>,
   @field:Valid
-  val reviews: List<SyncReviewRequest>,
-) : PlanRequest {
+  override val reviews: List<SyncReviewRequest>,
+) : PlanRequest, IdentifiedNeedsRequest, ReviewsRequest {
   fun requestMappings(): Set<RequestMapping> = buildSet {
     addAll(identifiedNeeds.map { RequestMapping(CsipComponent.IDENTIFIED_NEED, it.legacyId, it.id) })
     addAll(reviews.flatMap(SyncReviewRequest::requestMappings))

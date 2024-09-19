@@ -7,7 +7,7 @@ import java.time.LocalDate
 class UpdatePlanRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
-    val request = UpsertPlanRequest(
+    val request = UpdatePlanRequest(
       caseManager = "inani",
       reasonForPlan = "posidonium",
       firstCaseReviewDate = LocalDate.now(),
@@ -17,7 +17,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
 
   @Test
   fun `caseManager must have no more than 100 characters`() {
-    val request = UpsertPlanRequest(
+    val request = UpdatePlanRequest(
       caseManager = "n".repeat(101),
       reasonForPlan = "posidonium",
       firstCaseReviewDate = LocalDate.now(),
@@ -31,7 +31,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
 
   @Test
   fun `reasonForPlan must have no more than 240 characters`() {
-    val request = UpsertPlanRequest(
+    val request = UpdatePlanRequest(
       caseManager = "inani",
       reasonForPlan = "n".repeat(241),
       firstCaseReviewDate = LocalDate.now(),
