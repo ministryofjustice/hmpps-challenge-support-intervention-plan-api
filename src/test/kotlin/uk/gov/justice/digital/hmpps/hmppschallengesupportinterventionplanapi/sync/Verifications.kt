@@ -79,7 +79,7 @@ fun Interview.verifyAgainst(request: SyncInterviewRequest) {
 }
 
 fun DecisionAndActions.verifyAgainst(request: SyncDecisionAndActionsRequest) {
-  assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
+  assertThat(outcome?.code).isEqualTo(request.outcomeTypeCode)
   assertThat(signedOffBy?.code).isEqualTo(request.signedOffByRoleCode)
   assertThat(date).isEqualTo(request.date)
   assertThat(recordedBy).isEqualTo(request.recordedBy)

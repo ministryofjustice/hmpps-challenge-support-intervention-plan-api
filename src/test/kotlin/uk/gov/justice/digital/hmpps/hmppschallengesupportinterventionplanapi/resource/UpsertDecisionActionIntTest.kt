@@ -252,7 +252,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     }
 
     val decision = requireNotNull(record.referral?.decisionAndActions)
-    val request = upsertDecisionActionsRequest(decision.outcome.code, decision.signedOffBy.code, decision.actions)
+    val request = upsertDecisionActionsRequest(decision.outcome!!.code, decision.signedOffBy!!.code, decision.actions)
 
     val response = upsertDecisionActions(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
@@ -278,8 +278,8 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val decision = requireNotNull(record.referral?.decisionAndActions)
     val request = upsertDecisionActionsRequest(
-      decision.outcome.code,
-      decision.signedOffBy.code,
+      decision.outcome!!.code,
+      decision.signedOffBy!!.code,
       setOf(DecisionAction.UNIT_OR_CELL_MOVE),
     )
 
@@ -339,7 +339,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
   private fun DecisionAndActions.verifyAgainst(request: UpsertDecisionAndActionsRequest) {
     assertThat(conclusion).isEqualTo(request.conclusion)
-    assertThat(outcome.code).isEqualTo(request.outcomeTypeCode)
+    assertThat(outcome?.code).isEqualTo(request.outcomeTypeCode)
     assertThat(signedOffByRole?.code).isEqualTo(request.signedOffByRoleCode)
     assertThat(recordedBy).isEqualTo(request.recordedBy)
     assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)

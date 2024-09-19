@@ -13,7 +13,7 @@ data class DecisionAndActions(
   val conclusion: String?,
 
   @Schema(description = "The outcome decision for the referral.")
-  val outcome: ReferenceData,
+  val outcome: ReferenceData?,
 
   @Schema(description = "The role of the person making the outcome decision.")
   val signedOffByRole: ReferenceData?,
