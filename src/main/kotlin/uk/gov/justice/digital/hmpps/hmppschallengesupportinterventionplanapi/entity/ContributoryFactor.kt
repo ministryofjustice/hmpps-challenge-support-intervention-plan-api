@@ -46,7 +46,7 @@ class ContributoryFactor(
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
-  @JoinColumn(name = "contributory_factor_type_id", updatable = false)
+  @JoinColumn(name = "contributory_factor_type_id", updatable = true)
   var contributoryFactorType: ReferenceData = contributoryFactorType
     private set
 

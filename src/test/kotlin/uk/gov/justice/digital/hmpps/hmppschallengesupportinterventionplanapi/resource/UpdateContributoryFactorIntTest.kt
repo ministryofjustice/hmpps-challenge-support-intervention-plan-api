@@ -46,8 +46,10 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   @NullSource
   @ValueSource(strings = ["WRONG_ROLE", ROLE_NOMIS])
   fun `403 forbidden - no required role`(role: String?) {
-    val response = updateContributoryFactorResponseSpec(randomUUID(), updateContributoryFactorRequest(), role = role)
-      .errorResponse(HttpStatus.FORBIDDEN)
+    val response =
+      updateContributoryFactorResponseSpec(randomUUID(), updateContributoryFactorRequest(), role = role).errorResponse(
+        HttpStatus.FORBIDDEN,
+      )
 
     with(response) {
       assertThat(status).isEqualTo(403)
@@ -78,8 +80,8 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `404 not found - contributory factor not found`() {
     val uuid = randomUUID()
-    val response = updateContributoryFactorResponseSpec(uuid, updateContributoryFactorRequest())
-      .errorResponse(HttpStatus.NOT_FOUND)
+    val response =
+      updateContributoryFactorResponseSpec(uuid, updateContributoryFactorRequest()).errorResponse(HttpStatus.NOT_FOUND)
 
     with(response) {
       assertThat(status).isEqualTo(404)
@@ -95,14 +97,11 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     val prisonNumber = givenValidPrisonNumber("C1234FE")
     val factorUuid = dataSetup(generateCsipRecord(prisonNumber)) {
       it.withReferral()
-      requireNotNull(it.referral)
-        .withContributoryFactor(
-          type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"),
-        )
-        .withContributoryFactor(
-          type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "BAS"),
-        )
-        .contributoryFactors().last().id
+      requireNotNull(it.referral).withContributoryFactor(
+        type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"),
+      ).withContributoryFactor(
+        type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "BAS"),
+      ).contributoryFactors().last().id
     }
 
     val response = updateContributoryFactorResponseSpec(
@@ -110,8 +109,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
       updateContributoryFactorRequest(
         factorTypeCode = "BAS",
       ),
-    )
-      .errorResponse(HttpStatus.CONFLICT)
+    ).errorResponse(HttpStatus.CONFLICT)
 
     with(response) {
       assertThat(status).isEqualTo(409)
@@ -126,14 +124,17 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   fun `200 ok - contributory factor updated`() {
     val prisonNumber = givenValidPrisonNumber("F1234NC")
     val factor = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
-      val referral = requireNotNull(it.referral).withContributoryFactor()
+      val referral =
+        requireNotNull(it.referral).withContributoryFactor(type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"))
       referral.contributoryFactors().first()
     }
 
-    val request = updateContributoryFactorRequest(comment = "An updated comment to replace the original")
+    val request =
+      updateContributoryFactorRequest(factorTypeCode = "BAS", comment = "An updated comment to replace the original")
     val response = updateContributoryFactor(factor.id, request)
 
     val saved = getContributoryFactory(response.factorUuid)
+    assertThat(saved.contributoryFactorType.code).isEqualTo(request.factorTypeCode)
     assertThat(saved.comment).isEqualTo(request.comment)
     assertThat(saved.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
@@ -178,19 +179,15 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   private fun updateContributoryFactorRequest(
     factorTypeCode: String = "BAS",
     comment: String? = "comment about the factor",
-  ) =
-    UpdateContributoryFactorRequest(factorTypeCode, comment)
+  ) = UpdateContributoryFactorRequest(factorTypeCode, comment)
 
   private fun updateContributoryFactorResponseSpec(
     factorId: UUID,
     request: UpdateContributoryFactorRequest,
     username: String? = TEST_USER,
     role: String? = ROLE_CSIP_UI,
-  ) = webTestClient.patch()
-    .uri(urlToTest(factorId))
-    .bodyValue(request)
-    .headers(setAuthorisation(user = username, roles = listOfNotNull(role)))
-    .exchange()
+  ) = webTestClient.patch().uri(urlToTest(factorId)).bodyValue(request)
+    .headers(setAuthorisation(user = username, roles = listOfNotNull(role))).exchange()
 
   private fun updateContributoryFactor(
     csipUuid: UUID,
