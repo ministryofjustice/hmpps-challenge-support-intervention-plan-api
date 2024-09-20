@@ -229,14 +229,21 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   fun `400 bad request - attempt to save invalid decision`() {
     val request = syncCsipRequest(
       referral = syncReferralRequest(
-        decisionAndActions = syncDecisionRequest(outcomeCode = null, conclusion = null, actions = setOf()),
+        decisionAndActions = syncDecisionRequest(
+          outcomeCode = null,
+          conclusion = null,
+          signedOffByRole = null,
+          nextSteps = null,
+          actionOther = null,
+          actions = setOf(),
+        ),
       ),
     )
 
     val response = syncCsipResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
-      assertThat(userMessage).isEqualTo("Validation failure: Outcome type code, conclusion or at least one action must be provided")
-      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: Outcome type code, conclusion or at least one action must be provided")
+      assertThat(userMessage).isEqualTo("Validation failure: At least one decision field or at least one action must be provided")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: At least one decision field or at least one action must be provided")
     }
   }
 

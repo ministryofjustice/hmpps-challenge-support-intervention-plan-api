@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [DecisionRequestValidator::class])
 annotation class ValidDecisionDetail(
-  val message: String = "At least one field or at least one action must be provided",
+  val message: String = "At least one decision field or at least one action must be provided",
   val groups: Array<KClass<*>> = [],
   val payload: Array<KClass<out Any>> = [],
 )
@@ -22,9 +22,6 @@ class DecisionRequestValidator : ConstraintValidator<ValidDecisionDetail, Decisi
         conclusion,
         outcomeTypeCode,
         signedOffByRoleCode,
-        recordedBy,
-        recordedByDisplayName,
-        date,
         nextSteps,
         actionOther,
       ).isNotEmpty() || actions.isNotEmpty()
