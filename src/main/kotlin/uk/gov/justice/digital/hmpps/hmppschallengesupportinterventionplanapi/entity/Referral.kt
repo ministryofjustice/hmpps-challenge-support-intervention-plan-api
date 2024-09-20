@@ -29,10 +29,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidInputException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.ResourceAlreadyExistException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.DecisionAndActionsRequest
@@ -262,24 +260,18 @@ class Referral(
 
   fun upsertDecisionAndActions(
     request: DecisionAndActionsRequest,
-    rdSupplier: (ReferenceDataType, String) -> ReferenceData?,
+    rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ): DecisionAndActions {
     val isNew = decisionAndActions == null
-    val outcome = request.outcomeTypeCode?.let { verifyReferenceData(DECISION_OUTCOME_TYPE, it, rdSupplier) }
-    val signedOffByCode = outcome?.let { request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER }
-    val signedOffBy = signedOffByCode?.let { verifyReferenceData(DECISION_SIGNER_ROLE, it, rdSupplier) }
+    val outcome = request.outcomeTypeCode?.let { rdSupplier(DECISION_OUTCOME_TYPE, it) }
+    val signedOffByRoleCode = outcome?.let { request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER }
+    val signedOffBy = signedOffByRoleCode?.let { rdSupplier(DECISION_SIGNER_ROLE, it) }
     if (isNew) {
       decisionAndActions = DecisionAndActions(this, outcome, signedOffBy)
     }
     decisionAndActions!!.upsert(request, outcome, signedOffBy)
     return decisionAndActions!!
   }
-
-  private fun verifyReferenceData(
-    type: ReferenceDataType,
-    code: String,
-    rdSupplier: (ReferenceDataType, String) -> ReferenceData?,
-  ): ReferenceData = verifyExists(rdSupplier(type, code)) { InvalidInputException(type.name, code) }
 
   private fun updateReferenceData(
     existing: ReferenceData,
