@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.internal
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,6 +29,7 @@ class SyncCsipRecord(
   val referralSync: SyncReferral,
   val planSync: SyncPlan,
   val telemetry: TelemetryClient,
+  val objectMapper: ObjectMapper,
 ) {
   fun sync(request: SyncCsipRequest): SyncResponse {
     val rdMap = validatedReferenceData(request.findRequiredReferenceDataKeys().toSet())
@@ -53,7 +55,10 @@ class SyncCsipRecord(
 
     telemetry.trackEvent(
       "SyncCsipRecord",
-      mapOf("requestMappings" to requestMappings.toString(), "responseMappings" to responseMappings.toString()),
+      mapOf(
+        "requestMappings" to objectMapper.writeValueAsString(requestMappings),
+        "responseMappings" to objectMapper.writeValueAsString(responseMappings),
+      ),
       mapOf(),
     )
 

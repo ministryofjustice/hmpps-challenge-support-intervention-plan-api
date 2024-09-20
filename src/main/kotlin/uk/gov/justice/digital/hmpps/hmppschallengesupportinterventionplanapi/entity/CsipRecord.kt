@@ -150,7 +150,6 @@ class CsipRecord(
       incidentLocation = rdSupplier(INCIDENT_LOCATION, request.incidentLocationCode),
       refererAreaOfWork = rdSupplier(ReferenceDataType.AREA_OF_WORK, request.refererAreaCode),
       incidentInvolvement = request.incidentInvolvementCode?.let { rdSupplier(INCIDENT_INVOLVEMENT, it) },
-      referralComplete = request.isReferralComplete,
     ).apply { complete(completable) }
   }
 
