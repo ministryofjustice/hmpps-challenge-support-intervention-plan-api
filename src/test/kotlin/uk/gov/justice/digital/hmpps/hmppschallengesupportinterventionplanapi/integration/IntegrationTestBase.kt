@@ -81,6 +81,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpsertDecisionAndActionsRequest
@@ -308,15 +309,22 @@ abstract class IntegrationTestBase {
         knownReasons,
         otherInformation,
         saferCustodyTeamInformed,
-        referralComplete,
-        referralCompletedBy,
-        referralCompletedByDisplayName,
-        referralCompletedDate,
         incidentType(),
         incidentLocation(),
         refererAreaOfWork(),
         incidentInvolvement(),
-      ),
+      ).apply {
+        if (referralComplete == true) {
+          complete(
+            object : CompletableRequest {
+              override val completed: Boolean = true
+              override val completedDate: LocalDate? = referralCompletedDate
+              override val completedBy: String? = referralCompletedBy
+              override val completedByDisplayName: String? = referralCompletedByDisplayName
+            },
+          )
+        }
+      },
     )
   }
 

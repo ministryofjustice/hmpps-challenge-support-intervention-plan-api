@@ -228,13 +228,15 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   @Test
   fun `400 bad request - attempt to save invalid decision`() {
     val request = syncCsipRequest(
-      referral = syncReferralRequest(decisionAndActions = syncDecisionRequest(outcomeCode = null, conclusion = null)),
+      referral = syncReferralRequest(
+        decisionAndActions = syncDecisionRequest(outcomeCode = null, conclusion = null, actions = setOf()),
+      ),
     )
 
     val response = syncCsipResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
-      assertThat(userMessage).isEqualTo("Validation failure: Either outcome type code or conclusion must be provided")
-      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: Either outcome type code or conclusion must be provided")
+      assertThat(userMessage).isEqualTo("Validation failure: Outcome type code, conclusion or at least one action must be provided")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: Outcome type code, conclusion or at least one action must be provided")
     }
   }
 
@@ -262,6 +264,10 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),
         investigation = syncInvestigationRequest(interviews = listOf(syncInterviewRequest())),
         decisionAndActions = syncDecisionRequest(),
+        isReferralComplete = true,
+        completedBy = "CompletedBy",
+        completedDate = LocalDate.now(),
+        completedByDisplayName = "Display Name",
       ),
       plan = syncPlanRequest(
         identifiedNeeds = listOf(syncNeedRequest(), syncNeedRequest("Another need")),
@@ -572,6 +578,25 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
           outcomeCode = null,
           signedOffByRole = null,
           conclusion = "A conclusion without outcome",
+          actions = setOf(),
+        ),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    saved.verifyAgainst(request)
+  }
+
+  @Test
+  fun `200 success - save a new csip record with decision actions`() {
+    val request = syncCsipRequest(
+      referral = syncReferralRequest(
+        decisionAndActions = syncDecisionRequest(
+          outcomeCode = null,
+          signedOffByRole = null,
+          conclusion = null,
         ),
       ),
     )

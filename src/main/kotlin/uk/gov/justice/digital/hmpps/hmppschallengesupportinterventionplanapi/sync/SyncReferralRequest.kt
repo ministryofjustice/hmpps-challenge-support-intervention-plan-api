@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
@@ -79,6 +80,7 @@ data class SyncReferralRequest(
     investigation?.also { addAll(it.requestMappings()) }
   }
 
+  @JsonIgnore
   override val completed: Boolean? = isReferralComplete
 }
 
