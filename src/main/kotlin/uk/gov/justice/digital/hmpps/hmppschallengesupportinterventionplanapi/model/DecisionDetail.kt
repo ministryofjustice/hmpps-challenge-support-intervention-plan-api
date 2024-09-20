@@ -10,13 +10,21 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [DecisionRequestValidator::class])
 annotation class ValidDecisionDetail(
-  val message: String = "Outcome type code, conclusion or at least one action must be provided",
+  val message: String = "At least one decision field or at least one action must be provided",
   val groups: Array<KClass<*>> = [],
   val payload: Array<KClass<out Any>> = [],
 )
 
 class DecisionRequestValidator : ConstraintValidator<ValidDecisionDetail, DecisionAndActionsRequest> {
   override fun isValid(request: DecisionAndActionsRequest, context: ConstraintValidatorContext): Boolean {
-    return with(request) { listOfNotNull(outcomeTypeCode, conclusion).isNotEmpty() || actions.isNotEmpty() }
+    return with(request) {
+      listOfNotNull(
+        conclusion,
+        outcomeTypeCode,
+        signedOffByRoleCode,
+        nextSteps,
+        actionOther,
+      ).isNotEmpty() || actions.isNotEmpty()
+    }
   }
 }
