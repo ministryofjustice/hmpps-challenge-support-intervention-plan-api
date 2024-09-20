@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sy
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
@@ -77,7 +78,12 @@ data class SyncDecisionAndActionsRequest(
   override val actions: Set<DecisionAction>,
 ) : DecisionAndActionsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
-    outcomeTypeCode?.also { add(ReferenceDataKey(ReferenceDataType.DECISION_OUTCOME_TYPE, it)) }
+    outcomeTypeCode?.also {
+      add(ReferenceDataKey(ReferenceDataType.DECISION_OUTCOME_TYPE, it))
+      if (signedOffByRoleCode == null) {
+        add(ReferenceDataKey(ReferenceDataType.DECISION_SIGNER_ROLE, ReferenceData.SIGNED_OFF_BY_OTHER))
+      }
+    }
     signedOffByRoleCode?.also { add(ReferenceDataKey(ReferenceDataType.DECISION_SIGNER_ROLE, it)) }
   }
 }

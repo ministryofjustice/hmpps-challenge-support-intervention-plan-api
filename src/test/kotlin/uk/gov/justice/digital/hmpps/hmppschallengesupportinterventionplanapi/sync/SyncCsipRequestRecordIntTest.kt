@@ -418,7 +418,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
             syncInterviewRequest(),
           ),
         ),
-        decisionAndActions = syncDecisionRequest(),
+        decisionAndActions = syncDecisionRequest(signedOffByRole = null),
       ),
       plan = syncPlanRequest(
         identifiedNeeds = listOf(

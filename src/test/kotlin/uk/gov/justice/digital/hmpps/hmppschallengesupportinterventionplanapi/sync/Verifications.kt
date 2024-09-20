@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
@@ -80,7 +81,14 @@ fun Interview.verifyAgainst(request: SyncInterviewRequest) {
 
 fun DecisionAndActions.verifyAgainst(request: SyncDecisionAndActionsRequest) {
   assertThat(outcome?.code).isEqualTo(request.outcomeTypeCode)
-  assertThat(signedOffBy?.code).isEqualTo(request.signedOffByRoleCode)
+  signedOffBy?.also {
+    if (request.signedOffByRoleCode == null) {
+      assertThat(it.code).isEqualTo(ReferenceData.SIGNED_OFF_BY_OTHER)
+    } else {
+      assertThat(it.code).isEqualTo(request.signedOffByRoleCode)
+    }
+  }
+  assertThat(signedOffBy?.code).isEqualTo(request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER)
   assertThat(date).isEqualTo(request.date)
   assertThat(recordedBy).isEqualTo(request.recordedBy)
   assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
