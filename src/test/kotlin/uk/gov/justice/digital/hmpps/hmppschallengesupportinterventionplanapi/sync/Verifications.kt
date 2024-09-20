@@ -81,14 +81,7 @@ fun Interview.verifyAgainst(request: SyncInterviewRequest) {
 
 fun DecisionAndActions.verifyAgainst(request: SyncDecisionAndActionsRequest) {
   assertThat(outcome?.code).isEqualTo(request.outcomeTypeCode)
-  signedOffBy?.also {
-    if (request.signedOffByRoleCode == null) {
-      assertThat(it.code).isEqualTo(ReferenceData.SIGNED_OFF_BY_OTHER)
-    } else {
-      assertThat(it.code).isEqualTo(request.signedOffByRoleCode)
-    }
-  }
-  assertThat(signedOffBy?.code).isEqualTo(request.signedOffByRoleCode ?: ReferenceData.SIGNED_OFF_BY_OTHER)
+  assertThat(signedOffBy?.code).isEqualTo(ReferenceData.SIGNED_OFF_BY_OTHER)
   assertThat(date).isEqualTo(request.date)
   assertThat(recordedBy).isEqualTo(request.recordedBy)
   assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
