@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.NO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -223,25 +223,14 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
-
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
-
-    verifyDomainEvents(
-      prisonNumber,
-      response.recordUuid,
-      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
-      setOf(DomainEventType.CSIP_CREATED, DomainEventType.CONTRIBUTORY_FACTOR_CREATED),
-      response.referral.contributoryFactors.map { it.factorUuid }.toSet(),
-      2,
-    )
+    verifyDomainEvents(prisonNumber, response.recordUuid, CSIP_CREATED)
   }
 
   @Test
   fun `201 created - CSIP record created via DPS with empty logCode`() {
     val request = createCsipRecordRequest(
-      createReferralRequest(
-        contributoryFactorTypeCode = listOf("AFL"),
-      ),
+      createReferralRequest(contributoryFactorTypeCode = listOf("AFL")),
       logCode = null,
     )
 
@@ -256,6 +245,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     assertThat(saved.logCode).isNull()
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
+    verifyDomainEvents(prisonNumber, response.recordUuid, CSIP_CREATED)
   }
 
   @Test
@@ -274,6 +264,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
+    verifyDomainEvents(prisonNumber, response.recordUuid, CSIP_CREATED)
   }
 
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"
@@ -359,10 +350,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     private fun createCsipRecordRequest(
       createReferralRequest: CreateReferralRequest = createReferralRequest(),
       logCode: String? = LOG_CODE,
-    ) = CreateCsipRecordRequest(
-      logCode,
-      createReferralRequest,
-    )
+    ) = CreateCsipRecordRequest(logCode, createReferralRequest)
 
     private fun createReferralRequest(
       incidentTypeCode: String = "ATO",

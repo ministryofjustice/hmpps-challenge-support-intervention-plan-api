@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
@@ -106,14 +106,8 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
     val plan = getPlan(record.id)
     plan.verifyAgainst(request)
-
     verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN))
-    verifyDomainEvents(
-      record.prisonNumber,
-      recordUuid,
-      setOf(CsipComponent.PLAN),
-      setOf(DomainEventType.CSIP_UPDATED),
-    )
+    verifyDomainEvents(record.prisonNumber, recordUuid, CSIP_UPDATED)
   }
 
   @Test
@@ -122,27 +116,12 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
 
     val request = createPlanRequest(identifiedNeeds = listOf(createIdentifiedNeedRequest()))
-    val response = createPlan(record.id, request)
-
-    val needsIds = response.identifiedNeeds.map { it.identifiedNeedUuid }
+    createPlan(record.id, request)
 
     val plan = getPlan(record.id)
     plan.verifyAgainst(request)
-
-    verifyAudit(
-      plan,
-      RevisionType.ADD,
-      setOf(CsipComponent.PLAN, CsipComponent.IDENTIFIED_NEED),
-    )
-
-    verifyDomainEvents(
-      record.prisonNumber,
-      record.id,
-      setOf(CsipComponent.PLAN, CsipComponent.IDENTIFIED_NEED),
-      setOf(DomainEventType.CSIP_UPDATED, DomainEventType.IDENTIFIED_NEED_CREATED),
-      needsIds.toSet(),
-      2,
-    )
+    verifyAudit(plan, RevisionType.ADD, setOf(CsipComponent.PLAN, CsipComponent.IDENTIFIED_NEED))
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun Plan.verifyAgainst(request: CreatePlanRequest) {

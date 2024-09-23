@@ -12,8 +12,7 @@ import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_CREATED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.REVIEW_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -96,21 +95,8 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     val attendeeUuids = review.attendees().map { it.id }
     assertThat(attendeeUuids.size).isEqualTo(2)
-
-    verifyAudit(
-      review,
-      RevisionType.ADD,
-      setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE),
-    )
-
-    verifyDomainEvents(
-      record.prisonNumber,
-      record.id,
-      setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE),
-      setOf(REVIEW_CREATED, ATTENDEE_CREATED),
-      setOf(response.reviewUuid) + attendeeUuids,
-      expectedCount = 3,
-    )
+    verifyAudit(review, RevisionType.ADD, setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE))
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/plan/reviews"

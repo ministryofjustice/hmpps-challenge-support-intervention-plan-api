@@ -16,16 +16,13 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
@@ -135,13 +132,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     // verify the latest audit record is the initial insert from the given of the test
-    verifyAudit(
-      saved,
-      RevisionType.ADD,
-      setOf(RECORD, REFERRAL),
-      csipRequestContext(),
-    )
-
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL), csipRequestContext())
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
@@ -164,13 +155,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
-    verifyAudit(
-      saved,
-      RevisionType.MOD,
-      setOf(RECORD),
-    )
-
-    verifyDomainEvent(prisonNumber, saved.id, setOf(RECORD))
+    verifyAudit(saved, RevisionType.MOD, setOf(RECORD))
+    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
@@ -204,13 +190,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(referral.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
-    verifyAudit(
-      saved.referral!!,
-      RevisionType.MOD,
-      setOf(REFERRAL),
-    )
-
-    verifyDomainEvent(prisonNumber, saved.id, setOf(REFERRAL))
+    verifyAudit(saved.referral!!, RevisionType.MOD, setOf(REFERRAL))
+    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
@@ -254,13 +235,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       }
     }
 
-    verifyAudit(
-      record,
-      RevisionType.MOD,
-      setOf(RECORD, REFERRAL),
-    )
-
-    verifyDomainEvent(prisonNumber, saved.id, setOf(RECORD, REFERRAL))
+    verifyAudit(record, RevisionType.MOD, setOf(RECORD, REFERRAL))
+    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
@@ -283,13 +259,8 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     updateCsipRecord(record.id, request)
     val saved = csipRecordRepository.getCsipRecord(record.id)
 
-    verifyAudit(
-      saved.referral!!,
-      RevisionType.MOD,
-      setOf(REFERRAL),
-    )
-
-    verifyDomainEvent(prisonNumber, saved.id, setOf(REFERRAL))
+    verifyAudit(saved.referral!!, RevisionType.MOD, setOf(REFERRAL))
+    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   private fun updateCsipRecordResponseSpec(
@@ -393,21 +364,6 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
       otherInformation,
       isSaferCustodyTeamInformed,
       isReferralComplete,
-    )
-  }
-
-  private fun verifyDomainEvent(
-    prisonNumber: String,
-    recordUuid: UUID,
-    affectedComponents: Set<CsipComponent>,
-    source: Source = DPS,
-  ) {
-    verifyDomainEvents(
-      prisonNumber,
-      recordUuid,
-      affectedComponents,
-      setOf(DomainEventType.CSIP_UPDATED),
-      source = source,
     )
   }
 }

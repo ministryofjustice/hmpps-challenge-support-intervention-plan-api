@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PublishCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
@@ -25,18 +27,22 @@ class ReviewService(
   private val reviewRepository: ReviewRepository,
   private val attendeeRepository: AttendeeRepository,
 ) {
+  @PublishCsipEvent(CSIP_UPDATED)
   fun addReview(recordUuid: UUID, request: CreateReviewRequest): Review {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
     return plan.addReview(request).toModel()
   }
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updateReview(reviewUuid: UUID, request: UpdateReviewRequest): Review =
     reviewRepository.getReview(reviewUuid).update(request).toModel()
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee =
     reviewRepository.getReview(reviewUuid).addAttendee(request).toModel()
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updateAttendee(attendeeUuid: UUID, request: UpdateAttendeeRequest): Attendee =
     attendeeRepository.getAttendee(attendeeUuid).update(request).toModel()
 }

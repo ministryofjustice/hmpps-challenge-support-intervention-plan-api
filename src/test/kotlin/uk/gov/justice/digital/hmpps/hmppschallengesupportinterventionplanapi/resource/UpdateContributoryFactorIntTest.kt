@@ -2,6 +2,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.re
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
+import org.awaitility.kotlin.withPollDelay
 import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -15,7 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CONTRIBUTORY_FACTOR_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -27,6 +31,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
+import java.time.Duration.ofSeconds
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -95,8 +100,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - contributory factor already present`() {
     val prisonNumber = givenValidPrisonNumber("C1234FE")
-    val factorUuid = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
+    val factorUuid = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       requireNotNull(it.referral).withContributoryFactor(
         type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"),
       ).withContributoryFactor(
@@ -124,8 +128,8 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
   fun `200 ok - contributory factor updated`() {
     val prisonNumber = givenValidPrisonNumber("F1234NC")
     val factor = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
-      val referral =
-        requireNotNull(it.referral).withContributoryFactor(type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"))
+      val referral = requireNotNull(it.referral)
+        .withContributoryFactor(type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"))
       referral.contributoryFactors().first()
     }
 
@@ -140,14 +144,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
     assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(CONTRIBUTORY_FACTOR))
-
-    verifyDomainEvents(
-      prisonNumber,
-      factor.csipRecord().id,
-      setOf(CONTRIBUTORY_FACTOR),
-      setOf(CONTRIBUTORY_FACTOR_UPDATED),
-      setOf(response.factorUuid),
-    )
+    verifyDomainEvents(prisonNumber, factor.csipRecord().id, CSIP_UPDATED)
   }
 
   @Test
@@ -172,6 +169,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
       setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       nomisContext().copy(source = Source.DPS),
     )
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   private fun urlToTest(factorId: UUID) = "/csip-records/referral/contributory-factors/$factorId"

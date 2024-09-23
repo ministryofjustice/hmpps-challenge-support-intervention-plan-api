@@ -10,14 +10,12 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.DomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.HmppsDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.DomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PersonReference
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -42,8 +40,6 @@ class CsipEventServiceTest {
       assertThat(description).isEqualTo(DomainEventType.CSIP_UPDATED.description)
       with(additionalInformation) {
         assertThat(recordUuid).isEqualTo(csipEvent.recordUuid)
-        assertThat(source).isEqualTo(csipEvent.source)
-        assertThat(affectedComponents).isEqualTo(csipEvent.affectedComponents)
       }
       assertThat(detailUrl).isEqualTo("$baseUrl/csip-records/${csipEvent.recordUuid}")
       assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(PRISON_NUMBER))
@@ -62,11 +58,9 @@ class CsipEventServiceTest {
   }
 
   private fun csipUpdatedEvent() = CsipEvent(
-    recordUuid = UUID.randomUUID(),
-    prisonNumber = PRISON_NUMBER,
     type = DomainEventType.CSIP_UPDATED,
+    prisonNumber = PRISON_NUMBER,
+    recordUuid = UUID.randomUUID(),
     occurredAt = LocalDateTime.now(),
-    source = Source.DPS,
-    affectedComponents = setOf(CsipComponent.REFERRAL),
   )
 }

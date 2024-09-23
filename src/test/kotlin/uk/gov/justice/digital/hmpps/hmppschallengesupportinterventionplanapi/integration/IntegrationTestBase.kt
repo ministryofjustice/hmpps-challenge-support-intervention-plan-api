@@ -47,18 +47,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.audit.AuditRevision
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipBaseInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipChildInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.CsipInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.HmppsDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.Notification
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -73,6 +64,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipBaseInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.Notification
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.PostgresContainer
@@ -149,14 +145,7 @@ abstract class IntegrationTestBase {
       ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
     ).get().messages()
       .map { objectMapper.readValue<Notification>(it.body()) }
-      .map {
-        when (it.eventType) {
-          CSIP_UPDATED.eventType, CSIP_CREATED.eventType, CSIP_DELETED.eventType ->
-            objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
-
-          else -> objectMapper.readValue<HmppsDomainEvent<CsipChildInformation>>(it.message)
-        }
-      }
+      .map { objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message) }
 
   fun switchEventPublish(publish: Boolean) {
     val current = entityEventService.getByName<EventProperties>("eventProperties")
@@ -177,26 +166,18 @@ abstract class IntegrationTestBase {
   internal fun verifyDomainEvents(
     prisonNumber: String,
     recordUuid: UUID,
-    affectedComponents: Set<CsipComponent>,
-    eventTypes: Set<DomainEventType>,
-    entityIds: Set<UUID> = setOf(),
+    eventType: DomainEventType,
     expectedCount: Int = 1,
     source: Source = DPS,
   ) {
     await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
     val allEvents = hmppsEventsQueue.receiveDomainEventsOnQueue(expectedCount)
-    val basicEvents = allEvents.map { it.additionalInformation }.filterIsInstance<CsipChildInformation>()
-    assertThat(basicEvents.map { it.entityUuid }).containsExactlyInAnyOrderElementsOf(entityIds)
     allEvents.forEach { event ->
       with(event) {
         val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == event.eventType })
-        assertThat(domainEventType).isIn(eventTypes)
+        assertThat(domainEventType).isEqualTo(eventType)
         with(additionalInformation as CsipBaseInformation) {
-          if (this is CsipInformation) {
-            assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
-          }
           assertThat(this.recordUuid).isEqualTo(recordUuid)
-          assertThat(this.source).isEqualTo(source)
         }
         assertThat(description).isEqualTo(domainEventType.description)
         assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")

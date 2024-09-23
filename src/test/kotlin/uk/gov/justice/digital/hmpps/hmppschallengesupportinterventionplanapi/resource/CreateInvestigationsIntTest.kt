@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INTERVIEW
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
@@ -137,24 +137,11 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     val request = createInvestigationRequest(interviews = listOf(createInterviewRequest(), createInterviewRequest()))
 
     val response = createInvestigation(record.id, request)
-    val interviewUuids = response.interviews.map { it.interviewUuid }
     response.verifyAgainst(request)
 
     val investigation = getInvestigation(record.id)
-    verifyAudit(
-      investigation,
-      RevisionType.ADD,
-      setOf(CsipComponent.INVESTIGATION, INTERVIEW),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INVESTIGATION, INTERVIEW),
-      setOf(DomainEventType.CSIP_UPDATED, DomainEventType.INTERVIEW_CREATED),
-      interviewUuids.toSet(),
-      3,
-    )
+    verifyAudit(investigation, RevisionType.ADD, setOf(CsipComponent.INVESTIGATION, INTERVIEW))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun Investigation.verifyAgainst(request: CreateInvestigationRequest) {

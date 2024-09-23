@@ -13,18 +13,18 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.SaferCustodyScreeningOutcome
 import kotlin.reflect.KClass
 
-enum class CsipComponent(val clazz: KClass<*>, val description: String) {
-  RECORD(CsipRecord::class, "person.csip.record"),
-  REFERRAL(Referral::class, ""),
-  CONTRIBUTORY_FACTOR(ContributoryFactor::class, "person.csip.contributory-factor"),
-  SAFER_CUSTODY_SCREENING_OUTCOME(SaferCustodyScreeningOutcome::class, ""),
-  INVESTIGATION(Investigation::class, ""),
-  INTERVIEW(Interview::class, "person.csip.interview"),
-  DECISION_AND_ACTIONS(DecisionAndActions::class, ""),
-  PLAN(Plan::class, ""),
-  IDENTIFIED_NEED(IdentifiedNeed::class, "person.csip.identified-need"),
-  REVIEW(Review::class, "person.csip.review"),
-  ATTENDEE(Attendee::class, "person.csip.attendee"),
+enum class CsipComponent(val clazz: KClass<*>) {
+  RECORD(CsipRecord::class),
+  REFERRAL(Referral::class),
+  CONTRIBUTORY_FACTOR(ContributoryFactor::class),
+  SAFER_CUSTODY_SCREENING_OUTCOME(SaferCustodyScreeningOutcome::class),
+  INVESTIGATION(Investigation::class),
+  INTERVIEW(Interview::class),
+  DECISION_AND_ACTIONS(DecisionAndActions::class),
+  PLAN(Plan::class),
+  IDENTIFIED_NEED(IdentifiedNeed::class),
+  REVIEW(Review::class),
+  ATTENDEE(Attendee::class),
   ;
 
   companion object {
