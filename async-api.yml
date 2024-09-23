@@ -26,26 +26,6 @@ components:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-updated.yaml
     csip.record.deleted:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-deleted.yaml
-    csip.contributory-factor.created:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-contributory-factor-created.yaml
-    csip.contributory-factor.deleted:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-contributory-factor-deleted.yaml
-    csip.interview.created:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-created.yaml
-    csip.interview.deleted:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-interview-deleted.yaml
-    csip.identified-need.created:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-identified-need-created.yaml
-    csip.identified-need.deleted:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-identified-need-deleted.yaml
-    csip.review.created:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-review-created.yaml
-    csip.review.deleted:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-review-deleted.yaml
-    csip.attendee.created:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-attendee-created.yaml
-    csip.attendee.deleted:
-      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-attendee-deleted.yaml
 
 
 channels:
@@ -61,26 +41,6 @@ channels:
         $ref: '#/components/messages/csip.record.updated'
       csip.record.deleted:
         $ref: '#/components/messages/csip.record.deleted'
-      csip.contributory-factor.created:
-        $ref: '#/components/messages/csip.contributory-factor.created'
-      csip.contributory-factor.deleted:
-        $ref: '#/components/messages/csip.contributory-factor.deleted'
-      csip.interview.created:
-        $ref: '#/components/messages/csip.interview.created'
-      csip.interview.deleted:
-        $ref: '#/components/messages/csip.interview.deleted'
-      csip.identified-need.created:
-        $ref: '#/components/messages/csip.identified-need.created'
-      csip.identified-need.deleted:
-        $ref: '#/components/messages/csip.identified-need.deleted'
-      csip.review.created:
-        $ref: '#/components/messages/csip.review.created'
-      csip.review.deleted:
-        $ref: '#/components/messages/csip.review.deleted'
-      csip.attendee.created:
-        $ref: '#/components/messages/csip.attendee.created'
-      csip.attendee.deleted:
-        $ref: '#/components/messages/csip.attendee.deleted'
 
 operations:
   publish-event:
@@ -91,13 +51,3 @@ operations:
       - $ref: '#/channels/hmpps-domain-events/messages/csip.record.created'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.record.deleted'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.record.updated'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.contributory-factor.created'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.contributory-factor.deleted'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.interview.created'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.interview.deleted'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.identified-need.created'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.identified-need.deleted'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.review.created'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.review.deleted'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.attendee.created'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.attendee.deleted'
