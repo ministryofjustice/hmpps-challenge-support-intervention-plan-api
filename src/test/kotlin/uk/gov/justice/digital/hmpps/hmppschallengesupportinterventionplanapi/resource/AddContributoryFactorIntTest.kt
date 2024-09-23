@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CONTRIBUTORY_FACTOR_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -122,8 +122,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
   @Test
   fun `409 conflict - contributory factor already present`() {
     val prisonNumber = givenValidPrisonNumber("C1234FE")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       requireNotNull(it.referral).withContributoryFactor()
       it
     }
@@ -162,14 +161,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
     val saved = getContributoryFactory(response.factorUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR))
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CONTRIBUTORY_FACTOR),
-      setOf(CONTRIBUTORY_FACTOR_CREATED),
-      setOf(response.factorUuid),
-    )
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/referral/contributory-factors"

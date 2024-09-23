@@ -1,9 +1,7 @@
-package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -16,7 +14,6 @@ sealed interface DomainEventable {
 
 sealed interface CsipBaseEvent : DomainEventable {
   val occurredAt: LocalDateTime
-  val source: Source
   val prisonNumber: String
   val recordUuid: UUID
   override fun detailPath(): String = "/csip-records/$recordUuid"
@@ -36,38 +33,14 @@ data class CsipEvent(
   override val prisonNumber: String,
   override val recordUuid: UUID,
   override val occurredAt: LocalDateTime,
-  override val source: Source,
-  val affectedComponents: Set<CsipComponent>,
 ) : CsipBaseEvent {
-  override fun additionalInformation(): AdditionalInformation =
-    CsipInformation(source, recordUuid, affectedComponents)
-}
-
-data class CsipChildEvent(
-  override val type: DomainEventType,
-  override val prisonNumber: String,
-  override val recordUuid: UUID,
-  override val occurredAt: LocalDateTime,
-  override val source: Source,
-  val entityUuid: UUID,
-) : CsipBaseEvent {
-  override fun additionalInformation(): CsipChildInformation =
-    CsipChildInformation(source, recordUuid, entityUuid)
+  override fun additionalInformation(): AdditionalInformation = CsipInformation(recordUuid)
 }
 
 interface CsipBaseInformation : AdditionalInformation {
-  val source: Source
   val recordUuid: UUID
 }
 
 data class CsipInformation(
-  override val source: Source,
   override val recordUuid: UUID,
-  val affectedComponents: Set<CsipComponent>,
-) : CsipBaseInformation
-
-class CsipChildInformation(
-  override val source: Source,
-  override val recordUuid: UUID,
-  val entityUuid: UUID,
 ) : CsipBaseInformation

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.event
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter

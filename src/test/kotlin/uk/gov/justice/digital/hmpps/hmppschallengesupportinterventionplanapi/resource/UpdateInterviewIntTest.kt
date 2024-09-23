@@ -14,8 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.INTERVIEW_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -161,8 +160,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
     val request = interviewRequest()
 
     val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       requireNotNull(it.referral).withInvestigation().investigation!!.withInterview(
         interviewee = request.interviewee,
         interviewDate = request.interviewDate,
@@ -182,8 +180,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - update interview`() {
     val prisonNumber = givenValidPrisonNumber("I1234UI")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       requireNotNull(it.referral).withInvestigation().investigation!!.withInterview(
         interviewee = "oldInterviewee",
         interviewDate = LocalDate.of(1999, 12, 31),
@@ -200,19 +197,8 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
     response.verifyAgainst(request)
 
     val interview = getInterview(interviewUuid)
-    verifyAudit(
-      interview,
-      RevisionType.MOD,
-      setOf(CsipComponent.INTERVIEW),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INTERVIEW),
-      setOf(DomainEventType.CSIP_UPDATED, INTERVIEW_UPDATED),
-      setOf(interviewUuid),
-    )
+    verifyAudit(interview, RevisionType.MOD, setOf(CsipComponent.INTERVIEW))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getInterview(interviewUuid: UUID) = interviewRepository.getInterview(interviewUuid)

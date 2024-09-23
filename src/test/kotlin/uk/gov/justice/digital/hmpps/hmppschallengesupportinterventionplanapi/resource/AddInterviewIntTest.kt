@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus.CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.INTERVIEW_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -156,8 +156,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - interview added DPS`() {
     val prisonNumber = givenValidPrisonNumber("I1234DP")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       requireNotNull(it.referral).withInvestigation()
       it
     }
@@ -167,20 +166,8 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
     val interview = getInterview(response.interviewUuid)
     interview.verifyAgainst(request)
-
-    verifyAudit(
-      interview,
-      RevisionType.ADD,
-      setOf(CsipComponent.INTERVIEW),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INTERVIEW),
-      setOf(INTERVIEW_CREATED),
-      setOf(response.interviewUuid),
-    )
+    verifyAudit(interview, RevisionType.ADD, setOf(CsipComponent.INTERVIEW))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getInterview(uuid: UUID): Interview = interviewRepository.getInterview(uuid)

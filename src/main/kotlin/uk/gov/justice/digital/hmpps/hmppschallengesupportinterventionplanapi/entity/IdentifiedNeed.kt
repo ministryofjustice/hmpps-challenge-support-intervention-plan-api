@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.BatchSize
 import org.hibernate.envers.Audited
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.time.LocalDate
@@ -18,7 +19,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
+@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
 @BatchSize(size = 20)
 class IdentifiedNeed(
   @Audited(withModifiedFlag = false)

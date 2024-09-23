@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ATTENDEE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.IDENTIFIED_NEED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.INTERVIEW
@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REVIEW
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -110,33 +110,10 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     deleteCsipRecordResponseSpec(record.id).expectStatus().isNoContent
 
     val affectedComponents =
-      setOf(
-        RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW,
-        CsipComponent.ATTENDEE,
-      )
+      setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW, ATTENDEE)
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
-    verifyAudit(
-      record,
-      RevisionType.DEL,
-      affectedComponents,
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      affectedComponents,
-      setOf(
-        DomainEventType.CSIP_DELETED,
-        DomainEventType.CONTRIBUTORY_FACTOR_DELETED,
-        DomainEventType.INTERVIEW_DELETED,
-        DomainEventType.IDENTIFIED_NEED_DELETED,
-        DomainEventType.REVIEW_DELETED,
-        DomainEventType.ATTENDEE_DELETED,
-      ),
-      entityIds = factorUuids + interviewIds + needsIds + reviewIds + attendeeIds,
-      // expected messages: 1 csip, 2 factors, 3 interviews, 1 identified need, 2 reviews, 2 attendees
-      expectedCount = 10,
-    )
+    verifyAudit(record, RevisionType.DEL, affectedComponents)
+    verifyDomainEvents(prisonNumber, record.id, CSIP_DELETED)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid"

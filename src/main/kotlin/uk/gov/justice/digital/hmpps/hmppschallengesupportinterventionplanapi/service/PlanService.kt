@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PublishCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
@@ -23,12 +25,14 @@ class PlanService(
   private val csipRecordRepository: CsipRecordRepository,
   private val identifiedNeedRepository: IdentifiedNeedRepository,
 ) {
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updatePlan(recordUuid: UUID, request: UpdatePlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
     return plan.update(request).toModel()
   }
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun addIdentifiedNeed(recordUuid: UUID, request: CreateIdentifiedNeedRequest): IdentifiedNeed {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = verifyExists(record.plan) { MissingPlanException(recordUuid) }
@@ -36,9 +40,11 @@ class PlanService(
     return need.toModel()
   }
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updateIdentifiedNeed(identifiedNeedUuid: UUID, request: UpdateIdentifiedNeedRequest): IdentifiedNeed =
     identifiedNeedRepository.getIdentifiedNeed(identifiedNeedUuid).update(request).toModel()
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun createPlanWithIdentifiedNeeds(recordUuid: UUID, request: CreatePlanRequest): Plan {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val plan = record.createPlan(request)

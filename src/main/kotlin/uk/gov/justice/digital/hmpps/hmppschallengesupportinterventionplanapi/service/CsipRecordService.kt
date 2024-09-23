@@ -9,7 +9,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PublishCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummary
@@ -36,6 +40,7 @@ class CsipRecordService(
   private val referenceDataRepository: ReferenceDataRepository,
   private val csipRecordRepository: CsipRecordRepository,
 ) {
+  @PublishCsipEvent(CSIP_CREATED)
   fun createCsipRecord(
     prisoner: PrisonerDto,
     request: CreateCsipRecordRequest,
@@ -56,6 +61,7 @@ class CsipRecordService(
   @Transactional(readOnly = true)
   fun retrieveCsipRecord(recordUuid: UUID): CsipRecord = csipRecordRepository.getCsipRecord(recordUuid).toModel()
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updateCsipRecord(
     recordUuid: UUID,
     request: UpdateCsipRecordRequest,
@@ -66,9 +72,11 @@ class CsipRecordService(
     return csipRecordRepository.saveAndRefresh(record).toModel()
   }
 
+  @PublishCsipEvent(CSIP_DELETED)
   fun deleteCsipRecord(recordUuid: UUID): Boolean =
     csipRecordRepository.findById(recordUuid)?.also(csipRecordRepository::delete) != null
 
+  @Transactional(readOnly = true)
   fun findCsipRecordsForPrisoner(prisonNumber: String, request: CsipSummaryRequest): CsipSummaries =
     csipRecordRepository.findAll(request.toSpecification(prisonNumber), request.pageable()).map { it.toSummary() }
       .asCsipSummaries()

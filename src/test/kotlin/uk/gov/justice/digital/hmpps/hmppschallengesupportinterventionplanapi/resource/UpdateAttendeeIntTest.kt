@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
+import org.awaitility.kotlin.withPollDelay
 import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -14,7 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.PLAN
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REVIEW
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.ATTENDEE_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -24,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getAttendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
+import java.time.Duration.ofSeconds
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -99,19 +104,8 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
     saved.verifyAgainst(request)
 
     val record = saved.review.plan.csipRecord
-    verifyAudit(
-      attendee,
-      RevisionType.MOD,
-      setOf(ATTENDEE),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(ATTENDEE),
-      setOf(ATTENDEE_UPDATED),
-      setOf(attendee.id),
-    )
+    verifyAudit(attendee, RevisionType.MOD, setOf(ATTENDEE))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   @Test
@@ -141,6 +135,7 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
       setOf(RECORD, PLAN, REVIEW, ATTENDEE),
       nomisContext().copy(source = Source.DPS),
     )
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   private fun urlToTest(attendeeId: UUID) = "/csip-records/plan/reviews/attendees/$attendeeId"

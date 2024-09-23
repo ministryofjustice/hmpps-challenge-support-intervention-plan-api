@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Investigation
@@ -132,8 +132,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - no changes made to investigation`() {
     val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withReferral()
+    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
       requireNotNull(it.referral).withInvestigation()
       it
     }
@@ -169,18 +168,8 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
     response.verifyAgainst(request)
 
     val investigation = getInvestigation(record.id)
-    verifyAudit(
-      investigation,
-      RevisionType.MOD,
-      setOf(CsipComponent.INVESTIGATION),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.INVESTIGATION),
-      setOf(DomainEventType.CSIP_UPDATED),
-    )
+    verifyAudit(investigation, RevisionType.MOD, setOf(CsipComponent.INVESTIGATION))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getInvestigation(recordUuid: UUID) =

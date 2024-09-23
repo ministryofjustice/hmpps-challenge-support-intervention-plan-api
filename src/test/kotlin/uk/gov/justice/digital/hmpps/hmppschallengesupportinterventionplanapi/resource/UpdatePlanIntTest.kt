@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -132,19 +132,8 @@ class UpdatePlanIntTest : IntegrationTestBase() {
 
     val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
-
-    verifyAudit(
-      plan,
-      RevisionType.MOD,
-      setOf(CsipComponent.PLAN),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.PLAN),
-      setOf(DomainEventType.CSIP_UPDATED),
-    )
+    verifyAudit(plan, RevisionType.MOD, setOf(CsipComponent.PLAN))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun Plan.verifyAgainst(request: UpdatePlanRequest) {

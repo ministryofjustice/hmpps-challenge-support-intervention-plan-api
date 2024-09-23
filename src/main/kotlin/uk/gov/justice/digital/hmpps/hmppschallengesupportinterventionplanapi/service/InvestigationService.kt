@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PublishCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingInvestigationException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingReferralException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
@@ -27,6 +29,7 @@ class InvestigationService(
   private val interviewRepository: InterviewRepository,
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
+  @PublishCsipEvent(CSIP_UPDATED)
   fun createInvestigationWithInterviews(recordUuid: UUID, request: CreateInvestigationRequest): Investigation {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
@@ -37,6 +40,7 @@ class InvestigationService(
     return investigation.toModel()
   }
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updateInvestigation(
     recordUuid: UUID,
     request: UpdateInvestigationRequest,
@@ -47,6 +51,7 @@ class InvestigationService(
     return investigation.update(request).toModel()
   }
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun addInterview(recordUuid: UUID, request: CreateInterviewRequest): Interview {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     val referral = verifyExists(record.referral) { MissingReferralException(recordUuid) }
@@ -54,6 +59,7 @@ class InvestigationService(
     return investigation.addInterview(request, referenceDataRepository::getActiveReferenceData).toModel()
   }
 
+  @PublishCsipEvent(CSIP_UPDATED)
   fun updateInterview(interviewUuid: UUID, request: UpdateInterviewRequest): Interview =
     interviewRepository.getInterview(interviewUuid).update(request, referenceDataRepository::getActiveReferenceData)
       .toModel()

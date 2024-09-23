@@ -14,8 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.IDENTIFIED_NEED_UPDATED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.IdentifiedNeed
@@ -182,19 +181,8 @@ class UpdateIdentifiedNeedIntTest : IntegrationTestBase() {
     response.verifyAgainst(request)
 
     val identifiedNeed = getIdentifiedNeed(identifiedNeedUuid)
-    verifyAudit(
-      identifiedNeed,
-      RevisionType.MOD,
-      setOf(CsipComponent.IDENTIFIED_NEED),
-    )
-
-    verifyDomainEvents(
-      prisonNumber,
-      record.id,
-      setOf(CsipComponent.IDENTIFIED_NEED),
-      setOf(DomainEventType.CSIP_UPDATED, IDENTIFIED_NEED_UPDATED),
-      setOf(identifiedNeedUuid),
-    )
+    verifyAudit(identifiedNeed, RevisionType.MOD, setOf(CsipComponent.IDENTIFIED_NEED))
+    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getIdentifiedNeed(identifiedNeedUuid: UUID) =

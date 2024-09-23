@@ -18,6 +18,7 @@ import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.AttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReviewRequest
@@ -27,7 +28,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, DeleteEventListener::class)
+@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
 @BatchSize(size = 20)
 class Review(
   @Audited(withModifiedFlag = false)
