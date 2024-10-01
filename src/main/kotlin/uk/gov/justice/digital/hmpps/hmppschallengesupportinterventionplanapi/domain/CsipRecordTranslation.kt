@@ -24,31 +24,31 @@ fun ContributoryFactor.toModel() =
     lastModifiedByDisplayName = lastModifiedByDisplayName,
   )
 
-fun Referral.toModel() =
-  ReferralModel(
-    incidentDate = incidentDate,
-    incidentTime = incidentTime,
-    incidentType = incidentType.toReferenceDataModel(),
-    incidentLocation = incidentLocation.toReferenceDataModel(),
-    incidentInvolvement = incidentInvolvement?.toReferenceDataModel(),
-    refererArea = refererAreaOfWork.toReferenceDataModel(),
-    referredBy = referredBy,
-    otherInformation = otherInformation,
-    knownReasons = knownReasons,
-    descriptionOfConcern = descriptionOfConcern,
-    assaultedStaffName = assaultedStaffName,
-    isProactiveReferral = proactiveReferral,
-    isStaffAssaulted = staffAssaulted,
-    isReferralComplete = referralComplete,
-    referralCompletedDate = referralCompletedDate,
-    referralCompletedBy = referralCompletedBy,
-    referralCompletedByDisplayName = referralCompletedByDisplayName,
-    isSaferCustodyTeamInformed = saferCustodyTeamInformed,
-    saferCustodyScreeningOutcome = saferCustodyScreeningOutcome?.toModel(),
-    decisionAndActions = decisionAndActions?.toModel(),
-    investigation = investigation?.toModel(),
-    contributoryFactors = contributoryFactors().map { it.toModel() },
-  )
+fun Referral.toModel() = ReferralModel(
+  referralDate = referralDate,
+  incidentDate = incidentDate,
+  incidentTime = incidentTime,
+  incidentType = incidentType.toReferenceDataModel(),
+  incidentLocation = incidentLocation.toReferenceDataModel(),
+  incidentInvolvement = incidentInvolvement?.toReferenceDataModel(),
+  refererArea = refererAreaOfWork.toReferenceDataModel(),
+  referredBy = referredBy,
+  otherInformation = otherInformation,
+  knownReasons = knownReasons,
+  descriptionOfConcern = descriptionOfConcern,
+  assaultedStaffName = assaultedStaffName,
+  isProactiveReferral = proactiveReferral,
+  isStaffAssaulted = staffAssaulted,
+  isReferralComplete = referralComplete,
+  referralCompletedDate = referralCompletedDate,
+  referralCompletedBy = referralCompletedBy,
+  referralCompletedByDisplayName = referralCompletedByDisplayName,
+  isSaferCustodyTeamInformed = saferCustodyTeamInformed,
+  saferCustodyScreeningOutcome = saferCustodyScreeningOutcome?.toModel(),
+  decisionAndActions = decisionAndActions?.toModel(),
+  investigation = investigation?.toModel(),
+  contributoryFactors = contributoryFactors().map { it.toModel() },
+)
 
 fun CsipRecord.toModel() =
   CsipRecordModel(
