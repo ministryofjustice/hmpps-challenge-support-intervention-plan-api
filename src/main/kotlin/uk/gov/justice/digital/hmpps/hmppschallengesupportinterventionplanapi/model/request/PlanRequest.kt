@@ -35,13 +35,13 @@ data class CreatePlanRequest(
 data class UpdatePlanRequest(
   @Schema(description = "The case manager assigned to the CSIP plan.")
   @field:Size(min = 0, max = 100, message = "Case Manager name must be <= 100 characters")
-  override val caseManager: String,
+  override val caseManager: String?,
 
   @Schema(description = "The reasons motivating the creation of a CSIP plan.")
   @field:Size(min = 0, max = 240, message = "Reason for Plan must be <= 240 characters")
-  override val reasonForPlan: String,
+  override val reasonForPlan: String?,
 
   @Schema(description = "The first date the CSIP plan should be reviewed.", example = "2021-09-27")
   @JsonFormat(pattern = "yyyy-MM-dd")
-  override val firstCaseReviewDate: LocalDate,
+  override val firstCaseReviewDate: LocalDate?,
 ) : PlanRequest
