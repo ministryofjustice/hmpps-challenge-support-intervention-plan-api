@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import java.time.LocalDate
 import java.util.UUID
 
 class RetrieveCsipRecordIntTest : IntegrationTestBase() {
@@ -53,12 +54,15 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   @ValueSource(strings = [ROLE_CSIP_UI, ROLE_NOMIS])
   fun `200 ok - returns matching CSIP record`(role: String) {
     val prisonNumber = givenValidPrisonNumber("G1234CR")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
+    val record = givenCsipRecord(
+      generateCsipRecord(prisonNumber).withReferral(referralDate = LocalDate.now().minusDays(1)),
+    )
 
     val response = getCsipRecord(record.id, role)
     with(response) {
       assertThat(this.prisonNumber).isEqualTo(prisonNumber)
       assertThat(recordUuid).isEqualTo(record.id)
+      assertThat(response.referral.referralDate).isEqualTo(record.referral?.referralDate)
     }
   }
 

@@ -9,6 +9,10 @@ import java.time.LocalTime
 
 @Schema(description = "The referral of a CSIP record")
 data class Referral(
+  @Schema(description = "The date the referral was made", example = "2021-09-27")
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val referralDate: LocalDate,
+
   @Schema(description = "The date the incident that motivated the CSIP referral occurred", example = "2021-09-27")
   @JsonFormat(pattern = "yyyy-MM-dd")
   val incidentDate: LocalDate,
