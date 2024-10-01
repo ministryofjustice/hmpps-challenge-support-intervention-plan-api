@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -24,9 +26,12 @@ interface LegacyActioned {
   val activeCaseloadId: String?
 }
 
-data class DefaultLegacyActioned(
+class DefaultLegacyActioned(
   override val actionedAt: LocalDateTime,
-  override val actionedBy: String,
-  override val actionedByDisplayName: String,
+  actionedBy: String?,
+  actionedByDisplayName: String?,
   override val activeCaseloadId: String?,
-) : LegacyActioned
+) : LegacyActioned {
+  override val actionedBy: String = actionedBy ?: SYSTEM_USER_NAME
+  override val actionedByDisplayName: String = actionedByDisplayName ?: SYSTEM_DISPLAY_NAME
+}

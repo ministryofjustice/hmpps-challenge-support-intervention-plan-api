@@ -13,6 +13,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
@@ -665,6 +667,27 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         username = legacyActioned.actionedBy,
         userDisplayName = legacyActioned.actionedByDisplayName,
         activeCaseLoadId = legacyActioned.activeCaseloadId,
+      ),
+    )
+  }
+
+  @Test
+  fun `204 no content - delete csip record without actioned by information`() {
+    val record = dataSetup(generateCsipRecord(prisonNumber())) { it.withReferral() }
+
+    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null, null)
+    deleteCsip(record.id, legacyActioned)
+
+    val affectedComponents = setOf(RECORD, REFERRAL)
+    verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
+    verifyAudit(
+      record,
+      RevisionType.DEL,
+      affectedComponents,
+      nomisContext().copy(
+        requestAt = legacyActioned.actionedAt,
+        username = SYSTEM_USER_NAME,
+        userDisplayName = SYSTEM_DISPLAY_NAME,
       ),
     )
   }
