@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
@@ -38,6 +36,7 @@ class DefaultLegacyActioned(
 ) : LegacyActioned {
   @Schema(requiredMode = NOT_REQUIRED)
   override val actionedBy: String = actionedBy ?: SYSTEM_USER_NAME
+
   @Schema(requiredMode = NOT_REQUIRED)
   override val actionedByDisplayName: String = actionedByDisplayName ?: SYSTEM_DISPLAY_NAME
 }
