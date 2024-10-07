@@ -115,14 +115,14 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
       setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW, ATTENDEE)
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
     verifyDoesNotExist(personSummaryRepository.findByIdOrNull(record.prisonNumber)) {
-      IllegalStateException("Person Location not deleted")
+      IllegalStateException("Person Summary not deleted")
     }
     verifyAudit(record, RevisionType.DEL, affectedComponents)
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_DELETED)
   }
 
   @Test
-  fun `204 no content - Delete one of multiple leaves Person Location`() {
+  fun `204 no content - Delete one of multiple leaves Person Summary`() {
     val personSummary = prisoner().toPersonSummary()
     dataSetup(generateCsipRecord(personSummary).withCompletedReferral()) { it }
     val toDelete = dataSetup(generateCsipRecord(personSummary).withReferral()) { it }

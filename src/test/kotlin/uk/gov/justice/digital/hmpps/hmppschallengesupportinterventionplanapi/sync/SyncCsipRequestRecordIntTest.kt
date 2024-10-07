@@ -623,7 +623,24 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 success - save a new csip record providing person location details`() {
+  fun `200 success - save a new csip record where person summary already exists`() {
+    val existing = dataSetup(generateCsipRecord()) { it.withCompletedReferral().withPlan() }
+    val request = syncCsipRequest(referral = syncReferralRequest(), prisonNumber = existing.prisonNumber)
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    assertThat(saved).isNotNull()
+    saved.verifyAgainst(request)
+    saved.personSummary.verifyAgainst(
+      with(existing.personSummary) {
+        prisoner(request.prisonNumber, firstName, lastName, prisonCode, status, cellLocation)
+      },
+    )
+  }
+
+  @Test
+  fun `200 success - save a new csip record providing person summary details`() {
     val request = syncCsipRequest(referral = syncReferralRequest(), personSummary = personSummaryRequest())
 
     val response = syncCsipRecord(request)
@@ -681,7 +698,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
       )
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
     verifyDoesNotExist(personSummaryRepository.findByIdOrNull(record.prisonNumber)) {
-      IllegalStateException("Person Location not deleted")
+      IllegalStateException("Person Summary not deleted")
     }
     verifyAudit(
       record,
@@ -706,7 +723,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val affectedComponents = setOf(RECORD, REFERRAL)
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
     verifyDoesNotExist(personSummaryRepository.findByIdOrNull(record.prisonNumber)) {
-      IllegalStateException("Person Location not deleted")
+      IllegalStateException("Person Summary not deleted")
     }
     verifyAudit(
       record,

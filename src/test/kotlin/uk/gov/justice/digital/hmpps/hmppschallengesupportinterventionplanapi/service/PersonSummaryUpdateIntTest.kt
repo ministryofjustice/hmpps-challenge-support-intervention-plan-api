@@ -78,7 +78,7 @@ class PersonSummaryUpdateIntTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @ValueSource(strings = ["PERSONAL_DETAILS", "STATUS", "LOCATION"])
-  fun `message with matching category causes person location details to be updated`(changeCategory: String) {
+  fun `message with matching category causes person summary details to be updated`(changeCategory: String) {
     val personSummary = personSummaryRepository.save(prisoner().toPersonSummary())
     val updatedPrisoner = prisoner(
       prisonerNumber = personSummary.prisonNumber,
