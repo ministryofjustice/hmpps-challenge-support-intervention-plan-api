@@ -16,6 +16,7 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.AttendeesRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FirstReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
@@ -69,7 +70,13 @@ class Plan(
   fun update(request: PlanRequest): Plan = apply {
     caseManager = request.caseManager
     reasonForPlan = request.reasonForPlan
-    firstCaseReviewDate = request.firstCaseReviewDate
+    when {
+      request is FirstReviewRequest -> firstCaseReviewDate = request.firstCaseReviewDate
+      reviews.isEmpty() -> firstCaseReviewDate = request.nextCaseReviewDate
+      else -> {
+        reviews.maxByOrNull { it.reviewSequence }!!.updateNextReviewDate(request.nextCaseReviewDate)
+      }
+    }
   }
 
   fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed =

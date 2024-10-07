@@ -110,7 +110,7 @@ private fun personChangedEvent(
   eventType,
   detailUrl,
   description,
-  PrisonerUpdatedInformation(changeCategories),
+  PrisonerUpdatedInformation(prisonNumber, changeCategories),
   withPrisonNumber(prisonNumber),
 )
 

@@ -96,6 +96,10 @@ class Review(
     }
   }
 
+  fun updateNextReviewDate(date: LocalDate?) {
+    nextReviewDate = date
+  }
+
   fun addAttendee(request: AttendeeRequest) =
     Attendee(
       this,

@@ -72,6 +72,7 @@ fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity
     caseManager,
     reasonForPlan,
     firstCaseReviewDate,
+    nextReviewDate(),
     identifiedNeeds().map { it.toModel() },
     reviews().map { it.toModel() },
   )

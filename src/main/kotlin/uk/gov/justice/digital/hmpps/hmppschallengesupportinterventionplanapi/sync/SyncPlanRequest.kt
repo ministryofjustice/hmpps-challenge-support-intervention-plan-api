@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidPlanDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.AttendeeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FirstReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
@@ -26,7 +27,9 @@ data class SyncPlanRequest(
   override val identifiedNeeds: List<SyncNeedRequest>,
   @field:Valid
   override val reviews: List<SyncReviewRequest>,
-) : PlanRequest, IdentifiedNeedsRequest, ReviewsRequest {
+) : PlanRequest, FirstReviewRequest, IdentifiedNeedsRequest, ReviewsRequest {
+  override val nextCaseReviewDate: LocalDate? = firstCaseReviewDate
+
   fun requestMappings(): Set<RequestMapping> = buildSet {
     addAll(identifiedNeeds.map { RequestMapping(CsipComponent.IDENTIFIED_NEED, it.legacyId, it.id) })
     addAll(reviews.flatMap(SyncReviewRequest::requestMappings))
