@@ -124,16 +124,16 @@ class CreatePlanIntTest : IntegrationTestBase() {
   private fun Plan.verifyAgainst(request: CreatePlanRequest) {
     assertThat(caseManager).isEqualTo(request.caseManager)
     assertThat(reasonForPlan).isEqualTo(request.reasonForPlan)
-    assertThat(firstCaseReviewDate).isEqualTo(request.firstCaseReviewDate)
+    assertThat(firstCaseReviewDate).isEqualTo(request.nextCaseReviewDate)
     assertThat(identifiedNeeds().size).isEqualTo(request.identifiedNeeds.size)
   }
 
   private fun createPlanRequest(
     caseManager: String = "Case Manager",
     reasonForPlan: String = "Reason for this plan",
-    firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
+    nextCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
     identifiedNeeds: List<CreateIdentifiedNeedRequest> = listOf(),
-  ) = CreatePlanRequest(caseManager, reasonForPlan, firstCaseReviewDate, identifiedNeeds)
+  ) = CreatePlanRequest(caseManager, reasonForPlan, nextCaseReviewDate, identifiedNeeds)
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/plan"
 

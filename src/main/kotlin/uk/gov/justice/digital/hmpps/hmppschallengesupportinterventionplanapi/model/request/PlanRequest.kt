@@ -9,6 +9,10 @@ import java.time.LocalDate
 interface PlanRequest {
   val caseManager: String?
   val reasonForPlan: String?
+  val nextCaseReviewDate: LocalDate?
+}
+
+interface FirstReviewRequest : PlanRequest {
   val firstCaseReviewDate: LocalDate?
 }
 
@@ -24,7 +28,7 @@ data class CreatePlanRequest(
 
   @Schema(description = "The first date the CSIP plan should be reviewed.", example = "2021-09-27")
   @JsonFormat(pattern = "yyyy-MM-dd")
-  override val firstCaseReviewDate: LocalDate,
+  override val nextCaseReviewDate: LocalDate,
 
   @Schema(description = "The needs identified in the CSIP plan.")
   @field:Valid
@@ -43,5 +47,5 @@ data class UpdatePlanRequest(
 
   @Schema(description = "The first date the CSIP plan should be reviewed.", example = "2021-09-27")
   @JsonFormat(pattern = "yyyy-MM-dd")
-  override val firstCaseReviewDate: LocalDate?,
+  override val nextCaseReviewDate: LocalDate?,
 ) : PlanRequest

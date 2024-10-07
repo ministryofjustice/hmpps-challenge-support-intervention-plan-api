@@ -10,7 +10,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
     val request = UpdatePlanRequest(
       caseManager = "inani",
       reasonForPlan = "posidonium",
-      firstCaseReviewDate = LocalDate.now(),
+      nextCaseReviewDate = LocalDate.now(),
     )
     assertThat(validator.validate(request)).isEmpty()
   }
@@ -20,7 +20,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
     val request = UpdatePlanRequest(
       caseManager = "n".repeat(101),
       reasonForPlan = "posidonium",
-      firstCaseReviewDate = LocalDate.now(),
+      nextCaseReviewDate = LocalDate.now(),
     )
     assertSingleValidationError(
       validator.validate(request),
@@ -34,7 +34,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
     val request = UpdatePlanRequest(
       caseManager = "inani",
       reasonForPlan = "n".repeat(241),
-      firstCaseReviewDate = LocalDate.now(),
+      nextCaseReviewDate = LocalDate.now(),
     )
     assertSingleValidationError(
       validator.validate(request),

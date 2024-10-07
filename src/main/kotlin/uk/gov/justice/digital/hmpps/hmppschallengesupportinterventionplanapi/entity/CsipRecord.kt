@@ -115,7 +115,7 @@ class CsipRecord(
 
   fun createPlan(request: PlanRequest) = let {
     verifyDoesNotExist(plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
-    plan = Plan(this, request.caseManager, request.reasonForPlan, request.firstCaseReviewDate)
+    plan = Plan(this, request.caseManager, request.reasonForPlan, request.nextCaseReviewDate)
     plan!!
   }
 

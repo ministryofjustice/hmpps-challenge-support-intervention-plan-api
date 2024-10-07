@@ -30,13 +30,14 @@ data class HmppsDomainEvent<T : AdditionalInformation>(
   override val detailUrl: String?,
   override val description: String,
   override val additionalInformation: T,
-  override val personReference: PersonReference,
+  override val personReference: PersonReference?,
   override val version: Int = 1,
 ) : DomainEvent
 
 interface AdditionalInformation
 
-data class PrisonerUpdatedInformation(val categoriesChanged: Set<String>) : AdditionalInformation {
+data class PrisonerUpdatedInformation(val nomsNumber: String, val categoriesChanged: Set<String>) :
+  AdditionalInformation {
   companion object {
     val CATEGORIES_OF_INTEREST = setOf("PERSONAL_DETAILS", "STATUS", "LOCATION")
   }

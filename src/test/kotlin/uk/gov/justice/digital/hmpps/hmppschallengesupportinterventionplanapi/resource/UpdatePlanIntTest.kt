@@ -117,33 +117,60 @@ class UpdatePlanIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - update plan`() {
+  fun `200 ok - update plan without reviews`() {
     val record = dataSetup(generateCsipRecord()) { it.withReferral().withPlan() }
 
     val request = planRequest(
       "A new case manager",
       "Some other reason",
+      LocalDate.now().plusDays(7),
     )
 
     updatePlan(record.id, request, status = HttpStatus.OK)
 
     val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
+    assertThat(plan.firstCaseReviewDate).isEqualTo(request.nextCaseReviewDate)
     verifyAudit(plan, RevisionType.MOD, setOf(CsipComponent.PLAN))
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
+  }
+
+  @Test
+  fun `200 ok - when reviews exist`() {
+    val record = dataSetup(generateCsipRecord().withCompletedReferral()) {
+      it.withPlan(firstCaseReviewDate = LocalDate.now().minusWeeks(6))
+      requireNotNull(it.plan)
+        .withReview(nextReviewDate = LocalDate.now().minusWeeks(2))
+        .withReview(nextReviewDate = LocalDate.now().plusWeeks(4))
+      it
+    }
+
+    val request = planRequest(
+      "A new case manager",
+      "Some other reason",
+      LocalDate.now().plusDays(7),
+    )
+
+    updatePlan(record.id, request, status = HttpStatus.OK)
+
+    val plan = getPlan(record.id)
+    plan.verifyAgainst(request)
+    assertThat(plan.firstCaseReviewDate).isEqualTo(record.plan?.firstCaseReviewDate)
+    assertThat(plan.reviews().maxByOrNull { it.reviewSequence }!!.nextReviewDate).isEqualTo(request.nextCaseReviewDate)
+    verifyAudit(plan, RevisionType.MOD, setOf(CsipComponent.PLAN, CsipComponent.REVIEW))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun Plan.verifyAgainst(request: UpdatePlanRequest) {
     assertThat(caseManager).isEqualTo(request.caseManager)
     assertThat(reasonForPlan).isEqualTo(request.reasonForPlan)
-    assertThat(firstCaseReviewDate).isEqualTo(request.firstCaseReviewDate)
   }
 
   private fun planRequest(
     caseManager: String = "Case Manager",
     reasonForPlan: String = "Reason for this plan",
-    firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
-  ) = UpdatePlanRequest(caseManager, reasonForPlan, firstCaseReviewDate)
+    nextCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
+  ) = UpdatePlanRequest(caseManager, reasonForPlan, nextCaseReviewDate)
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/plan"
 
@@ -163,4 +190,10 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     status: HttpStatus,
   ) = updatePlanResponseSpec(recordUuid, request, username, role)
     .successResponse<uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Plan>(status)
+
+  private fun getPlan(id: UUID) = transactionTemplate.execute {
+    val plan = requireNotNull(csipRecordRepository.getCsipRecord(id).plan)
+    plan.reviews()
+    plan
+  }!!
 }

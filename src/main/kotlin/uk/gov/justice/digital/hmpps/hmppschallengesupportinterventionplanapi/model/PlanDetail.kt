@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import jakarta.validation.Constraint
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FirstReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.IdentifiedNeedsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReviewsRequest
@@ -23,7 +24,8 @@ class PlanRequestValidator : ConstraintValidator<ValidPlanDetail, PlanRequest> {
       listOfNotNull(
         caseManager,
         reasonForPlan,
-        firstCaseReviewDate,
+        if (request is FirstReviewRequest) request.firstCaseReviewDate else null,
+        nextCaseReviewDate,
       ).isNotEmpty() ||
         request is IdentifiedNeedsRequest && request.identifiedNeeds.isNotEmpty() ||
         request is ReviewsRequest && request.reviews.isNotEmpty()

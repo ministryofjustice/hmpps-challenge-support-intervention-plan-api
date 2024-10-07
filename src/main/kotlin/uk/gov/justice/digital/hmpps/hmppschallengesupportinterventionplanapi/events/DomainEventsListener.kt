@@ -17,7 +17,7 @@ class DomainEventsListener(
     val prisonerChanged = objectMapper.readValue<HmppsDomainEvent<PrisonerUpdatedInformation>>(notification.message)
     val matchingChanges = prisonerChanged.additionalInformation.categoriesChanged intersect CATEGORIES_OF_INTEREST
     if (matchingChanges.isNotEmpty()) {
-      prisonerChanged.personReference.findNomsNumber()?.also(personSummaryService::updateExistingDetails)
+      personSummaryService.updateExistingDetails(prisonerChanged.additionalInformation.nomsNumber)
     }
   }
 

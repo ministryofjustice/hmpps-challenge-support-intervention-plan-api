@@ -10,7 +10,7 @@ class CreatePlanRequestTest : RequestValidationTest() {
     val request = CreatePlanRequest(
       caseManager = "postulant",
       reasonForPlan = "verterem",
-      firstCaseReviewDate = LocalDate.now(),
+      nextCaseReviewDate = LocalDate.now(),
       listOf(),
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -21,7 +21,7 @@ class CreatePlanRequestTest : RequestValidationTest() {
     val request = CreatePlanRequest(
       caseManager = "n".repeat(101),
       reasonForPlan = "n".repeat(241),
-      firstCaseReviewDate = LocalDate.now(),
+      nextCaseReviewDate = LocalDate.now(),
       listOf(),
     )
     assertValidationErrors(
