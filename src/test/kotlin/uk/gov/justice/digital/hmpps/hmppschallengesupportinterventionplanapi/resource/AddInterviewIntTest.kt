@@ -89,8 +89,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     request: CreateInterviewRequest,
     invalid: InvalidRd,
   ) {
-    val prisonNumber = givenValidPrisonNumber("R1234VI")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       requireNotNull(it.referral).withInvestigation()
       it
@@ -123,8 +122,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - missing referral record`() {
-    val prisonNumber = givenValidPrisonNumber("I1234MR")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord())
 
     val response = addInterviewResponseSpec(record.id, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -139,8 +137,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - missing investigation record`() {
-    val prisonNumber = givenValidPrisonNumber("I1234MI")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
 
     val response = addInterviewResponseSpec(record.id, createInterviewRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -155,8 +152,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - interview added DPS`() {
-    val prisonNumber = givenValidPrisonNumber("I1234DP")
-    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val record = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral).withInvestigation()
       it
     }
@@ -167,7 +163,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     val interview = getInterview(response.interviewUuid)
     interview.verifyAgainst(request)
     verifyAudit(interview, RevisionType.ADD, setOf(CsipComponent.INTERVIEW))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getInterview(uuid: UUID): Interview = interviewRepository.getInterview(uuid)

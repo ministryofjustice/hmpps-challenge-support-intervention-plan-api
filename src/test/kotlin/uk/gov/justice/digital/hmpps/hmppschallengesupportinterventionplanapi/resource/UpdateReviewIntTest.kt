@@ -98,8 +98,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - review updated`() {
-    val prisonNumber = givenValidPrisonNumber("F1234NC")
-    val review = dataSetup(generateCsipRecord(prisonNumber).withPlan()) {
+    val review = dataSetup(generateCsipRecord().withPlan()) {
       val plan = requireNotNull(it.plan).withReview()
       plan.reviews().first()
     }
@@ -124,13 +123,12 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
     assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(REVIEW))
-    verifyDomainEvents(prisonNumber, review.csipRecord().id, CSIP_UPDATED)
+    verifyDomainEvents(review.csipRecord().prisonNumber, review.csipRecord().id, CSIP_UPDATED)
   }
 
   @Test
   fun `200 ok - review not updated with no change`() {
-    val prisonNumber = givenValidPrisonNumber("F1234UP")
-    val review = dataSetup(generateCsipRecord(prisonNumber).withPlan()) {
+    val review = dataSetup(generateCsipRecord().withPlan()) {
       val plan = requireNotNull(it.plan).withReview(
         reviewDate = LocalDate.now(),
         recordedBy = TEST_USER,
@@ -174,16 +172,15 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     reviewDate: LocalDate? = LocalDate.now(),
     nextReviewDate: LocalDate? = LocalDate.now().plusDays(3),
     csipClosedDate: LocalDate? = LocalDate.now().plusDays(5),
-  ) =
-    UpdateReviewRequest(
-      reviewDate,
-      recordedBy = TEST_USER,
-      recordedByDisplayName = TEST_USER_NAME,
-      nextReviewDate,
-      csipClosedDate,
-      summary,
-      actions,
-    )
+  ) = UpdateReviewRequest(
+    reviewDate,
+    recordedBy = TEST_USER,
+    recordedByDisplayName = TEST_USER_NAME,
+    nextReviewDate,
+    csipClosedDate,
+    summary,
+    actions,
+  )
 
   private fun updateReviewResponseSpec(
     reviewId: UUID,

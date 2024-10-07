@@ -74,10 +74,8 @@ class UpdateIdentifiedNeedIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - invalid request values`() {
-    val prisonNumber = givenValidPrisonNumber("I2234MR")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
-      it.withPlan().plan!!.withNeed()
-      it
+    val record = dataSetup(generateCsipRecord()) { csip ->
+      csip.withPlan().also { it.plan!!.withNeed() }
     }
     val identifiedNeedUuid = requireNotNull(record.plan?.identifiedNeeds()?.firstOrNull()).id
 
@@ -136,9 +134,7 @@ class UpdateIdentifiedNeedIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - no changes made to identified need`() {
     val request = identifiedNeedRequest()
-
-    val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withPlan().plan!!.withNeed(
         identifiedNeed = request.identifiedNeed,
         responsiblePerson = request.responsiblePerson,
@@ -160,8 +156,7 @@ class UpdateIdentifiedNeedIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - update identified need`() {
-    val prisonNumber = givenValidPrisonNumber("I1234UI")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withPlan().plan!!.withNeed(
         identifiedNeed = "oldIdentifiedNeed",
         responsiblePerson = "oldResponsiblePerson",
@@ -182,7 +177,7 @@ class UpdateIdentifiedNeedIntTest : IntegrationTestBase() {
 
     val identifiedNeed = getIdentifiedNeed(identifiedNeedUuid)
     verifyAudit(identifiedNeed, RevisionType.MOD, setOf(CsipComponent.IDENTIFIED_NEED))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getIdentifiedNeed(identifiedNeedUuid: UUID) =

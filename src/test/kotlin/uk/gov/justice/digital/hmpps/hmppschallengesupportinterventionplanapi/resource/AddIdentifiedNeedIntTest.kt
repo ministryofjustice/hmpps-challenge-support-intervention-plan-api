@@ -81,8 +81,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - identified need added DPS`() {
-    val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
+    val record = dataSetup(generateCsipRecord()) { it.withPlan() }
 
     val request = createIdentifiedNeedRequest()
     val response = addIdentifiedNeed(record.id, request)
@@ -90,7 +89,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     val need = getIdentifiedNeed(response.identifiedNeedUuid)
     need.verifyAgainst(request)
     verifyAudit(need, RevisionType.ADD, setOf(CsipComponent.IDENTIFIED_NEED))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/plan/identified-needs"

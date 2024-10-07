@@ -57,8 +57,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - invalid Outcome Type code`() {
-    val prisonNumber = givenValidPrisonNumber("S1234MF")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
     val request = createScreeningOutcomeRequest(outcomeTypeCode = "WRONG_CODE")
 
     val response = createScreeningOutcomeResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -74,8 +73,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val prisonNumber = givenValidPrisonNumber("S1234MF")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord())
     val request = createScreeningOutcomeRequest()
 
     val response = createScreeningOutcomeResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -108,8 +106,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
   @Test
   fun `409 conflict - CSIP record already has Screening Outcome created`() {
-    val prisonNumber = givenValidPrisonNumber("S1234AE")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       requireNotNull(it.referral).withSaferCustodyScreeningOutcome()
       it
@@ -129,8 +126,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
   @Test
   fun `create safer custody screening outcome via DPS UI`() {
-    val prisonNumber = givenValidPrisonNumber("S1234CD")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
     val request = createScreeningOutcomeRequest(recordedBy = "Safer")
 
     val response = createScreeningOutcome(record.id, request)
@@ -145,7 +141,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
 
     val saved = getScreeningOutcome(record.id)
     verifyAudit(saved, RevisionType.ADD, setOf(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/safer-custody-screening"

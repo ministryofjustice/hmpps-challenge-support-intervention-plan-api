@@ -29,6 +29,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
@@ -86,6 +88,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event.EntityEventService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.getByName
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.testUserContext
@@ -127,6 +130,9 @@ abstract class IntegrationTestBase {
   lateinit var referenceDataRepository: ReferenceDataRepository
 
   @Autowired
+  lateinit var personLocationRepository: PersonLocationRepository
+
+  @Autowired
   lateinit var transactionTemplate: TransactionTemplate
 
   @Autowired
@@ -155,6 +161,7 @@ abstract class IntegrationTestBase {
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
     switchEventPublish(false)
     val t = transactionTemplate.execute {
+      personLocationRepository.saveAndFlush(csipRecord.personLocation)
       val res = code(csipRecord)
       csipRecordRepository.saveAndRefresh(csipRecord)
       res
@@ -235,12 +242,18 @@ abstract class IntegrationTestBase {
   fun givenReferenceData(type: ReferenceDataType, code: String) =
     requireNotNull(referenceDataRepository.findByKey(ReferenceDataKey(type, code)))
 
-  fun givenValidPrisonNumber(prisonNumber: String): String {
-    prisonerSearch.stubGetPrisoner(prisonNumber)
-    return prisonNumber
+  fun givenPrisoner(prisoner: PrisonerDto): PrisonerDto = prisoner.also {
+    prisonerSearch.stubGetPrisoner(it)
   }
 
-  fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(csipRecord)
+  fun givenValidPrisonNumber(prisonNumber: String): String = prisonNumber.also {
+    givenPrisoner(prisoner(prisonerNumber = prisonNumber))
+  }
+
+  fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = transactionTemplate.execute {
+    personLocationRepository.saveAndFlush(csipRecord.personLocation)
+    csipRecordRepository.save(csipRecord)
+  }!!
 
   fun CsipRecord.withCompletedReferral(
     referralComplete: Boolean = true,

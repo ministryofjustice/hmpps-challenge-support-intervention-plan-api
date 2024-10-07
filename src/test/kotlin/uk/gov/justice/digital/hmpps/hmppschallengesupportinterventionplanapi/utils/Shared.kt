@@ -2,8 +2,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ut
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
@@ -17,6 +19,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.cellLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -92,3 +96,21 @@ fun Referral.verifyAgainst(request: CreateReferralRequest) {
   assertThat(refererAreaOfWork.code).isEqualTo(request.refererAreaCode)
   assertThat(incidentInvolvement?.code).isEqualTo(request.incidentInvolvementCode)
 }
+
+fun PersonLocation.verifyAgainst(prisoner: PrisonerDto) {
+  assertThat(prisonNumber).isEqualTo(prisoner.prisonerNumber)
+  assertThat(firstName).isEqualTo(prisoner.firstName)
+  assertThat(lastName).isEqualTo(prisoner.lastName)
+  assertThat(status).isEqualTo(prisoner.status)
+  assertThat(prisonCode).isEqualTo(prisoner.prisonId)
+  assertThat(cellLocation).isEqualTo(prisoner.cellLocation)
+}
+
+fun prisoner(
+  prisonerNumber: String = prisonNumber(),
+  firstName: String = "First",
+  lastName: String = "Last",
+  prisonId: String? = "LEI",
+  status: String = "ACTIVE IN",
+  cellLocation: String? = cellLocation(),
+) = PrisonerDto(prisonerNumber, firstName, lastName, prisonId, status, cellLocation)

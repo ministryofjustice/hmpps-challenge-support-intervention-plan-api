@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonLocation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ATTENDEE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.IDENTIFIED_NEED
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import java.time.LocalDate
 import java.util.UUID
 
@@ -71,8 +74,7 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `204 no content - CSIP record deleted by DPS`() {
-    val prisonNumber = givenValidPrisonNumber("D1234DS")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       val referral = requireNotNull(it.referral)
         .withContributoryFactor()
@@ -112,8 +114,26 @@ class DeleteCsipRecordsIntTest : IntegrationTestBase() {
     val affectedComponents =
       setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW, ATTENDEE)
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(personLocationRepository.findByIdOrNull(record.prisonNumber)) {
+      IllegalStateException("Person Location not deleted")
+    }
     verifyAudit(record, RevisionType.DEL, affectedComponents)
-    verifyDomainEvents(prisonNumber, record.id, CSIP_DELETED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_DELETED)
+  }
+
+  @Test
+  fun `204 no content - Delete one of multiple leaves Person Location`() {
+    val personLocation = prisoner().toPersonLocation()
+    dataSetup(generateCsipRecord(personLocation).withCompletedReferral()) { it }
+    val toDelete = dataSetup(generateCsipRecord(personLocation).withReferral()) { it }
+    assertThat(csipRecordRepository.countByPrisonNumber(toDelete.prisonNumber)).isEqualTo(2)
+
+    deleteCsipRecordResponseSpec(toDelete.id).expectStatus().isNoContent
+
+    verifyDoesNotExist(csipRecordRepository.findById(toDelete.id)) { IllegalStateException("CSIP record not deleted") }
+    assertThat(personLocationRepository.findByIdOrNull(toDelete.prisonNumber)).isNotNull()
+    assertThat(csipRecordRepository.countByPrisonNumber(toDelete.prisonNumber)).isEqualTo(1)
+    verifyDomainEvents(toDelete.prisonNumber, toDelete.id, CSIP_DELETED)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid"

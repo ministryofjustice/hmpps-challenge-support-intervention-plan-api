@@ -84,8 +84,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - review added DPS`() {
-    val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withPlan() }
+    val record = dataSetup(generateCsipRecord()) { it.withPlan() }
 
     val request = createReviewRequest(attendees = listOf(createAttendeeRequest(), createAttendeeRequest()))
     val response = addReview(record.id, request)

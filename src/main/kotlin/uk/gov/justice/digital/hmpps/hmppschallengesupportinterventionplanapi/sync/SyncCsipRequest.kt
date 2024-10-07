@@ -27,6 +27,7 @@ data class SyncCsipRequest(
   override val activeCaseloadId: String?,
   override val legacyId: Long,
   override val id: UUID?,
+  val personLocation: PersonLocationRequest?,
 ) : NomisAudited(), NomisIdentifiable, CsipRequest, PrisonNumberChangeRequest, LegacyIdAware, LegacyActioned {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     referral?.also { addAll(it.findRequiredReferenceDataKeys()) }
@@ -38,5 +39,13 @@ data class SyncCsipRequest(
     plan?.also { addAll(it.requestMappings()) }
   }
 }
+
+data class PersonLocationRequest(
+  val firstName: String,
+  val lastName: String,
+  val status: String,
+  val prisonCode: String?,
+  val cellLocation: String?,
+)
 
 data class RequestMapping(val component: CsipComponent, val legacyId: Long, val id: UUID?)

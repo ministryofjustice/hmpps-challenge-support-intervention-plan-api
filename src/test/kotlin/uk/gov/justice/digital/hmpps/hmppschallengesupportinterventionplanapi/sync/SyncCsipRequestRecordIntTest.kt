@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
@@ -38,9 +39,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.InterviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.NomisIdGenerator.newId
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.badSyncRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.personLocationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncCsipRequest
@@ -55,7 +55,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.syn
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.withModifiedDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.newId
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -394,7 +397,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 success - can update an existing csip record`() {
-    val initial = dataSetup(generateCsipRecord(prisonNumber())) {
+    val initial = dataSetup(generateCsipRecord()) {
       val referral = requireNotNull(it.withReferral().referral)
         .withSaferCustodyScreeningOutcome()
         .withContributoryFactor(type = givenReferenceData(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, "DEB"))
@@ -411,6 +414,8 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
     val request = syncCsipRequest(
       uuid = initial.id,
+      prisonNumber = initial.prisonNumber,
+      personLocation = null,
       logCode = LOG_CODE,
       referral = syncReferralRequest(
         incidentTime = LocalTime.now(),
@@ -487,7 +492,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 success - existing ids returned when updating an existing record from legacy id`() {
-    val initial = dataSetup(generateCsipRecord(prisonNumber(), legacyId = newId())) {
+    val initial = dataSetup(generateCsipRecord(legacyId = newId())) {
       val referral = requireNotNull(it.withReferral().referral)
         .withSaferCustodyScreeningOutcome()
         .withContributoryFactor(legacyId = newId())
@@ -617,8 +622,24 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `200 success - save a new csip record providing person location details`() {
+    val request = syncCsipRequest(referral = syncReferralRequest(), personLocation = personLocationRequest())
+
+    val response = syncCsipRecord(request)
+    val csipMapping = response.mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    assertThat(saved).isNotNull()
+    saved.verifyAgainst(request)
+    saved.personLocation.verifyAgainst(
+      with(request.personLocation!!) {
+        prisoner(request.prisonNumber, firstName, lastName, prisonCode, status, cellLocation)
+      },
+    )
+  }
+
+  @Test
   fun `204 no content - delete csip record`() {
-    val record = dataSetup(generateCsipRecord(prisonNumber())) {
+    val record = dataSetup(generateCsipRecord()) {
       val referral = requireNotNull(it.withReferral().referral)
         .withContributoryFactor()
         .withContributoryFactor()
@@ -658,6 +679,9 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW, ATTENDEE,
       )
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(personLocationRepository.findByIdOrNull(record.prisonNumber)) {
+      IllegalStateException("Person Location not deleted")
+    }
     verifyAudit(
       record,
       RevisionType.DEL,
@@ -673,13 +697,16 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
   @Test
   fun `204 no content - delete csip record without actioned by information`() {
-    val record = dataSetup(generateCsipRecord(prisonNumber())) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
 
     val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null, null)
     deleteCsip(record.id, legacyActioned)
 
     val affectedComponents = setOf(RECORD, REFERRAL)
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
+    verifyDoesNotExist(personLocationRepository.findByIdOrNull(record.prisonNumber)) {
+      IllegalStateException("Person Location not deleted")
+    }
     verifyAudit(
       record,
       RevisionType.DEL,

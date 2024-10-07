@@ -2,13 +2,17 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.data.domain.Page
 import org.springframework.data.jpa.domain.Specification
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toReferenceDataModel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonLocation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
@@ -38,11 +42,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 @Transactional
 class CsipRecordService(
   private val referenceDataRepository: ReferenceDataRepository,
+  private val personLocationRepository: PersonLocationRepository,
+  private val personSearch: PrisonerSearchClient,
   private val csipRecordRepository: CsipRecordRepository,
 ) {
   @PublishCsipEvent(CSIP_CREATED)
   fun createCsipRecord(
-    prisoner: PrisonerDto,
+    prisonNumber: String,
     request: CreateCsipRecordRequest,
   ): CsipRecord {
     val context = csipRequestContext()
@@ -50,7 +56,8 @@ class CsipRecordService(
       ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE,
       request.referral.contributoryFactors.map { it.factorTypeCode }.toSet(),
     )
-    val record = CsipEntity(prisoner.prisonerNumber, prisoner.prisonId, request.logCode)
+    val personLocation = getPersonLocation(prisonNumber)
+    val record = CsipEntity(personLocation, personLocation.prisonCode, request.logCode)
     val referral = record.createReferral(request.referral, context, referenceDataRepository::getActiveReferenceData)
     request.referral.contributoryFactors.forEach {
       referral.addContributoryFactor(it) { type, code -> requireNotNull(rdMap[ReferenceDataKey(type, code)]) }
@@ -74,12 +81,25 @@ class CsipRecordService(
 
   @PublishCsipEvent(CSIP_DELETED)
   fun deleteCsipRecord(recordUuid: UUID): Boolean =
-    csipRecordRepository.findById(recordUuid)?.also(csipRecordRepository::delete) != null
+    csipRecordRepository.findById(recordUuid)?.also {
+      val remaining = csipRecordRepository.countByPrisonNumber(it.prisonNumber)
+      csipRecordRepository.delete(it)
+      if (remaining == 1) {
+        personLocationRepository.delete(it.personLocation)
+      }
+    } != null
 
   @Transactional(readOnly = true)
   fun findCsipRecordsForPrisoner(prisonNumber: String, request: CsipSummaryRequest): CsipSummaries =
     csipRecordRepository.findAll(request.toSpecification(prisonNumber), request.pageable()).map { it.toSummary() }
       .asCsipSummaries()
+
+  private fun getPersonLocation(prisonNumber: String): PersonLocation {
+    return personLocationRepository.findByIdOrNull(prisonNumber)
+      ?: personLocationRepository.save(
+        requireNotNull(personSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }.toPersonLocation(),
+      )
+  }
 }
 
 private fun CsipSummaryRequest.toSpecification(prisonNumber: String): Specification<CsipEntity> = listOfNotNull(

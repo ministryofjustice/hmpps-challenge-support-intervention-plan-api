@@ -22,6 +22,8 @@ interface CsipRecordRepository :
   fun findById(recordId: UUID): CsipRecord?
 
   fun findByLegacyId(legacyId: Long): CsipRecord?
+
+  fun countByPrisonNumber(prisonNumber: String): Int
 }
 
 fun CsipRecordRepository.getCsipRecord(recordUuid: UUID) =

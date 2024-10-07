@@ -78,8 +78,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `409 conflict - Plan already exists`() {
-    val prisonNumber = givenValidPrisonNumber("P1234AE")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withCompletedReferral().withPlan()
     }
 
@@ -97,8 +96,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - create plan via DPS UI`() {
-    val prisonNumber = givenValidPrisonNumber("P1234DS")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
+    val record = dataSetup(generateCsipRecord()) { it }
     val recordUuid = record.id
     val request = createPlanRequest()
 
@@ -112,8 +110,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - create plan with identified needs via DPS UI`() {
-    val prisonNumber = givenValidPrisonNumber("P1234WN")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
+    val record = dataSetup(generateCsipRecord()) { it }
 
     val request = createPlanRequest(identifiedNeeds = listOf(createIdentifiedNeedRequest()))
     createPlan(record.id, request)

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
-import java.time.LocalDate
 
 internal const val PRISON_NUMBER = "A1234AA"
 internal const val PRISON_NUMBER_NOT_FOUND = "NOT_FOUND"
@@ -20,6 +19,17 @@ internal const val PRISON_NUMBER_THROW_EXCEPTION = "THROW"
 
 class PrisonerSearchServer : WireMockServer(8112) {
   private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+
+  fun stubGetPrisoner(prisoner: PrisonerDto): StubMapping =
+    stubFor(
+      get("/prisoner/${prisoner.prisonerNumber}")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(mapper.writeValueAsString(prisoner))
+            .withStatus(200),
+        ),
+    )
 
   fun stubGetPrisoner(prisonNumber: String = PRISON_NUMBER): StubMapping =
     stubFor(
@@ -31,12 +41,11 @@ class PrisonerSearchServer : WireMockServer(8112) {
               mapper.writeValueAsString(
                 PrisonerDto(
                   prisonerNumber = prisonNumber,
-                  bookingId = 1234,
                   "First",
-                  "Middle",
                   "Last",
-                  LocalDate.of(1988, 4, 3),
                   PRISON_CODE_LEEDS,
+                  "ACTIVE IN",
+                  "A-1-002",
                 ),
               ),
             )

@@ -80,8 +80,7 @@ class AddAttendeeIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - attendee added DPS`() {
-    val prisonNumber = givenValidPrisonNumber("N1234DP")
-    val review = dataSetup(generateCsipRecord(prisonNumber)) {
+    val review = dataSetup(generateCsipRecord()) {
       it.withPlan()
       val plan = requireNotNull(it.plan).withReview()
       plan.reviews().first()
@@ -95,7 +94,7 @@ class AddAttendeeIntTest : IntegrationTestBase() {
 
     val record = review.plan.csipRecord
     verifyAudit(attendee, RevisionType.ADD, setOf(CsipComponent.ATTENDEE))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun urlToTest(reviewUuid: UUID) = "/csip-records/plan/reviews/$reviewUuid/attendees"
