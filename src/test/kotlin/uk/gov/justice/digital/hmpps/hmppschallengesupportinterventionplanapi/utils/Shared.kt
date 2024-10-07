@@ -5,7 +5,7 @@ import org.assertj.core.api.Assertions.within
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
@@ -97,7 +97,7 @@ fun Referral.verifyAgainst(request: CreateReferralRequest) {
   assertThat(incidentInvolvement?.code).isEqualTo(request.incidentInvolvementCode)
 }
 
-fun PersonLocation.verifyAgainst(prisoner: PrisonerDto) {
+fun PersonSummary.verifyAgainst(prisoner: PrisonerDto) {
   assertThat(prisonNumber).isEqualTo(prisoner.prisonerNumber)
   assertThat(firstName).isEqualTo(prisoner.firstName)
   assertThat(lastName).isEqualTo(prisoner.lastName)

@@ -6,13 +6,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PrisonNumberChangeRequest
 import java.time.LocalDateTime
 import java.util.UUID
 
 data class SyncCsipRequest(
   @field:Size(max = 10, message = "Prison number must be <= 10 characters")
-  override val prisonNumber: String,
+  val prisonNumber: String,
   @field:Size(max = 10, message = "Log code must be <= 10 characters")
   override val logCode: String?,
   @field:Valid
@@ -27,8 +26,8 @@ data class SyncCsipRequest(
   override val activeCaseloadId: String?,
   override val legacyId: Long,
   override val id: UUID?,
-  val personLocation: PersonLocationRequest?,
-) : NomisAudited(), NomisIdentifiable, CsipRequest, PrisonNumberChangeRequest, LegacyIdAware, LegacyActioned {
+  val personSummary: PersonSummaryRequest?,
+) : NomisAudited(), NomisIdentifiable, CsipRequest, LegacyIdAware, LegacyActioned {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     referral?.also { addAll(it.findRequiredReferenceDataKeys()) }
   }
@@ -40,7 +39,7 @@ data class SyncCsipRequest(
   }
 }
 
-data class PersonLocationRequest(
+data class PersonSummaryRequest(
   val firstName: String,
   val lastName: String,
   val status: String,

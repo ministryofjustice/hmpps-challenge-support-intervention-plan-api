@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
@@ -76,7 +76,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - csip records matching log code are returned`() {
-    val prisoner = prisoner().toPersonLocation()
+    val prisoner = prisoner().toPersonSummary()
     dataSetup(generateCsipRecord(prisoner, logCode = "LEI").withReferral()) { it }
     dataSetup(generateCsipRecord(prisoner, logCode = "MDI").withReferral()) { it }
 
@@ -89,7 +89,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - csip records matching created date are returned`() {
-    val prisoner = prisoner().toPersonLocation()
+    val prisoner = prisoner().toPersonSummary()
     dataSetup(
       generateCsipRecord(
         prisoner,
@@ -129,7 +129,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - default sort is desc`() {
-    val prisoner = prisoner().toPersonLocation()
+    val prisoner = prisoner().toPersonSummary()
     dataSetup(
       generateCsipRecord(
         prisoner,
@@ -165,7 +165,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - can sort asc`() {
-    val prisoner = prisoner().toPersonLocation()
+    val prisoner = prisoner().toPersonSummary()
     dataSetup(
       generateCsipRecord(
         prisoner,

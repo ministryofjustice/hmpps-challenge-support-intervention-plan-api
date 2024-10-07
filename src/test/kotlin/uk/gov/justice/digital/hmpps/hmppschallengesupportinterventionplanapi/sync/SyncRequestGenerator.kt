@@ -13,13 +13,13 @@ import java.util.UUID
 
 object SyncRequestGenerator {
 
-  fun personLocationRequest(
+  fun personSummaryRequest(
     firstName: String = "First",
     lastName: String = "Last",
     status: String = "ACTIVE IN",
     prisonCode: String? = "LEI",
     cellLocation: String? = cellLocation(),
-  ) = PersonLocationRequest(firstName, lastName, status, prisonCode, cellLocation)
+  ) = PersonSummaryRequest(firstName, lastName, status, prisonCode, cellLocation)
 
   fun syncCsipRequest(
     logCode: String? = null,
@@ -31,7 +31,7 @@ object SyncRequestGenerator {
     actionedBy: String = "actionedBy",
     actionedByDisplayName: String = "actionedByDisplayName",
     activeCaseloadId: String? = null,
-    personLocation: PersonLocationRequest? = personLocationRequest(),
+    personSummary: PersonSummaryRequest? = personSummaryRequest(),
     id: Long = newId(),
     uuid: UUID? = null,
   ) = SyncCsipRequest(
@@ -46,7 +46,7 @@ object SyncRequestGenerator {
     activeCaseloadId,
     id,
     uuid,
-    personLocation,
+    personSummary,
   ).withAuditDetail()
 
   fun syncReferralRequest(

@@ -7,11 +7,11 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocationRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidInputException
@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.PersonLocationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.PersonSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.RequestMapping
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.ResponseMapping
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncCsipRequest
@@ -32,7 +32,7 @@ import java.util.UUID
 class SyncCsipRecord(
   val referenceDaRepository: ReferenceDataRepository,
   val csipRepository: CsipRecordRepository,
-  val personLocationRepository: PersonLocationRepository,
+  val personSummaryRepository: PersonSummaryRepository,
   val personSearch: PrisonerSearchClient,
   val referralSync: SyncReferral,
   val planSync: SyncPlan,
@@ -43,9 +43,9 @@ class SyncCsipRecord(
     val rdSupplier: (ReferenceDataType, String) -> ReferenceData = { type, code ->
       requireNotNull(rdMap[ReferenceDataKey(type, code)])
     }
-    val personLocation = personLocationRepository.findByIdOrNull(request.prisonNumber)
+    val personSummary = personSummaryRepository.findByIdOrNull(request.prisonNumber)
     val csip: CsipRecord = findCsipRecord(request.id, request.legacyId)?.update(request)?.withAuditInfo(request)
-      ?: request.toCsipRecord(personLocation ?: request.toPersonLocation())
+      ?: request.toCsipRecord(personSummary ?: request.toPersonSummary())
     val referralMappings = request.referral?.let {
       val referral = csip.referral?.update(it, rdSupplier) ?: csip.createReferral(it, csipRequestContext(), rdSupplier)
       referralSync.sync(referral, it, rdSupplier)
@@ -72,7 +72,7 @@ class SyncCsipRecord(
       val remaining = csipRepository.countByPrisonNumber(it.prisonNumber)
       csipRepository.delete(it)
       if (remaining == 1) {
-        personLocationRepository.delete(it.personLocation)
+        personSummaryRepository.delete(it.personSummary)
       }
     }
   }
@@ -99,15 +99,15 @@ class SyncCsipRecord(
     }
   }
 
-  private fun SyncCsipRequest.toPersonLocation() = (
-    personLocation?.toPersonLocation(prisonNumber)
-      ?: personSearch.getPrisoner(prisonNumber)?.toPersonLocation()
-    )?.also(personLocationRepository::save)
+  private fun SyncCsipRequest.toPersonSummary() = (
+    personSummary?.toPersonSummary(prisonNumber)
+      ?: personSearch.getPrisoner(prisonNumber)?.toPersonSummary()
+    )?.also(personSummaryRepository::save)
     ?: throw NotFoundException("Person", prisonNumber)
 
-  private fun PersonLocationRequest.toPersonLocation(prisonNumber: String) =
-    PersonLocation(prisonNumber, firstName, lastName, status, prisonCode, cellLocation)
+  private fun PersonSummaryRequest.toPersonSummary(prisonNumber: String) =
+    PersonSummary(prisonNumber, firstName, lastName, status, prisonCode, cellLocation)
 
-  private fun SyncCsipRequest.toCsipRecord(personLocation: PersonLocation): CsipRecord =
-    CsipRecord(personLocation, prisonCodeWhenRecorded, logCode, legacyId).withAuditInfo(this)
+  private fun SyncCsipRequest.toCsipRecord(personSummary: PersonSummary): CsipRecord =
+    CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId).withAuditInfo(this)
 }

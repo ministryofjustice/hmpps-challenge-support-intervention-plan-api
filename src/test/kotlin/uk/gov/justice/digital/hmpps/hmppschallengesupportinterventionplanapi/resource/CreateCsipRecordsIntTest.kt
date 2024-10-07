@@ -224,7 +224,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
-    saved.personLocation.verifyAgainst(prisoner)
+    saved.personSummary.verifyAgainst(prisoner)
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
     verifyDomainEvents(prisoner.prisonerNumber, response.recordUuid, CSIP_CREATED)
   }

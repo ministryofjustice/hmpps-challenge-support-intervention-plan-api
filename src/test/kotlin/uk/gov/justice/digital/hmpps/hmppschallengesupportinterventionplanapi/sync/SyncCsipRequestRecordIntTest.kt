@@ -40,7 +40,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.badSyncRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.personLocationRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.personSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncAttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncCsipRequest
@@ -415,7 +415,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val request = syncCsipRequest(
       uuid = initial.id,
       prisonNumber = initial.prisonNumber,
-      personLocation = null,
+      personSummary = null,
       logCode = LOG_CODE,
       referral = syncReferralRequest(
         incidentTime = LocalTime.now(),
@@ -623,15 +623,15 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 success - save a new csip record providing person location details`() {
-    val request = syncCsipRequest(referral = syncReferralRequest(), personLocation = personLocationRequest())
+    val request = syncCsipRequest(referral = syncReferralRequest(), personSummary = personSummaryRequest())
 
     val response = syncCsipRecord(request)
     val csipMapping = response.mappings.first { it.component == RECORD }
     val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
     assertThat(saved).isNotNull()
     saved.verifyAgainst(request)
-    saved.personLocation.verifyAgainst(
-      with(request.personLocation!!) {
+    saved.personSummary.verifyAgainst(
+      with(request.personSummary!!) {
         prisoner(request.prisonNumber, firstName, lastName, prisonCode, status, cellLocation)
       },
     )
@@ -679,7 +679,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         RECORD, REFERRAL, CONTRIBUTORY_FACTOR, INVESTIGATION, INTERVIEW, PLAN, IDENTIFIED_NEED, REVIEW, ATTENDEE,
       )
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
-    verifyDoesNotExist(personLocationRepository.findByIdOrNull(record.prisonNumber)) {
+    verifyDoesNotExist(personSummaryRepository.findByIdOrNull(record.prisonNumber)) {
       IllegalStateException("Person Location not deleted")
     }
     verifyAudit(
@@ -704,7 +704,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
 
     val affectedComponents = setOf(RECORD, REFERRAL)
     verifyDoesNotExist(csipRecordRepository.findById(record.id)) { IllegalStateException("CSIP record not deleted") }
-    verifyDoesNotExist(personLocationRepository.findByIdOrNull(record.prisonNumber)) {
+    verifyDoesNotExist(personSummaryRepository.findByIdOrNull(record.prisonNumber)) {
       IllegalStateException("Person Location not deleted")
     }
     verifyAudit(
