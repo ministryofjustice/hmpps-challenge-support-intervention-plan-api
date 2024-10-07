@@ -29,6 +29,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
@@ -69,6 +71,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PrisonerUpdatedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.PostgresContainer
@@ -86,6 +89,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.rep
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event.EntityEventService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.getByName
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.setByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.testUserContext
@@ -93,7 +97,9 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.MissingTopicException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import uk.gov.justice.hmpps.sqs.publish
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -127,14 +133,30 @@ abstract class IntegrationTestBase {
   lateinit var referenceDataRepository: ReferenceDataRepository
 
   @Autowired
+  lateinit var personLocationRepository: PersonLocationRepository
+
+  @Autowired
   lateinit var transactionTemplate: TransactionTemplate
 
   @Autowired
   lateinit var entityManager: EntityManager
 
-  internal val hmppsEventsQueue by lazy {
+  internal val hmppsEventsTestQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
       ?: throw MissingQueueException("hmppseventtestqueue queue not found")
+  }
+
+  internal val hmppsDomainEventsQueue by lazy {
+    hmppsQueueService.findByQueueId("hmppsdomaineventsqueue")
+      ?: throw MissingQueueException("hmppsdomaineventsqueue queue not found")
+  }
+
+  val domainEventsTopic by lazy {
+    hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingTopicException("hmppseventtopic not found")
+  }
+
+  internal fun sendPersonChangedEvent(event: HmppsDomainEvent<PrisonerUpdatedInformation>) {
+    domainEventsTopic.publish(event.eventType, objectMapper.writeValueAsString(event))
   }
 
   internal fun HmppsQueue.countAllMessagesOnQueue() =
@@ -155,6 +177,7 @@ abstract class IntegrationTestBase {
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
     switchEventPublish(false)
     val t = transactionTemplate.execute {
+      personLocationRepository.saveAndFlush(csipRecord.personLocation)
       val res = code(csipRecord)
       csipRecordRepository.saveAndRefresh(csipRecord)
       res
@@ -170,8 +193,8 @@ abstract class IntegrationTestBase {
     expectedCount: Int = 1,
     source: Source = DPS,
   ) {
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
-    val allEvents = hmppsEventsQueue.receiveDomainEventsOnQueue(expectedCount)
+    await untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
+    val allEvents = hmppsEventsTestQueue.receiveDomainEventsOnQueue(expectedCount)
     allEvents.forEach { event ->
       with(event) {
         val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == event.eventType })
@@ -235,12 +258,18 @@ abstract class IntegrationTestBase {
   fun givenReferenceData(type: ReferenceDataType, code: String) =
     requireNotNull(referenceDataRepository.findByKey(ReferenceDataKey(type, code)))
 
-  fun givenValidPrisonNumber(prisonNumber: String): String {
-    prisonerSearch.stubGetPrisoner(prisonNumber)
-    return prisonNumber
+  fun givenPrisoner(prisoner: PrisonerDto): PrisonerDto = prisoner.also {
+    prisonerSearch.stubGetPrisoner(it)
   }
 
-  fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = csipRecordRepository.save(csipRecord)
+  fun givenValidPrisonNumber(prisonNumber: String): String = prisonNumber.also {
+    givenPrisoner(prisoner(prisonerNumber = prisonNumber))
+  }
+
+  fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = transactionTemplate.execute {
+    personLocationRepository.saveAndFlush(csipRecord.personLocation)
+    csipRecordRepository.save(csipRecord)
+  }!!
 
   fun CsipRecord.withCompletedReferral(
     referralComplete: Boolean = true,
@@ -474,7 +503,9 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun `clear queues`() {
-    hmppsEventsQueue.sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).build()).get()
+    hmppsEventsTestQueue.sqsClient.purgeQueue(
+      PurgeQueueRequest.builder().queueUrl(hmppsEventsTestQueue.queueUrl).build(),
+    ).get()
   }
 
   internal fun setAuthorisation(

@@ -66,8 +66,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - At least one field should be completed`() {
-    val prisonNumber = givenValidPrisonNumber("I2234NF")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withCompletedReferral())
+    val record = givenCsipRecord(generateCsipRecord().withCompletedReferral())
 
     val response = updateInvestigationResponseSpec(
       record.id,
@@ -83,8 +82,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val prisonNumber = givenValidPrisonNumber("I2234MR")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord())
 
     val response = updateInvestigationResponseSpec(record.id, investigationRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -115,8 +113,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - investigation does not exist`() {
-    val prisonNumber = givenValidPrisonNumber("I1234DS")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
     val request = investigationRequest()
 
     val response = updateInvestigationResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -131,8 +128,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - no changes made to investigation`() {
-    val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val record = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral).withInvestigation()
       it
     }
@@ -142,13 +138,12 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
     val response = updateInvestigation(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
   fun `200 ok - update investigation`() {
-    val prisonNumber = givenValidPrisonNumber("I1234UI")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       requireNotNull(it.referral).withInvestigation(
         "oldStaffInvolved",
@@ -169,7 +164,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
     val investigation = getInvestigation(record.id)
     verifyAudit(investigation, RevisionType.MOD, setOf(CsipComponent.INVESTIGATION))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getInvestigation(recordUuid: UUID) =

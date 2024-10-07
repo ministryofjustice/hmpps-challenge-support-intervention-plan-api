@@ -92,8 +92,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     request: CreateContributoryFactorRequest,
     invalid: InvalidRd,
   ) {
-    val prisonNumber = givenValidPrisonNumber("R1234VC")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
     val response = addContributoryFactorResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
     with(response) {
       assertThat(status).isEqualTo(400)
@@ -121,8 +120,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `409 conflict - contributory factor already present`() {
-    val prisonNumber = givenValidPrisonNumber("C1234FE")
-    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val record = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral).withContributoryFactor()
       it
     }
@@ -145,8 +143,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - contributory factor added DPS`() {
-    val prisonNumber = givenValidPrisonNumber("C1234DP")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
 
     val request = createContributoryFactorRequest()
     val response = addContributoryFactor(record.id, request)
@@ -161,7 +158,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
     val saved = getContributoryFactory(response.factorUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/referral/contributory-factors"

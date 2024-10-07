@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -207,8 +208,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       createReferralRequest(contributoryFactorTypeCode = listOf("AFL")),
     )
 
-    val prisonNumber = givenValidPrisonNumber("C1234SP")
-    val response = webTestClient.createCsipRecord(prisonNumber, request)
+    val prisoner = givenPrisoner(prisoner())
+    val response = webTestClient.createCsipRecord(prisoner.prisonerNumber, request)
 
     with(response) {
       assertThat(logCode).isEqualTo(LOG_CODE)
@@ -223,8 +224,9 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     saved.verifyAgainst(request)
+    saved.personLocation.verifyAgainst(prisoner)
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
-    verifyDomainEvents(prisonNumber, response.recordUuid, CSIP_CREATED)
+    verifyDomainEvents(prisoner.prisonerNumber, response.recordUuid, CSIP_CREATED)
   }
 
   @Test
@@ -234,8 +236,8 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       logCode = null,
     )
 
-    val prisonNumber = givenValidPrisonNumber("C1235SP")
-    val response = webTestClient.createCsipRecord(prisonNumber, request)
+    val prisoner = givenPrisoner(prisoner())
+    val response = webTestClient.createCsipRecord(prisoner.prisonerNumber, request)
 
     with(response) {
       assertThat(referral).isNotNull()
@@ -245,15 +247,15 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     assertThat(saved.logCode).isNull()
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
-    verifyDomainEvents(prisonNumber, response.recordUuid, CSIP_CREATED)
+    verifyDomainEvents(prisoner.prisonerNumber, response.recordUuid, CSIP_CREATED)
   }
 
   @Test
   fun `201 created - completed details returned`() {
     val request = createCsipRecordRequest(createReferralRequest(referralComplete = true))
 
-    val prisonNumber = givenValidPrisonNumber("C1235SP")
-    val response = webTestClient.createCsipRecord(prisonNumber, request)
+    val prisoner = givenPrisoner(prisoner())
+    val response = webTestClient.createCsipRecord(prisoner.prisonerNumber, request)
 
     with(response.referral) {
       assertThat(isReferralComplete).isEqualTo(true)
@@ -264,7 +266,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
-    verifyDomainEvents(prisonNumber, response.recordUuid, CSIP_CREATED)
+    verifyDomainEvents(prisoner.prisonerNumber, response.recordUuid, CSIP_CREATED)
   }
 
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"

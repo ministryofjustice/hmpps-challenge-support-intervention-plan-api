@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_THROW_EXCEPTION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchServer
-import java.time.LocalDate
 
 class PrisonerSearchClientTest {
   private lateinit var client: PrisonerSearchClient
@@ -39,12 +38,11 @@ class PrisonerSearchClientTest {
     assertThat(result!!).isEqualTo(
       PrisonerDto(
         prisonerNumber = PRISON_NUMBER,
-        bookingId = 1234,
         "First",
-        "Middle",
         "Last",
-        LocalDate.of(1988, 4, 3),
         PRISON_CODE_LEEDS,
+        "ACTIVE IN",
+        "A-1-002",
       ),
     )
     server.verify(exactly(1), getRequestedFor(urlEqualTo("/prisoner/$PRISON_NUMBER")))

@@ -8,9 +8,11 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonLocation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import java.time.LocalDateTime
 
 class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
@@ -54,10 +56,9 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - csip records details are correctly returned`() {
-    val prisonNumber = "M1234DT"
-    val csip = dataSetup(generateCsipRecord(prisonNumber).withReferral().withPlan()) { it }
+    val csip = dataSetup(generateCsipRecord().withReferral().withPlan()) { it }
 
-    with(getCsipRecords(prisonNumber)) {
+    with(getCsipRecords(csip.prisonNumber)) {
       assertThat(content.size).isEqualTo(1)
       val summary = content.first()
       with(summary) {
@@ -75,37 +76,37 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - csip records matching log code are returned`() {
-    val prisonNumber = "M1234LC"
-    dataSetup(generateCsipRecord(prisonNumber, logCode = "LEI").withReferral()) { it }
-    dataSetup(generateCsipRecord(prisonNumber, logCode = "MDI").withReferral()) { it }
+    val prisoner = prisoner().toPersonLocation()
+    dataSetup(generateCsipRecord(prisoner, logCode = "LEI").withReferral()) { it }
+    dataSetup(generateCsipRecord(prisoner, logCode = "MDI").withReferral()) { it }
 
-    with(getCsipRecords(prisonNumber, mapOf("logCode" to "LEI"))) {
+    with(getCsipRecords(prisoner.prisonNumber, mapOf("logCode" to "LEI"))) {
       assertThat(content.size).isEqualTo(1)
-      assertThat(content.first().prisonNumber).isEqualTo(prisonNumber)
+      assertThat(content.first().prisonNumber).isEqualTo(prisoner.prisonNumber)
       assertThat(content.first().logCode).isEqualTo("LEI")
     }
   }
 
   @Test
   fun `200 ok - csip records matching created date are returned`() {
-    val prisonNumber = "M1234DR"
+    val prisoner = prisoner().toPersonLocation()
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(1),
         logCode = "NOT_EXP",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(3),
         logCode = "EXP",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(7),
         logCode = "NOT_EXP",
       ).withReferral(),
@@ -113,7 +114,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
     with(
       getCsipRecords(
-        prisonNumber,
+        prisoner.prisonNumber,
         mapOf(
           "createdAtStart" to LocalDateTime.now().minusDays(5).toString(),
           "createdAtEnd" to LocalDateTime.now().minusDays(2).toString(),
@@ -121,31 +122,31 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
       ),
     ) {
       assertThat(content.size).isEqualTo(1)
-      assertThat(content.first().prisonNumber).isEqualTo(prisonNumber)
+      assertThat(content.first().prisonNumber).isEqualTo(prisoner.prisonNumber)
       assertThat(content.first().logCode).isEqualTo("EXP")
     }
   }
 
   @Test
   fun `200 ok - default sort is desc`() {
-    val prisonNumber = "D1234ST"
+    val prisoner = prisoner().toPersonLocation()
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(3),
         logCode = "TWO",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(1),
         logCode = "ONE",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(7),
         logCode = "THREE",
       ).withReferral(),
@@ -153,7 +154,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
     with(
       getCsipRecords(
-        prisonNumber,
+        prisoner.prisonNumber,
         mapOf("sort" to "createdAt"),
       ),
     ) {
@@ -164,24 +165,24 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - can sort asc`() {
-    val prisonNumber = "A1234ST"
+    val prisoner = prisoner().toPersonLocation()
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(3),
         logCode = "TWO",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(7),
         logCode = "ONE",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
-        prisonNumber,
+        prisoner,
         createdAt = LocalDateTime.now().minusDays(1),
         logCode = "THREE",
       ).withReferral(),
@@ -189,7 +190,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
 
     with(
       getCsipRecords(
-        prisonNumber,
+        prisoner.prisonNumber,
         mapOf("sort" to "createdAt,asc"),
       ),
     ) {

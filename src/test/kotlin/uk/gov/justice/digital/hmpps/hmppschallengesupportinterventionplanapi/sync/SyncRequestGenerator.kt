@@ -3,13 +3,23 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sy
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.NomisIdGenerator.newId
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.cellLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.newId
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 
 object SyncRequestGenerator {
+
+  fun personLocationRequest(
+    firstName: String = "First",
+    lastName: String = "Last",
+    status: String = "ACTIVE IN",
+    prisonCode: String? = "LEI",
+    cellLocation: String? = cellLocation(),
+  ) = PersonLocationRequest(firstName, lastName, status, prisonCode, cellLocation)
 
   fun syncCsipRequest(
     logCode: String? = null,
@@ -21,6 +31,7 @@ object SyncRequestGenerator {
     actionedBy: String = "actionedBy",
     actionedByDisplayName: String = "actionedByDisplayName",
     activeCaseloadId: String? = null,
+    personLocation: PersonLocationRequest? = personLocationRequest(),
     id: Long = newId(),
     uuid: UUID? = null,
   ) = SyncCsipRequest(
@@ -35,6 +46,7 @@ object SyncRequestGenerator {
     activeCaseloadId,
     id,
     uuid,
+    personLocation,
   ).withAuditDetail()
 
   fun syncReferralRequest(

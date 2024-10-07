@@ -6,7 +6,10 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
@@ -39,7 +42,10 @@ import java.util.UUID
 @EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
 class CsipRecord(
 
-  prisonNumber: String,
+  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "prison_number")
+  val personLocation: PersonLocation,
 
   @Audited(withModifiedFlag = false)
   @Column(length = 6, updatable = false)
@@ -59,9 +65,9 @@ class CsipRecord(
   override var legacyId: Long? = legacyId
     private set
 
-  @Column(nullable = false, length = 10)
-  var prisonNumber: String = prisonNumber
-    private set
+  @NotAudited
+  @Column(name = "prison_number", insertable = false, updatable = false)
+  val prisonNumber: String = personLocation.prisonNumber
 
   @Column(length = 10)
   var logCode: String? = logCode
@@ -95,7 +101,7 @@ class CsipRecord(
   fun update(request: CsipRequest): CsipRecord = apply {
     logCode = request.logCode
     if (request is PrisonNumberChangeRequest) {
-      prisonNumber = request.prisonNumber
+      // prisonNumber = request.prisonNumber // TODO: update to reference new person location
     }
     if (request is LegacyIdAware) {
       legacyId = request.legacyId

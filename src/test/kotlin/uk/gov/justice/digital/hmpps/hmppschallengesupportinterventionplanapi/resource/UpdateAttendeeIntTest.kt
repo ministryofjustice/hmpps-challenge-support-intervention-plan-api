@@ -89,8 +89,7 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 updated - attendee updated`() {
-    val prisonNumber = givenValidPrisonNumber("A1234DP")
-    val attendee = dataSetup(generateCsipRecord(prisonNumber)) {
+    val attendee = dataSetup(generateCsipRecord()) {
       it.withPlan()
       val plan = requireNotNull(it.plan).withReview()
       val review = plan.reviews().first().withAttendee()
@@ -105,13 +104,12 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
 
     val record = saved.review.plan.csipRecord
     verifyAudit(attendee, RevisionType.MOD, setOf(ATTENDEE))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   @Test
   fun `200 ok - attendee not updated with no change`() {
-    val prisonNumber = givenValidPrisonNumber("A1234NC")
-    val attendee = dataSetup(generateCsipRecord(prisonNumber).withPlan()) {
+    val attendee = dataSetup(generateCsipRecord().withPlan()) {
       val plan = requireNotNull(it.plan).withReview()
       val review = plan.reviews().first().withAttendee().withAttendee()
       review.attendees()[1]
@@ -135,7 +133,7 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
       setOf(RECORD, PLAN, REVIEW, ATTENDEE),
       nomisContext().copy(source = Source.DPS),
     )
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   private fun urlToTest(attendeeId: UUID) = "/csip-records/plan/reviews/attendees/$attendeeId"

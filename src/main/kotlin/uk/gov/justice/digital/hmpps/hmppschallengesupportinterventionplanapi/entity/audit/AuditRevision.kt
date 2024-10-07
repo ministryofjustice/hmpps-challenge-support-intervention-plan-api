@@ -65,8 +65,7 @@ class AuditRevisionEntityListener : EntityTrackingRevisionListener {
     revision: Any,
   ) {
     (revision as AuditRevision).apply {
-      val component = fromClass(entityClass) ?: throw IllegalArgumentException("Unknown entity type affected")
-      affectedComponents.add(component)
+      fromClass(entityClass)?.also { affectedComponents.add(it) }
     }
   }
 }

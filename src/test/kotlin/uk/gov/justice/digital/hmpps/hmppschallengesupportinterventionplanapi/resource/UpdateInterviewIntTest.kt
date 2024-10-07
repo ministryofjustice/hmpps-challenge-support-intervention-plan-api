@@ -75,8 +75,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - invalid reference code`() {
-    val prisonNumber = givenValidPrisonNumber("I2234MR")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       requireNotNull(it.referral).withInvestigation().investigation!!.withInterview()
       it
@@ -103,8 +102,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - invalid text values`() {
-    val prisonNumber = givenValidPrisonNumber("I2234MR")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       requireNotNull(it.referral).withInvestigation().investigation!!.withInterview()
       it
@@ -159,8 +157,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
   fun `200 ok - no changes made to interview`() {
     val request = interviewRequest()
 
-    val prisonNumber = givenValidPrisonNumber("I1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val record = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral).withInvestigation().investigation!!.withInterview(
         interviewee = request.interviewee,
         interviewDate = request.interviewDate,
@@ -174,13 +171,12 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
 
     val response = updateInterview(interviewUuid, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
   fun `200 ok - update interview`() {
-    val prisonNumber = givenValidPrisonNumber("I1234UI")
-    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val record = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral).withInvestigation().investigation!!.withInterview(
         interviewee = "oldInterviewee",
         interviewDate = LocalDate.of(1999, 12, 31),
@@ -198,7 +194,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
 
     val interview = getInterview(interviewUuid)
     verifyAudit(interview, RevisionType.MOD, setOf(CsipComponent.INTERVIEW))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun getInterview(interviewUuid: UUID) = interviewRepository.getInterview(interviewUuid)

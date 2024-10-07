@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
@@ -37,7 +36,7 @@ import java.util.UUID
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "1. CSIP Record Controller", description = "Endpoints for CSIP Record operations")
-class CsipRecordsController(val csipRecordService: CsipRecordService, val prisonerSearchClient: PrisonerSearchClient) {
+class CsipRecordsController(val csipRecordService: CsipRecordService) {
   @Operation(
     summary = "Retrieve and filter all CSIP records for a prisoner.",
     description = "Returns the CSIP records for a prisoner. Supports log code filtering.",
@@ -106,10 +105,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService, val prison
   fun createCsipRecord(
     @PathVariable @Parameter(description = "Prison Number of the prisoner", required = true) prisonNumber: String,
     @Valid @RequestBody createCsipRecordRequest: CreateCsipRecordRequest,
-  ): CsipRecord {
-    val prisoner = requireNotNull(prisonerSearchClient.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
-    return csipRecordService.createCsipRecord(prisoner, createCsipRecordRequest)
-  }
+  ): CsipRecord = csipRecordService.createCsipRecord(prisonNumber, createCsipRecordRequest)
 
   @Operation(
     summary = "Get a CSIP record by its unique identifier",

@@ -99,8 +99,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `409 conflict - contributory factor already present`() {
-    val prisonNumber = givenValidPrisonNumber("C1234FE")
-    val factorUuid = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val factorUuid = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral).withContributoryFactor(
         type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"),
       ).withContributoryFactor(
@@ -126,8 +125,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - contributory factor updated`() {
-    val prisonNumber = givenValidPrisonNumber("F1234NC")
-    val factor = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val factor = dataSetup(generateCsipRecord().withReferral()) {
       val referral = requireNotNull(it.referral)
         .withContributoryFactor(type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"))
       referral.contributoryFactors().first()
@@ -144,13 +142,12 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
     assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(CONTRIBUTORY_FACTOR))
-    verifyDomainEvents(prisonNumber, factor.csipRecord().id, CSIP_UPDATED)
+    verifyDomainEvents(factor.csipRecord().prisonNumber, factor.csipRecord().id, CSIP_UPDATED)
   }
 
   @Test
   fun `200 ok - contributory factor not updated with no change`() {
-    val prisonNumber = givenValidPrisonNumber("F1234UP")
-    val factor = dataSetup(generateCsipRecord(prisonNumber).withReferral()) {
+    val factor = dataSetup(generateCsipRecord().withReferral()) {
       val referral = requireNotNull(it.referral).withContributoryFactor()
       referral.contributoryFactors().first()
     }
@@ -169,7 +166,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
       setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       nomisContext().copy(source = Source.DPS),
     )
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   private fun urlToTest(factorId: UUID) = "/csip-records/referral/contributory-factors/$factorId"

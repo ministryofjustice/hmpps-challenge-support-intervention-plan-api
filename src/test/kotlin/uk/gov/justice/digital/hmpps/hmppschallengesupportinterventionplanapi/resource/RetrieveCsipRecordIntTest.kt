@@ -53,9 +53,8 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = [ROLE_CSIP_UI, ROLE_NOMIS])
   fun `200 ok - returns matching CSIP record`(role: String) {
-    val prisonNumber = givenValidPrisonNumber("G1234CR")
     val record = givenCsipRecord(
-      generateCsipRecord(prisonNumber).withReferral(referralDate = LocalDate.now().minusDays(1)),
+      generateCsipRecord().withReferral(referralDate = LocalDate.now().minusDays(1)),
     )
 
     val response = getCsipRecord(record.id, role)

@@ -98,8 +98,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     updateReferral: UpdateReferral,
     invalid: InvalidRd,
   ) {
-    val prisonNumber = givenValidPrisonNumber("R1234VC")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber).withReferral())
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
 
     val request = updateCsipRecordRequest(logCode = null, referral = updateReferral)
     val response = updateCsipRecordResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -114,8 +113,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - CSIP record not updated does not create audit record`() {
-    val prisonNumber = givenValidPrisonNumber("U1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber, logCode = LOG_CODE).withReferral()) { it }
+    val record = dataSetup(generateCsipRecord(logCode = LOG_CODE).withReferral()) { it }
 
     val request = updateCsipRecordRequest(logCode = LOG_CODE)
     val response = updateCsipRecord(record.id, request)
@@ -133,13 +131,12 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     // verify the latest audit record is the initial insert from the given of the test
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL), csipRequestContext())
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
   fun `200 ok - CSIP record updated log code with source DPS`() {
-    val prisonNumber = givenValidPrisonNumber("U1234DR")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
 
     val request = updateCsipRecordRequest()
     val response = updateCsipRecord(record.id, request)
@@ -156,17 +153,16 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifyAudit(saved, RevisionType.MOD, setOf(RECORD))
-    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
   fun `200 ok - CSIP record updated referral`() {
-    val prisonNumber = givenValidPrisonNumber("U1235DR")
     val incidentType = givenReferenceData(ReferenceDataType.INCIDENT_TYPE, "ATO")
     val incidentLocation = givenReferenceData(ReferenceDataType.INCIDENT_LOCATION, "KIT")
     val refererArea = givenReferenceData(ReferenceDataType.AREA_OF_WORK, "HEA")
 
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral(
         incidentType = { incidentType },
         incidentLocation = { incidentLocation },
@@ -191,13 +187,12 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifyAudit(saved.referral!!, RevisionType.MOD, setOf(REFERRAL))
-    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
   fun `200 ok - CSIP record updates csip and completes referral`() {
-    val prisonNumber = givenValidPrisonNumber("U5463BT")
-    val record = dataSetup(generateCsipRecord(prisonNumber).withReferral()) { it }
+    val record = dataSetup(generateCsipRecord().withReferral()) { it }
     val referral = requireNotNull(record.referral)
 
     val request = updateCsipRecordRequest(
@@ -236,13 +231,12 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifyAudit(record, RevisionType.MOD, setOf(RECORD, REFERRAL))
-    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
   fun `200 ok - Undo referral complete`() {
-    val prisonNumber = givenValidPrisonNumber("U1234UC")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withCompletedReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withCompletedReferral() }
     val referral = requireNotNull(record.referral)
 
     val request = updateCsipRecordRequest(
@@ -260,7 +254,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.id)
 
     verifyAudit(saved.referral!!, RevisionType.MOD, setOf(REFERRAL))
-    verifyDomainEvents(prisonNumber, saved.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   private fun updateCsipRecordResponseSpec(

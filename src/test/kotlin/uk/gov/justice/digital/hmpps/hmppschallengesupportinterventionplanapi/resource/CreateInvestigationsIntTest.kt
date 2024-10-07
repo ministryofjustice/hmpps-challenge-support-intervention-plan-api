@@ -65,8 +65,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - CSIP record missing a referral`() {
-    val prisonNumber = givenValidPrisonNumber("I3234MR")
-    val record = givenCsipRecord(generateCsipRecord(prisonNumber))
+    val record = givenCsipRecord(generateCsipRecord())
 
     val response = createInvestigationResponseSpec(record.id, createInvestigationRequest())
       .errorResponse(HttpStatus.BAD_REQUEST)
@@ -111,8 +110,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `409 conflict - Investigation already exists`() {
-    val prisonNumber = givenValidPrisonNumber("I1234AE")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) {
+    val record = dataSetup(generateCsipRecord()) {
       it.withReferral()
       requireNotNull(it.referral).withInvestigation()
       it
@@ -132,8 +130,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
   @Test
   fun `201 created - create investigation with interviews via DPS UI`() {
-    val prisonNumber = givenValidPrisonNumber("I1234WI")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
     val request = createInvestigationRequest(interviews = listOf(createInterviewRequest(), createInterviewRequest()))
 
     val response = createInvestigation(record.id, request)
@@ -141,7 +138,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
     val investigation = getInvestigation(record.id)
     verifyAudit(investigation, RevisionType.ADD, setOf(CsipComponent.INVESTIGATION, INTERVIEW))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun Investigation.verifyAgainst(request: CreateInvestigationRequest) {

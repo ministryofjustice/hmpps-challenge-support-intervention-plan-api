@@ -83,8 +83,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - plan does not exist`() {
-    val prisonNumber = givenValidPrisonNumber("P1234DS")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it }
+    val record = dataSetup(generateCsipRecord()) { it }
     val request = planRequest()
 
     val response = updatePlanResponseSpec(record.id, request).errorResponse(HttpStatus.BAD_REQUEST)
@@ -99,8 +98,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - no changes made to plan`() {
-    val prisonNumber = givenValidPrisonNumber("P1234NC")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral().withPlan() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral().withPlan() }
 
     val request = planRequest()
 
@@ -115,13 +113,12 @@ class UpdatePlanIntTest : IntegrationTestBase() {
       nomisContext().copy(source = Source.DPS),
     )
 
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
   fun `200 ok - update plan`() {
-    val prisonNumber = givenValidPrisonNumber("P1234UP")
-    val record = dataSetup(generateCsipRecord(prisonNumber)) { it.withReferral().withPlan() }
+    val record = dataSetup(generateCsipRecord()) { it.withReferral().withPlan() }
 
     val request = planRequest(
       "A new case manager",
@@ -133,7 +130,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
     verifyAudit(plan, RevisionType.MOD, setOf(CsipComponent.PLAN))
-    verifyDomainEvents(prisonNumber, record.id, CSIP_UPDATED)
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
   private fun Plan.verifyAgainst(request: UpdatePlanRequest) {

@@ -1,24 +1,24 @@
 erDiagram
-    csip_record ||--|| referral : "was created by"
-    csip_record ||--o{ audit_event : "changes tracked by"
-    referral ||--o{ contributory_factor : "has contributory factors"
-    referral ||--o| investigation : "optionally has an"
-    referral ||--o| safer_custody_screening_outcome : "optionally has a"
-    investigation ||--o{ interview : "can involve interviews with"
-    referral ||--o| decisions_and_actions : "optionally has"
-    csip_record ||--o| plan : "if decision is progress to CSIP"
-    plan ||--o{ identified_need : "has one or more"
-    plan ||--o{ review : "regularly reviewed"
-    review ||--o{ attendee : "attended by"
-    referral }o--|| reference_data : "incident categorised by"
-    referral }o--|| reference_data : "incident occurred in"
-    referral }o--|| reference_data : "referer categorised by"
-    referral }o--|| reference_data : "referred person was involved in the indecent as"
-    safer_custody_screening_outcome }o--|| reference_data : "outcome categorised by"
-    interview }o--|| reference_data : "role of interviewee"
-    decisions_and_actions }o--|| reference_data : "outcome categorised by"
-    decisions_and_actions }o--|| reference_data : "role of person signing off the referral decision"
-    contributory_factor }o--|| reference_data : "categorised by"
+    csip_record ||--|| referral: "was created by"
+    csip_record ||--o{ audit_event: "changes tracked by"
+    referral ||--o{ contributory_factor: "has contributory factors"
+    referral ||--o| investigation: "optionally has an"
+    referral ||--o| safer_custody_screening_outcome: "optionally has a"
+    investigation ||--o{ interview: "can involve interviews with"
+    referral ||--o| decisions_and_actions: "optionally has"
+    csip_record ||--o| plan: "if decision is progress to CSIP"
+    plan ||--o{ identified_need: "has one or more"
+    plan ||--o{ review: "regularly reviewed"
+    review ||--o{ attendee: "attended by"
+    referral }o--|| reference_data: "incident categorised by"
+    referral }o--|| reference_data: "incident occurred in"
+    referral }o--|| reference_data: "referer categorised by"
+    referral }o--|| reference_data: "referred person was involved in the indecent as"
+    safer_custody_screening_outcome }o--|| reference_data: "outcome categorised by"
+    interview }o--|| reference_data: "role of interviewee"
+    decisions_and_actions }o--|| reference_data: "outcome categorised by"
+    decisions_and_actions }o--|| reference_data: "role of person signing off the referral decision"
+    contributory_factor }o--|| reference_data: "categorised by"
 
     csip_record {
         uuid record_id PK "not null unique. Mapped to OFFENDER_CSIP_REPORTS"
@@ -235,4 +235,13 @@ erDiagram
         varchar(64) last_modified_by
         timestamp deactivated_at
         varchar(64) deactivated_by
+    }
+
+    person_location {
+        varchar(10) prison_number PK "not null"
+        varchar(64) first_name
+        varchar(64) last_name
+        varchar(16) status "not null"
+        varchar(16) prison_code
+        varchar(64) cell_location
     }
