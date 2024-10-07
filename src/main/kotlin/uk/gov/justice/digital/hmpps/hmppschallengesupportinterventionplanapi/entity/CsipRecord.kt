@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PlanRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.PrisonNumberChangeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralDateRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.ReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.asCompletable
@@ -45,7 +44,7 @@ class CsipRecord(
   @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "prison_number")
-  val personLocation: PersonLocation,
+  val personSummary: PersonSummary,
 
   @Audited(withModifiedFlag = false)
   @Column(length = 6, updatable = false)
@@ -67,7 +66,7 @@ class CsipRecord(
 
   @NotAudited
   @Column(name = "prison_number", insertable = false, updatable = false)
-  val prisonNumber: String = personLocation.prisonNumber
+  val prisonNumber: String = personSummary.prisonNumber
 
   @Column(length = 10)
   var logCode: String? = logCode
@@ -100,9 +99,6 @@ class CsipRecord(
 
   fun update(request: CsipRequest): CsipRecord = apply {
     logCode = request.logCode
-    if (request is PrisonNumberChangeRequest) {
-      // prisonNumber = request.prisonNumber // TODO: update to reference new person location
-    }
     if (request is LegacyIdAware) {
       legacyId = request.legacyId
     }

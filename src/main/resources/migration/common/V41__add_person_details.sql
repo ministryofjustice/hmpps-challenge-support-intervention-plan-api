@@ -1,4 +1,4 @@
-create table if not exists person_location
+create table if not exists person_summary
 (
     prison_number varchar(10) primary key not null,
     first_name    varchar(64)             not null,
@@ -9,7 +9,7 @@ create table if not exists person_location
     version       int                     not null
 );
 
-create table if not exists person_location_audit
+create table if not exists person_summary_audit
 (
     rev_id                 bigint      not null references audit_revision (id),
     rev_type               smallint    not null,
@@ -28,11 +28,11 @@ create table if not exists person_location_audit
     primary key (rev_id, prison_number)
 );
 
-with csip_person as (select prison_number, '', '', 'ACTIVE IN', null, null from csip_record group by prison_number)
+with csip_person as (select prison_number, '', '', 'ACTIVE IN', null, null, 1 from csip_record group by prison_number)
 insert
-into person_location
+into person_summary (prison_number, first_name, last_name, status, prison_code, cell_location, version)
 select *
 from csip_person;
 
 alter table csip_record
-    add constraint fk_csip_prison_number foreign key (prison_number) references person_location (prison_number);
+    add constraint fk_csip_prison_number foreign key (prison_number) references person_summary (prison_number);

@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-class PersonLocation(
+class PersonSummary(
   @Id
   val prisonNumber: String,
   firstName: String,
@@ -43,6 +43,6 @@ class PersonLocation(
   }
 }
 
-fun PrisonerDto.toPersonLocation() = PersonLocation(prisonerNumber, firstName, lastName, status, prisonId, cellLocation)
+fun PrisonerDto.toPersonSummary() = PersonSummary(prisonerNumber, firstName, lastName, status, prisonId, cellLocation)
 
-interface PersonLocationRepository : JpaRepository<PersonLocation, String>
+interface PersonSummaryRepository : JpaRepository<PersonSummary, String>

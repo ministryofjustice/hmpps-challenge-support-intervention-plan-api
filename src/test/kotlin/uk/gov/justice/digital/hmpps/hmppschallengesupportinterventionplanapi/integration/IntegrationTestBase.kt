@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Interview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Investigation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocationRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
@@ -133,7 +133,7 @@ abstract class IntegrationTestBase {
   lateinit var referenceDataRepository: ReferenceDataRepository
 
   @Autowired
-  lateinit var personLocationRepository: PersonLocationRepository
+  lateinit var personSummaryRepository: PersonSummaryRepository
 
   @Autowired
   lateinit var transactionTemplate: TransactionTemplate
@@ -177,7 +177,7 @@ abstract class IntegrationTestBase {
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
     switchEventPublish(false)
     val t = transactionTemplate.execute {
-      personLocationRepository.saveAndFlush(csipRecord.personLocation)
+      personSummaryRepository.saveAndFlush(csipRecord.personSummary)
       val res = code(csipRecord)
       csipRecordRepository.saveAndRefresh(csipRecord)
       res
@@ -267,7 +267,7 @@ abstract class IntegrationTestBase {
   }
 
   fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = transactionTemplate.execute {
-    personLocationRepository.saveAndFlush(csipRecord.personLocation)
+    personSummaryRepository.saveAndFlush(csipRecord.personSummary)
     csipRecordRepository.save(csipRecord)
   }!!
 

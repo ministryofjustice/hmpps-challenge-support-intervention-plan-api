@@ -9,25 +9,26 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonLocation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonLocation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.DomainEventsListener.Companion.PRISONER_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PersonReference.Companion.withPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PrisonerUpdatedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.Duration.ofSeconds
 import java.time.ZonedDateTime
 
-class PersonLocationUpdateIntTest : IntegrationTestBase() {
+class PersonSummaryUpdateIntTest : IntegrationTestBase() {
   @Test
   fun `message ignored if category not of interest`() {
-    val personLocation = personLocationRepository.save(prisoner().toPersonLocation())
+    val personSummary = personSummaryRepository.save(prisoner().toPersonSummary())
     val updatedPrisoner = prisoner(
-      prisonerNumber = personLocation.prisonNumber,
+      prisonerNumber = personSummary.prisonNumber,
       firstName = "Update-First",
       lastName = "Update-Last",
       status = "INACTIVE OUT",
@@ -38,7 +39,7 @@ class PersonLocationUpdateIntTest : IntegrationTestBase() {
 
     sendPersonChangedEvent(
       personChangedEvent(
-        personLocation.prisonNumber,
+        personSummary.prisonNumber,
         setOf(
           "IDENTIFIERS",
           "ALERTS",
@@ -52,16 +53,35 @@ class PersonLocationUpdateIntTest : IntegrationTestBase() {
     )
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
-    val saved = requireNotNull(personLocationRepository.findByIdOrNull(personLocation.prisonNumber))
-    saved.verifyAgainstOther(personLocation)
+    val saved = requireNotNull(personSummaryRepository.findByIdOrNull(personSummary.prisonNumber))
+    saved.verifyAgainstOther(personSummary)
+  }
+
+  @Test
+  fun `message ignored if prison number not of interest`() {
+    val prisonNumber = prisonNumber()
+    assertThat(personSummaryRepository.findByIdOrNull(prisonNumber)).isNull()
+    val updatedPrisoner = prisoner(
+      prisonerNumber = prisonNumber,
+      firstName = "Update-First",
+      lastName = "Update-Last",
+      status = "INACTIVE OUT",
+      prisonId = null,
+      cellLocation = null,
+    )
+
+    sendPersonChangedEvent(personChangedEvent(updatedPrisoner.prisonerNumber, setOf("PERSONAL_DETAILS")))
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    assertThat(personSummaryRepository.findByIdOrNull(prisonNumber)).isNull()
   }
 
   @ParameterizedTest
   @ValueSource(strings = ["PERSONAL_DETAILS", "STATUS", "LOCATION"])
-  fun `message with matching category causes person location details to be updated`(changeCategory: String) {
-    val personLocation = personLocationRepository.save(prisoner().toPersonLocation())
+  fun `message with matching category causes person summary details to be updated`(changeCategory: String) {
+    val personSummary = personSummaryRepository.save(prisoner().toPersonSummary())
     val updatedPrisoner = prisoner(
-      prisonerNumber = personLocation.prisonNumber,
+      prisonerNumber = personSummary.prisonNumber,
       firstName = "Update-First",
       lastName = "Update-Last",
       status = "INACTIVE OUT",
@@ -70,10 +90,10 @@ class PersonLocationUpdateIntTest : IntegrationTestBase() {
     )
     prisonerSearch.stubGetPrisoner(updatedPrisoner)
 
-    sendPersonChangedEvent(personChangedEvent(personLocation.prisonNumber, setOf(changeCategory)))
+    sendPersonChangedEvent(personChangedEvent(personSummary.prisonNumber, setOf(changeCategory)))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
-    val saved = requireNotNull(personLocationRepository.findByIdOrNull(personLocation.prisonNumber))
+    val saved = requireNotNull(personSummaryRepository.findByIdOrNull(personSummary.prisonNumber))
     saved.verifyAgainst(updatedPrisoner)
   }
 }
@@ -94,7 +114,7 @@ private fun personChangedEvent(
   withPrisonNumber(prisonNumber),
 )
 
-private fun PersonLocation.verifyAgainstOther(other: PersonLocation) {
+private fun PersonSummary.verifyAgainstOther(other: PersonSummary) {
   assertThat(prisonNumber).isEqualTo(other.prisonNumber)
   assertThat(firstName).isEqualTo(other.firstName)
   assertThat(lastName).isEqualTo(other.lastName)
