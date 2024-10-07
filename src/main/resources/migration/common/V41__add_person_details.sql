@@ -28,9 +28,9 @@ create table if not exists person_location_audit
     primary key (rev_id, prison_number)
 );
 
-with csip_person as (select prison_number, '', '', 'ACTIVE IN', null, null from csip_record group by prison_number)
+with csip_person as (select prison_number, '', '', 'ACTIVE IN', null, null, 1 from csip_record group by prison_number)
 insert
-into person_location
+into person_location (prison_number, first_name, last_name, status, prison_code, cell_location, version)
 select *
 from csip_person;
 

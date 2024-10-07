@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PrisonerUpdatedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.Duration.ofSeconds
@@ -54,6 +55,25 @@ class PersonLocationUpdateIntTest : IntegrationTestBase() {
     await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
     val saved = requireNotNull(personLocationRepository.findByIdOrNull(personLocation.prisonNumber))
     saved.verifyAgainstOther(personLocation)
+  }
+
+  @Test
+  fun `message ignored if prison number not of interest`() {
+    val prisonNumber = prisonNumber()
+    assertThat(personLocationRepository.findByIdOrNull(prisonNumber)).isNull()
+    val updatedPrisoner = prisoner(
+      prisonerNumber = prisonNumber,
+      firstName = "Update-First",
+      lastName = "Update-Last",
+      status = "INACTIVE OUT",
+      prisonId = null,
+      cellLocation = null,
+    )
+
+    sendPersonChangedEvent(personChangedEvent(updatedPrisoner.prisonerNumber, setOf("PERSONAL_DETAILS")))
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    assertThat(personLocationRepository.findByIdOrNull(prisonNumber)).isNull()
   }
 
   @ParameterizedTest
