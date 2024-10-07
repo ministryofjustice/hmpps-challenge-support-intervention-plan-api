@@ -37,6 +37,12 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: hmppseventtopic
+      subscribeFilter: '{"eventType":["person.csip-record.created","person.csip-record.updated","person.csip-record.deleted"]}'
+    hmppsdomaineventsqueue:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      subscribeTopicId: hmppseventtopic
+      subscribeFilter: '{"eventType":["prisoner-offender-search.prisoner.updated"]}'
   topics:
     hmppseventtopic:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

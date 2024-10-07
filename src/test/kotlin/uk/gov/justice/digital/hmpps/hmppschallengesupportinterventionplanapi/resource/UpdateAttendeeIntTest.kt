@@ -133,7 +133,7 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
       setOf(RECORD, PLAN, REVIEW, ATTENDEE),
       nomisContext().copy(source = Source.DPS),
     )
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   private fun urlToTest(attendeeId: UUID) = "/csip-records/plan/reviews/attendees/$attendeeId"

@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PrisonerUpdatedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.PostgresContainer
@@ -96,7 +97,9 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.MissingTopicException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import uk.gov.justice.hmpps.sqs.publish
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -138,9 +141,22 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var entityManager: EntityManager
 
-  internal val hmppsEventsQueue by lazy {
+  internal val hmppsEventsTestQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
       ?: throw MissingQueueException("hmppseventtestqueue queue not found")
+  }
+
+  internal val hmppsDomainEventsQueue by lazy {
+    hmppsQueueService.findByQueueId("hmppsdomaineventsqueue")
+      ?: throw MissingQueueException("hmppsdomaineventsqueue queue not found")
+  }
+
+  val domainEventsTopic by lazy {
+    hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingTopicException("hmppseventtopic not found")
+  }
+
+  internal fun sendPersonChangedEvent(event: HmppsDomainEvent<PrisonerUpdatedInformation>) {
+    domainEventsTopic.publish(event.eventType, objectMapper.writeValueAsString(event))
   }
 
   internal fun HmppsQueue.countAllMessagesOnQueue() =
@@ -177,8 +193,8 @@ abstract class IntegrationTestBase {
     expectedCount: Int = 1,
     source: Source = DPS,
   ) {
-    await untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
-    val allEvents = hmppsEventsQueue.receiveDomainEventsOnQueue(expectedCount)
+    await untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
+    val allEvents = hmppsEventsTestQueue.receiveDomainEventsOnQueue(expectedCount)
     allEvents.forEach { event ->
       with(event) {
         val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == event.eventType })
@@ -487,7 +503,9 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun `clear queues`() {
-    hmppsEventsQueue.sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).build()).get()
+    hmppsEventsTestQueue.sqsClient.purgeQueue(
+      PurgeQueueRequest.builder().queueUrl(hmppsEventsTestQueue.queueUrl).build(),
+    ).get()
   }
 
   internal fun setAuthorisation(

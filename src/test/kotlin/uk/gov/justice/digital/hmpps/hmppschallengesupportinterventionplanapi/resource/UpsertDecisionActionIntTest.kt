@@ -250,7 +250,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       nomisContext().copy(source = DPS),
     )
 
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test

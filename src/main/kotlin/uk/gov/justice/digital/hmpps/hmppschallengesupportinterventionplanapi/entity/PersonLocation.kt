@@ -33,6 +33,14 @@ class PersonLocation(
 
   @Version
   val version: Int? = null
+
+  fun update(firstName: String, lastName: String, status: String, prisonCode: String?, cellLocation: String?) {
+    this.firstName = firstName
+    this.lastName = lastName
+    this.status = status
+    this.prisonCode = prisonCode
+    this.cellLocation = cellLocation
+  }
 }
 
 fun PrisonerDto.toPersonLocation() = PersonLocation(prisonerNumber, firstName, lastName, status, prisonId, cellLocation)

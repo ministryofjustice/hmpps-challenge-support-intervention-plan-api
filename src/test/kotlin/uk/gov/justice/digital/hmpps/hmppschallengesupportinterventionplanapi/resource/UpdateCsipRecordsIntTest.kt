@@ -131,7 +131,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
     // verify the latest audit record is the initial insert from the given of the test
     verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL), csipRequestContext())
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test

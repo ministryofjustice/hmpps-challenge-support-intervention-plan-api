@@ -138,7 +138,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
     val response = updateInvestigation(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test

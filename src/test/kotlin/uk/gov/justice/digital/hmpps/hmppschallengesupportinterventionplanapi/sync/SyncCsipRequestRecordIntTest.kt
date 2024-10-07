@@ -353,7 +353,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
       validateEntityWithContext = false,
     )
 
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
@@ -487,7 +487,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     val attendees = attendeeRepository.findAllById(attendeeRequests.map { it.id })
     attendees.forEach { i -> i.verifyAgainst(requireNotNull(attendeeRequests.find { it.legacyId == i.legacyId })) }
 
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test
@@ -563,7 +563,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     assertThat(response.mappings.single { it.component == ATTENDEE })
       .isEqualTo(ResponseMapping(ATTENDEE, attendeeRequest.legacyId, attendee.id))
 
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   @Test

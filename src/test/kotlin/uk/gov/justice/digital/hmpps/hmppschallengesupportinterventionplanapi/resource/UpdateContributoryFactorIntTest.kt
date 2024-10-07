@@ -166,7 +166,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
       setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR),
       nomisContext().copy(source = Source.DPS),
     )
-    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
 
   private fun urlToTest(factorId: UUID) = "/csip-records/referral/contributory-factors/$factorId"
