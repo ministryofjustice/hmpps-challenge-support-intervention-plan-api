@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ATTENDEE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
@@ -717,6 +718,19 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         userDisplayName = SYSTEM_DISPLAY_NAME,
       ),
     )
+  }
+
+  @Test
+  fun `204 no content - delete csip record without deleting person summary`() {
+    val personSummary = prisoner().toPersonSummary()
+    dataSetup(generateCsipRecord(personSummary)) { it.withCompletedReferral() }
+    val toDelete = dataSetup(generateCsipRecord(personSummary)) { it.withReferral() }
+
+    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null, null)
+    deleteCsip(toDelete.id, legacyActioned)
+
+    verifyDoesNotExist(csipRecordRepository.findById(toDelete.id)) { IllegalStateException("CSIP record not deleted") }
+    assertThat(personSummaryRepository.findByIdOrNull(toDelete.prisonNumber)).isNotNull()
   }
 
   private fun urlToTest() = "/sync/csip-records"
