@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.UpdatePlanRequest
 import java.time.LocalDate
 
 class UpdatePlanRequestTest : RequestValidationTest() {
@@ -25,7 +26,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
     assertSingleValidationError(
       validator.validate(request),
       "caseManager",
-      "Case Manager name must be <= 100 characters",
+      "Case manager name must be <= 100 characters",
     )
   }
 
@@ -39,7 +40,7 @@ class UpdatePlanRequestTest : RequestValidationTest() {
     assertSingleValidationError(
       validator.validate(request),
       "reasonForPlan",
-      "Reason for Plan must be <= 240 characters",
+      "Reason for plan must be <= 240 characters",
     )
   }
 }

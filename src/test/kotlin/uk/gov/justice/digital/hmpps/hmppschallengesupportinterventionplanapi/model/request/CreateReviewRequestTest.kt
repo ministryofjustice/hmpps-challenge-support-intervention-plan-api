@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateReviewRequest
 
 class CreateReviewRequestTest : RequestValidationTest() {
   @Test
@@ -33,8 +34,8 @@ class CreateReviewRequestTest : RequestValidationTest() {
     )
     assertValidationErrors(
       validator.validate(request),
-      Pair("recordedBy", "Recorded By username must be <= 64 characters"),
-      Pair("recordedByDisplayName", "Recorded By display name must be <= 255 characters"),
+      Pair("recordedBy", "Recorded by username must be <= 64 characters"),
+      Pair("recordedByDisplayName", "Recorded by display name must be <= 255 characters"),
       Pair("summary", "Summary must be <= 4000 characters"),
     )
   }

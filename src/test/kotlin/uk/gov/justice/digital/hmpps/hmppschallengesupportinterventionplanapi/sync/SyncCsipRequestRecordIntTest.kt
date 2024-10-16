@@ -18,7 +18,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.toPersonSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.AttendeeRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.IdentifiedNeedRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.ReviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.ContributoryFactorRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.InterviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.ATTENDEE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
@@ -33,13 +39,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.AttendeeRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ContributoryFactorRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.IdentifiedNeedRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.InterviewRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.badSyncRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.personSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncAttendeeRequest
@@ -131,7 +131,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         |Area code must be <= 12 characters
         |Attendee name must be <= 100 characters
         |Attendee role must be <= 50 characters
-        |Case manager must be <= 100 characters
+        |Case manager name must be <= 100 characters
         |Completed by display name must be <= 255 characters
         |Completed by username must be <= 64 characters
         |Conclusion must be <= 4000 characters
@@ -151,7 +151,7 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
         |Known reasons must be <= 4000 characters
         |Log code must be <= 10 characters
         |Name or names must be <= 1000 characters
-        |Next step must be <= 4000 characters
+        |Next steps must be <= 4000 characters
         |Occurrence reason must be <= 4000 characters
         |Other information must be <= 4000 characters
         |Person's trigger must be <= 4000 characters

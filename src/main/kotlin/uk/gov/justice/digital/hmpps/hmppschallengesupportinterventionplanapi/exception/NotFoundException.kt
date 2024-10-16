@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception
 
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
 import java.util.UUID
 
 data class NotFoundException(val resource: String, val identifier: String) : RuntimeException("$resource not found")

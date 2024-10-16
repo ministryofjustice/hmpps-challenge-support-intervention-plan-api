@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.dto.UserDetailsDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.ManageUsersServer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
@@ -37,7 +36,7 @@ class ManageUsersClientTest {
     val result = client.getUserDetails(TEST_USER)
 
     assertThat(result!!).isEqualTo(
-      UserDetailsDto(
+      UserDetails(
         TEST_USER,
         true,
         TEST_USER_NAME,

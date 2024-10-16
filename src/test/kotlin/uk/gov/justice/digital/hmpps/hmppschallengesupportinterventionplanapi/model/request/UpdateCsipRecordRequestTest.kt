@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpdateReferralRequest
 import java.time.LocalDate
 
 class UpdateCsipRecordRequestTest : RequestValidationTest() {
@@ -10,7 +11,7 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
   fun `valid request`() {
     val request = UpdateCsipRecordRequest(
       logCode = "menandri",
-      UpdateReferral(
+      UpdateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = null,
         incidentTypeCode = "wisi",
@@ -44,7 +45,7 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
   fun `validation fails if size constraints are not met`() {
     val request = UpdateCsipRecordRequest(
       logCode = "n".repeat(11),
-      UpdateReferral(
+      UpdateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = null,
         incidentTypeCode = "n".repeat(13),
@@ -81,7 +82,7 @@ class UpdateCsipRecordRequestTest : RequestValidationTest() {
   fun `valid request with incident fields null`() {
     val request = UpdateCsipRecordRequest(
       null,
-      UpdateReferral(
+      UpdateReferralRequest(
         incidentDate = LocalDate.now(),
         incidentTime = null,
         incidentTypeCode = "wisi",

@@ -13,9 +13,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipInformation
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.DomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.HmppsDomainEvent
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.EntityEventService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.DomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.DomainEventPublisher
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PersonReference
 import java.time.LocalDateTime
 import java.util.UUID
 

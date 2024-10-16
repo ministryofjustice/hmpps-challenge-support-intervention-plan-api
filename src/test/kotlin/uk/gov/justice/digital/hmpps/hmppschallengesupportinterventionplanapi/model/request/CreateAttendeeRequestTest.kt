@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateAttendeeRequest
 
 class CreateAttendeeRequestTest : RequestValidationTest() {
   @Test
@@ -19,7 +20,7 @@ class CreateAttendeeRequestTest : RequestValidationTest() {
   @Test
   fun `role must be no more than 100 characters`() {
     val request = createRequest(role = "n".repeat(51))
-    assertSingleValidationError(validator.validate(request), "role", "Attendee Role must be <= 50 characters")
+    assertSingleValidationError(validator.validate(request), "role", "Attendee role must be <= 50 characters")
   }
 
   @Test

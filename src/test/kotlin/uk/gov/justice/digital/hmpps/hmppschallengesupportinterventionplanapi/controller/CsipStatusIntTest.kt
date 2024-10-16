@@ -1,0 +1,268 @@
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CsipRecordService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
+import java.time.LocalDate
+
+class CsipStatusIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var service: CsipRecordService
+
+  @Test
+  fun `csip status - CsipClosed`() {
+    val record = dataSetup(generateCsipRecord()) { csip ->
+      csip.withCompletedReferral().withPlan()
+      val plan = requireNotNull(csip.plan)
+      plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
+        .withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      csip
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_CLOSED)
+  }
+
+  @Test
+  fun `csip status - CsipOpen`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral().withPlan()
+      val plan = requireNotNull(it.plan)
+      plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
+        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP))
+      it
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
+  }
+
+  @Test
+  fun `csip status - AwaitingDecision`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+        .withInvestigation()
+      it
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.AWAITING_DECISION)
+  }
+
+  @Test
+  fun `csip status - AcctSupport 1`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "ACC"))
+        .withInvestigation()
+      it
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.ACCT_SUPPORT)
+  }
+
+  @Test
+  fun `csip status - AcctSupport 2`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+        .withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "ACC"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.ACCT_SUPPORT)
+  }
+
+  @Test
+  fun `csip status - PlanPending 1`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.PLAN_PENDING)
+  }
+
+  @Test
+  fun `csip status - PlanPending 2`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.PLAN_PENDING)
+  }
+
+  @Test
+  fun `csip status - InvestigationPending`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.INVESTIGATION_PENDING)
+  }
+
+  @Test
+  fun `csip status - NoFurtherAction 1`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"))
+        .withInvestigation()
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.NO_FURTHER_ACTION)
+  }
+
+  @Test
+  fun `csip status - NoFurtherAction 2`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+        .withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.NO_FURTHER_ACTION)
+  }
+
+  @Test
+  fun `csip status - ReferralSubmitted`() {
+    val record = dataSetup(generateCsipRecord()) { it.withCompletedReferral() }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+  }
+
+  @Test
+  fun `csip status - ReferralPending`() {
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
+  }
+
+  @Test
+  fun `test updates update status`() {
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
+
+    var saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
+
+    record.setReferralComplete()
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+
+    record.addSaferCustodyScreeningOutcome()
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.INVESTIGATION_PENDING)
+
+    record.addInvestigation()
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.AWAITING_DECISION)
+
+    record.changeDecision("ACC")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.ACCT_SUPPORT)
+
+    record.changeDecision("WIN")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.SUPPORT_OUTSIDE_CSIP)
+
+    record.changeDecision("NFA")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.NO_FURTHER_ACTION)
+
+    record.changeScreeningOutcome("CUR")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.PLAN_PENDING)
+
+    record.addPlan()
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
+
+    record.addReview(ReviewAction.CSIP_UPDATED, ReviewAction.CASE_NOTE, ReviewAction.RESPONSIBLE_PEOPLE_INFORMED)
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_OPEN)
+
+    record.addReview(ReviewAction.CASE_NOTE, ReviewAction.CLOSE_CSIP)
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status).isEqualTo(CsipStatus.CSIP_CLOSED)
+  }
+
+  private fun CsipRecord.setReferralComplete() = transactionTemplate.execute {
+    val csip = csipRecordRepository.getCsipRecord(id)
+    requireNotNull(csip.referral).apply {
+      set(::referralComplete, true)
+      set(::referralCompletedDate, LocalDate.now())
+      set(::referralCompletedBy, "referralCompletedBy")
+      set(::referralCompletedByDisplayName, "referralCompletedByDisplayName")
+    }
+  }
+
+  private fun CsipRecord.addSaferCustodyScreeningOutcome() = transactionTemplate.execute {
+    val csip = csipRecordRepository.getCsipRecord(id)
+    requireNotNull(csip.referral).withSaferCustodyScreeningOutcome(
+      outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"),
+    )
+  }
+
+  private fun CsipRecord.addInvestigation() = transactionTemplate.execute {
+    val csip = csipRecordRepository.getCsipRecord(id)
+    requireNotNull(csip.referral).withInvestigation()
+  }
+
+  private fun CsipRecord.changeDecision(code: String) = transactionTemplate.execute {
+    val csip = csipRecordRepository.getCsipRecord(id)
+    if (csip.referral?.decisionAndActions == null) {
+      requireNotNull(csip.referral).withDecisionAndActions()
+    }
+    requireNotNull(csip.referral!!.decisionAndActions).apply {
+      set(::conclusion, "A simple conclusion")
+      set(::outcome, givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, code))
+    }
+  }
+
+  private fun CsipRecord.changeScreeningOutcome(code: String) = transactionTemplate.execute {
+    val csip = csipRecordRepository.getCsipRecord(id)
+    requireNotNull(csip.referral!!.saferCustodyScreeningOutcome).apply {
+      set(::outcome, givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, code))
+    }
+  }
+
+  private fun CsipRecord.addPlan() = transactionTemplate.execute {
+    csipRecordRepository.getCsipRecord(id).withPlan()
+  }
+
+  private fun CsipRecord.addReview(vararg actions: ReviewAction) = transactionTemplate.execute {
+    val csip = csipRecordRepository.getCsipRecord(id)
+    requireNotNull(csip.plan).withReview(actions = buildSet { addAll(actions) })
+  }
+}

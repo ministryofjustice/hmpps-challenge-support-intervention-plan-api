@@ -2,6 +2,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ev
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.AdditionalInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.DomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PersonReference
 import java.time.LocalDateTime
 import java.util.UUID
 

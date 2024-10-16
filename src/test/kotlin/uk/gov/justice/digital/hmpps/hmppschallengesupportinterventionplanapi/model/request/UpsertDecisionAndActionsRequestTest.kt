@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertDecisionAndActionsRequest
 
 class UpsertDecisionAndActionsRequestTest : RequestValidationTest() {
   @Test
@@ -36,12 +37,12 @@ class UpsertDecisionAndActionsRequestTest : RequestValidationTest() {
     assertValidationErrors(
       validator.validate(request),
       Pair("conclusion", "Conclusion must be <= 4000 characters"),
-      Pair("outcomeTypeCode", "Outcome Type code must be <= 12 characters"),
-      Pair("signedOffByRoleCode", "Outcome Sign Off By Role code must be <= 12 characters"),
-      Pair("recordedBy", "Outcome Recorded By username must be <= 64 characters"),
-      Pair("recordedByDisplayName", "Outcome Recorded By display name must be <= 255 characters"),
-      Pair("nextSteps", "Next Step must be <= 4000 characters"),
-      Pair("actionOther", "Action Other must be <= 4000 characters"),
+      Pair("outcomeTypeCode", "Decision outcome code must be <= 12 characters"),
+      Pair("signedOffByRoleCode", "Signed off by role code must be <= 12 characters"),
+      Pair("recordedBy", "Recorded by username must be <= 64 characters"),
+      Pair("recordedByDisplayName", "Recorded by display name must be <= 255 characters"),
+      Pair("nextSteps", "Next steps must be <= 4000 characters"),
+      Pair("actionOther", "Action other must be <= 4000 characters"),
     )
   }
 }

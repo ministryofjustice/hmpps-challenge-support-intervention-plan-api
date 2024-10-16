@@ -2,22 +2,23 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.AttendeeRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.ReviewRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.getAttendee
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.getReview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PublishCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MissingPlanException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyCsipRecordExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Attendee
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.Review
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateAttendeeRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateReviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.AttendeeRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.CsipRecordRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.ReviewRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getAttendee
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.repository.getReview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Review
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateAttendeeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.UpdateAttendeeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.UpdateReviewRequest
 import java.util.UUID
 
 @Transactional
@@ -46,36 +47,3 @@ class ReviewService(
   fun updateAttendee(attendeeUuid: UUID, request: UpdateAttendeeRequest): Attendee =
     attendeeRepository.getAttendee(attendeeUuid).update(request).toModel()
 }
-
-fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review.toModel() = Review(
-  id,
-  reviewSequence,
-  reviewDate,
-  recordedBy,
-  recordedByDisplayName,
-  nextReviewDate,
-  csipClosedDate,
-  summary,
-  actions,
-  createdAt,
-  createdBy,
-  createdByDisplayName,
-  lastModifiedAt,
-  lastModifiedBy,
-  lastModifiedByDisplayName,
-  attendees().map { it.toModel() },
-)
-
-fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee.toModel() = Attendee(
-  id,
-  name,
-  role,
-  attended,
-  contribution,
-  createdAt,
-  createdBy,
-  createdByDisplayName,
-  lastModifiedAt,
-  lastModifiedBy,
-  lastModifiedByDisplayName,
-)

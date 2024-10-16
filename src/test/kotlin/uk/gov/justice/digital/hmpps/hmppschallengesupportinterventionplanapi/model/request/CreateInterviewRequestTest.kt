@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInterviewRequest
 import java.time.LocalDate
 
 class CreateInterviewRequestTest : RequestValidationTest() {
@@ -26,9 +27,9 @@ class CreateInterviewRequestTest : RequestValidationTest() {
     )
     assertValidationErrors(
       validator.validate(request),
-      Pair("interviewText", "Interview Text must be <= 4000 characters"),
+      Pair("interviewText", "Interview text must be <= 4000 characters"),
       Pair("interviewee", "Interviewee name must be <= 100 characters"),
-      Pair("intervieweeRoleCode", "Interviewee Role Code must be <= 12 characters"),
+      Pair("intervieweeRoleCode", "Interviewee role code must be <= 12 characters"),
     )
   }
 }
