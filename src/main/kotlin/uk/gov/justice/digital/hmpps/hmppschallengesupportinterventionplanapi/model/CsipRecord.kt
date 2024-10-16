@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Referral
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -24,7 +25,6 @@ data class CsipRecord(
   val logCode: String?,
 
   @Schema(description = "The date and time the CSIP Record was created", example = "2021-09-27T14:19:25")
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   val createdAt: LocalDateTime,
 
   @Schema(description = "The username of the user who created the CSIP Record", example = "USER1234")
@@ -34,7 +34,6 @@ data class CsipRecord(
   val createdByDisplayName: String,
 
   @Schema(description = "The date and time the CSIP Record was last modified", example = "2022-07-15T15:24:56")
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   val lastModifiedAt: LocalDateTime?,
 
   @Schema(description = "The username of the user who last modified the CSIP Record", example = "USER1234")

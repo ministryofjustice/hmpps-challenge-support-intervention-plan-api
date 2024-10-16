@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.dto.UserDetailsDto
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.UserDetails
 import java.util.UUID
 
 internal const val TEST_USER = "TEST_USER"
@@ -33,7 +33,7 @@ class ManageUsersServer : WireMockServer(8111) {
             .withHeader("Content-Type", "application/json")
             .withBody(
               mapper.writeValueAsString(
-                UserDetailsDto(
+                UserDetails(
                   username = username,
                   active = true,
                   name = name,

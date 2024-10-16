@@ -2,23 +2,23 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ut
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.PersonSummary
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Referral
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.NOMIS_SYS_USER_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateAttendeeRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateAttendeeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateIdentifiedNeedRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInterviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateIdentifiedNeedRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateInterviewRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.cellLocation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import java.time.LocalDate
@@ -97,13 +97,13 @@ fun Referral.verifyAgainst(request: CreateReferralRequest) {
   assertThat(incidentInvolvement?.code).isEqualTo(request.incidentInvolvementCode)
 }
 
-fun PersonSummary.verifyAgainst(prisoner: PrisonerDto) {
-  assertThat(prisonNumber).isEqualTo(prisoner.prisonerNumber)
-  assertThat(firstName).isEqualTo(prisoner.firstName)
-  assertThat(lastName).isEqualTo(prisoner.lastName)
-  assertThat(status).isEqualTo(prisoner.status)
-  assertThat(prisonCode).isEqualTo(prisoner.prisonId)
-  assertThat(cellLocation).isEqualTo(prisoner.cellLocation)
+fun PersonSummary.verifyAgainst(prisonerDetails: PrisonerDetails) {
+  assertThat(prisonNumber).isEqualTo(prisonerDetails.prisonerNumber)
+  assertThat(firstName).isEqualTo(prisonerDetails.firstName)
+  assertThat(lastName).isEqualTo(prisonerDetails.lastName)
+  assertThat(status).isEqualTo(prisonerDetails.status)
+  assertThat(prisonCode).isEqualTo(prisonerDetails.prisonId)
+  assertThat(cellLocation).isEqualTo(prisonerDetails.cellLocation)
 }
 
 fun prisoner(
@@ -113,4 +113,4 @@ fun prisoner(
   prisonId: String? = "LEI",
   status: String = "ACTIVE IN",
   cellLocation: String? = cellLocation(),
-) = PrisonerDto(prisonerNumber, firstName, lastName, prisonId, status, cellLocation)
+) = PrisonerDetails(prisonerNumber, firstName, lastName, prisonId, status, cellLocation)

@@ -6,13 +6,12 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.dto.PrisonerDto
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.retryIdempotentRequestOnTransientException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 
 @Component
 class PrisonerSearchClient(@Qualifier("prisonerSearchWebClient") private val webClient: WebClient) {
-  fun getPrisoner(prisonerId: String): PrisonerDto? {
+  fun getPrisoner(prisonerId: String): PrisonerDetails? {
     return try {
       webClient
         .get()
@@ -20,7 +19,7 @@ class PrisonerSearchClient(@Qualifier("prisonerSearchWebClient") private val web
         .exchangeToMono { res ->
           when (res.statusCode()) {
             HttpStatus.NOT_FOUND -> Mono.empty()
-            HttpStatus.OK -> res.bodyToMono<PrisonerDto>()
+            HttpStatus.OK -> res.bodyToMono<PrisonerDetails>()
             else -> res.createError()
           }
         }
@@ -31,3 +30,12 @@ class PrisonerSearchClient(@Qualifier("prisonerSearchWebClient") private val web
     }
   }
 }
+
+data class PrisonerDetails(
+  val prisonerNumber: String,
+  val firstName: String,
+  val lastName: String,
+  val prisonId: String?,
+  val status: String,
+  val cellLocation: String?,
+)

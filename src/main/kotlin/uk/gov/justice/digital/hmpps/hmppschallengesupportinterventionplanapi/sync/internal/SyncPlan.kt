@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sy
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Attendee
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.IdentifiedNeed
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Plan
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Review
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.byId
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.byLegacyId
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.byId
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.byLegacyId
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Attendee
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.IdentifiedNeed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Review
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.ResponseMapping
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncPlanRequest

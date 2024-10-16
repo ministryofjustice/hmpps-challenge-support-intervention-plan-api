@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpdateInvestigationRequest
 
 class UpdateInvestigationRequestTest : RequestValidationTest() {
   @Test
@@ -30,11 +31,11 @@ class UpdateInvestigationRequestTest : RequestValidationTest() {
     assertValidationErrors(
       validator.validate(request),
       Pair("staffInvolved", "Staff involved must be <= 4000 characters"),
-      Pair("personsUsualBehaviour", "Person's Usual Behaviour must be <= 4000 characters"),
-      Pair("protectiveFactors", "Protective Factors must be <= 4000 characters"),
+      Pair("personsUsualBehaviour", "Person's usual behaviour must be <= 4000 characters"),
+      Pair("protectiveFactors", "Protective factors must be <= 4000 characters"),
       Pair("occurrenceReason", "Occurrence reason must be <= 4000 characters"),
-      Pair("personsTrigger", "Person's Trigger must be <= 4000 characters"),
-      Pair("evidenceSecured", "Evidence Secured must be <= 4000 characters"),
+      Pair("personsTrigger", "Person's trigger must be <= 4000 characters"),
+      Pair("evidenceSecured", "Evidence secured must be <= 4000 characters"),
     )
   }
 }

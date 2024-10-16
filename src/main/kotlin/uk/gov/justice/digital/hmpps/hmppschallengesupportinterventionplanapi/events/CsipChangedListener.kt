@@ -6,9 +6,9 @@ import jakarta.persistence.PreUpdate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Auditable
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipAware
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.Auditable
 
 @Component
 class CsipChangedListener {

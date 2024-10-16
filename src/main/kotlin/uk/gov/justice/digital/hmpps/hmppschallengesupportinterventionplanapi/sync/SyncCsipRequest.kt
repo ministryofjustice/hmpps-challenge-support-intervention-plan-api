@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sy
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
@@ -12,9 +12,7 @@ import java.util.UUID
 data class SyncCsipRequest(
   @field:Size(max = 10, message = "Prison number must be <= 10 characters")
   val prisonNumber: String,
-  @field:Size(max = 10, message = "Log code must be <= 10 characters")
   override val logCode: String?,
-  @field:Valid
   override val referral: SyncReferralRequest?,
   @field:Valid
   val plan: SyncPlanRequest?,

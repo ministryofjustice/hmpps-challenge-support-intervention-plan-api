@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.UpdateAttendeeRequest
 
 class UpdateAttendeeRequestTest : RequestValidationTest() {
   @Test
@@ -16,7 +17,7 @@ class UpdateAttendeeRequestTest : RequestValidationTest() {
     assertValidationErrors(
       validator.validate(request),
       "name" to "Attendee name must be <= 100 characters",
-      "role" to "Attendee Role must be <= 50 characters",
+      "role" to "Attendee role must be <= 50 characters",
       "contribution" to "Contribution must be <= 4000 characters",
     )
   }

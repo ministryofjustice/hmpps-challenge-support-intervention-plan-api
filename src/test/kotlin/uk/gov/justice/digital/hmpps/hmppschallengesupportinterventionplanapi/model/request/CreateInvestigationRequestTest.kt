@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInvestigationRequest
 
 class CreateInvestigationRequestTest : RequestValidationTest() {
   @Test
@@ -50,7 +51,7 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
     assertSingleValidationError(
       validator.validate(request),
       "evidenceSecured",
-      "Evidence Secured must be <= 4000 characters",
+      "Evidence secured must be <= 4000 characters",
     )
   }
 
@@ -86,7 +87,7 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
     assertSingleValidationError(
       validator.validate(request),
       "personsUsualBehaviour",
-      "Person's Usual Behaviour must be <= 4000 characters",
+      "Person's usual behaviour must be <= 4000 characters",
     )
   }
 
@@ -104,7 +105,7 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
     assertSingleValidationError(
       validator.validate(request),
       "personsTrigger",
-      "Person's Trigger must be <= 4000 characters",
+      "Person's trigger must be <= 4000 characters",
     )
   }
 
@@ -122,7 +123,7 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
     assertSingleValidationError(
       validator.validate(request),
       "protectiveFactors",
-      "Protective Factors must be <= 4000 characters",
+      "Protective factors must be <= 4000 characters",
     )
   }
 }

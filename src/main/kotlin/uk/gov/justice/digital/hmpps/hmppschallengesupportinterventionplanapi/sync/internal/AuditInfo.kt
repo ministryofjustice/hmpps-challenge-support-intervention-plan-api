@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.internal
 
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.entity.Auditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.Auditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.NomisAudited
 
 fun <T : Auditable> T.withAuditInfo(request: NomisAudited): T = apply {
