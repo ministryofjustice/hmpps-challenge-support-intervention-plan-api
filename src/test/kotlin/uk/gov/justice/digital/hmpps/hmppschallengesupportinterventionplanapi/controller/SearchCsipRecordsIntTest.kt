@@ -142,32 +142,33 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - can find by status`() {
-    val closedCsip = dataSetup(generateCsipRecord(prisoner(prisonId = SEARCH_PRISON_CODE).toPersonSummary())) {
+    val prisonCode = "STA"
+    val closedCsip = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
       it.withReferral().withPlan()
       requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
       it
     }
-    val openCsip = dataSetup(generateCsipRecord(prisoner(prisonId = SEARCH_PRISON_CODE).toPersonSummary())) {
+    val openCsip = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
       it.withReferral().withPlan()
     }
-    val awaitingDecision = dataSetup(generateCsipRecord(prisoner(prisonId = SEARCH_PRISON_CODE).toPersonSummary())) {
+    val awaitingDecision = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
       it.withReferral()
       val referral = requireNotNull(it.referral).withInvestigation()
       requireNotNull(referral.investigation).withInterview()
       it
     }
 
-    val res1 = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, status = CSIP_CLOSED, size = 100))
-    assertThat(res1.content.size).isGreaterThanOrEqualTo(1)
-    res1.content.first { it.id == closedCsip.id }.verifyAgainst(closedCsip)
+    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = CSIP_CLOSED, size = 100))
+    assertThat(res1.content.size).isEqualTo(1)
+    res1.content.first().verifyAgainst(closedCsip)
 
-    val res2 = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, status = CSIP_OPEN, size = 100))
-    assertThat(res2.content.size).isGreaterThanOrEqualTo(1)
-    res2.content.first { it.id == openCsip.id }.verifyAgainst(openCsip)
+    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = CSIP_OPEN, size = 100))
+    assertThat(res2.content.size).isEqualTo(1)
+    res2.content.first().verifyAgainst(openCsip)
 
-    val res3 = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, status = AWAITING_DECISION, size = 100))
-    assertThat(res3.content.size).isGreaterThanOrEqualTo(1)
-    res3.content.first { it.id == awaitingDecision.id }.verifyAgainst(awaitingDecision)
+    val res3 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = AWAITING_DECISION, size = 100))
+    assertThat(res3.content.size).isEqualTo(1)
+    res3.content.first().verifyAgainst(awaitingDecision)
   }
 
   @Test
@@ -257,6 +258,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   private fun FindCsipRequest.asParams() = listOfNotNull(
     "prisonCode" to prisonCode,
     query?.let { "query" to it },
+    status?.let { "status" to it },
     "page" to page,
     "size" to size,
     "sort" to sort,
