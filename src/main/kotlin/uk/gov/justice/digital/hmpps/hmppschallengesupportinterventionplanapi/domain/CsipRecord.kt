@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
@@ -126,12 +125,6 @@ class CsipRecord(
     plan!!
   }
 
-  fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.RECORD)
-    referral?.also { addAll(it.components()) }
-    plan?.also { addAll(it.components()) }
-  }
-
   private fun referral(
     context: CsipRequestContext,
     request: ReferralRequest,
@@ -167,6 +160,7 @@ class CsipRecord(
     val PRISON_NUMBER: String = CsipRecord::prisonNumber.name
     val LOG_CODE: String = CsipRecord::logCode.name
     val CREATED_AT: String = CsipRecord::createdAt.name
+    val STATUS: String = CsipRecord::status.name
   }
 }
 
