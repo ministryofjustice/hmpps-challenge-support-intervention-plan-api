@@ -196,6 +196,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     verifySort(prisonCode, "location", listOf(csip1, csip2, csip3))
     verifySort(prisonCode, "referralDate", listOf(csip2, csip1, csip3))
     verifySort(prisonCode, "caseManager", listOf(csip2, csip1, csip3))
+    verifySort(prisonCode, "status", listOf(csip1, csip2, csip3).sortedBy { it.status.name })
   }
 
   private fun verifySort(prisonCode: String, sortField: String, order: List<CsipRecord>) {

@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 data class FindCsipRequest(
   @Parameter(description = "The prison code for the location of the prisoner", example = "MDI")
   val prisonCode: String,
-  @Parameter(description = "The name(s) of the prisoner space separated", example = "First Last")
+  @Parameter(description = "Either the prison number or the name(s) of the prisoner space separated", example = "First Last")
   val query: String?,
   @Parameter(description = "The status of the CSIP record", example = "CSIP_OPEN")
   val status: CsipStatus?,

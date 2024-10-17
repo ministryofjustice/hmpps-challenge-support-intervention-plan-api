@@ -23,7 +23,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestController
 @RequestMapping
 @Tag(name = "8. CSIP Admin Controller", description = "Endpoints for admin features such as search and reporting")
-class CsipAdminController(private val search: CsipSearchService) {
+class CsipSearchController(private val search: CsipSearchService) {
   @Operation(
     summary = "Search and filter all CSIP records.",
     description = "Returns the CSIP records matching search query and filters",
