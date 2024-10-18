@@ -341,7 +341,7 @@ abstract class IntegrationTestBase {
   fun CsipRecord.withPlan(
     caseManager: String = "Case Manager",
     reasonForPlan: String = "Reason for this plan",
-    firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(6),
+    firstCaseReviewDate: LocalDate = LocalDate.now().plusWeeks(2),
   ) = apply {
     set(::plan, Plan(this, caseManager, reasonForPlan, firstCaseReviewDate))
   }
