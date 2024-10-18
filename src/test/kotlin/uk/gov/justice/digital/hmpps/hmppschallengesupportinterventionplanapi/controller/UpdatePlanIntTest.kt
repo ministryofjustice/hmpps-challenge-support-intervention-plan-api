@@ -100,7 +100,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
   fun `200 ok - no changes made to plan`() {
     val record = dataSetup(generateCsipRecord()) { it.withReferral().withPlan() }
 
-    val request = planRequest()
+    val request = planRequest(nextCaseReviewDate = record.plan!!.firstCaseReviewDate!!)
 
     updatePlan(record.id, request, status = HttpStatus.OK)
     val plan = csipRecordRepository.getCsipRecord(record.id).plan

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.createdAfter
@@ -31,6 +32,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsip
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsipDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.PageMeta
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaryRequest
@@ -45,6 +48,7 @@ class CsipRecordService(
   private val personSummaryRepository: PersonSummaryRepository,
   private val personSearch: PrisonerSearchClient,
   private val csipRecordRepository: CsipRecordRepository,
+  private val csipSummaryRepository: CsipSummaryRepository,
 ) {
   @PublishCsipEvent(CSIP_CREATED)
   fun createCsipRecord(
@@ -93,6 +97,16 @@ class CsipRecordService(
   fun findCsipRecordsForPrisoner(prisonNumber: String, request: CsipSummaryRequest): CsipSummaries =
     csipRecordRepository.findAll(request.toSpecification(prisonNumber), request.pageable()).map { it.toSummary() }
       .asCsipSummaries()
+
+  @Transactional(readOnly = true)
+  fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? =
+    csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
+      CurrentCsipDetail(
+        CurrentCsip(it.current.status, it.current.referralDate, it.current.nextReviewDate),
+        it.opened,
+        it.referred,
+      )
+    }
 
   private fun getPersonSummary(prisonNumber: String): PersonSummary {
     return personSummaryRepository.findByIdOrNull(prisonNumber)

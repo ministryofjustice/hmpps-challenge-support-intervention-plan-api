@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsipDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
@@ -37,6 +38,39 @@ import java.util.UUID
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "1. CSIP Record Controller", description = "Endpoints for CSIP Record operations")
 class CsipRecordsController(val csipRecordService: CsipRecordService) {
+
+  @Operation(
+    summary = "Retrieve and filter the current CSIP record for a prisoner.",
+    description = "Returns the current CSIP record for a prisoner and counts of open csip records and referrals for the prisoner",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "CSIP records found",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad Request",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @GetMapping("/prisoners/{prisonNumber}/csip-records/current")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  fun getCurrentCsipRecord(@PathVariable prisonNumber: String): CurrentCsipDetail =
+    csipRecordService.findCurrentCsip(prisonNumber) ?: CurrentCsipDetail.NONE
+
   @Operation(
     summary = "Retrieve and filter all CSIP records for a prisoner.",
     description = "Returns the CSIP records for a prisoner. Supports log code filtering.",
