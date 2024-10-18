@@ -40,8 +40,8 @@ import java.util.UUID
 class CsipRecordsController(val csipRecordService: CsipRecordService) {
 
   @Operation(
-    summary = "Retrieve and filter the current CSIP record for a prisoner.",
-    description = "Returns the current CSIP record for a prisoner and counts of open csip records and referrals for the prisoner",
+    summary = "Retrieve the current CSIP record for a prisoner.",
+    description = "Returns a summary of the current CSIP record and counts of opened csip and referrals for the prisoner",
   )
   @ApiResponses(
     value = [

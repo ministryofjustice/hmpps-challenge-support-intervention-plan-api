@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsipDetail
@@ -51,7 +52,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - returns matching CSIP record`() {
+  fun `200 ok - returns matching CSIP OPEN record`() {
     val prisoner = prisoner().toPersonSummary()
     val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) { it }
     dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
@@ -67,6 +68,56 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(status).isEqualTo(CsipStatus.CSIP_OPEN)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(2)
+      assertThat(totalReferralCount).isEqualTo(2)
+    }
+  }
+
+  @Test
+  fun `200 ok - returns matching AWAITING DECISION record`() {
+    val prisoner = prisoner().toPersonSummary()
+    val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral()) {
+      requireNotNull(it.referral).withInvestigation()
+      it
+    }
+    dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
+      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      it
+    }
+
+    val response = getLatestCsipRecord(prisoner.prisonNumber)
+    with(response) {
+      with(requireNotNull(currentCsip)) {
+        assertThat(referralDate).isEqualTo(current.referral?.referralDate)
+        assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
+        assertThat(status).isEqualTo(CsipStatus.AWAITING_DECISION)
+      }
+      assertThat(totalOpenedCsipCount).isEqualTo(1)
+      assertThat(totalReferralCount).isEqualTo(2)
+    }
+  }
+
+  @Test
+  fun `200 ok - returns matching CSIP_CLOSED record`() {
+    val prisoner = prisoner().toPersonSummary()
+    val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
+      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      it
+    }
+    dataSetup(generateCsipRecord(prisoner).withCompletedReferral()) {
+      requireNotNull(it.referral).withSaferCustodyScreeningOutcome(
+        outcome = givenReferenceData(SCREENING_OUTCOME_TYPE, "NFA"),
+      )
+      it
+    }
+
+    val response = getLatestCsipRecord(prisoner.prisonNumber)
+    with(response) {
+      with(requireNotNull(currentCsip)) {
+        assertThat(referralDate).isEqualTo(current.referral?.referralDate)
+        assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
+        assertThat(status).isEqualTo(CsipStatus.CSIP_CLOSED)
+      }
+      assertThat(totalOpenedCsipCount).isEqualTo(1)
       assertThat(totalReferralCount).isEqualTo(2)
     }
   }
