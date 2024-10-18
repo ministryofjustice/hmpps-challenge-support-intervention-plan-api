@@ -27,7 +27,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping(path = ["/sync/csip-records"], produces = [MediaType.APPLICATION_JSON_VALUE])
-@Tag(name = "Sync CSIP Record Controller", description = "Endpoint for sync operations")
+@Tag(name = "9. Sync CSIP Record Controller", description = "Endpoint for sync operations")
 class SyncController(private val csip: SyncCsipRecord) {
   @ApiResponses(
     value = [

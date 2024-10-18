@@ -23,3 +23,21 @@ data class CsipSummary(
 )
 
 data class CsipSummaries(val content: List<CsipSummary>, val metadata: PageMeta)
+
+data class CsipSearchResult(
+  val id: UUID,
+  val prisoner: Prisoner,
+  val referralDate: LocalDate,
+  val nextReviewDate: LocalDate?,
+  val caseManager: String?,
+  val status: CsipStatus,
+)
+
+data class Prisoner(
+  val prisonNumber: String,
+  val firstName: String,
+  val lastName: String,
+  val location: String?,
+)
+
+data class CsipSearchResults(val content: List<CsipSearchResult>, val metadata: PageMeta)
