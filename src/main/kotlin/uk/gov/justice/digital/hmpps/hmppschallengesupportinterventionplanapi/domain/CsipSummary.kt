@@ -10,11 +10,11 @@ import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord.Companion.STATUS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.FIRST_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.LAST_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -47,6 +47,9 @@ class CsipSummary(
     val FIRST_NAME: String = CsipSummary::firstName.name
     val LAST_NAME: String = CsipSummary::lastName.name
     val PRISON_CODE: String = CsipSummary::prisonCode.name
+    val CELL_LOCATION: String = CsipSummary::cellLocation.name
+    val STATUS: String = CsipSummary::status.name
+    val PRIORITY: String = CsipSummary::priority.name
   }
 }
 

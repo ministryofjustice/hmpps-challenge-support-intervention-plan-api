@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Direction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 
 data class FindCsipRequest(
@@ -27,9 +28,9 @@ data class FindCsipRequest(
 
   override fun buildSort(field: String, direction: Direction): Sort {
     val primary = when (field) {
-      NAME -> Sort.by(direction, "firstName", "lastName", "prisonNumber")
-      LOCATION -> Sort.by(direction, "prisonCode", "cellLocation")
-      STATUS -> Sort.by(direction, "priority")
+      NAME -> Sort.by(direction, CsipSummary.FIRST_NAME, CsipSummary.LAST_NAME, CsipSummary.PRISON_NUMBER)
+      LOCATION -> Sort.by(direction, CsipSummary.PRISON_CODE, CsipSummary.CELL_LOCATION)
+      STATUS -> Sort.by(direction, CsipSummary.PRIORITY)
       else -> Sort.by(direction, field)
     }
     return if (field != REFERRAL_DATE) {
