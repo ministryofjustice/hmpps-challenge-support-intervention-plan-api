@@ -3,12 +3,16 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Direction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 
 data class FindCsipRequest(
   @Parameter(description = "The prison code for the location of the prisoner", example = "MDI")
   val prisonCode: String,
-  @Parameter(description = "Either the prison number or the name(s) of the prisoner space separated", example = "First Last")
+  @Parameter(
+    description = "Either the prison number or the name(s) of the prisoner space separated",
+    example = "First Last",
+  )
   val query: String?,
   @Parameter(description = "The status of the CSIP record", example = "CSIP_OPEN")
   val status: CsipStatus?,
@@ -22,15 +26,19 @@ data class FindCsipRequest(
   override fun validSortFields(): Set<String> =
     setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS)
 
-  override fun buildSort(field: String, direction: Direction): Sort =
-    when (field) {
-      CASE_MANAGER -> Sort.by(direction, "plan_caseManager")
-      LOCATION -> Sort.by(direction, "personSummary_cellLocation")
-      NAME -> Sort.by(direction, "personSummary_firstName", "personSummary_lastName", "personSummary_prisonNumber")
-      NEXT_REVIEW_DATE -> Sort.by(direction, "plan_reviews_nextReviewDate", "plan_firstCaseReviewDate")
-      REFERRAL_DATE -> Sort.by(direction, "referral_referralDate")
+  override fun buildSort(field: String, direction: Direction): Sort {
+    val primary = when (field) {
+      NAME -> Sort.by(direction, CsipSummary.FIRST_NAME, CsipSummary.LAST_NAME, CsipSummary.PRISON_NUMBER)
+      LOCATION -> Sort.by(direction, CsipSummary.PRISON_CODE, CsipSummary.CELL_LOCATION)
+      STATUS -> Sort.by(direction, CsipSummary.PRIORITY)
       else -> Sort.by(direction, field)
     }
+    return if (field != REFERRAL_DATE) {
+      primary.and(Sort.by(Direction.DESC, REFERRAL_DATE))
+    } else {
+      primary
+    }
+  }
 
   companion object {
     const val CASE_MANAGER = "caseManager"

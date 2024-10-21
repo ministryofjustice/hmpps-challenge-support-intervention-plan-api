@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.AREA_OF_WORK
@@ -290,16 +289,6 @@ class Referral(
     } else {
       existing
     }
-
-  fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.REFERRAL)
-    saferCustodyScreeningOutcome?.also { add(CsipComponent.SAFER_CUSTODY_SCREENING_OUTCOME) }
-    decisionAndActions?.also { add(CsipComponent.DECISION_AND_ACTIONS) }
-    investigation?.also { addAll(it.components()) }
-    if (contributoryFactors.isNotEmpty()) {
-      add(CsipComponent.CONTRIBUTORY_FACTOR)
-    }
-  }
 }
 
 fun Referral.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Referral(

@@ -160,7 +160,6 @@ class CsipRecord(
     val PRISON_NUMBER: String = CsipRecord::prisonNumber.name
     val LOG_CODE: String = CsipRecord::logCode.name
     val CREATED_AT: String = CsipRecord::createdAt.name
-    val STATUS: String = CsipRecord::status.name
   }
 }
 

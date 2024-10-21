@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.AttendeesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.FirstReviewRequest
@@ -117,21 +116,8 @@ class Plan(
   }
 
   fun nextReviewDate(): LocalDate? {
-    val nextReviewDate = reviews().mapNotNull(Review::nextReviewDate).maxOrNull()
-    return listOfNotNull(firstCaseReviewDate, nextReviewDate).maxOrNull()
-  }
-
-  fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.PLAN)
-    if (identifiedNeeds.isNotEmpty()) {
-      add(CsipComponent.IDENTIFIED_NEED)
-    }
-    if (reviews.isNotEmpty()) {
-      add(CsipComponent.REVIEW)
-    }
-    if (reviews.flatMap { it.attendees() }.isNotEmpty()) {
-      add(CsipComponent.ATTENDEE)
-    }
+    val nextReviewDate = reviews().maxByOrNull { it.reviewSequence }?.nextReviewDate
+    return listOfNotNull(nextReviewDate, firstCaseReviewDate).firstOrNull()
   }
 }
 
