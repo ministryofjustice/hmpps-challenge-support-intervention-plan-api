@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_RO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
@@ -67,7 +68,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
     ],
   )
   @GetMapping("/prisoners/{prisonNumber}/csip-records/current")
-  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_RO')")
   fun getCurrentCsipRecord(@PathVariable prisonNumber: String): CurrentCsipDetail =
     csipRecordService.findCurrentCsip(prisonNumber) ?: CurrentCsipDetail.NONE
 

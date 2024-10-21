@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_RO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
@@ -27,7 +28,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @NullSource
-  @ValueSource(strings = ["WRONG_ROLE"])
+  @ValueSource(strings = ["ROLE_SOME_OTHER", ROLE_CSIP_UI])
   fun `403 forbidden - no required role`(role: String?) {
     val response = getLatestCsipResponseSpec(prisonNumber(), role).errorResponse(HttpStatus.FORBIDDEN)
 
@@ -122,12 +123,12 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     }
   }
 
-  fun getLatestCsipResponseSpec(prisonNumber: String, role: String? = ROLE_CSIP_UI): WebTestClient.ResponseSpec =
+  fun getLatestCsipResponseSpec(prisonNumber: String, role: String? = ROLE_CSIP_RO): WebTestClient.ResponseSpec =
     webTestClient.get()
       .uri("/prisoners/$prisonNumber/csip-records/current")
       .headers(setAuthorisation(roles = listOfNotNull(role)))
       .exchange()
 
-  fun getLatestCsipRecord(prisonNumber: String, role: String = ROLE_CSIP_UI): CurrentCsipDetail =
+  fun getLatestCsipRecord(prisonNumber: String, role: String = ROLE_CSIP_RO): CurrentCsipDetail =
     getLatestCsipResponseSpec(prisonNumber, role).successResponse()
 }
