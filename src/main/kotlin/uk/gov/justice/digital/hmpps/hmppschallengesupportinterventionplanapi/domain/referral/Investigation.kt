@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.InterviewRequest
@@ -88,13 +87,6 @@ class Investigation(
     personsUsualBehaviour = request.personsUsualBehaviour
     personsTrigger = request.personsTrigger
     protectiveFactors = request.protectiveFactors
-  }
-
-  fun components(): Set<CsipComponent> = buildSet {
-    add(CsipComponent.INVESTIGATION)
-    if (interviews.isNotEmpty()) {
-      add(CsipComponent.INTERVIEW)
-    }
   }
 }
 
