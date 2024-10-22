@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-challenge-support-intervention-plan-api/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-challenge-support-intervention-plan-api)
 [![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-challenge-support-intervention-plan-api/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-challenge-support-intervention-plan-api)
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://hmpps-challenge-support-intervention-plan-api-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html?configUrl=/v3/api-docs)
-[![Event docs](https://img.shields.io/badge/Event_docs-view-85EA2D.svg)](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/ministryofjustice/hmpps-challenge-support-intervention-plan-api/main/async-api.yml)
+[![Event docs](https://img.shields.io/badge/Event_docs-view-85EA2D.svg)](https://studio.asyncapi.com/?readOnly&url=https://raw.githubusercontent.com/ministryofjustice/hmpps-challenge-support-intervention-plan-api/main/async-api.yml)
 
 ## HMPPS Project Setup instructions
 
