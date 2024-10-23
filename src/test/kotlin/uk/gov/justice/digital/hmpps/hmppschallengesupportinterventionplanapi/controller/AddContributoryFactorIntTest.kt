@@ -16,9 +16,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.ContributoryFactorRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.getContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.CONTRIBUTORY_FACTOR
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REFERRAL
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
@@ -27,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -159,6 +163,44 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
 
     val saved = getContributoryFactory(response.factorUuid)
     verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR))
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
+  }
+
+  @Test
+  fun `201 created - contributory factor added via DPS to complete a referral`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withReferral(
+        incidentInvolvement = { givenRandom(INCIDENT_INVOLVEMENT) },
+        proactiveReferral = true,
+        staffAssaulted = false,
+      )
+    }
+    assertThat(record.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
+
+    val request = createContributoryFactorRequest()
+    val response = addContributoryFactor(record.id, request)
+
+    with(response) {
+      assertThat(factorType.code).isEqualTo(request.factorTypeCode)
+      assertThat(comment).isEqualTo(request.comment)
+      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
+      assertThat(createdBy).isEqualTo(TEST_USER)
+      assertThat(createdByDisplayName).isEqualTo(TEST_USER_NAME)
+    }
+
+    val saved = getContributoryFactory(response.factorUuid)
+
+    with(saved.referral.csipRecord) {
+      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      with(requireNotNull(saved.referral)) {
+        assertThat(referralComplete).isEqualTo(true)
+        assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
+        assertThat(referralCompletedBy).isEqualTo(TEST_USER)
+        assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
+      }
+    }
+
+    verifyAudit(saved, RevisionType.ADD, setOf(CONTRIBUTORY_FACTOR, REFERRAL))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 

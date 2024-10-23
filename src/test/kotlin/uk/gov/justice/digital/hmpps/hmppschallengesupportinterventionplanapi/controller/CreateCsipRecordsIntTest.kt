@@ -205,7 +205,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `201 created - CSIP record created via DPS`() {
     val request = createCsipRecordRequest(
-      createReferralRequest(contributoryFactorTypeCode = listOf("AFL")),
+      createReferralRequest(contributoryFactorTypeCode = listOf("AFL"), referralComplete = true),
     )
 
     val prisoner = givenPrisoner(prisoner())
@@ -219,7 +219,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdBy).isEqualTo("TEST_USER")
       assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
-      assertThat(status).isEqualTo(CsipStatus.REFERRAL_PENDING)
+      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
     }
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
@@ -358,7 +358,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       incidentTypeCode: String = "ATO",
       incidentLocationCode: String = "EDU",
       refererAreaCode: String = "ACT",
-      incidentInvolvementCode: String = "OTH",
+      incidentInvolvementCode: String? = "OTH",
       contributoryFactorTypeCode: Collection<String> = listOf("AFL"),
       referralComplete: Boolean? = null,
     ) = CreateReferralRequest(

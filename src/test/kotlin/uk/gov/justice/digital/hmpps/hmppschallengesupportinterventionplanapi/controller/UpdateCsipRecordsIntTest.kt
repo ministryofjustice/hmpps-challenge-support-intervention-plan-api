@@ -191,7 +191,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - CSIP record updates csip and completes referral`() {
+  fun `200 ok - CSIP record updates csip and completes referral by setting isReferralComplete flag`() {
     val record = dataSetup(generateCsipRecord().withReferral()) { it }
     val referral = requireNotNull(record.referral)
 
@@ -206,6 +206,54 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
         knownReasons = "Updated reasons",
         otherInformation = "Even more information that can change",
         isReferralComplete = true,
+      ),
+    )
+
+    val response = updateCsipRecord(record.id, request)
+    assertThat(response.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+    with(response.referral) {
+      assertThat(isReferralComplete).isEqualTo(true)
+      assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
+      assertThat(referralCompletedBy).isEqualTo(TEST_USER)
+      assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
+    }
+
+    val saved = csipRecordRepository.getCsipRecord(record.id)
+    with(saved) {
+      assertThat(logCode).isEqualTo(request.logCode)
+      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      with(requireNotNull(saved.referral)) {
+        assertThat(referralComplete).isEqualTo(true)
+        assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
+        assertThat(referralCompletedBy).isEqualTo(TEST_USER)
+        assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
+      }
+    }
+
+    verifyAudit(record, RevisionType.MOD, setOf(RECORD, REFERRAL))
+    verifyDomainEvents(record.prisonNumber, saved.id, CSIP_UPDATED)
+  }
+
+  @Test
+  fun `200 ok - CSIP record updates csip and completes referral by providing mandatory field values`() {
+    val record = dataSetup(generateCsipRecord().withReferral()) {
+      requireNotNull(it.referral).withContributoryFactor()
+      it
+    }
+    val referral = requireNotNull(record.referral)
+
+    val request = updateCsipRecordRequest(
+      logCode = LOG_CODE,
+      referral = updateReferral(
+        incidentTypeCode = referral.incidentType.code,
+        incidentLocationCode = referral.incidentLocation.code,
+        refererAreaCode = referral.refererAreaOfWork.code,
+        incidentInvolvementCode = "OTH",
+        descriptionOfConcern = "Updated concerns",
+        knownReasons = "Updated reasons",
+        otherInformation = "Even more information that can change",
+        isProactiveReferral = true,
+        isStaffAssaulted = false,
       ),
     )
 
