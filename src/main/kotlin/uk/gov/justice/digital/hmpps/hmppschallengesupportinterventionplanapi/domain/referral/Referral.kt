@@ -210,12 +210,19 @@ class Referral(
       complete(update)
     } else if (update.isReferralComplete != referralComplete) {
       complete(csipRequestContext().asCompletable(update.isReferralComplete))
+    } else if (isCompletingReferral()) {
+      complete(csipRequestContext().asCompletable(true))
     }
 
     if (update is ReferralDateRequest) {
       referralDate = update.referralDate
     }
   }
+
+  private fun isCompletingReferral() =
+    referralComplete != true && proactiveReferral != null && staffAssaulted != null && descriptionOfConcern != null &&
+      knownReasons != null && incidentInvolvement != null && contributoryFactors().isNotEmpty() &&
+      (staffAssaulted == false || assaultedStaffName != null)
 
   fun complete(request: CompletableRequest): Referral = apply {
     referralCompletedDate = request.completedDate
@@ -234,6 +241,9 @@ class Referral(
     legacyId = if (request is LegacyIdAware) request.legacyId else null,
   ).apply {
     contributoryFactors.add(this)
+    if (isCompletingReferral()) {
+      complete(csipRequestContext().asCompletable(true))
+    }
   }
 
   fun createSaferCustodyScreeningOutcome(
