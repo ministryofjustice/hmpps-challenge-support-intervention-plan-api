@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.badSyncRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.personSummaryRequest
@@ -57,6 +59,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.syn
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.newId
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
@@ -750,6 +753,35 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     assertThat(personSummaryRepository.findByIdOrNull(toDelete.prisonNumber)).isNotNull()
   }
 
+  @Test
+  fun `200 ok - returns an empty list when no csips exist`() {
+    val res = getCsipRecords(prisonNumber())
+    assertThat(res).isEmpty()
+  }
+
+  @Test
+  fun `200 ok - returns all csip records for a prison number`() {
+    val prisoner = prisoner().toPersonSummary()
+    val csip1 = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
+      val referral = requireNotNull(it.referral).withContributoryFactor()
+        .withSaferCustodyScreeningOutcome().withInvestigation().withDecisionAndActions()
+      requireNotNull(referral.investigation).withInterview()
+      requireNotNull(it.plan).withNeed("First need").withNeed("Second need").withReview()
+      it
+    }
+    val csip2 = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
+      requireNotNull(it.referral).withContributoryFactor().withContributoryFactor()
+        .withSaferCustodyScreeningOutcome().withDecisionAndActions()
+      requireNotNull(it.plan).withNeed()
+      it
+    }
+
+    val res = getCsipRecords(prisoner.prisonNumber)
+    assertThat(res).hasSize(2)
+    res.first { it.recordUuid == csip1.id }.verifyAgainst(csip1)
+    res.first { it.recordUuid == csip2.id }.verifyAgainst(csip2)
+  }
+
   private fun urlToTest() = "/sync/csip-records"
 
   private fun syncCsipResponseSpec(
@@ -763,6 +795,10 @@ class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
     .bodyValue(legacyActioned)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS)))
     .exchange().expectStatus().isNoContent
+
+  private fun getCsipRecords(prisonNumber: String): List<CsipRecord> = webTestClient.get().uri("${urlToTest()}/$prisonNumber")
+    .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
+    .expectStatus().isOk.expectBodyList<CsipRecord>().returnResult().responseBody!!
 
   private fun syncCsipRecord(request: SyncCsipRequest) = syncCsipResponseSpec(request).successResponse<SyncResponse>()
 
