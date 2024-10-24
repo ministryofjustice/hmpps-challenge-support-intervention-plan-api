@@ -11,9 +11,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.matchesPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.syn
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncCsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncResponse
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipModel
 
 @Service
 @Transactional
@@ -110,4 +113,7 @@ class SyncCsipRecord(
 
   private fun SyncCsipRequest.toCsipRecord(personSummary: PersonSummary): CsipRecord =
     CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId).withAuditInfo(this)
+
+  fun findFor(prisonNumber: String): List<CsipModel> =
+    csipRepository.findAll(matchesPrisonNumber(prisonNumber)).map { it.toModel() }
 }

@@ -9,9 +9,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.LocalDate
 import java.util.UUID
 
@@ -53,16 +55,19 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = [ROLE_CSIP_UI, ROLE_NOMIS])
   fun `200 ok - returns matching CSIP record`(role: String) {
-    val record = givenCsipRecord(
-      generateCsipRecord().withReferral(referralDate = LocalDate.now().minusDays(1)),
-    )
+    val record = dataSetup(generateCsipRecord().withCompletedReferral().withPlan()) {
+      val referral = requireNotNull(it.referral).withContributoryFactor()
+        .withSaferCustodyScreeningOutcome().withInvestigation().withDecisionAndActions()
+      requireNotNull(referral.investigation).withInterview("A N Other")
+      val plan = requireNotNull(it.plan).withNeed("One need").withNeed("Another need")
+        .withReview(LocalDate.now().minusDays(1))
+        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP))
+      requireNotNull(plan.reviews().random()).withAttendee()
+      it
+    }
 
     val response = getCsipRecord(record.id, role)
-    with(response) {
-      assertThat(this.prisonNumber).isEqualTo(prisonNumber)
-      assertThat(recordUuid).isEqualTo(record.id)
-      assertThat(response.referral.referralDate).isEqualTo(record.referral?.referralDate)
-    }
+    response.verifyAgainst(record)
   }
 
   fun getCsipRecordResponseSpec(recordUuid: UUID, role: String? = ROLE_CSIP_UI): WebTestClient.ResponseSpec =
