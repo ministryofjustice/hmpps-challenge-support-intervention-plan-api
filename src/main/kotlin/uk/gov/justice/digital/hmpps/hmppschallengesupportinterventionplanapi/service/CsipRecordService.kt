@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_DELETED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
@@ -103,7 +104,7 @@ class CsipRecordService(
   fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? =
     csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
       CurrentCsipDetail(
-        CurrentCsip(it.current.status(), it.current.referralDate, it.current.nextReviewDate),
+        CurrentCsip(it.current.status(), it.current.referralDate(), it.current.nextReviewDate, it.current.closedDate),
         it.opened,
         it.referred,
       )
@@ -115,6 +116,9 @@ class CsipRecordService(
         requireNotNull(personSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }.toPersonSummary(),
       )
   }
+
+  private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.referralDate() =
+    if (statusCode == CsipStatus.REFERRAL_PENDING) null else referralDate
 }
 
 private fun CsipSummaryRequest.toSpecification(prisonNumber: String): Specification<CsipEntity> = listOfNotNull(

@@ -39,6 +39,7 @@ class CsipSummary(
   val statusCode: CsipStatus,
   val statusDescription: String,
   val priority: Int,
+  val closedDate: LocalDate?,
   val createdAt: LocalDateTime,
 
   @Id

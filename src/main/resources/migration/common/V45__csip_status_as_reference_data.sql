@@ -44,6 +44,7 @@ drop view csip_summary;
 create view csip_summary as
 with latest_review as (select plan_id,
                               next_review_date,
+                              csip_closed_date,
                               row_number() over (partition by plan_id order by review_sequence desc) seq
                        from review rev)
 select person.prison_number,
@@ -52,18 +53,19 @@ select person.prison_number,
        person.prison_code,
        person.cell_location,
        ref.referral_date,
-       coalesce(rev.next_review_date, p.first_case_review_date) as next_review_date,
+       coalesce(rev.next_review_date, p.first_case_review_date)        as next_review_date,
        p.case_manager,
-       csip.record_id                                           as id,
+       csip.record_id                                                  as id,
        csip.created_at,
+       case when st.code = 'CSIP_CLOSED' then rev.csip_closed_date end as closed_date,
        case
            when st.code = 'CSIP_OPEN' then 1
            when st.code = 'CSIP_CLOSED' then 3
            when st.code in ('NO_FURTHER_ACTION', 'SUPPORT_OUTSIDE_CSIP') then 4
            else 2
-           end                                                  as priority,
-       st.code                                                  as status_code,
-       st.description                                           as status_description
+           end                                                         as priority,
+       st.code                                                         as status_code,
+       st.description                                                  as status_description
 from csip_record csip
          join person_summary person on person.prison_number = csip.prison_number
          join referral ref on ref.referral_id = csip.record_id

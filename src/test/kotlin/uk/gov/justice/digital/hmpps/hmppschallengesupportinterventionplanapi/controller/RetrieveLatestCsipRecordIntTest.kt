@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
+import java.time.LocalDate
 
 class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
   @Test
@@ -101,7 +102,10 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
   fun `200 ok - returns matching CSIP_CLOSED record`() {
     val prisoner = prisoner().toPersonSummary()
     val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
-      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      requireNotNull(it.plan).withReview(
+        actions = setOf(ReviewAction.CLOSE_CSIP),
+        csipClosedDate = LocalDate.now().minusDays(1),
+      )
       it
     }
     dataSetup(generateCsipRecord(prisoner).withCompletedReferral()) {
@@ -117,6 +121,56 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_CLOSED.name)
+        assertThat(closedDate).isEqualTo(current.plan!!.reviews().first().csipClosedDate)
+      }
+      assertThat(totalOpenedCsipCount).isEqualTo(1)
+      assertThat(totalReferralCount).isEqualTo(2)
+    }
+  }
+
+  @Test
+  fun `200 ok - returns no referral date when referral pending`() {
+    val prisoner = prisoner().toPersonSummary()
+    dataSetup(generateCsipRecord(prisoner).withReferral()) { it }
+
+    val response = getLatestCsipRecord(prisoner.prisonNumber)
+    with(response) {
+      with(requireNotNull(currentCsip)) {
+        assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_PENDING.name)
+        assertThat(referralDate).isNull()
+      }
+      assertThat(totalOpenedCsipCount).isEqualTo(0)
+      assertThat(totalReferralCount).isEqualTo(0)
+    }
+  }
+
+  @Test
+  fun `200 ok - returns matching overdue review date`() {
+    val prisoner = prisoner().toPersonSummary()
+    val current = dataSetup(
+      generateCsipRecord(prisoner).withCompletedReferral()
+        .withPlan(firstCaseReviewDate = LocalDate.now().minusDays(30)),
+    ) {
+      requireNotNull(it.plan).withReview(
+        actions = setOf(ReviewAction.REMAIN_ON_CSIP),
+        nextReviewDate = LocalDate.now().minusDays(10),
+      )
+      it
+    }
+    dataSetup(generateCsipRecord(prisoner).withCompletedReferral()) {
+      requireNotNull(it.referral).withSaferCustodyScreeningOutcome(
+        outcome = givenReferenceData(SCREENING_OUTCOME_TYPE, "NFA"),
+      )
+      it
+    }
+
+    val response = getLatestCsipRecord(prisoner.prisonNumber)
+    with(response) {
+      with(requireNotNull(currentCsip)) {
+        assertThat(referralDate).isEqualTo(current.referral?.referralDate)
+        assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
+        assertThat(status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
+        assertThat(reviewOverdueDays).isEqualTo(10)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
       assertThat(totalReferralCount).isEqualTo(2)
