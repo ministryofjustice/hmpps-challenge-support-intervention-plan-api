@@ -68,6 +68,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(2)
       assertThat(totalReferralCount).isEqualTo(2)
@@ -92,6 +93,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
         assertThat(status.code).isEqualTo(CsipStatus.AWAITING_DECISION.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
       assertThat(totalReferralCount).isEqualTo(2)
@@ -121,6 +123,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_CLOSED.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
         assertThat(closedDate).isEqualTo(current.plan!!.reviews().first().csipClosedDate)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
@@ -131,12 +134,13 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - returns no referral date when referral pending`() {
     val prisoner = prisoner().toPersonSummary()
-    dataSetup(generateCsipRecord(prisoner).withReferral()) { it }
+    val current = dataSetup(generateCsipRecord(prisoner).withReferral()) { it }
 
     val response = getLatestCsipRecord(prisoner.prisonNumber)
     with(response) {
       with(requireNotNull(currentCsip)) {
         assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_PENDING.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
         assertThat(referralDate).isNull()
       }
       assertThat(totalOpenedCsipCount).isEqualTo(0)
@@ -170,6 +174,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
         assertThat(reviewOverdueDays).isEqualTo(10)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
