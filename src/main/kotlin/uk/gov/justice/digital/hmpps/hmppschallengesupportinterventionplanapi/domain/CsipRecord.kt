@@ -4,8 +4,6 @@ import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
@@ -20,9 +18,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
@@ -89,9 +87,9 @@ class CsipRecord(
     private set
 
   @NotAudited
-  @Enumerated(EnumType.STRING)
-  @Column(insertable = false, updatable = false)
-  var status: CsipStatus = CsipStatus.UNKNOWN
+  @OneToOne
+  @JoinColumn(name = "status_id", insertable = false, updatable = false)
+  var status: ReferenceData? = null
     private set
 
   fun createReferral(
@@ -176,5 +174,5 @@ fun CsipRecord.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportint
   lastModifiedByDisplayName = lastModifiedByDisplayName,
   referral = referral!!.toModel(),
   plan = plan?.toModel(),
-  status = status,
+  status = requireNotNull(status).toReferenceDataModel(),
 )

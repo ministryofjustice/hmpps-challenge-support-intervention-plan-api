@@ -66,7 +66,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
-        assertThat(status).isEqualTo(CsipStatus.CSIP_OPEN)
+        assertThat(status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(2)
       assertThat(totalReferralCount).isEqualTo(2)
@@ -90,7 +90,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
-        assertThat(status).isEqualTo(CsipStatus.AWAITING_DECISION)
+        assertThat(status.code).isEqualTo(CsipStatus.AWAITING_DECISION.name)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
       assertThat(totalReferralCount).isEqualTo(2)
@@ -116,7 +116,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
-        assertThat(status).isEqualTo(CsipStatus.CSIP_CLOSED)
+        assertThat(status.code).isEqualTo(CsipStatus.CSIP_CLOSED.name)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
       assertThat(totalReferralCount).isEqualTo(2)

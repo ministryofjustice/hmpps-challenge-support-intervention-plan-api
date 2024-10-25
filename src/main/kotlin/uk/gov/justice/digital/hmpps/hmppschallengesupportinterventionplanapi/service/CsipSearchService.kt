@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryHasStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrison
@@ -42,7 +43,7 @@ private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = list
 ).reduce { spec, current -> spec.and(current) }
 
 private fun CsipSummary.toSearchResult() =
-  CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status)
+  CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status())
 
 private fun CsipSummary.prisoner() = Prisoner(prisonNumber, firstName, lastName, cellLocation)
 

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.verifyAllReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.saveAndRefresh
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
@@ -102,7 +103,7 @@ class CsipRecordService(
   fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? =
     csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
       CurrentCsipDetail(
-        CurrentCsip(it.current.status, it.current.referralDate, it.current.nextReviewDate),
+        CurrentCsip(it.current.status(), it.current.referralDate, it.current.nextReviewDate),
         it.opened,
         it.referred,
       )
@@ -133,7 +134,7 @@ private fun CsipEntity.toSummary(): CsipSummary {
     plan?.nextReviewDate(),
     referral.incidentType.toReferenceDataModel(),
     plan?.caseManager,
-    status,
+    requireNotNull(status).toReferenceDataModel(),
   )
 }
 
