@@ -31,7 +31,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.ServiceConfig
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
@@ -170,8 +170,8 @@ abstract class IntegrationTestBase {
       .map { objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message) }
 
   fun switchEventPublish(publish: Boolean) {
-    val current = entityEventService.getByName<EventProperties>("eventProperties")
-    entityEventService.setByName("eventProperties", current.copy(publish = publish))
+    val current = entityEventService.getByName<ServiceConfig>("serviceConfig")
+    entityEventService.setByName("serviceConfig", current.copy(publishEvents = publish))
   }
 
   fun <T> dataSetup(csipRecord: CsipRecord, code: (CsipRecord) -> T): T {
@@ -276,7 +276,9 @@ abstract class IntegrationTestBase {
     referralCompletedBy: String = "referralCompletedBy",
     referralCompletedByDisplayName: String = "referralCompletedByDisplayName",
     referralCompletedDate: LocalDate = LocalDate.now().minusDays(1),
+    referralDate: LocalDate = LocalDate.now(),
   ) = withReferral(
+    referralDate = referralDate,
     referralComplete = referralComplete,
     referralCompletedBy = referralCompletedBy,
     referralCompletedByDisplayName = referralCompletedByDisplayName,

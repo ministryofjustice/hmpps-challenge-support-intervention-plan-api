@@ -119,7 +119,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       it.withReferral().withPlan()
     }
 
-    dataSetup(
+    val csip4 = dataSetup(
       generateCsipRecord(
         prisoner(prisonId = SEARCH_PRISON_CODE, firstName = "James", lastName = "Smith").toPersonSummary(),
       ),
@@ -127,17 +127,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       it.withReferral().withPlan()
     }
 
-    val res1 = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, query = "John", sort = "name,asc"))
-    assertThat(res1.content.size).isEqualTo(3)
-    res1.content[0].verifyAgainst(csip1)
-    res1.content[1].verifyAgainst(csip2)
-    res1.content[2].verifyAgainst(csip3)
-
-    val res2 = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, query = "john", sort = "name,desc"))
-    assertThat(res2.content.size).isEqualTo(3)
-    res2.content[0].verifyAgainst(csip3)
-    res2.content[1].verifyAgainst(csip2)
-    res2.content[2].verifyAgainst(csip1)
+    verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip2), query = "john")
+    verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip4), query = "jam")
   }
 
   @Test
@@ -175,44 +166,86 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   fun `200 ok - can sort by fields`() {
     val prisonCode = "SOR"
     val csip1 = dataSetup(
-      generateCsipRecord(prisoner(prisonId = prisonCode, cellLocation = "$prisonCode-1-123").toPersonSummary()),
+      generateCsipRecord(
+        prisoner(
+          prisonId = prisonCode,
+          cellLocation = "$prisonCode-1-123",
+          lastName = "Johnson",
+          firstName = "James",
+        ).toPersonSummary(),
+      ),
     ) {
-      it.withReferral(referralDate = LocalDate.now().minusDays(10))
+      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(10))
         .withPlan(caseManager = "John Doe").plan!!.withReview(nextReviewDate = LocalDate.now().plusWeeks(12))
       it
     }
     val csip2 = dataSetup(
-      generateCsipRecord(prisoner(prisonId = prisonCode, cellLocation = "$prisonCode-2-123").toPersonSummary()),
+      generateCsipRecord(
+        prisoner(
+          prisonId = prisonCode,
+          cellLocation = "$prisonCode-2-123",
+          lastName = "Smith",
+          firstName = "Jane",
+        ).toPersonSummary(),
+      ),
     ) {
-      it.withReferral(referralDate = LocalDate.now().minusDays(30))
-        .withPlan(firstCaseReviewDate = LocalDate.now().plusDays(20), caseManager = "Jane Doe")
+      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(30))
+      requireNotNull(it.referral).withInvestigation()
+      it
     }
 
     val csip3 = dataSetup(
-      generateCsipRecord(prisoner(prisonId = prisonCode, cellLocation = "$prisonCode-2-456").toPersonSummary()),
+      generateCsipRecord(
+        prisoner(
+          prisonId = prisonCode,
+          cellLocation = "$prisonCode-2-456",
+          lastName = "Smith",
+          firstName = "John",
+        ).toPersonSummary(),
+      ),
     ) {
       it.withReferral(referralDate = LocalDate.now().minusDays(90))
     }
 
-    verifySort(prisonCode, "location", listOf(csip1, csip2, csip3))
-    verifySort(prisonCode, "referralDate", listOf(csip3, csip2, csip1))
-    verifySort(prisonCode, "caseManager", listOf(csip2, csip1, csip3))
-    verifySort(prisonCode, "nextReviewDate", listOf(csip2, csip1, csip3))
-    verifySort(prisonCode, "status", listOf(csip1, csip2, csip3))
+    val csip4 = dataSetup(
+      generateCsipRecord(
+        prisoner(
+          prisonId = prisonCode,
+          cellLocation = "$prisonCode-3-123",
+          lastName = "James",
+          firstName = "Laura",
+        ).toPersonSummary(),
+      ),
+    ) {
+      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(10))
+        .withPlan(caseManager = "Jane Doe", firstCaseReviewDate = LocalDate.now().plusWeeks(6))
+      it
+    }
+
+    verifySort(prisonCode, "location", listOf(csip1, csip2, csip3, csip4))
+    verifySort(prisonCode, "referralDate", listOf(csip3, csip2, csip4, csip1), listOf(csip4, csip1, csip2, csip3))
+    verifySort(prisonCode, "nextReviewDate", listOf(csip4, csip1, csip2, csip3), listOf(csip2, csip3, csip1, csip4))
+    verifySort(prisonCode, "status", listOf(csip2, csip4, csip1, csip3), listOf(csip3, csip4, csip1, csip2))
+    verifySort(prisonCode, "caseManager", listOf(csip4, csip1, csip2, csip3), listOf(csip2, csip3, csip1, csip4))
   }
 
-  private fun verifySort(prisonCode: String, sortField: String, order: List<CsipRecord>) {
-    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode, sort = "$sortField,asc"))
+  private fun verifySort(
+    prisonCode: String,
+    sortField: String,
+    order: List<CsipRecord>,
+    reverseOrder: List<CsipRecord> = order.reversed(),
+    query: String? = null,
+  ) {
+    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode, query = query, sort = "$sortField,asc"))
     assertThat(res1.content.size).isEqualTo(order.size)
     for (i in order.indices) {
       res1.content[i].verifyAgainst(order[i])
     }
 
-    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode, sort = "$sortField,desc"))
+    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode, query = query, sort = "$sortField,desc"))
     assertThat(res2.content.size).isEqualTo(order.size)
-    val reversed = order.reversed()
-    for (i in reversed.indices) {
-      res1.content[i].verifyAgainst(order[i])
+    for (i in reverseOrder.indices) {
+      res2.content[i].verifyAgainst(reverseOrder[i])
     }
   }
 

@@ -3,7 +3,17 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Direction
+import org.springframework.data.domain.Sort.Direction.ASC
+import org.springframework.data.domain.Sort.Direction.DESC
+import org.springframework.data.domain.Sort.by
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.CELL_LOCATION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.CREATED_AT
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.FIRST_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.LAST_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_CODE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS_DESCRIPTION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 
 data class FindCsipRequest(
@@ -26,17 +36,17 @@ data class FindCsipRequest(
   override fun validSortFields(): Set<String> =
     setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS)
 
+  private fun sortByDate(direction: Direction) = by(direction, CsipSummary.REFERRAL_DATE, CREATED_AT)
+  private fun sortByName(direction: Direction): Sort = by(direction, LAST_NAME, FIRST_NAME, PRISON_NUMBER)
+  private fun tieBreaker() = sortByName(ASC).and(sortByDate(DESC))
+
   override fun buildSort(field: String, direction: Direction): Sort {
-    val primary = when (field) {
-      NAME -> Sort.by(direction, CsipSummary.FIRST_NAME, CsipSummary.LAST_NAME, CsipSummary.PRISON_NUMBER)
-      LOCATION -> Sort.by(direction, CsipSummary.PRISON_CODE, CsipSummary.CELL_LOCATION)
-      STATUS -> Sort.by(direction, CsipSummary.PRIORITY)
-      else -> Sort.by(direction, field)
-    }
-    return if (field != REFERRAL_DATE) {
-      primary.and(Sort.by(Direction.DESC, REFERRAL_DATE))
-    } else {
-      primary
+    return when (field) {
+      REFERRAL_DATE -> sortByDate(direction).and(sortByName(ASC))
+      NAME -> sortByName(direction).and(sortByDate(DESC))
+      LOCATION -> by(direction, PRISON_CODE, CELL_LOCATION).and(tieBreaker())
+      STATUS -> by(direction, STATUS_DESCRIPTION).and(tieBreaker())
+      else -> by(direction, field).and(tieBreaker())
     }
   }
 
