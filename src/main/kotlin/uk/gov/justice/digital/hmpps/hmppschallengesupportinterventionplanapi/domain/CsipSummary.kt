@@ -37,6 +37,7 @@ class CsipSummary(
   @Enumerated(EnumType.STRING)
   val status: CsipStatus,
   val priority: Int,
+  val statusDescription: String,
   val createdAt: LocalDateTime,
 
   @Id
@@ -49,7 +50,9 @@ class CsipSummary(
     val PRISON_CODE: String = CsipSummary::prisonCode.name
     val CELL_LOCATION: String = CsipSummary::cellLocation.name
     val STATUS: String = CsipSummary::status.name
-    val PRIORITY: String = CsipSummary::priority.name
+    val REFERRAL_DATE: String = CsipSummary::referralDate.name
+    val CREATED_AT: String = CsipSummary::createdAt.name
+    val STATUS_DESCRIPTION: String = CsipSummary::statusDescription.name
   }
 }
 

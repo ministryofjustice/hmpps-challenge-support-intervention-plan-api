@@ -8,7 +8,7 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.EventProperties
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.ServiceConfig
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipEvent
@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.DomainEventPublisher
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PersonReference
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_CODE_LEEDS
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -29,8 +30,8 @@ class CsipEventServiceTest {
 
   @Test
   fun `handle event - publish enabled`() {
-    val eventProperties = EventProperties(true, baseUrl)
-    val csipEventService = EntityEventService(eventProperties, telemetryClient, domainEventPublisher)
+    val serviceConfig = ServiceConfig(setOf(PRISON_CODE_LEEDS), baseUrl, true)
+    val csipEventService = EntityEventService(serviceConfig, telemetryClient, domainEventPublisher)
     val csipEvent = csipUpdatedEvent()
 
     csipEventService.handleEvent(csipEvent)
@@ -50,8 +51,8 @@ class CsipEventServiceTest {
 
   @Test
   fun `handle event - publish disabled`() {
-    val eventProperties = EventProperties(false, baseUrl)
-    val csipEventService = EntityEventService(eventProperties, telemetryClient, domainEventPublisher)
+    val serviceConfig = ServiceConfig(setOf(PRISON_CODE_LEEDS), baseUrl, false)
+    val csipEventService = EntityEventService(serviceConfig, telemetryClient, domainEventPublisher)
     val csipEvent = csipUpdatedEvent()
 
     csipEventService.handleEvent(csipEvent)
