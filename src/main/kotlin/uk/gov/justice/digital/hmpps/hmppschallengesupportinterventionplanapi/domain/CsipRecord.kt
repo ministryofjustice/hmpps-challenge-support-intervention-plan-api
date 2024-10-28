@@ -47,10 +47,7 @@ import java.util.UUID
 @EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
 class CsipRecord(
 
-  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "prison_number")
-  val personSummary: PersonSummary,
+  personSummary: PersonSummary,
 
   @Audited(withModifiedFlag = false)
   @Column(length = 6, updatable = false)
@@ -68,6 +65,12 @@ class CsipRecord(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
+    private set
+
+  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "prison_number")
+  var personSummary: PersonSummary = personSummary
     private set
 
   @NotAudited
@@ -123,6 +126,10 @@ class CsipRecord(
     verifyDoesNotExist(plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
     plan = Plan(this, request.caseManager, request.reasonForPlan, request.nextCaseReviewDate)
     plan!!
+  }
+
+  fun moveTo(personSummary: PersonSummary) = apply {
+    this.personSummary = personSummary
   }
 
   private fun referral(

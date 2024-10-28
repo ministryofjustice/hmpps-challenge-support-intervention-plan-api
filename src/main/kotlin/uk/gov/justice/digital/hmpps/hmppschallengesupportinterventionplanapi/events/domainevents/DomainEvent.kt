@@ -42,3 +42,8 @@ data class PrisonerUpdatedInformation(val nomsNumber: String, val categoriesChan
     val CATEGORIES_OF_INTEREST = setOf("PERSONAL_DETAILS", "STATUS", "LOCATION")
   }
 }
+
+data class MergeInformation(
+  val nomsNumber: String,
+  val removedNomsNumber: String,
+) : AdditionalInformation

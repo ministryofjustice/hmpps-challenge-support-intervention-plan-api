@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_MOVED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer.DO_NOT_KNOW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -71,11 +72,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipBaseInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipInformation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipMovedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.EntityEventService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PersonReference
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PrisonerUpdatedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.PostgresContainer
@@ -155,7 +156,7 @@ abstract class IntegrationTestBase {
     hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingTopicException("hmppseventtopic not found")
   }
 
-  internal fun sendPersonChangedEvent(event: HmppsDomainEvent<PrisonerUpdatedInformation>) {
+  internal fun sendDomainEvent(event: HmppsDomainEvent<*>) {
     domainEventsTopic.publish(event.eventType, objectMapper.writeValueAsString(event))
   }
 
@@ -167,7 +168,12 @@ abstract class IntegrationTestBase {
       ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
     ).get().messages()
       .map { objectMapper.readValue<Notification>(it.body()) }
-      .map { objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message) }
+      .map {
+        when (it.eventType) {
+          CSIP_MOVED.eventType -> objectMapper.readValue<HmppsDomainEvent<CsipMovedInformation>>(it.message)
+          else -> objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
+        }
+      }
 
   fun switchEventPublish(publish: Boolean) {
     val current = entityEventService.getByName<ServiceConfig>("serviceConfig")
@@ -192,6 +198,15 @@ abstract class IntegrationTestBase {
     eventType: DomainEventType,
     expectedCount: Int = 1,
     source: Source = DPS,
+  ) = verifyDomainEvents(prisonNumber, setOf(recordUuid), eventType, expectedCount, source)
+
+  internal fun verifyDomainEvents(
+    prisonNumber: String,
+    recordUuids: Set<UUID>,
+    eventType: DomainEventType,
+    expectedCount: Int = 1,
+    source: Source = DPS,
+    previousPrisonNumber: String? = null,
   ) {
     await untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
     val allEvents = hmppsEventsTestQueue.receiveDomainEventsOnQueue(expectedCount)
@@ -200,10 +215,13 @@ abstract class IntegrationTestBase {
         val domainEventType = requireNotNull(DomainEventType.entries.find { it.eventType == event.eventType })
         assertThat(domainEventType).isEqualTo(eventType)
         with(additionalInformation as CsipBaseInformation) {
-          assertThat(this.recordUuid).isEqualTo(recordUuid)
+          assertThat(this.recordUuid).isIn(recordUuids)
+          assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/${this.recordUuid}")
+        }
+        if (additionalInformation is CsipMovedInformation) {
+          assertThat((additionalInformation as CsipMovedInformation).previousNomsNumber).isEqualTo(previousPrisonNumber)
         }
         assertThat(description).isEqualTo(domainEventType.description)
-        assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/$recordUuid")
         assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
       }
     }
