@@ -129,6 +129,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip2), query = "john")
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip4), query = "jam")
+    verifySort(SEARCH_PRISON_CODE, "name", listOf(csip4), query = "smith james")
   }
 
   @Test

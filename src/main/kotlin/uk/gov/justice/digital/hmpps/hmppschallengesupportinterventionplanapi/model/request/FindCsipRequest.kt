@@ -5,6 +5,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.data.domain.Sort.Direction.ASC
 import org.springframework.data.domain.Sort.Direction.DESC
+import org.springframework.data.domain.Sort.NullHandling.NULLS_LAST
+import org.springframework.data.domain.Sort.Order
 import org.springframework.data.domain.Sort.by
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.CELL_LOCATION
@@ -46,7 +48,7 @@ data class FindCsipRequest(
       NAME -> sortByName(direction).and(sortByDate(DESC))
       LOCATION -> by(direction, PRISON_CODE, CELL_LOCATION).and(tieBreaker())
       STATUS -> by(direction, STATUS_DESCRIPTION).and(tieBreaker())
-      else -> by(direction, field).and(tieBreaker())
+      else -> by(Order(direction, field, NULLS_LAST)).and(tieBreaker())
     }
   }
 

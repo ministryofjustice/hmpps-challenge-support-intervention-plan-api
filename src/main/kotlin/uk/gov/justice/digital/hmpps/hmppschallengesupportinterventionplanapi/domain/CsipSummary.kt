@@ -100,7 +100,7 @@ fun summaryMatchesName(name: String) =
         cb.like(cb.lower(csip[FIRST_NAME]), "%${it.lowercase()}%"),
       )
     }.toTypedArray()
-    cb.or(*matches)
+    cb.and(*matches)
   }
 
 fun summaryHasStatus(status: CsipStatus) = Specification<CsipSummary> { csip, _, cb ->
