@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -80,6 +81,22 @@ interface CsipSummaryRepository : JpaRepository<CsipSummary, UUID>, JpaSpecifica
   """,
   )
   fun findCurrentWithCounts(prisonNumber: String): CurrentCsipAndCounts?
+
+  @Query(
+    """
+    select csip.prisonCode,
+       sum(case when csip.statusCode = 'REFERRAL_SUBMITTED' then 1 else 0 end)                               as referrals_submitted,
+       sum(case when csip.statusCode = 'INVESTIGATION_PENDING' then 1 else 0 end)                            as investigations_pending,
+       sum(case when csip.statusCode = 'AWAITING_DECISION' then 1 else 0 end)                                as awaiting_decisions,
+       sum(case when csip.statusCode = 'PLAN_PENDING' then 1 else 0 end)                                     as pending_plans,
+       sum(case when csip.statusCode = 'CSIP_OPEN' then 1 else 0 end)                                        as open,
+       sum(case when csip.statusCode = 'CSIP_OPEN' and csip.nextReviewDate < current_date then 1 else 0 end) as overdue
+   from CsipSummary csip
+   where csip.prisonCode = :prisonCode
+   group by csip.prisonCode
+  """,
+  )
+  fun getOverviewCounts(prisonCode: String): CsipCounts?
 }
 
 interface CurrentCsipAndCounts {

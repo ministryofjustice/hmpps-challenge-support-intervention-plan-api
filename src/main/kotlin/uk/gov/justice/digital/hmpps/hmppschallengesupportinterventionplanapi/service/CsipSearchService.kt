@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrison
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrisonNumber
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipOverview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResult
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResults
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.PageMeta
@@ -23,6 +25,9 @@ class CsipSearchService(private val csipSummaryRepository: CsipSummaryRepository
   fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults =
     csipSummaryRepository.findAll(request.asSpecification(), request.pageable())
       .map { it.toSearchResult() }.asCsipSearchResults()
+
+  fun getOverviewForPrison(prisonCode: String): CsipOverview =
+    CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
 }
 
 private fun Page<CsipSearchResult>.asCsipSearchResults() = CsipSearchResults(
