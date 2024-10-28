@@ -6,8 +6,6 @@ import jakarta.validation.constraints.Min
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
-import org.springframework.data.domain.Sort.NullHandling.NULLS_LAST
-import org.springframework.data.domain.Sort.Order
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidInputException
 
 interface PagedRequest {
@@ -35,7 +33,7 @@ interface PagedRequest {
     return buildSort(field, direction)
   }
 
-  fun buildSort(field: String, direction: Sort.Direction): Sort = Sort.by(Order(direction, field, NULLS_LAST))
+  fun buildSort(field: String, direction: Sort.Direction): Sort = Sort.by(direction, field)
 
   fun pageable(): Pageable = PageRequest.of(page - 1, size, sort())
 }
