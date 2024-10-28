@@ -33,7 +33,7 @@ dependencies {
   implementation("org.springframework.data:spring-data-envers")
 
   // AWS
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.0.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.1.0")
 
   // Test dependencies
   testImplementation("org.testcontainers:postgresql:1.20.3")
