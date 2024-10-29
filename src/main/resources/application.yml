@@ -69,6 +69,7 @@ springdoc:
   swagger-ui:
     tags-sorter: alpha
     operations-sorter: alpha
+  paths-to-exclude: "/queue-admin/**"
 
 sentry:
   exception-resolver-order: -2147483647

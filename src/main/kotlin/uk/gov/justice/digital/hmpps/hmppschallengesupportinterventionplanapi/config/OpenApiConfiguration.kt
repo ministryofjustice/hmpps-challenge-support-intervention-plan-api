@@ -36,6 +36,9 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
         .version(version)
         .description(
           "API for retrieving and managing Challenge, Support, and Intervention Plan (CSIP) relating to a person.\n\n" +
+            "This API is only intended for use by the CSIP UI and the prisoner profile. " +
+            "Any other proposed consumers of this API should discuss the requirements first with the current maintainers of the CSIP service. " +
+            "See the developer portal for this information.\n\n"+
             "## Authentication\n\n" +
             "This API uses OAuth2 with JWTs. " +
             "You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n" +
