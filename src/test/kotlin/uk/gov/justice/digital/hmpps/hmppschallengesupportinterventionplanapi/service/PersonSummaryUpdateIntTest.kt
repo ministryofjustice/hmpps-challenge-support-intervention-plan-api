@@ -37,7 +37,7 @@ class PersonSummaryUpdateIntTest : IntegrationTestBase() {
     )
     prisonerSearch.stubGetPrisoner(updatedPrisoner)
 
-    sendPersonChangedEvent(
+    sendDomainEvent(
       personChangedEvent(
         personSummary.prisonNumber,
         setOf(
@@ -70,7 +70,7 @@ class PersonSummaryUpdateIntTest : IntegrationTestBase() {
       cellLocation = null,
     )
 
-    sendPersonChangedEvent(personChangedEvent(updatedPrisoner.prisonerNumber, setOf("PERSONAL_DETAILS")))
+    sendDomainEvent(personChangedEvent(updatedPrisoner.prisonerNumber, setOf("PERSONAL_DETAILS")))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
     assertThat(personSummaryRepository.findByIdOrNull(prisonNumber)).isNull()
@@ -90,7 +90,7 @@ class PersonSummaryUpdateIntTest : IntegrationTestBase() {
     )
     prisonerSearch.stubGetPrisoner(updatedPrisoner)
 
-    sendPersonChangedEvent(personChangedEvent(personSummary.prisonNumber, setOf(changeCategory)))
+    sendDomainEvent(personChangedEvent(personSummary.prisonNumber, setOf(changeCategory)))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
     val saved = requireNotNull(personSummaryRepository.findByIdOrNull(personSummary.prisonNumber))

@@ -24,6 +24,8 @@ components:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-created.yaml
     csip.record.updated:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-updated.yaml
+    csip.record.moved:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-moved.yaml
     csip.record.deleted:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/csip/person-csip-record-deleted.yaml
 
@@ -39,6 +41,8 @@ channels:
         $ref: '#/components/messages/csip.record.created'
       csip.record.updated:
         $ref: '#/components/messages/csip.record.updated'
+      csip.record.moved:
+        $ref: '#/components/messages/csip.record.moved'
       csip.record.deleted:
         $ref: '#/components/messages/csip.record.deleted'
 
@@ -49,5 +53,6 @@ operations:
       $ref: '#/channels/hmpps-domain-events'
     messages:
       - $ref: '#/channels/hmpps-domain-events/messages/csip.record.created'
-      - $ref: '#/channels/hmpps-domain-events/messages/csip.record.deleted'
       - $ref: '#/channels/hmpps-domain-events/messages/csip.record.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.record.moved'
+      - $ref: '#/channels/hmpps-domain-events/messages/csip.record.deleted'
