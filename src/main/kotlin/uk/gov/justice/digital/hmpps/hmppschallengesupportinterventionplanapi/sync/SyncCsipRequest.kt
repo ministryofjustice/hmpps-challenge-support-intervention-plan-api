@@ -20,7 +20,6 @@ data class SyncCsipRequest(
   val prisonCodeWhenRecorded: String?,
   override val actionedAt: LocalDateTime,
   override val actionedBy: String,
-  override val actionedByDisplayName: String,
   override val activeCaseloadId: String?,
   override val legacyId: Long,
   override val id: UUID?,

@@ -98,8 +98,6 @@ fun Interview.toModel() =
     interviewText = interviewText,
     createdAt = createdAt,
     createdBy = createdBy,
-    createdByDisplayName = createdByDisplayName,
     lastModifiedAt = lastModifiedAt,
     lastModifiedBy = lastModifiedBy,
-    lastModifiedByDisplayName = lastModifiedByDisplayName,
   )

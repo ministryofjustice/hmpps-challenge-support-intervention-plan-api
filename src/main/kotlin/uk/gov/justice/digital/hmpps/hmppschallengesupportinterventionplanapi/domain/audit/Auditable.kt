@@ -16,22 +16,18 @@ interface Versioned {
 interface Auditable {
   var createdAt: LocalDateTime
   var createdBy: String
-  var createdByDisplayName: String
 
   var lastModifiedAt: LocalDateTime?
   var lastModifiedBy: String?
-  var lastModifiedByDisplayName: String?
 
   fun recordCreatedDetails(context: CsipRequestContext) {
     createdAt = context.requestAt
     createdBy = context.username
-    createdByDisplayName = context.userDisplayName
   }
 
   fun recordModifiedDetails(context: CsipRequestContext) {
     lastModifiedAt = context.requestAt
     lastModifiedBy = context.username
-    lastModifiedByDisplayName = context.userDisplayName
   }
 }
 
@@ -49,14 +45,8 @@ open class SimpleAuditable(context: CsipRequestContext = csipRequestContext()) :
   override var createdBy: String = context.username
 
   @field:Column
-  override var createdByDisplayName: String = context.userDisplayName
-
-  @field:Column
   override var lastModifiedAt: LocalDateTime? = null
 
   @field:Column
   override var lastModifiedBy: String? = null
-
-  @field:Column
-  override var lastModifiedByDisplayName: String? = null
 }

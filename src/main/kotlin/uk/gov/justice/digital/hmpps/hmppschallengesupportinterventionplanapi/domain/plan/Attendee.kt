@@ -85,8 +85,6 @@ fun Attendee.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinter
   contribution,
   createdAt,
   createdBy,
-  createdByDisplayName,
   lastModifiedAt,
   lastModifiedBy,
-  lastModifiedByDisplayName,
 )

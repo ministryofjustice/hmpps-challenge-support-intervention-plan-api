@@ -102,8 +102,6 @@ fun IdentifiedNeed.toModel() =
     progression,
     createdAt,
     createdBy,
-    createdByDisplayName,
     lastModifiedAt,
     lastModifiedBy,
-    lastModifiedByDisplayName,
   )

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.RequestContextHolder
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
@@ -121,7 +120,6 @@ class SyncController(private val csip: SyncCsipRecord) {
       object : LegacyActioned {
         override val actionedAt: LocalDateTime = LocalDateTime.now()
         override val actionedBy = SYSTEM_USER_NAME
-        override val actionedByDisplayName = SYSTEM_DISPLAY_NAME
         override val activeCaseloadId: String? = null
       },
     )
@@ -166,7 +164,7 @@ class SyncController(private val csip: SyncCsipRecord) {
           source = Source.NOMIS,
           requestAt = actioned.actionedAt,
           username = actioned.actionedBy,
-          userDisplayName = actioned.actionedByDisplayName,
+          userDisplayName = actioned.actionedBy,
           activeCaseLoadId = actioned.activeCaseloadId,
         ),
         0,

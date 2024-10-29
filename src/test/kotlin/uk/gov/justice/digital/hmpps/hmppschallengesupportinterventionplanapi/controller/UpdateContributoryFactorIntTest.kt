@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpdateContributoryFactorRequest
@@ -141,7 +140,6 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     assertThat(saved.comment).isEqualTo(request.comment)
     assertThat(saved.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
-    assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(CONTRIBUTORY_FACTOR))
     verifyDomainEvents(factor.csipRecord().prisonNumber, factor.csipRecord().id, CSIP_UPDATED)
   }
@@ -160,7 +158,6 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     val saved = getContributoryFactory(response.factorUuid)
     assertThat(saved.lastModifiedAt).isNull()
     assertThat(saved.lastModifiedBy).isNull()
-    assertThat(saved.lastModifiedByDisplayName).isNull()
     verifyAudit(
       saved,
       RevisionType.ADD,

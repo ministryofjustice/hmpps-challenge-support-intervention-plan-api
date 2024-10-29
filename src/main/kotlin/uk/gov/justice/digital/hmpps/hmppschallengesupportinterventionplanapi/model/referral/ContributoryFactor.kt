@@ -25,21 +25,9 @@ data class ContributoryFactor(
   @Schema(description = "The username of the user who created the Contributory Factor", example = "USER1234")
   val createdBy: String,
 
-  @Schema(
-    description = "The displayable name of the user who created the Contributory Factor",
-    example = "Firstname Lastname",
-  )
-  val createdByDisplayName: String,
-
   @Schema(description = "The date and time the Contributory Factor was last modified", example = "2022-07-15T15:24:56")
   val lastModifiedAt: LocalDateTime?,
 
   @Schema(description = "The username of the user who last modified the Contributory Factor", example = "USER1234")
   val lastModifiedBy: String?,
-
-  @Schema(
-    description = "The displayable name of the user who last modified the Contributory Factor",
-    example = "Firstname Lastname",
-  )
-  val lastModifiedByDisplayName: String?,
 )

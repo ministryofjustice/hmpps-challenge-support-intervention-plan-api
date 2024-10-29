@@ -15,7 +15,6 @@ object EntityGenerator {
     logCode: String? = null,
     createdAt: LocalDateTime = CONTEXT.requestAt,
     createdBy: String = CONTEXT.username,
-    createdByDisplayName: String = CONTEXT.userDisplayName,
     legacyId: Long? = null,
   ) = CsipRecord(
     personSummary,
@@ -25,6 +24,5 @@ object EntityGenerator {
   ).apply {
     this.createdAt = createdAt
     this.createdBy = createdBy
-    this.createdByDisplayName = createdByDisplayName
   }
 }

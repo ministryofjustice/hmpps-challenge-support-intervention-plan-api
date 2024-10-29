@@ -40,21 +40,9 @@ data class IdentifiedNeed(
   @Schema(description = "The username of the user who created the Identified Need", example = "USER1234")
   val createdBy: String,
 
-  @Schema(
-    description = "The displayable name of the user who created the Identified Need",
-    example = "Firstname Lastname",
-  )
-  val createdByDisplayName: String,
-
   @Schema(description = "The date and time the Identified Need was last modified", example = "2022-07-15T15:24:56")
   val lastModifiedAt: LocalDateTime?,
 
   @Schema(description = "The username of the user who last modified the Identified Need", example = "USER1234")
   val lastModifiedBy: String?,
-
-  @Schema(
-    description = "The displayable name of the user who last modified the Identified Need",
-    example = "Firstname Lastname",
-  )
-  val lastModifiedByDisplayName: String?,
 )

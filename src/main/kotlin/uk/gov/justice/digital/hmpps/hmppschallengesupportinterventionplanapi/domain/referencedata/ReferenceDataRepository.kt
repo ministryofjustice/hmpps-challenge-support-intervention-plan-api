@@ -28,9 +28,6 @@ fun ReferenceDataRepository.getActiveReferenceData(key: ReferenceDataKey) =
     verify(it.isActive()) { NotActiveException(key.domain.name, key.code) }
   }
 
-fun ReferenceDataRepository.getScreeningOutcomeType(code: String) =
-  getActiveReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, code)
-
 fun ReferenceDataRepository.verifyAllReferenceData(
   type: ReferenceDataType,
   codes: Set<String>,

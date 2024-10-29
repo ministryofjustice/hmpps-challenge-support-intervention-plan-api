@@ -158,7 +158,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(comment).isEqualTo(request.comment)
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo(TEST_USER)
-      assertThat(createdByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
     val saved = getContributoryFactory(response.factorUuid)
@@ -185,7 +184,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
       assertThat(comment).isEqualTo(request.comment)
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo(TEST_USER)
-      assertThat(createdByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
     val saved = getContributoryFactory(response.factorUuid)

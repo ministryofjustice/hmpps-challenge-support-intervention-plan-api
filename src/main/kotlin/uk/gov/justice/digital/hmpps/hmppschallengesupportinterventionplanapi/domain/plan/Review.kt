@@ -142,9 +142,7 @@ fun Review.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterve
   actions,
   createdAt,
   createdBy,
-  createdByDisplayName,
   lastModifiedAt,
   lastModifiedBy,
-  lastModifiedByDisplayName,
   attendees().map { it.toModel() },
 )

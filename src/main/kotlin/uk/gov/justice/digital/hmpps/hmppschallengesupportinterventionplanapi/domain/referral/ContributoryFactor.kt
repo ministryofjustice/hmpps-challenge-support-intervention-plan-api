@@ -85,8 +85,6 @@ fun ContributoryFactor.toModel() =
     comment = comment,
     createdAt = createdAt,
     createdBy = createdBy,
-    createdByDisplayName = createdByDisplayName,
     lastModifiedAt = lastModifiedAt,
     lastModifiedBy = lastModifiedBy,
-    lastModifiedByDisplayName = lastModifiedByDisplayName,
   )

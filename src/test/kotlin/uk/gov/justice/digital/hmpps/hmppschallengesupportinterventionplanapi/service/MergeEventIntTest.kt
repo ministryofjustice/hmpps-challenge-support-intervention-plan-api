@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
 import java.time.Duration.ofSeconds
 import java.time.ZonedDateTime
 

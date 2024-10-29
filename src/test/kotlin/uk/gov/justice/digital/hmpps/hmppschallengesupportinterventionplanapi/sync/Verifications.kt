@@ -129,10 +129,8 @@ fun Attendee.verifyAgainst(request: SyncAttendeeRequest) {
 fun Auditable.verifyAuditFields(request: NomisAudited) {
   assertThat(createdAt).isCloseTo(request.createdAt, within(1, ChronoUnit.SECONDS))
   assertThat(createdBy).isEqualTo(request.createdBy)
-  assertThat(createdByDisplayName).isEqualTo(request.createdByDisplayName)
   request.lastModifiedAt?.also {
     assertThat(lastModifiedAt).isCloseTo(it, within(1, ChronoUnit.SECONDS))
     assertThat(lastModifiedBy).isEqualTo(request.lastModifiedBy)
-    assertThat(lastModifiedByDisplayName).isEqualTo(request.lastModifiedByDisplayName)
   }
 }

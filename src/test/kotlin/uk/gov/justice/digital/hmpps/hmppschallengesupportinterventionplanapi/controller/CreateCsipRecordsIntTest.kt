@@ -217,7 +217,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(referral).isNotNull()
       assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
       assertThat(createdBy).isEqualTo("TEST_USER")
-      assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
       assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
     }

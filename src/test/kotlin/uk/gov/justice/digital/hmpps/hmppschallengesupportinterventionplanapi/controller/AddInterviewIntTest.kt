@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
@@ -171,7 +170,6 @@ class AddInterviewIntTest : IntegrationTestBase() {
   private fun Interview.verifyAgainst(
     request: CreateInterviewRequest,
     createdBy: String = TEST_USER,
-    createdByDisplayName: String = TEST_USER_NAME,
   ) {
     assertThat(interviewee).isEqualTo(request.interviewee)
     assertThat(intervieweeRole.code).isEqualTo(request.intervieweeRoleCode)
@@ -179,7 +177,6 @@ class AddInterviewIntTest : IntegrationTestBase() {
     assertThat(interviewText).isEqualTo(request.interviewText)
     assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(this.createdBy).isEqualTo(createdBy)
-    assertThat(this.createdByDisplayName).isEqualTo(createdByDisplayName)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/referral/investigation/interviews"

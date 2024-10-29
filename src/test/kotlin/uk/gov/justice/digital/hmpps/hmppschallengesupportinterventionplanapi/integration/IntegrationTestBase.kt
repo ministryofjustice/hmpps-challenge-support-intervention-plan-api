@@ -250,7 +250,6 @@ abstract class IntegrationTestBase {
     with(auditRevision) {
       assertThat(source).isEqualTo(context.source)
       assertThat(username).isEqualTo(context.username)
-      assertThat(userDisplayName).isEqualTo(context.userDisplayName)
       assertThat(caseloadId).isEqualTo(context.activeCaseLoadId)
       assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
     }
@@ -260,11 +259,9 @@ abstract class IntegrationTestBase {
       with(audited) {
         if (revisionType == RevisionType.ADD) {
           assertThat(createdBy).isEqualTo(context.username)
-          assertThat(createdByDisplayName).isEqualTo(context.userDisplayName)
         }
         if (revisionType == RevisionType.MOD) {
           assertThat(lastModifiedBy).isEqualTo(context.username)
-          assertThat(lastModifiedByDisplayName).isEqualTo(context.userDisplayName)
         }
       }
     }

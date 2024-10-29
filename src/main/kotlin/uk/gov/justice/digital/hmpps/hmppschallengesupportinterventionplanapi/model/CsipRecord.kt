@@ -30,20 +30,11 @@ data class CsipRecord(
   @Schema(description = "The username of the user who created the CSIP Record", example = "USER1234")
   val createdBy: String,
 
-  @Schema(description = "The displayable name of the user who created the CSIP Record", example = "Firstname Lastname")
-  val createdByDisplayName: String,
-
   @Schema(description = "The date and time the CSIP Record was last modified", example = "2022-07-15T15:24:56")
   val lastModifiedAt: LocalDateTime?,
 
   @Schema(description = "The username of the user who last modified the CSIP Record", example = "USER1234")
   val lastModifiedBy: String?,
-
-  @Schema(
-    description = "The displayable name of the user who last modified the CSIP Record",
-    example = "Firstname Lastname",
-  )
-  val lastModifiedByDisplayName: String?,
 
   @Schema(description = "The referral that results in the creation of this CSIP record.")
   val referral: Referral,

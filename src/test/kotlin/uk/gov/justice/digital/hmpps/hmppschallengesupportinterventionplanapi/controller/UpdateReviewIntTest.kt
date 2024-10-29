@@ -122,7 +122,6 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     assertThat(saved.csipClosedDate).isEqualTo(LocalDate.now().plusDays(5))
     assertThat(saved.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
     assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
-    assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(REVIEW))
     verifyDomainEvents(review.csipRecord().prisonNumber, review.csipRecord().id, CSIP_UPDATED)
   }
@@ -155,7 +154,6 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     val saved = getReview(response.reviewUuid)
     assertThat(saved.lastModifiedAt).isNull()
     assertThat(saved.lastModifiedBy).isNull()
-    assertThat(saved.lastModifiedByDisplayName).isNull()
     verifyAudit(
       saved,
       RevisionType.ADD,
