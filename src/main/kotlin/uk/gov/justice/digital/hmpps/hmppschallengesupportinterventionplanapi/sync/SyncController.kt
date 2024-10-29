@@ -20,12 +20,15 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.RequestContextHolder
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_DISPLAY_NAME
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.SYSTEM_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.internal.SyncCsipRecord
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController
@@ -86,6 +89,43 @@ class SyncController(private val csip: SyncCsipRecord) {
   fun syncCsipRecord(@Valid @RequestBody request: SyncCsipRequest): SyncResponse {
     setSyncContext(request)
     return csip.sync(request)
+  }
+
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "CSIP record moved",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PutMapping("/move")
+  @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
+  fun moveCsipRecord(@Valid @RequestBody request: MoveCsipRequest) {
+    setSyncContext(
+      object : LegacyActioned {
+        override val actionedAt: LocalDateTime = LocalDateTime.now()
+        override val actionedBy = SYSTEM_USER_NAME
+        override val actionedByDisplayName = SYSTEM_DISPLAY_NAME
+        override val activeCaseloadId: String? = null
+      },
+    )
+    csip.move(request)
   }
 
   @ApiResponses(

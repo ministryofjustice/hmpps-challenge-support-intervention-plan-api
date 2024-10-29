@@ -1,32 +1,33 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.internal
 
 import com.microsoft.applicationinsights.TelemetryClient
-import org.springframework.data.repository.findByIdOrNull
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.matchesPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_MOVED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.InvalidInputException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.MultipleInvalidException
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.PersonSummaryService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.MoveCsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.PersonSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.RequestMapping
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.ResponseMapping
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncCsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncResponse
+import java.time.LocalDateTime.now
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord as CsipModel
 
@@ -35,10 +36,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 class SyncCsipRecord(
   val referenceDaRepository: ReferenceDataRepository,
   val csipRepository: CsipRecordRepository,
-  val personSummaryRepository: PersonSummaryRepository,
-  val personSearch: PrisonerSearchClient,
+  val personSummaryService: PersonSummaryService,
   val referralSync: SyncReferral,
   val planSync: SyncPlan,
+  val eventPublisher: ApplicationEventPublisher,
   val telemetry: TelemetryClient,
 ) {
   fun sync(request: SyncCsipRequest): SyncResponse {
@@ -46,9 +47,9 @@ class SyncCsipRecord(
     val rdSupplier: (ReferenceDataType, String) -> ReferenceData = { type, code ->
       requireNotNull(rdMap[ReferenceDataKey(type, code)])
     }
-    val personSummary = personSummaryRepository.findByIdOrNull(request.prisonNumber)
+
     val csip: CsipRecord = findCsipRecord(request.id, request.legacyId)?.update(request)?.withAuditInfo(request)
-      ?: request.toCsipRecord(personSummary ?: request.toPersonSummary())
+      ?: request.toCsipRecord(request.toPersonSummary())
     val referralMappings = request.referral?.let {
       val referral = csip.referral?.update(it, rdSupplier) ?: csip.createReferral(it, csipRequestContext(), rdSupplier)
       referralSync.sync(referral, it, rdSupplier)
@@ -70,12 +71,28 @@ class SyncCsipRecord(
     )
   }
 
+  fun move(request: MoveCsipRequest) {
+    val toMove = csipRepository.findByPrisonNumberAndIdIn(request.fromPrisonNumber, request.recordUuids)
+    if (toMove.isNotEmpty()) {
+      val personSummary = personSummaryService.getPersonSummaryByPrisonNumber(request.toPrisonNumber)
+      val remaining = csipRepository.countByPrisonNumber(request.fromPrisonNumber)
+      val moved = toMove.map { csip ->
+        csip.moveTo(personSummary).also {
+          eventPublisher.publishEvent(CsipEvent(CSIP_MOVED, it.prisonNumber, it.id, now(), request.fromPrisonNumber))
+        }
+      }
+      if (remaining == moved.size) {
+        personSummaryService.removePersonSummaryByPrisonNumber(request.fromPrisonNumber)
+      }
+    }
+  }
+
   fun deleteCsipRecord(id: UUID) {
     csipRepository.findById(id)?.also {
       val remaining = csipRepository.countByPrisonNumber(it.prisonNumber)
       csipRepository.delete(it)
       if (remaining == 1) {
-        personSummaryRepository.delete(it.personSummary)
+        personSummaryService.removePersonSummaryByPrisonNumber(it.personSummary.prisonNumber)
       }
     }
   }
@@ -102,11 +119,9 @@ class SyncCsipRecord(
     }
   }
 
-  private fun SyncCsipRequest.toPersonSummary() = (
-    personSummary?.toPersonSummary(prisonNumber)
-      ?: personSearch.getPrisoner(prisonNumber)?.toPersonSummary()
-    )?.also(personSummaryRepository::save)
-    ?: throw NotFoundException("Person", prisonNumber)
+  private fun SyncCsipRequest.toPersonSummary() =
+    personSummary?.toPersonSummary(prisonNumber)?.let(personSummaryService::savePersonSummary)
+      ?: personSummaryService.getPersonSummaryByPrisonNumber(prisonNumber)
 
   private fun PersonSummaryRequest.toPersonSummary(prisonNumber: String) =
     PersonSummary(prisonNumber, firstName, lastName, status, prisonCode, cellLocation)
