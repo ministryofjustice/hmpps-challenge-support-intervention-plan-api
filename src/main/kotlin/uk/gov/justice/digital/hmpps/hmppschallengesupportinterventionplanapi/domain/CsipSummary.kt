@@ -14,8 +14,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.LAST_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_NUMBER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -35,9 +37,10 @@ class CsipSummary(
   val nextReviewDate: LocalDate?,
   val caseManager: String?,
   @Enumerated(EnumType.STRING)
-  val status: CsipStatus,
-  val priority: Int,
+  val statusCode: CsipStatus,
   val statusDescription: String,
+  val priority: Int,
+  val closedDate: LocalDate?,
   val createdAt: LocalDateTime,
 
   @Id
@@ -49,7 +52,7 @@ class CsipSummary(
     val LAST_NAME: String = CsipSummary::lastName.name
     val PRISON_CODE: String = CsipSummary::prisonCode.name
     val CELL_LOCATION: String = CsipSummary::cellLocation.name
-    val STATUS: String = CsipSummary::status.name
+    val STATUS_CODE: String = CsipSummary::statusCode.name
     val REFERRAL_DATE: String = CsipSummary::referralDate.name
     val CREATED_AT: String = CsipSummary::createdAt.name
     val STATUS_DESCRIPTION: String = CsipSummary::statusDescription.name
@@ -78,6 +81,23 @@ interface CsipSummaryRepository : JpaRepository<CsipSummary, UUID>, JpaSpecifica
   """,
   )
   fun findCurrentWithCounts(prisonNumber: String): CurrentCsipAndCounts?
+
+  @Query(
+    """
+    select new uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts(
+       sum(case when csip.statusCode = 'REFERRAL_SUBMITTED' then 1 else 0 end),
+       sum(case when csip.statusCode = 'INVESTIGATION_PENDING' then 1 else 0 end),
+       sum(case when csip.statusCode = 'AWAITING_DECISION' then 1 else 0 end),
+       sum(case when csip.statusCode = 'PLAN_PENDING' then 1 else 0 end),
+       sum(case when csip.statusCode = 'CSIP_OPEN' then 1 else 0 end),
+       sum(case when csip.statusCode = 'CSIP_OPEN' and csip.nextReviewDate < current_date then 1 else 0 end)
+    )
+   from CsipSummary csip
+   where csip.prisonCode = :prisonCode
+   group by csip.prisonCode
+  """,
+  )
+  fun getOverviewCounts(prisonCode: String): CsipCounts?
 }
 
 interface CurrentCsipAndCounts {
@@ -104,5 +124,7 @@ fun summaryMatchesName(name: String) =
   }
 
 fun summaryHasStatus(status: CsipStatus) = Specification<CsipSummary> { csip, _, cb ->
-  cb.equal(csip.get<String>(STATUS), status.name)
+  cb.equal(csip.get<String>(STATUS_CODE), status.name)
 }
+
+fun CsipSummary.status() = ReferenceData(statusCode.name, statusDescription)

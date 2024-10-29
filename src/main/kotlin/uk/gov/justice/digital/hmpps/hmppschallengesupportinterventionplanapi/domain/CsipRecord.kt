@@ -4,8 +4,6 @@ import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
@@ -20,9 +18,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.Referral
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.toModel
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_INVOLVEMENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INCIDENT_LOCATION
@@ -47,10 +45,7 @@ import java.util.UUID
 @EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
 class CsipRecord(
 
-  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "prison_number")
-  val personSummary: PersonSummary,
+  personSummary: PersonSummary,
 
   @Audited(withModifiedFlag = false)
   @Column(length = 6, updatable = false)
@@ -70,9 +65,16 @@ class CsipRecord(
   override var legacyId: Long? = legacyId
     private set
 
+  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "prison_number")
+  var personSummary: PersonSummary = personSummary
+    private set
+
   @NotAudited
   @Column(name = "prison_number", insertable = false, updatable = false)
-  val prisonNumber: String = personSummary.prisonNumber
+  var prisonNumber: String = personSummary.prisonNumber
+    private set
 
   @Column(length = 10)
   var logCode: String? = logCode
@@ -89,9 +91,9 @@ class CsipRecord(
     private set
 
   @NotAudited
-  @Enumerated(EnumType.STRING)
-  @Column(insertable = false, updatable = false)
-  var status: CsipStatus = CsipStatus.UNKNOWN
+  @OneToOne
+  @JoinColumn(name = "status_id", insertable = false, updatable = false)
+  var status: ReferenceData? = null
     private set
 
   fun createReferral(
@@ -123,6 +125,11 @@ class CsipRecord(
     verifyDoesNotExist(plan) { ResourceAlreadyExistException("CSIP record already has a plan") }
     plan = Plan(this, request.caseManager, request.reasonForPlan, request.nextCaseReviewDate)
     plan!!
+  }
+
+  fun moveTo(personSummary: PersonSummary) = apply {
+    this.personSummary = personSummary
+    this.prisonNumber = personSummary.prisonNumber
   }
 
   private fun referral(
@@ -176,5 +183,5 @@ fun CsipRecord.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportint
   lastModifiedByDisplayName = lastModifiedByDisplayName,
   referral = referral!!.toModel(),
   plan = plan?.toModel(),
-  status = status,
+  status = requireNotNull(status).toReferenceDataModel(),
 )

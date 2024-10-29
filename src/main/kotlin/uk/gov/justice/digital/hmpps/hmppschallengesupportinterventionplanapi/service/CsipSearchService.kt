@@ -6,10 +6,13 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryHasStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrison
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrisonNumber
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipOverview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResult
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResults
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.PageMeta
@@ -22,6 +25,9 @@ class CsipSearchService(private val csipSummaryRepository: CsipSummaryRepository
   fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults =
     csipSummaryRepository.findAll(request.asSpecification(), request.pageable())
       .map { it.toSearchResult() }.asCsipSearchResults()
+
+  fun getOverviewForPrison(prisonCode: String): CsipOverview =
+    CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
 }
 
 private fun Page<CsipSearchResult>.asCsipSearchResults() = CsipSearchResults(
@@ -42,7 +48,7 @@ private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = list
 ).reduce { spec, current -> spec.and(current) }
 
 private fun CsipSummary.toSearchResult() =
-  CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status)
+  CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status())
 
 private fun CsipSummary.prisoner() = Prisoner(prisonNumber, firstName, lastName, cellLocation)
 

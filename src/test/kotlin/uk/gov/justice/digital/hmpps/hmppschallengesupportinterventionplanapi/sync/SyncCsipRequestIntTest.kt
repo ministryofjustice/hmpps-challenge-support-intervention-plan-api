@@ -69,7 +69,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 
-class SyncCsipRequestRecordIntTest : IntegrationTestBase() {
+class SyncCsipRequestIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var contributoryFactorRepository: ContributoryFactorRepository

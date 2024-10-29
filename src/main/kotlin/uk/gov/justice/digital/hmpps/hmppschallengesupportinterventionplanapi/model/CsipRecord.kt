@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model
 
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Plan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Referral
 import java.time.LocalDateTime
 import java.util.UUID
@@ -52,5 +52,5 @@ data class CsipRecord(
   val plan: Plan?,
 
   @Schema(description = "The current status of the CSIP record.")
-  val status: CsipStatus,
+  val status: ReferenceData,
 )

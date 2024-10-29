@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
@@ -69,7 +70,7 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
         assertThat(nextReviewDate).isEqualTo(csip.plan!!.firstCaseReviewDate)
         assertThat(incidentType.code).isEqualTo(csip.referral!!.incidentType.code)
         assertThat(caseManager).isEqualTo(csip.plan!!.caseManager)
-        assertThat(status).isEqualTo(csip.status)
+        assertThat(status).isEqualTo(csip.status!!.toReferenceDataModel())
       }
     }
   }
