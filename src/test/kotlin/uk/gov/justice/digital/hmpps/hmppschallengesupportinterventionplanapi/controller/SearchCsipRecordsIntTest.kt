@@ -300,7 +300,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   private fun CsipSearchResult.verifyAgainst(csip: CsipRecord) {
     assertThat(id).isEqualTo(csip.id)
-    assertThat(status).isEqualTo(csip.status)
+    assertThat(status.code).isEqualTo(csip.status!!.code)
     assertThat(referralDate).isEqualTo(csip.referral!!.referralDate)
     assertThat(nextReviewDate).isEqualTo(csip.plan?.nextReviewDate())
     assertThat(caseManager).isEqualTo(csip.plan?.caseManager)

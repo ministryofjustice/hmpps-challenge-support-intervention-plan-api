@@ -174,7 +174,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val response = updateCsipRecord(record.id, request)
     with(response) {
       assertThat(logCode).isNull()
-      assertThat(status).isEqualTo(CsipStatus.REFERRAL_PENDING)
+      assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_PENDING.name)
     }
 
     val saved = csipRecordRepository.getCsipRecord(record.id)
@@ -210,7 +210,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     )
 
     val response = updateCsipRecord(record.id, request)
-    assertThat(response.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+    assertThat(response.status.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
     with(response.referral) {
       assertThat(isReferralComplete).isEqualTo(true)
       assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
@@ -221,7 +221,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.id)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
-      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      assertThat(status?.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
       with(requireNotNull(saved.referral)) {
         assertThat(referralComplete).isEqualTo(true)
         assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
@@ -258,7 +258,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     )
 
     val response = updateCsipRecord(record.id, request)
-    assertThat(response.status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+    assertThat(response.status.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
     with(response.referral) {
       assertThat(isReferralComplete).isEqualTo(true)
       assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
@@ -269,7 +269,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.id)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
-      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      assertThat(status?.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
       with(requireNotNull(saved.referral)) {
         assertThat(referralComplete).isEqualTo(true)
         assertThat(referralCompletedDate).isEqualTo(LocalDate.now())

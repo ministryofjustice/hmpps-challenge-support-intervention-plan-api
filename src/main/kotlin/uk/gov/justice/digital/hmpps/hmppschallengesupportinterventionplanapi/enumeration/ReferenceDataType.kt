@@ -27,6 +27,7 @@ enum class ReferenceDataType(val domain: String) {
   INCIDENT_TYPE("incident-type"), // Map to NOMIS domain CSIP_TYP
   INTERVIEWEE_ROLE("interviewee-role"), // Map to NOMIS domain CSIP_INTVROL
   SCREENING_OUTCOME_TYPE("screening-outcome-type"), // Map to NOMIS domain CSIP_OUT
+  STATUS("status"),
   ;
 
   companion object {

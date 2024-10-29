@@ -8,13 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springdoc.core.annotations.ParameterObject
-import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipOverview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResults
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FindCsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CsipSearchService
@@ -51,9 +51,31 @@ class CsipSearchController(private val search: CsipSearchService) {
       ),
     ],
   )
-  @ResponseStatus(HttpStatus.OK)
   @GetMapping("/search/csip-records")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun findCsipRecords(@Valid @ParameterObject request: FindCsipRequest): CsipSearchResults =
     search.findMatchingCsipRecords(request)
+
+  @Operation(summary = "Retrieve an overview of CSIP records for a given prison")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Successful request returning CSIP overview",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @GetMapping("/prisons/{prisonCode}/csip-records/overview")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  fun getCsipOverview(@PathVariable prisonCode: String): CsipOverview = search.getOverviewForPrison(prisonCode)
 }

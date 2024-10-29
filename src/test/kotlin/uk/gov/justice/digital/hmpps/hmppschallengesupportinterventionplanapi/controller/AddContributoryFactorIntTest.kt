@@ -175,7 +175,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
         staffAssaulted = false,
       )
     }
-    assertThat(record.status).isEqualTo(CsipStatus.REFERRAL_PENDING)
+    assertThat(record.status?.code).isEqualTo(CsipStatus.REFERRAL_PENDING.name)
 
     val request = createContributoryFactorRequest()
     val response = addContributoryFactor(record.id, request)
@@ -191,7 +191,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     val saved = getContributoryFactory(response.factorUuid)
 
     with(saved.referral.csipRecord) {
-      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      assertThat(status?.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
       with(requireNotNull(saved.referral)) {
         assertThat(referralComplete).isEqualTo(true)
         assertThat(referralCompletedDate).isEqualTo(LocalDate.now())

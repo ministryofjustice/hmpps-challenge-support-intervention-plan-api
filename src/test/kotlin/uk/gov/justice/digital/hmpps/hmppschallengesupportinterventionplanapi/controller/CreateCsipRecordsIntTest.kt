@@ -219,7 +219,7 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(createdBy).isEqualTo("TEST_USER")
       assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
-      assertThat(status).isEqualTo(CsipStatus.REFERRAL_SUBMITTED)
+      assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
     }
 
     val saved = csipRecordRepository.getCsipRecord(response.recordUuid)

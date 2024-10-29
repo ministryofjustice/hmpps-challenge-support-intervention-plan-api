@@ -15,8 +15,8 @@ data class ReferenceData(
     description = "The sequence number of the code. Used for ordering codes correctly in lists and drop downs. ",
     example = "3",
   )
-  val listSequence: Int?,
+  val listSequence: Int? = null,
 
   @Schema(description = "The date and time the code was deactivated", example = "2023-11-08T09:53:34")
-  val deactivatedAt: LocalDateTime?,
+  val deactivatedAt: LocalDateTime? = null,
 )
