@@ -20,6 +20,9 @@ class PersonSummaryService(
     }
   }
 
+  fun savePersonSummary(personSummary: PersonSummary) =
+    personSummaryRepository.findByIdOrNull(personSummary.prisonNumber) ?: personSummaryRepository.save(personSummary)
+
   fun getPersonSummaryByPrisonNumber(prisonNumber: String): PersonSummary {
     val person = personSummaryRepository.findByIdOrNull(prisonNumber)
     return if (person == null) {

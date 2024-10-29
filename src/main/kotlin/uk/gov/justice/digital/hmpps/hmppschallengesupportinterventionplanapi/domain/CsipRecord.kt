@@ -73,7 +73,8 @@ class CsipRecord(
 
   @NotAudited
   @Column(name = "prison_number", insertable = false, updatable = false)
-  val prisonNumber: String = personSummary.prisonNumber
+  var prisonNumber: String = personSummary.prisonNumber
+    private set
 
   @Column(length = 10)
   var logCode: String? = logCode
@@ -128,6 +129,7 @@ class CsipRecord(
 
   fun moveTo(personSummary: PersonSummary) = apply {
     this.personSummary = personSummary
+    this.prisonNumber = personSummary.prisonNumber
   }
 
   private fun referral(
