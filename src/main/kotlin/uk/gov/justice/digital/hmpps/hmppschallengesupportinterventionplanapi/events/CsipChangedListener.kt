@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.Auditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.Versioned
 
 @Component
 class CsipChangedListener {
@@ -21,21 +21,21 @@ class CsipChangedListener {
   }
 
   @PrePersist
-  fun onPrePersist(auditable: Auditable) {
+  fun onPrePersist(auditable: Versioned) {
     auditable.publishEvent()
   }
 
   @PreUpdate
-  fun onPreUpdate(auditable: Auditable) {
+  fun onPreUpdate(auditable: Versioned) {
     auditable.publishEvent()
   }
 
   @PreRemove
-  fun onPreRemove(auditable: Auditable) {
+  fun onPreRemove(auditable: Versioned) {
     auditable.publishEvent()
   }
 
-  private fun Auditable.publishEvent() {
+  private fun Versioned.publishEvent() {
     when (this) {
       is CsipRecord -> this
       is CsipAware -> csipRecord()

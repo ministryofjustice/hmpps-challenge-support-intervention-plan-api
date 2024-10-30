@@ -25,7 +25,6 @@ class SyncReferral {
     val factorMappings = request.contributoryFactors.map {
       val cf = referral.findContributoryFactor(it.id, it.legacyId)?.update(it, rdSupplier)
         ?: referral.addContributoryFactor(it, rdSupplier)
-      cf.withAuditInfo(it)
       ResponseMapping(CsipComponent.CONTRIBUTORY_FACTOR, it.legacyId, cf.id)
     }.toSet()
     request.saferCustodyScreeningOutcome?.also {
@@ -37,7 +36,6 @@ class SyncReferral {
       inv.interviews.map {
         val interview = investigation.findInterview(it.id, it.legacyId)?.update(it, rdSupplier)
           ?: investigation.addInterview(it, rdSupplier)
-        interview.withAuditInfo(it)
         ResponseMapping(CsipComponent.INTERVIEW, it.legacyId, interview.id)
       }
     } ?: emptySet()

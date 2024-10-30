@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,8 +30,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createContributoryFactorRequest
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -156,8 +153,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(factorType.code).isEqualTo(request.factorTypeCode)
       assertThat(comment).isEqualTo(request.comment)
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(createdBy).isEqualTo(TEST_USER)
     }
 
     val saved = getContributoryFactory(response.factorUuid)
@@ -182,8 +177,6 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     with(response) {
       assertThat(factorType.code).isEqualTo(request.factorTypeCode)
       assertThat(comment).isEqualTo(request.comment)
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(createdBy).isEqualTo(TEST_USER)
     }
 
     val saved = getContributoryFactory(response.factorUuid)

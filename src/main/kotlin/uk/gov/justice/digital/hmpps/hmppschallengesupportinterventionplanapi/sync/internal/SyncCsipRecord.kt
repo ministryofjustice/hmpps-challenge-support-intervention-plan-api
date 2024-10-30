@@ -48,7 +48,7 @@ class SyncCsipRecord(
       requireNotNull(rdMap[ReferenceDataKey(type, code)])
     }
 
-    val csip: CsipRecord = findCsipRecord(request.id, request.legacyId)?.update(request)?.withAuditInfo(request)
+    val csip: CsipRecord = findCsipRecord(request.id, request.legacyId)?.update(request)
       ?: request.toCsipRecord(request.toPersonSummary())
     val referralMappings = request.referral?.let {
       val referral = csip.referral?.update(it, rdSupplier) ?: csip.createReferral(it, csipRequestContext(), rdSupplier)
@@ -127,7 +127,7 @@ class SyncCsipRecord(
     PersonSummary(prisonNumber, firstName, lastName, status, prisonCode, cellLocation)
 
   private fun SyncCsipRequest.toCsipRecord(personSummary: PersonSummary): CsipRecord =
-    CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId).withAuditInfo(this)
+    CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId)
 
   fun findFor(prisonNumber: String): List<CsipModel> =
     csipRepository.findAll(matchesPrisonNumber(prisonNumber)).map { it.toModel() }

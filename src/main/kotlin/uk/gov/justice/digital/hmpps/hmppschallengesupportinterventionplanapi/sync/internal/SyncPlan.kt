@@ -19,15 +19,12 @@ class SyncPlan {
   fun sync(plan: Plan, request: SyncPlanRequest): Set<ResponseMapping> {
     val needMappings = request.identifiedNeeds.map {
       val need = plan.findNeed(it.id, it.legacyId)?.update(it) ?: plan.addIdentifiedNeed(it)
-      need.withAuditInfo(it)
       ResponseMapping(CsipComponent.IDENTIFIED_NEED, it.legacyId, need.id)
     }.toSet()
     val reviewMappings = request.reviews.map { rev ->
       val review = plan.findReview(rev.id, rev.legacyId)?.update(rev) ?: plan.addReview(rev)
-      review.withAuditInfo(rev)
       val attendeeMappings = rev.attendees.map { att ->
         val attendee = review.findAttendee(att.id, att.legacyId)?.update(att) ?: review.addAttendee(att)
-        attendee.withAuditInfo(att)
         ResponseMapping(CsipComponent.ATTENDEE, att.legacyId, attendee.id)
       }
       attendeeMappings + ResponseMapping(CsipComponent.REVIEW, rev.legacyId, review.id)

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -32,8 +31,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -138,8 +135,6 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     val saved = getContributoryFactory(response.factorUuid)
     assertThat(saved.contributoryFactorType.code).isEqualTo(request.factorTypeCode)
     assertThat(saved.comment).isEqualTo(request.comment)
-    assertThat(saved.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
     verifyAudit(saved, RevisionType.MOD, setOf(CONTRIBUTORY_FACTOR))
     verifyDomainEvents(factor.csipRecord().prisonNumber, factor.csipRecord().id, CSIP_UPDATED)
   }
@@ -156,8 +151,6 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     val response = updateContributoryFactor(factor.id, request)
 
     val saved = getContributoryFactory(response.factorUuid)
-    assertThat(saved.lastModifiedAt).isNull()
-    assertThat(saved.lastModifiedBy).isNull()
     verifyAudit(
       saved,
       RevisionType.ADD,

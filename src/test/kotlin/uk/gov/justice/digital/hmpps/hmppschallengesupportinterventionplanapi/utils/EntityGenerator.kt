@@ -14,7 +14,6 @@ object EntityGenerator {
     prisonCodeWhenRecorded: String? = null,
     logCode: String? = null,
     createdAt: LocalDateTime = CONTEXT.requestAt,
-    createdBy: String = CONTEXT.username,
     legacyId: Long? = null,
   ) = CsipRecord(
     personSummary,
@@ -22,7 +21,6 @@ object EntityGenerator {
     logCode,
     legacyId,
   ).apply {
-    this.createdAt = createdAt
-    this.createdBy = createdBy
+    set(::createdAt, createdAt)
   }
 }

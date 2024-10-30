@@ -13,8 +13,8 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
@@ -37,12 +37,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.asCompletable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 class CsipRecord(
 
   personSummary: PersonSummary,
@@ -54,7 +55,10 @@ class CsipRecord(
   logCode: String? = null,
 
   legacyId: Long? = null,
-) : SimpleAuditable(), Identifiable {
+) : SimpleVersion(), Identifiable {
+
+  @Audited(withModifiedFlag = false)
+  val createdAt: LocalDateTime = csipRequestContext().requestAt
 
   @Audited(withModifiedFlag = false)
   @Id
@@ -175,10 +179,6 @@ fun CsipRecord.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportint
   prisonNumber = prisonNumber,
   prisonCodeWhenRecorded = prisonCodeWhenRecorded,
   logCode = logCode,
-  createdAt = createdAt,
-  createdBy = createdBy,
-  lastModifiedAt = lastModifiedAt,
-  lastModifiedBy = lastModifiedBy,
   referral = referral!!.toModel(),
   plan = plan?.toModel(),
   status = requireNotNull(status).toReferenceDataModel(),

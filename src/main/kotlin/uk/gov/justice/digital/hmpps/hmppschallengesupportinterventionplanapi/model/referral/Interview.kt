@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Schema(description = "An interview in relation to the investigation on the incident that motivated the CSIP referral")
@@ -25,16 +24,4 @@ data class Interview(
 
   @Schema(description = "Information provided in interview.")
   val interviewText: String?,
-
-  @Schema(description = "The date and time the Interview was created", example = "2021-09-27T14:19:25")
-  val createdAt: LocalDateTime,
-
-  @Schema(description = "The username of the user who created the Interview", example = "USER1234")
-  val createdBy: String,
-
-  @Schema(description = "The date and time the Interview was last modified", example = "2022-07-15T15:24:56")
-  val lastModifiedAt: LocalDateTime?,
-
-  @Schema(description = "The username of the user who last modified the Interview", example = "USER1234")
-  val lastModifiedBy: String?,
 )

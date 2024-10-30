@@ -354,7 +354,6 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
         userDisplayName = request.actionedBy,
         activeCaseLoadId = request.activeCaseloadId,
       ),
-      validateEntityWithContext = false,
     )
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
@@ -421,6 +420,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       prisonNumber = initial.prisonNumber,
       personSummary = null,
       logCode = LOG_CODE,
+      actionedAt = initial.createdAt,
       referral = syncReferralRequest(
         incidentTime = LocalTime.now(),
         contributoryFactors = listOf(

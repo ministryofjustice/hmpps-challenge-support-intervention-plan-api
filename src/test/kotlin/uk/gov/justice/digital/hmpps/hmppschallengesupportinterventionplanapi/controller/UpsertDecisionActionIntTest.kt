@@ -213,7 +213,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.id))
     val decision = requireNotNull(csip.referral?.decisionAndActions)
-    assertThat(decision.createdBy).isEqualTo(TEST_USER)
 
     verifyAudit(decision, RevisionType.ADD, setOf(CsipComponent.DECISION_AND_ACTIONS))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)

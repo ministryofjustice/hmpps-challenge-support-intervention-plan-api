@@ -94,22 +94,22 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
     dataSetup(
       generateCsipRecord(
         prisoner,
+        logCode = "NOT_EXP",
         createdAt = LocalDateTime.now().minusDays(1),
-        logCode = "NOT_EXP",
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(3),
         logCode = "EXP",
+        createdAt = LocalDateTime.now().minusDays(3),
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(7),
         logCode = "NOT_EXP",
+        createdAt = LocalDateTime.now().minusDays(7),
       ).withReferral(),
     ) { it }
 
@@ -134,22 +134,22 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(3),
         logCode = "TWO",
+        createdAt = LocalDateTime.now().minusDays(3),
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(1),
         logCode = "ONE",
+        createdAt = LocalDateTime.now().minusDays(1),
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(7),
         logCode = "THREE",
+        createdAt = LocalDateTime.now().minusDays(7),
       ).withReferral(),
     ) { it }
 
@@ -170,22 +170,22 @@ class RetrieveCsipRecordsIntTest : IntegrationTestBase() {
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(3),
         logCode = "TWO",
+        createdAt = LocalDateTime.now().minusDays(3),
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(7),
         logCode = "ONE",
+        createdAt = LocalDateTime.now().minusDays(7),
       ).withReferral(),
     ) { it }
     dataSetup(
       generateCsipRecord(
         prisoner,
-        createdAt = LocalDateTime.now().minusDays(1),
         logCode = "THREE",
+        createdAt = LocalDateTime.now().minusDays(1),
       ).withReferral(),
     ) { it }
 

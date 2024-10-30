@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -26,8 +25,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInterviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createInterviewRequest
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -169,14 +166,11 @@ class AddInterviewIntTest : IntegrationTestBase() {
 
   private fun Interview.verifyAgainst(
     request: CreateInterviewRequest,
-    createdBy: String = TEST_USER,
   ) {
     assertThat(interviewee).isEqualTo(request.interviewee)
     assertThat(intervieweeRole.code).isEqualTo(request.intervieweeRoleCode)
     assertThat(interviewDate).isEqualTo(request.interviewDate)
     assertThat(interviewText).isEqualTo(request.interviewText)
-    assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(this.createdBy).isEqualTo(createdBy)
   }
 
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/referral/investigation/interviews"
