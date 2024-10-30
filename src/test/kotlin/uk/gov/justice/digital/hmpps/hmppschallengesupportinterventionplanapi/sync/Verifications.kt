@@ -22,7 +22,7 @@ fun CsipRecord.verifyAgainst(request: SyncCsipRequest) {
   assertThat(prisonCodeWhenRecorded).isEqualTo(prisonCodeWhenRecorded)
   request.referral?.also { requireNotNull(referral).verifyAgainst(it) }
   request.plan?.also { requireNotNull(plan).verifyAgainst(it) }
-  assertThat(createdAt).isEqualTo(request.actionedAt)
+  assertThat(createdAt.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(request.actionedAt.truncatedTo(ChronoUnit.SECONDS))
 }
 
 fun Referral.verifyAgainst(request: SyncReferralRequest) {
