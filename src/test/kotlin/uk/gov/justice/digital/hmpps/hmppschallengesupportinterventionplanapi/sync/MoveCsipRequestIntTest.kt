@@ -23,12 +23,12 @@ class MoveCsipRequestIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.put().uri(urlToTest()).exchange().expectStatus().isUnauthorized
+    webTestClient.put().uri(URL).exchange().expectStatus().isUnauthorized
   }
 
   @Test
   fun `403 forbidden - wrong role`() {
-    val response = webTestClient.put().uri(urlToTest())
+    val response = webTestClient.put().uri(URL)
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
       .bodyValue(moveCsipRequest())
       .exchange().errorResponse(HttpStatus.FORBIDDEN)
@@ -87,14 +87,16 @@ class MoveCsipRequestIntTest : IntegrationTestBase() {
     verifyDomainEvents(newNoms, setOf(csip1.id), CSIP_MOVED, 1, Source.NOMIS, oldNoms)
   }
 
-  private fun urlToTest() = "/sync/csip-records/move"
+  companion object {
+    private const val URL = "/sync/csip-records/move"
+  }
 
   private fun moveCsipRequest(from: String = prisonNumber(), to: String = prisonNumber(), ids: Set<UUID> = setOf()) =
     MoveCsipRequest(from, to, ids)
 
   private fun syncCsipResponseSpec(
     request: MoveCsipRequest,
-  ) = webTestClient.put().uri(urlToTest())
+  ) = webTestClient.put().uri(URL)
     .bodyValue(request)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
 

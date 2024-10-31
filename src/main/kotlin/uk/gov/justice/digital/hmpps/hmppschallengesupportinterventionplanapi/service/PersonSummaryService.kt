@@ -20,7 +20,7 @@ class PersonSummaryService(
     }
   }
 
-  fun savePersonSummary(personSummary: PersonSummary) =
+  fun savePersonSummary(personSummary: PersonSummary): PersonSummary =
     personSummaryRepository.findByIdOrNull(personSummary.prisonNumber) ?: personSummaryRepository.save(personSummary)
 
   fun getPersonSummaryByPrisonNumber(prisonNumber: String): PersonSummary {

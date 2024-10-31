@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -35,9 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class UpdateCsipRecordsIntTest : IntegrationTestBase() {
@@ -124,9 +121,6 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.id)
     with(saved) {
       assertThat(logCode).isEqualTo(LOG_CODE)
-      assertThat(lastModifiedAt).isNull()
-      assertThat(lastModifiedBy).isNull()
-      assertThat(lastModifiedByDisplayName).isNull()
     }
 
     // verify the latest audit record is the initial insert from the given of the test
@@ -147,9 +141,6 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.id)
     with(saved) {
       assertThat(logCode).isEqualTo(request.logCode)
-      assertThat(lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(lastModifiedBy).isEqualTo(TEST_USER)
-      assertThat(lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
     verifyAudit(saved, RevisionType.MOD, setOf(RECORD))
@@ -180,10 +171,6 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
     val saved = csipRecordRepository.getCsipRecord(record.id)
     with(saved) {
       assertThat(logCode).isNull()
-      val referral = requireNotNull(saved.referral)
-      assertThat(referral.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(referral.lastModifiedBy).isEqualTo(TEST_USER)
-      assertThat(referral.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     }
 
     verifyAudit(saved.referral!!, RevisionType.MOD, setOf(REFERRAL))

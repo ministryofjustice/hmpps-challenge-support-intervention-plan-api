@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditRevision
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.Auditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
@@ -232,7 +231,6 @@ abstract class IntegrationTestBase {
     revisionType: RevisionType,
     affectedComponents: Set<CsipComponent>,
     context: CsipRequestContext = testUserContext(),
-    validateEntityWithContext: Boolean = true,
   ) = transactionTemplate.execute {
     val auditReader = AuditReaderFactory.get(entityManager)
     assertTrue(auditReader.isEntityClassAudited(entity::class.java))
@@ -250,23 +248,8 @@ abstract class IntegrationTestBase {
     with(auditRevision) {
       assertThat(source).isEqualTo(context.source)
       assertThat(username).isEqualTo(context.username)
-      assertThat(userDisplayName).isEqualTo(context.userDisplayName)
       assertThat(caseloadId).isEqualTo(context.activeCaseLoadId)
       assertThat(this.affectedComponents).containsExactlyInAnyOrderElementsOf(affectedComponents)
-    }
-
-    if (validateEntityWithContext) {
-      val audited = entityRevision[0] as Auditable
-      with(audited) {
-        if (revisionType == RevisionType.ADD) {
-          assertThat(createdBy).isEqualTo(context.username)
-          assertThat(createdByDisplayName).isEqualTo(context.userDisplayName)
-        }
-        if (revisionType == RevisionType.MOD) {
-          assertThat(lastModifiedBy).isEqualTo(context.username)
-          assertThat(lastModifiedByDisplayName).isEqualTo(context.userDisplayName)
-        }
-      }
     }
   }
 

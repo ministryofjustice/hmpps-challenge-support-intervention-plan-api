@@ -124,9 +124,6 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
     val response = updateAttendee(attendee.id, request)
 
     val saved = getAttendee(response.attendeeUuid)
-    assertThat(saved.lastModifiedAt).isNull()
-    assertThat(saved.lastModifiedBy).isNull()
-    assertThat(saved.lastModifiedByDisplayName).isNull()
     verifyAudit(
       saved,
       RevisionType.ADD,

@@ -36,7 +36,6 @@ class AuditRevision {
   var timestamp: LocalDateTime = LocalDateTime.now()
 
   var username: String? = null
-  var userDisplayName: String? = null
   var caseloadId: String? = null
 
   @Enumerated(EnumType.STRING)
@@ -51,7 +50,6 @@ class AuditRevisionEntityListener : EntityTrackingRevisionListener {
     (revision as AuditRevision).apply {
       val context = csipRequestContext()
       username = context.username
-      userDisplayName = context.userDisplayName
       caseloadId = context.activeCaseLoadId
       source = context.source
     }

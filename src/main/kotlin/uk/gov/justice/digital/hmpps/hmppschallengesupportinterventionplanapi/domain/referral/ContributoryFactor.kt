@@ -15,8 +15,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
@@ -30,7 +29,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 @BatchSize(size = 20)
 class ContributoryFactor(
   @Audited(withModifiedFlag = false)
@@ -43,7 +42,7 @@ class ContributoryFactor(
   comment: String?,
 
   legacyId: Long? = null,
-) : SimpleAuditable(), Identifiable, CsipAware {
+) : SimpleVersion(), Identifiable, CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -83,10 +82,4 @@ fun ContributoryFactor.toModel() =
     factorUuid = id,
     factorType = contributoryFactorType.toReferenceDataModel(),
     comment = comment,
-    createdAt = createdAt,
-    createdBy = createdBy,
-    createdByDisplayName = createdByDisplayName,
-    lastModifiedAt = lastModifiedAt,
-    lastModifiedBy = lastModifiedBy,
-    lastModifiedByDisplayName = lastModifiedByDisplayName,
   )

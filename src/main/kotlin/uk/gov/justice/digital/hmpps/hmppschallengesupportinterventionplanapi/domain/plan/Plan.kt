@@ -15,8 +15,7 @@ import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.AttendeesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.FirstReviewRequest
@@ -30,7 +29,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 class Plan(
   @Audited(withModifiedFlag = false)
   @MapsId
@@ -41,7 +40,7 @@ class Plan(
   caseManager: String?,
   reasonForPlan: String?,
   firstCaseReviewDate: LocalDate?,
-) : SimpleAuditable(), CsipAware {
+) : SimpleVersion(), CsipAware {
   override fun csipRecord() = csipRecord
 
   @Audited(withModifiedFlag = false)

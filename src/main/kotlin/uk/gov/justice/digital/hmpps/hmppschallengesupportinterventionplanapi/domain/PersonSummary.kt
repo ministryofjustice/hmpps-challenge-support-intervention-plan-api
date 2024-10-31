@@ -41,12 +41,6 @@ class PersonSummary(
     this.prisonCode = prisonCode
     this.cellLocation = cellLocation
   }
-
-  companion object {
-    val FIRST_NAME = PersonSummary::firstName.name
-    val LAST_NAME = PersonSummary::lastName.name
-    val PRISON_CODE = PersonSummary::prisonCode.name
-  }
 }
 
 fun PrisonerDetails.toPersonSummary() = PersonSummary(prisonerNumber, firstName, lastName, status, prisonId, cellLocation)

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -34,8 +33,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -120,9 +117,6 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     assertThat(saved.reviewDate).isEqualTo(LocalDate.now().plusDays(3))
     assertThat(saved.nextReviewDate).isEqualTo(LocalDate.now().plusDays(4))
     assertThat(saved.csipClosedDate).isEqualTo(LocalDate.now().plusDays(5))
-    assertThat(saved.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
-    assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(REVIEW))
     verifyDomainEvents(review.csipRecord().prisonNumber, review.csipRecord().id, CSIP_UPDATED)
   }
@@ -153,9 +147,6 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     val response = updateReview(review.id, request)
 
     val saved = getReview(response.reviewUuid)
-    assertThat(saved.lastModifiedAt).isNull()
-    assertThat(saved.lastModifiedBy).isNull()
-    assertThat(saved.lastModifiedByDisplayName).isNull()
     verifyAudit(
       saved,
       RevisionType.ADD,

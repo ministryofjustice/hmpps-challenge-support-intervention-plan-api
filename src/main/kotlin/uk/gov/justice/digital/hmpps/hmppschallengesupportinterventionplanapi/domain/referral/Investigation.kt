@@ -14,8 +14,7 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
@@ -27,14 +26,14 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 class Investigation(
   @Audited(withModifiedFlag = false)
   @MapsId
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
-) : SimpleAuditable(), CsipAware {
+) : SimpleVersion(), CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)

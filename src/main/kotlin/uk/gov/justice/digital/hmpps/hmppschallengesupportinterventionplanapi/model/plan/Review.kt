@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Schema(description = "A regular review of a CSIP Plan")
@@ -40,24 +39,6 @@ data class Review(
 
   @Schema(description = "A list of actions following the review.")
   val actions: Set<ReviewAction>,
-
-  @Schema(description = "The date and time the Review was created", example = "2021-09-27T14:19:25")
-  val createdAt: LocalDateTime,
-
-  @Schema(description = "The username of the user who created the Review", example = "USER1234")
-  val createdBy: String,
-
-  @Schema(description = "The displayable name of the user who created the Review", example = "Firstname Lastname")
-  val createdByDisplayName: String,
-
-  @Schema(description = "The date and time the Review was last modified", example = "2022-07-15T15:24:56")
-  val lastModifiedAt: LocalDateTime?,
-
-  @Schema(description = "The username of the user who last modified the Review", example = "USER1234")
-  val lastModifiedBy: String?,
-
-  @Schema(description = "The displayable name of the user who last modified the Review", example = "Firstname Lastname")
-  val lastModifiedByDisplayName: String?,
 
   @Schema(description = "The attendees/contributors to the review.")
   val attendees: Collection<Attendee>,

@@ -29,7 +29,6 @@ object SyncRequestGenerator {
     prisonCodeWhenRecorded: String? = null,
     actionedAt: LocalDateTime = LocalDateTime.now(),
     actionedBy: String = "actionedBy",
-    actionedByDisplayName: String = "actionedByDisplayName",
     activeCaseloadId: String? = null,
     personSummary: PersonSummaryRequest? = personSummaryRequest(),
     id: Long = newId(),
@@ -42,7 +41,6 @@ object SyncRequestGenerator {
     prisonCodeWhenRecorded,
     actionedAt,
     actionedBy,
-    actionedByDisplayName,
     activeCaseloadId,
     id,
     uuid,
@@ -309,14 +307,12 @@ object SyncRequestGenerator {
   fun <T : NomisAudited> T.withAuditDetail() = apply {
     createdAt = LocalDateTime.now().minusMinutes(1)
     createdBy = "NOM_USER"
-    createdByDisplayName = "${this::class.simpleName!!} NOMIS User"
   }
 
   fun <T : NomisAudited> T.withModifiedDetail() = apply {
     withAuditDetail()
     lastModifiedAt = LocalDateTime.now().minusMinutes(1)
     lastModifiedBy = "NOM_USER"
-    lastModifiedByDisplayName = "${this::class.simpleName!!} NOMIS User"
   }
 
   fun badSyncRequest() = invalidCsip()

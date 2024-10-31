@@ -88,12 +88,12 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.put().uri(urlToTest()).exchange().expectStatus().isUnauthorized
+    webTestClient.put().uri(URL).exchange().expectStatus().isUnauthorized
   }
 
   @Test
   fun `403 forbidden - wrong role`() {
-    val response = webTestClient.put().uri(urlToTest())
+    val response = webTestClient.put().uri(URL)
       .headers(setAuthorisation(roles = listOf("WRONG_ROLE")))
       .bodyValue(syncCsipRequest())
       .exchange().errorResponse(HttpStatus.FORBIDDEN)
@@ -109,7 +109,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - no body`() {
-    val response = webTestClient.put().uri(urlToTest())
+    val response = webTestClient.put().uri(URL)
       .headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI)))
       .exchange().errorResponse(HttpStatus.BAD_REQUEST)
 
@@ -351,10 +351,9 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       nomisContext().copy(
         requestAt = request.actionedAt,
         username = request.actionedBy,
-        userDisplayName = request.actionedByDisplayName,
+        userDisplayName = request.actionedBy,
         activeCaseLoadId = request.activeCaseloadId,
       ),
-      validateEntityWithContext = false,
     )
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
@@ -421,6 +420,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       prisonNumber = initial.prisonNumber,
       personSummary = null,
       logCode = LOG_CODE,
+      actionedAt = initial.createdAt,
       referral = syncReferralRequest(
         incidentTime = LocalTime.now(),
         contributoryFactors = listOf(
@@ -692,7 +692,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val attendeeIds = record.plan!!.reviews().flatMap { r -> r.attendees().map { it.id } }
     assertThat(attendeeIds).hasSize(1)
 
-    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), "actionedBy", "actionedByDisplayName", "LEI")
+    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), "actionedBy", "LEI")
     deleteCsip(record.id, legacyActioned)
 
     val affectedComponents =
@@ -710,7 +710,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       nomisContext().copy(
         requestAt = legacyActioned.actionedAt,
         username = legacyActioned.actionedBy,
-        userDisplayName = legacyActioned.actionedByDisplayName,
+        userDisplayName = legacyActioned.actionedBy,
         activeCaseLoadId = legacyActioned.activeCaseloadId,
       ),
     )
@@ -720,7 +720,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
   fun `204 no content - delete csip record without actioned by information`() {
     val record = dataSetup(generateCsipRecord()) { it.withReferral() }
 
-    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null, null)
+    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null)
     deleteCsip(record.id, legacyActioned)
 
     val affectedComponents = setOf(RECORD, REFERRAL)
@@ -746,7 +746,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     dataSetup(generateCsipRecord(personSummary)) { it.withCompletedReferral() }
     val toDelete = dataSetup(generateCsipRecord(personSummary)) { it.withReferral() }
 
-    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null, null)
+    val legacyActioned = DefaultLegacyActioned(LocalDateTime.now(), null, null)
     deleteCsip(toDelete.id, legacyActioned)
 
     verifyDoesNotExist(csipRecordRepository.findById(toDelete.id)) { IllegalStateException("CSIP record not deleted") }
@@ -782,27 +782,26 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     res.first { it.recordUuid == csip2.id }.verifyAgainst(csip2)
   }
 
-  private fun urlToTest() = "/sync/csip-records"
-
   private fun syncCsipResponseSpec(
     request: SyncCsipRequest,
-  ) = webTestClient.put().uri(urlToTest())
+  ) = webTestClient.put().uri(URL)
     .bodyValue(request)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
 
   private fun deleteCsip(uuid: UUID, legacyActioned: LegacyActioned) = webTestClient.method(HttpMethod.DELETE)
-    .uri("${urlToTest()}/$uuid")
+    .uri("$URL/$uuid")
     .bodyValue(legacyActioned)
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS)))
     .exchange().expectStatus().isNoContent
 
-  private fun getCsipRecords(prisonNumber: String): List<CsipRecord> = webTestClient.get().uri("${urlToTest()}/$prisonNumber")
+  private fun getCsipRecords(prisonNumber: String): List<CsipRecord> = webTestClient.get().uri("$URL/$prisonNumber")
     .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
     .expectStatus().isOk.expectBodyList<CsipRecord>().returnResult().responseBody!!
 
   private fun syncCsipRecord(request: SyncCsipRequest) = syncCsipResponseSpec(request).successResponse<SyncResponse>()
 
   companion object {
+    private const val URL = "/sync/csip-records"
     private const val NON_EXISTENT = "NON_EXISTENT"
     private const val INVALID = "is invalid"
 

@@ -17,8 +17,7 @@ import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
@@ -31,7 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 class DecisionAndActions(
   @Audited(withModifiedFlag = false)
   @MapsId
@@ -41,7 +40,7 @@ class DecisionAndActions(
 
   outcome: ReferenceData?,
   signedOffBy: ReferenceData?,
-) : SimpleAuditable(), CsipAware {
+) : SimpleVersion(), CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)

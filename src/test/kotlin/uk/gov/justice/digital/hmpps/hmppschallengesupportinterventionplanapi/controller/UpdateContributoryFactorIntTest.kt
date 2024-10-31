@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -26,15 +25,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpdateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -139,9 +135,6 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     val saved = getContributoryFactory(response.factorUuid)
     assertThat(saved.contributoryFactorType.code).isEqualTo(request.factorTypeCode)
     assertThat(saved.comment).isEqualTo(request.comment)
-    assertThat(saved.lastModifiedAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-    assertThat(saved.lastModifiedBy).isEqualTo(TEST_USER)
-    assertThat(saved.lastModifiedByDisplayName).isEqualTo(TEST_USER_NAME)
     verifyAudit(saved, RevisionType.MOD, setOf(CONTRIBUTORY_FACTOR))
     verifyDomainEvents(factor.csipRecord().prisonNumber, factor.csipRecord().id, CSIP_UPDATED)
   }
@@ -158,9 +151,6 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     val response = updateContributoryFactor(factor.id, request)
 
     val saved = getContributoryFactory(response.factorUuid)
-    assertThat(saved.lastModifiedAt).isNull()
-    assertThat(saved.lastModifiedBy).isNull()
-    assertThat(saved.lastModifiedByDisplayName).isNull()
     verifyAudit(
       saved,
       RevisionType.ADD,

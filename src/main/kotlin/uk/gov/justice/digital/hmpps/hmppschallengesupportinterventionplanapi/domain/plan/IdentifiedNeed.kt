@@ -14,8 +14,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
@@ -27,7 +26,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 @BatchSize(size = 20)
 class IdentifiedNeed(
   @Audited(withModifiedFlag = false)
@@ -44,7 +43,7 @@ class IdentifiedNeed(
   progression: String?,
 
   legacyId: Long? = null,
-) : SimpleAuditable(), Identifiable, CsipAware {
+) : SimpleVersion(), Identifiable, CsipAware {
   override fun csipRecord() = plan.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -100,10 +99,4 @@ fun IdentifiedNeed.toModel() =
     closedDate,
     intervention,
     progression,
-    createdAt,
-    createdBy,
-    createdByDisplayName,
-    lastModifiedAt,
-    lastModifiedBy,
-    lastModifiedByDisplayName,
   )

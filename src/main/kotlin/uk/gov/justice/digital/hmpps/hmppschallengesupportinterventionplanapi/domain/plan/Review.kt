@@ -21,8 +21,7 @@ import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
@@ -37,7 +36,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 @BatchSize(size = 20)
 class Review(
   @Audited(withModifiedFlag = false)
@@ -55,7 +54,7 @@ class Review(
   actions: Set<ReviewAction>,
 
   legacyId: Long? = null,
-) : SimpleAuditable(), Identifiable, CsipAware {
+) : SimpleVersion(), Identifiable, CsipAware {
   override fun csipRecord() = plan.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -140,11 +139,5 @@ fun Review.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterve
   csipClosedDate,
   summary,
   actions,
-  createdAt,
-  createdBy,
-  createdByDisplayName,
-  lastModifiedAt,
-  lastModifiedBy,
-  lastModifiedByDisplayName,
   attendees().map { it.toModel() },
 )

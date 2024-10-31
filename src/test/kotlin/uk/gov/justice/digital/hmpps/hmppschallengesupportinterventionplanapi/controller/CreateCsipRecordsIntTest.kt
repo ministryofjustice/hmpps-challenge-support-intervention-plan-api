@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.controller
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.hibernate.envers.RevisionType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -34,9 +33,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.temporal.ChronoUnit
 
 class CreateCsipRecordsIntTest : IntegrationTestBase() {
 
@@ -215,9 +212,6 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
       assertThat(logCode).isEqualTo(LOG_CODE)
       assertThat(recordUuid).isNotNull()
       assertThat(referral).isNotNull()
-      assertThat(createdAt).isCloseTo(LocalDateTime.now(), within(3, ChronoUnit.SECONDS))
-      assertThat(createdBy).isEqualTo("TEST_USER")
-      assertThat(createdByDisplayName).isEqualTo("Test User")
       assertThat(prisonCodeWhenRecorded).isEqualTo(PRISON_CODE_LEEDS)
       assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_SUBMITTED.name)
     }

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sy
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.Auditable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Attendee
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.IdentifiedNeed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
@@ -23,7 +22,7 @@ fun CsipRecord.verifyAgainst(request: SyncCsipRequest) {
   assertThat(prisonCodeWhenRecorded).isEqualTo(prisonCodeWhenRecorded)
   request.referral?.also { requireNotNull(referral).verifyAgainst(it) }
   request.plan?.also { requireNotNull(plan).verifyAgainst(it) }
-  verifyAuditFields(request)
+  assertThat(createdAt.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(request.actionedAt.truncatedTo(ChronoUnit.SECONDS))
 }
 
 fun Referral.verifyAgainst(request: SyncReferralRequest) {
@@ -52,7 +51,6 @@ fun Referral.verifyAgainst(request: SyncReferralRequest) {
 fun ContributoryFactor.verifyAgainst(request: SyncContributoryFactorRequest) {
   assertThat(contributoryFactorType.code).isEqualTo(request.factorTypeCode)
   assertThat(comment).isEqualTo(request.comment)
-  verifyAuditFields(request)
 }
 
 fun SaferCustodyScreeningOutcome.verifyAgainst(request: SyncScreeningOutcomeRequest) {
@@ -76,7 +74,6 @@ fun Interview.verifyAgainst(request: SyncInterviewRequest) {
   assertThat(interviewDate).isEqualTo(request.interviewDate)
   assertThat(intervieweeRole.code).isEqualTo(request.intervieweeRoleCode)
   assertThat(interviewText).isEqualTo(request.interviewText)
-  verifyAuditFields(request)
 }
 
 fun DecisionAndActions.verifyAgainst(request: SyncDecisionAndActionsRequest) {
@@ -104,7 +101,6 @@ fun IdentifiedNeed.verifyAgainst(request: SyncNeedRequest) {
   assertThat(closedDate).isEqualTo(request.closedDate)
   assertThat(intervention).isEqualTo(request.intervention)
   assertThat(progression).isEqualTo(request.progression)
-  verifyAuditFields(request)
 }
 
 fun Review.verifyAgainst(request: SyncReviewRequest) {
@@ -115,7 +111,6 @@ fun Review.verifyAgainst(request: SyncReviewRequest) {
   assertThat(csipClosedDate).isEqualTo(request.csipClosedDate)
   assertThat(summary).isEqualTo(request.summary)
   assertThat(actions).containsExactlyInAnyOrderElementsOf(request.actions)
-  verifyAuditFields(request)
 }
 
 fun Attendee.verifyAgainst(request: SyncAttendeeRequest) {
@@ -123,16 +118,4 @@ fun Attendee.verifyAgainst(request: SyncAttendeeRequest) {
   assertThat(role).isEqualTo(request.role)
   assertThat(attended).isEqualTo(request.isAttended)
   assertThat(contribution).isEqualTo(request.contribution)
-  verifyAuditFields(request)
-}
-
-fun Auditable.verifyAuditFields(request: NomisAudited) {
-  assertThat(createdAt).isCloseTo(request.createdAt, within(1, ChronoUnit.SECONDS))
-  assertThat(createdBy).isEqualTo(request.createdBy)
-  assertThat(createdByDisplayName).isEqualTo(request.createdByDisplayName)
-  request.lastModifiedAt?.also {
-    assertThat(lastModifiedAt).isCloseTo(it, within(1, ChronoUnit.SECONDS))
-    assertThat(lastModifiedBy).isEqualTo(request.lastModifiedBy)
-    assertThat(lastModifiedByDisplayName).isEqualTo(request.lastModifiedByDisplayName)
-  }
 }

@@ -13,8 +13,7 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.AuditedEntityListener
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleAuditable
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
@@ -26,7 +25,7 @@ import java.util.UUID
 @Entity
 @Table
 @Audited(withModifiedFlag = true)
-@EntityListeners(AuditedEntityListener::class, CsipChangedListener::class)
+@EntityListeners(CsipChangedListener::class)
 class SaferCustodyScreeningOutcome(
   @Audited(withModifiedFlag = false)
   @MapsId
@@ -38,7 +37,7 @@ class SaferCustodyScreeningOutcome(
   recordedBy: String,
   recordedByDisplayName: String,
   reasonForDecision: String?,
-) : SimpleAuditable(), CsipAware {
+) : SimpleVersion(), CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)

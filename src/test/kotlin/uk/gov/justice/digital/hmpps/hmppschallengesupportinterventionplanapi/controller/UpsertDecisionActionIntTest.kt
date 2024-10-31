@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.DecisionAndActions
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
@@ -214,8 +213,6 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
     val csip = requireNotNull(csipRecordRepository.getCsipRecord(record.id))
     val decision = requireNotNull(csip.referral?.decisionAndActions)
-    assertThat(decision.createdBy).isEqualTo(TEST_USER)
-    assertThat(decision.createdByDisplayName).isEqualTo(TEST_USER_NAME)
 
     verifyAudit(decision, RevisionType.ADD, setOf(CsipComponent.DECISION_AND_ACTIONS))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
