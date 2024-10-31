@@ -13,7 +13,6 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.toModel
@@ -37,7 +36,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.asCompletable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
@@ -56,9 +54,6 @@ class CsipRecord(
 
   legacyId: Long? = null,
 ) : SimpleVersion(), Identifiable {
-
-  @Audited(withModifiedFlag = false)
-  val createdAt: LocalDateTime = csipRequestContext().requestAt
 
   @Audited(withModifiedFlag = false)
   @Id
@@ -169,8 +164,6 @@ class CsipRecord(
 
   companion object {
     val PRISON_NUMBER: String = CsipRecord::prisonNumber.name
-    val LOG_CODE: String = CsipRecord::logCode.name
-    val CREATED_AT: String = CsipRecord::createdAt.name
   }
 }
 

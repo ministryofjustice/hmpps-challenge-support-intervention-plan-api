@@ -224,7 +224,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     }
 
     verifySort(prisonCode, "location", listOf(csip1, csip2, csip3, csip4))
-    verifySort(prisonCode, "referralDate", listOf(csip3, csip2, csip4, csip1), listOf(csip4, csip1, csip2, csip3))
+    verifySort(prisonCode, "referralDate", listOf(csip3, csip2, csip1, csip4), listOf(csip4, csip1, csip2, csip3))
     verifySort(prisonCode, "nextReviewDate", listOf(csip4, csip1, csip2, csip3), listOf(csip2, csip3, csip1, csip4))
     verifySort(prisonCode, "status", listOf(csip2, csip4, csip1, csip3), listOf(csip3, csip4, csip1, csip2))
     verifySort(prisonCode, "caseManager", listOf(csip4, csip1, csip2, csip3), listOf(csip2, csip3, csip1, csip4))

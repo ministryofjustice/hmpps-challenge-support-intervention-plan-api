@@ -27,7 +27,6 @@ erDiagram
         varchar(6) prison_code_when_recorded "The prison code where the person was resident at the time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.AGY_LOC_ID"
         varchar(10) log_code "User entered identifier for the CSIP record. Defaults to the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ"
         int version "increments on each update"
-        timestamp created_at "not null. The date and time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.CREATE_DATETIME"
     }
 
     referral {

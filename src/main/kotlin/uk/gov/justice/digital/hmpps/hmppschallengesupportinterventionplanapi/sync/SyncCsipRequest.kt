@@ -24,7 +24,7 @@ data class SyncCsipRequest(
   override val legacyId: Long,
   override val id: UUID?,
   val personSummary: PersonSummaryRequest?,
-) : NomisAudited(), NomisIdentifiable, CsipRequest, LegacyIdAware, LegacyActioned {
+) : NomisIdentifiable, CsipRequest, LegacyIdAware, LegacyActioned {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     referral?.also { addAll(it.findRequiredReferenceDataKeys()) }
   }

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
-import org.springframework.data.domain.Page
-import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -11,15 +9,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.createdAfter
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.createdBefore
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.isLikeLogCode
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.matchesPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.getActiveReferenceData
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.verifyAllReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
@@ -32,13 +25,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.PublishCsipEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummaries
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsip
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsipDetail
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.PageMeta
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CsipSummaryRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord as CsipEntity
@@ -96,11 +85,6 @@ class CsipRecordService(
     } != null
 
   @Transactional(readOnly = true)
-  fun findCsipRecordsForPrisoner(prisonNumber: String, request: CsipSummaryRequest): CsipSummaries =
-    csipRecordRepository.findAll(request.toSpecification(prisonNumber), request.pageable()).map { it.toSummary() }
-      .asCsipSummaries()
-
-  @Transactional(readOnly = true)
   fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? =
     csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
       CurrentCsipDetail(
@@ -120,29 +104,3 @@ class CsipRecordService(
   private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.referralDate() =
     if (statusCode == CsipStatus.REFERRAL_PENDING) null else referralDate
 }
-
-private fun CsipSummaryRequest.toSpecification(prisonNumber: String): Specification<CsipEntity> = listOfNotNull(
-  matchesPrisonNumber(prisonNumber),
-  logCode?.let { isLikeLogCode(it) },
-  createdAtStart?.let { createdAfter(it) },
-  createdAtEnd?.let { createdBefore(it) },
-).reduce { spec, current -> spec.and(current) }
-
-private fun CsipEntity.toSummary(): CsipSummary {
-  val referral = requireNotNull(referral) { IllegalStateException("Referral not yet created") }
-  return CsipSummary(
-    id,
-    prisonNumber,
-    logCode,
-    referral.referralDate,
-    plan?.nextReviewDate(),
-    referral.incidentType.toReferenceDataModel(),
-    plan?.caseManager,
-    requireNotNull(status).toReferenceDataModel(),
-  )
-}
-
-private fun Page<CsipSummary>.asCsipSummaries() = CsipSummaries(
-  content,
-  PageMeta(totalElements),
-)

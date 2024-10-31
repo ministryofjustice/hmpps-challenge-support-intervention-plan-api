@@ -45,7 +45,7 @@ object SyncRequestGenerator {
     id,
     uuid,
     personSummary,
-  ).withAuditDetail()
+  )
 
   fun syncReferralRequest(
     referralDate: LocalDate = LocalDate.now().minusDays(1),
@@ -102,7 +102,7 @@ object SyncRequestGenerator {
     comment: String? = "A comment about the factor",
     id: Long = newId(),
     uuid: UUID? = null,
-  ): SyncContributoryFactorRequest = SyncContributoryFactorRequest(typeCode, comment, id, uuid).withAuditDetail()
+  ): SyncContributoryFactorRequest = SyncContributoryFactorRequest(typeCode, comment, id, uuid)
 
   fun syncScreeningOutcomeRequest(
     outcomeCode: String = "OPE",
@@ -138,7 +138,6 @@ object SyncRequestGenerator {
     id: Long = newId(),
     uuid: UUID? = null,
   ) = SyncInterviewRequest(interviewee, interviewDate, intervieweeRole, interviewText, id, uuid)
-    .withAuditDetail()
 
   fun syncDecisionRequest(
     conclusion: String? = "conclusion",
@@ -182,7 +181,7 @@ object SyncRequestGenerator {
     uuid: UUID? = null,
   ) = SyncNeedRequest(
     identifiedNeed, responsiblePerson, createdDate, targetDate, closedDate, intervention, progression, id, uuid,
-  ).withAuditDetail()
+  )
 
   fun syncReviewRequest(
     reviewDate: LocalDate? = LocalDate.now(),
@@ -206,7 +205,7 @@ object SyncRequestGenerator {
     attendees,
     id,
     uuid,
-  ).withAuditDetail()
+  )
 
   fun syncAttendeeRequest(
     name: String? = "Attendee name",
@@ -215,7 +214,7 @@ object SyncRequestGenerator {
     contribution: String? = "Contribution",
     id: Long = newId(),
     uuid: UUID? = null,
-  ) = SyncAttendeeRequest(name, role, isAttended, contribution, id, uuid).withAuditDetail()
+  ) = SyncAttendeeRequest(name, role, isAttended, contribution, id, uuid)
 
   private fun invalidCsip() = syncCsipRequest(
     prisonNumber = "A".repeat(11),
@@ -303,17 +302,6 @@ object SyncRequestGenerator {
     role = "A".repeat(51),
     contribution = "A".repeat(4001),
   )
-
-  fun <T : NomisAudited> T.withAuditDetail() = apply {
-    createdAt = LocalDateTime.now().minusMinutes(1)
-    createdBy = "NOM_USER"
-  }
-
-  fun <T : NomisAudited> T.withModifiedDetail() = apply {
-    withAuditDetail()
-    lastModifiedAt = LocalDateTime.now().minusMinutes(1)
-    lastModifiedBy = "NOM_USER"
-  }
 
   fun badSyncRequest() = invalidCsip()
 }

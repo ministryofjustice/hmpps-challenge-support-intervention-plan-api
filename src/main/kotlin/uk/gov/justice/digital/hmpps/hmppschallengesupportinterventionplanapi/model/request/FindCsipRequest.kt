@@ -8,7 +8,6 @@ import org.springframework.data.domain.Sort.Direction.DESC
 import org.springframework.data.domain.Sort.by
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.CELL_LOCATION
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.CREATED_AT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.FIRST_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.LAST_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_CODE
@@ -36,7 +35,7 @@ data class FindCsipRequest(
   override fun validSortFields(): Set<String> =
     setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS)
 
-  private fun sortByDate(direction: Direction) = by(direction, CsipSummary.REFERRAL_DATE, CREATED_AT)
+  private fun sortByDate(direction: Direction) = by(direction, CsipSummary.REFERRAL_DATE, CsipSummary.ID)
   private fun sortByName(direction: Direction): Sort = by(direction, LAST_NAME, FIRST_NAME, PRISON_NUMBER)
   private fun tieBreaker() = sortByName(ASC).and(sortByDate(DESC))
 

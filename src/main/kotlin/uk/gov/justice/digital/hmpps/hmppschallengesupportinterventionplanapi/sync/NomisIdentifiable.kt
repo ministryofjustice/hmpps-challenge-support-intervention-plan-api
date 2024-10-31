@@ -11,13 +11,6 @@ interface NomisIdentifiable {
   val id: UUID?
 }
 
-abstract class NomisAudited {
-  lateinit var createdAt: LocalDateTime
-  lateinit var createdBy: String
-  var lastModifiedAt: LocalDateTime? = null
-  var lastModifiedBy: String? = null
-}
-
 interface LegacyActioned {
   val actionedAt: LocalDateTime
   val actionedBy: String
