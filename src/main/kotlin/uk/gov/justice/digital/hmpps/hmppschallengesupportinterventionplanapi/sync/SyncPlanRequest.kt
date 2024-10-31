@@ -41,7 +41,7 @@ data class SyncNeedRequest(
   override val progression: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisAudited(), NomisIdentifiable, IdentifiedNeedRequest, LegacyIdAware
+) : NomisIdentifiable, IdentifiedNeedRequest, LegacyIdAware
 
 data class SyncReviewRequest(
   override val reviewDate: LocalDate?,
@@ -54,7 +54,7 @@ data class SyncReviewRequest(
   override val attendees: List<SyncAttendeeRequest>,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisAudited(), NomisIdentifiable, ReviewRequest, AttendeesRequest, LegacyIdAware {
+) : NomisIdentifiable, ReviewRequest, AttendeesRequest, LegacyIdAware {
   fun requestMappings(): Set<RequestMapping> = buildSet {
     add(RequestMapping(CsipComponent.REVIEW, legacyId, id))
     addAll(attendees.map { RequestMapping(CsipComponent.ATTENDEE, it.legacyId, it.id) })
@@ -68,4 +68,4 @@ data class SyncAttendeeRequest(
   override val contribution: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisAudited(), NomisIdentifiable, AttendeeRequest, LegacyIdAware
+) : NomisIdentifiable, AttendeeRequest, LegacyIdAware

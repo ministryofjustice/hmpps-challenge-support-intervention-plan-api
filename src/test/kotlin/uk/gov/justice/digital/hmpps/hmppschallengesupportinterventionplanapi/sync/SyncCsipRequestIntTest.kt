@@ -55,7 +55,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.syn
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.syncScreeningOutcomeRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.SyncRequestGenerator.withModifiedDetail
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.LOG_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.newId
@@ -420,13 +419,12 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       prisonNumber = initial.prisonNumber,
       personSummary = null,
       logCode = LOG_CODE,
-      actionedAt = initial.createdAt,
       referral = syncReferralRequest(
         incidentTime = LocalTime.now(),
         contributoryFactors = listOf(
           syncContributoryFactorRequest(
             uuid = initial.referral!!.contributoryFactors().first().id,
-          ).withModifiedDetail(),
+          ),
           syncContributoryFactorRequest(typeCode = "BAS"),
         ),
         saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),
@@ -440,7 +438,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       ),
       plan = syncPlanRequest(
         identifiedNeeds = listOf(
-          syncNeedRequest(uuid = initial.plan!!.identifiedNeeds().first().id).withModifiedDetail(),
+          syncNeedRequest(uuid = initial.plan!!.identifiedNeeds().first().id),
           syncNeedRequest("Another need"),
         ),
         reviews = listOf(
@@ -448,10 +446,10 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
             uuid = initial.plan!!.reviews().first().id,
             actions = setOf(ReviewAction.CASE_NOTE),
             attendees = listOf(
-              syncAttendeeRequest(uuid = initial.plan!!.reviews().first().attendees().first().id).withModifiedDetail(),
+              syncAttendeeRequest(uuid = initial.plan!!.reviews().first().attendees().first().id),
               syncAttendeeRequest("Another attendee"),
             ),
-          ).withModifiedDetail(),
+          ),
           syncReviewRequest(
             actions = setOf(ReviewAction.CSIP_UPDATED),
             attendees = listOf(

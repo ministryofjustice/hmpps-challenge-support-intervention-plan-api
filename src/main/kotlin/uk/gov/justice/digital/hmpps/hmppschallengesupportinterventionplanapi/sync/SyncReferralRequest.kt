@@ -74,7 +74,7 @@ data class SyncContributoryFactorRequest(
   override val comment: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisAudited(), NomisIdentifiable, ContributoryFactorRequest, LegacyIdAware {
+) : NomisIdentifiable, ContributoryFactorRequest, LegacyIdAware {
   fun findRequiredReferenceDataKeys() =
     setOf(ReferenceDataKey(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, factorTypeCode))
 }

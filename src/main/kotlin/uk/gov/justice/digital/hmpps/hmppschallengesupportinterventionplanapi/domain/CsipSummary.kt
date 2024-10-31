@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Immutable
@@ -41,12 +40,12 @@ class CsipSummary(
   val statusDescription: String,
   val priority: Int,
   val closedDate: LocalDate?,
-  val createdAt: LocalDateTime,
 
   @Id
   val id: UUID,
 ) {
   companion object {
+    val ID: String = CsipSummary::id.name
     val PRISON_NUMBER: String = CsipSummary::prisonNumber.name
     val FIRST_NAME: String = CsipSummary::firstName.name
     val LAST_NAME: String = CsipSummary::lastName.name
@@ -54,7 +53,6 @@ class CsipSummary(
     val CELL_LOCATION: String = CsipSummary::cellLocation.name
     val STATUS_CODE: String = CsipSummary::statusCode.name
     val REFERRAL_DATE: String = CsipSummary::referralDate.name
-    val CREATED_AT: String = CsipSummary::createdAt.name
     val STATUS_DESCRIPTION: String = CsipSummary::statusDescription.name
   }
 }
@@ -76,7 +74,7 @@ interface CsipSummaryRepository : JpaRepository<CsipSummary, UUID>, JpaSpecifica
     select cur as current, c.op as opened, c.re as referred from CsipSummary cur
     join counts c on c.prisonNumber = cur.prisonNumber
     where cur.prisonNumber = :prisonNumber
-    order by cur.priority, cur.referralDate desc, cur.createdAt desc
+    order by cur.priority, cur.referralDate desc, cur.id desc
     limit 1
   """,
   )

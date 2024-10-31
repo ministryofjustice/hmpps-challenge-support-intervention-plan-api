@@ -10,19 +10,6 @@ interface PagedResponse {
 
 data class PageMeta(override val totalElements: Long) : PagedResponse
 
-data class CsipSummary(
-  val id: UUID,
-  val prisonNumber: String,
-  val logCode: String?,
-  val referralDate: LocalDate,
-  val nextReviewDate: LocalDate?,
-  val incidentType: ReferenceData,
-  val caseManager: String?,
-  val status: ReferenceData,
-)
-
-data class CsipSummaries(val content: List<CsipSummary>, val metadata: PageMeta)
-
 data class CsipSearchResult(
   val id: UUID,
   val prisoner: Prisoner,

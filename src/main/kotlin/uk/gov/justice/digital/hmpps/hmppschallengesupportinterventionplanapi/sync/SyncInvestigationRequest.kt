@@ -43,7 +43,7 @@ data class SyncInterviewRequest(
   override val interviewText: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisAudited(), NomisIdentifiable, InterviewRequest, LegacyIdAware {
+) : NomisIdentifiable, InterviewRequest, LegacyIdAware {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> =
     setOf(ReferenceDataKey(ReferenceDataType.INTERVIEWEE_ROLE, intervieweeRoleCode))
 }
