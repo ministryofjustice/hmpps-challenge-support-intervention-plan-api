@@ -184,7 +184,7 @@ object SyncRequestGenerator {
   )
 
   fun syncReviewRequest(
-    reviewDate: LocalDate? = LocalDate.now(),
+    reviewDate: LocalDate = LocalDate.now(),
     recordedBy: String = "recordedBy",
     recordedByDisplayName: String = "recordedByDisplayName",
     nextReviewDate: LocalDate? = null,

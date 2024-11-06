@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 @Schema(description = "The request body to create a Review for a CSIP Plan")
 data class CreateReviewRequest(
-  override val reviewDate: LocalDate?,
+  override val reviewDate: LocalDate,
   override val recordedBy: String,
   override val recordedByDisplayName: String,
   override val nextReviewDate: LocalDate?,
@@ -18,7 +18,7 @@ data class CreateReviewRequest(
 
 @Schema(description = "The request body to update a Review for a CSIP Plan")
 data class UpdateReviewRequest(
-  override val reviewDate: LocalDate?,
+  override val reviewDate: LocalDate,
   override val recordedBy: String,
   override val recordedByDisplayName: String,
   override val nextReviewDate: LocalDate?,

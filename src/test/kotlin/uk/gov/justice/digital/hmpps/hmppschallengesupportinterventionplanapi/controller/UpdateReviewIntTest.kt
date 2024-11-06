@@ -161,7 +161,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
   private fun updateReviewRequest(
     summary: String? = "review summary",
     actions: Set<ReviewAction> = setOf(),
-    reviewDate: LocalDate? = LocalDate.now(),
+    reviewDate: LocalDate = LocalDate.now(),
     nextReviewDate: LocalDate? = LocalDate.now().plusDays(3),
     csipClosedDate: LocalDate? = LocalDate.now().plusDays(5),
   ) = UpdateReviewRequest(

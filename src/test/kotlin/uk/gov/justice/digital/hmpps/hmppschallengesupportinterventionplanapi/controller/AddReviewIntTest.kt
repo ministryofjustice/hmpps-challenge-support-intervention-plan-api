@@ -120,7 +120,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     addReviewResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun createReviewRequest(
-    reviewDate: LocalDate? = LocalDate.now(),
+    reviewDate: LocalDate = LocalDate.now(),
     recordedBy: String = "recordedBy",
     recordedByDisplayName: String = "recordedByDisplayName",
     nextReviewDate: LocalDate? = LocalDate.now().plusWeeks(4),

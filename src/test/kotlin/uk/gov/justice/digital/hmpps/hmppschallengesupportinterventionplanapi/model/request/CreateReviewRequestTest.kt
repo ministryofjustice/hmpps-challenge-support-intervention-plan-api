@@ -3,12 +3,13 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.CreateReviewRequest
+import java.time.LocalDate
 
 class CreateReviewRequestTest : RequestValidationTest() {
   @Test
   fun `valid request`() {
     val request = CreateReviewRequest(
-      reviewDate = null,
+      reviewDate = LocalDate.now(),
       recordedBy = "",
       recordedByDisplayName = "",
       nextReviewDate = null,
@@ -23,7 +24,7 @@ class CreateReviewRequestTest : RequestValidationTest() {
   @Test
   fun `validation fails if size constraints are not met`() {
     val request = CreateReviewRequest(
-      reviewDate = null,
+      reviewDate = LocalDate.now(),
       recordedBy = "n".repeat(65),
       recordedByDisplayName = "n".repeat(256),
       nextReviewDate = null,
