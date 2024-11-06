@@ -58,7 +58,7 @@ interface IdentifiedNeedsRequest {
 
 interface ReviewRequest {
   @get:Schema(description = "The date of the review.", example = "2021-09-27")
-  val reviewDate: LocalDate?
+  val reviewDate: LocalDate
 
   @get:Schema(description = "The username of the person who recorded the review.")
   @get:Size(min = 0, max = 64, message = "Recorded by username must be <= 64 characters")

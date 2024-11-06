@@ -45,7 +45,7 @@ class Review(
   val plan: Plan,
 
   reviewSequence: Int,
-  reviewDate: LocalDate?,
+  reviewDate: LocalDate,
   recordedBy: String,
   recordedByDisplayName: String,
   nextReviewDate: LocalDate?,
@@ -68,7 +68,7 @@ class Review(
 
   var reviewSequence: Int = reviewSequence
     private set
-  var reviewDate: LocalDate? = reviewDate
+  var reviewDate: LocalDate = reviewDate
     private set
   var recordedBy: String = recordedBy
     private set

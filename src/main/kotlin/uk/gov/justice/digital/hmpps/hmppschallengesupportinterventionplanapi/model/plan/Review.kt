@@ -20,7 +20,7 @@ data class Review(
   val reviewSequence: Int,
 
   @Schema(description = "The date of the review.", example = "2021-09-27")
-  val reviewDate: LocalDate?,
+  val reviewDate: LocalDate,
 
   @Schema(description = "The username of the person who recorded the review.")
   val recordedBy: String,

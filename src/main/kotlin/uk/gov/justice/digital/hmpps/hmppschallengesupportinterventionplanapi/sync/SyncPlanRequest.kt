@@ -44,7 +44,7 @@ data class SyncNeedRequest(
 ) : NomisIdentifiable, IdentifiedNeedRequest, LegacyIdAware
 
 data class SyncReviewRequest(
-  override val reviewDate: LocalDate?,
+  override val reviewDate: LocalDate,
   override val recordedBy: String,
   override val recordedByDisplayName: String,
   override val nextReviewDate: LocalDate?,
