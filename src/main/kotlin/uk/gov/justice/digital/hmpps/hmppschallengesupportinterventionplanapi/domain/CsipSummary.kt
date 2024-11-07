@@ -114,8 +114,8 @@ fun summaryMatchesName(name: String) =
   Specification<CsipSummary> { csip, _, cb ->
     val matches = name.split("\\s".toRegex()).map {
       cb.or(
-        cb.like(cb.lower(csip[LAST_NAME]), "%${it.lowercase()}%"),
-        cb.like(cb.lower(csip[FIRST_NAME]), "%${it.lowercase()}%"),
+        cb.like(cb.lower(csip[LAST_NAME]), "%${it.lowercase()}%", '\\'),
+        cb.like(cb.lower(csip[FIRST_NAME]), "%${it.lowercase()}%", '\\'),
       )
     }.toTypedArray()
     cb.and(*matches)

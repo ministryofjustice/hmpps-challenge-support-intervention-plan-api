@@ -174,7 +174,7 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
     ResponseEntity.status(INTERNAL_SERVER_ERROR).body(
       ErrorResponse(
         status = INTERNAL_SERVER_ERROR,
-        userMessage = "Unexpected error: ${e.message}",
+        userMessage = "An unexpected server error occurred.",
         developerMessage = "${e::class.simpleName} => ${e.message}",
       ),
     )

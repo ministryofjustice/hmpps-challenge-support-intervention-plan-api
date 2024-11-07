@@ -127,9 +127,19 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       it.withReferral().withPlan()
     }
 
+    val csip5 = dataSetup(
+      generateCsipRecord(
+        prisoner(prisonId = SEARCH_PRISON_CODE, firstName = "Darren", lastName = "Jumbo").toPersonSummary(),
+      ),
+    ) {
+      it.withReferral().withPlan()
+    }
+
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip2), query = "john")
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip4), query = "jam")
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip4), query = "smith james")
+    verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip5, csip4), query = "j_m")
+    verifySort(SEARCH_PRISON_CODE, "name", listOf(csip5), query = "r%e")
   }
 
   @Test

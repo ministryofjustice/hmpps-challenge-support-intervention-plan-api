@@ -52,4 +52,4 @@ private fun CsipSummary.toSearchResult() =
 
 private fun CsipSummary.prisoner() = Prisoner(prisonNumber, firstName, lastName, cellLocation)
 
-private fun String.isPrisonNumber() = matches(Regex("\\w\\d{4}\\w{2}"))
+private fun String.isPrisonNumber() = matches(Regex("^\\w\\d{4}\\w{2}$"))
