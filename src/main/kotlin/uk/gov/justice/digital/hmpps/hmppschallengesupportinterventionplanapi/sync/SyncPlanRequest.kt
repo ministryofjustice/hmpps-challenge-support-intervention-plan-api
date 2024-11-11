@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.ValidPlanDetail
@@ -23,6 +24,7 @@ data class SyncPlanRequest(
   override val identifiedNeeds: List<SyncNeedRequest>,
   override val reviews: List<SyncReviewRequest>,
 ) : PlanRequest, FirstReviewRequest, IdentifiedNeedsRequest, ReviewsRequest {
+  @JsonIgnore
   override val nextCaseReviewDate: LocalDate? = firstCaseReviewDate
 
   fun requestMappings(): Set<RequestMapping> = buildSet {
