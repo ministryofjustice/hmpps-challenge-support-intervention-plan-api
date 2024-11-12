@@ -377,7 +377,7 @@ abstract class IntegrationTestBase {
     reviewDate: LocalDate = LocalDate.now(),
     recordedBy: String = "recordedBy",
     recordedByDisplayName: String = "recordedByDisplayName",
-    nextReviewDate: LocalDate? = (reviewDate ?: LocalDate.now()).plusWeeks(4),
+    nextReviewDate: LocalDate? = reviewDate.plusWeeks(4),
     csipClosedDate: LocalDate? = null,
     summary: String? = "A brief summary of the review",
     actions: Set<ReviewAction> = setOf(),

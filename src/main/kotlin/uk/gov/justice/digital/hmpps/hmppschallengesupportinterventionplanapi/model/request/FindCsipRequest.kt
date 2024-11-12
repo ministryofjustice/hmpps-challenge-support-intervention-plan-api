@@ -39,6 +39,8 @@ data class FindCsipRequest(
   private fun sortByName(direction: Direction): Sort = by(direction, LAST_NAME, FIRST_NAME, PRISON_NUMBER)
   private fun tieBreaker() = sortByName(ASC).and(sortByDate(DESC))
 
+  fun queryString(): String? = query?.replace("\u0000", "")?.trim()?.takeIf { it.isNotBlank() }
+
   override fun buildSort(field: String, direction: Direction): Sort {
     return when (field) {
       REFERRAL_DATE -> sortByDate(direction).and(sortByName(ASC))

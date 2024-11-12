@@ -23,7 +23,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.FindCsipRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
+import java.net.URLDecoder.decode
 import java.time.LocalDate
+import kotlin.text.Charsets.UTF_8
 
 class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
@@ -92,6 +94,15 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     val res = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, query = csip1.prisonNumber))
     assertThat(res.content.size).isEqualTo(1)
     res.content.first().verifyAgainst(csip1)
+
+    val res2 = searchCsipRecords(
+      searchRequest(
+        prisonCode = SEARCH_PRISON_CODE,
+        query = decode("${csip1.prisonNumber}%00", UTF_8.name()),
+      ),
+    )
+    assertThat(res2.content.size).isEqualTo(1)
+    res2.content.first().verifyAgainst(csip1)
   }
 
   @Test
@@ -140,6 +151,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip4), query = "smith james")
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip3, csip1, csip5, csip4), query = "j_m")
     verifySort(SEARCH_PRISON_CODE, "name", listOf(csip5), query = "r%e")
+    verifySort(SEARCH_PRISON_CODE, "name", listOf(csip5), query = decode("ren%00", UTF_8.name()))
   }
 
   @Test
