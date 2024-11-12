@@ -37,7 +37,7 @@ private fun Page<CsipSearchResult>.asCsipSearchResults() = CsipSearchResults(
 
 private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = listOfNotNull(
   summaryMatchesPrison(prisonCode),
-  query?.trim()?.let {
+  queryString()?.let {
     if (it.isPrisonNumber()) {
       summaryMatchesPrisonNumber(it)
     } else {
