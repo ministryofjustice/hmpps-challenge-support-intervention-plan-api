@@ -3,6 +3,10 @@ generic-service:
   productId: "DPS094" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
 
   replicaCount: 4
+  resources:
+    requests:
+      cpu: 128m
+      memory: 768Mi
 
   image:
     repository: quay.io/hmpps/hmpps-challenge-support-intervention-plan-api
