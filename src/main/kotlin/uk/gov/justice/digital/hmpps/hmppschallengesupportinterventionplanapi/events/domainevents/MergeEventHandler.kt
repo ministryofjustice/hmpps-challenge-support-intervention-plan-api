@@ -18,19 +18,22 @@ class MergeEventHandler(
   private val eventPublisher: ApplicationEventPublisher,
 ) {
   fun handle(event: HmppsDomainEvent<MergeInformation>) {
-    val personSummary = personSummaryService.getPersonSummaryByPrisonNumber(event.additionalInformation.nomsNumber)
-    csipRepository.findAll(matchesPrisonNumber(event.additionalInformation.removedNomsNumber)).map {
-      it.moveTo(personSummary)
-    }.forEach {
-      eventPublisher.publishEvent(
-        CsipEvent(
-          CSIP_MOVED,
-          it.personSummary.prisonNumber,
-          it.id,
-          now(),
-          event.additionalInformation.removedNomsNumber,
-        ),
-      )
+    val toMerge = csipRepository.findAll(matchesPrisonNumber(event.additionalInformation.removedNomsNumber))
+    if (toMerge.isNotEmpty()) {
+      val personSummary = personSummaryService.getPersonSummaryByPrisonNumber(event.additionalInformation.nomsNumber)
+      toMerge.map {
+        it.moveTo(personSummary)
+      }.forEach {
+        eventPublisher.publishEvent(
+          CsipEvent(
+            CSIP_MOVED,
+            it.personSummary.prisonNumber,
+            it.id,
+            now(),
+            event.additionalInformation.removedNomsNumber,
+          ),
+        )
+      }
     }
     personSummaryService.removePersonSummaryByPrisonNumber(event.additionalInformation.removedNomsNumber)
   }
