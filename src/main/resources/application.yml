@@ -110,6 +110,6 @@ hmpps.sqs:
   queueAdminRole: ROLE_CSIP_ADMIN
 
 service:
-  publish-events: false
+  publish-events: true
   base-url: http://localhost:8080
   active-prisons: LEI

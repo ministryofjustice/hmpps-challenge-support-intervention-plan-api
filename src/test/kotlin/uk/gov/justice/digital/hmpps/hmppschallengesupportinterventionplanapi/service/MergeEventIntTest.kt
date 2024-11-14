@@ -26,12 +26,44 @@ class MergeEventIntTest : IntegrationTestBase() {
   fun `message ignored if prison number not of interest`() {
     val oldNoms = prisonNumber()
     val newNoms = prisonNumber()
+    assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
     assertThat(personSummaryRepository.findByIdOrNull(newNoms)).isNull()
 
-    sendDomainEvent(mergeEvent(newNoms, oldNoms))
+    sendDomainEvent(mergeEvent(oldNoms, newNoms))
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
+    assertThat(personSummaryRepository.findByIdOrNull(newNoms)).isNull()
+  }
+
+  @Test
+  fun `message ignored if no csip on old noms number`() {
+    val oldNoms = prisonNumber()
+    val newNoms = prisonNumber()
+    assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
+
+    val newPerson = prisoner(newNoms).toPersonSummary()
+    dataSetup(generateCsipRecord(newPerson)) { it.withCompletedReferral() }
+    dataSetup(generateCsipRecord(newPerson)) { it.withCompletedReferral() }
+
+    sendDomainEvent(mergeEvent(oldNoms, newNoms))
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
+    assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
+  }
+
+  @Test
+  fun `person summary removed if no csip records to merge`() {
+    val oldNoms = prisonNumber()
+    val newNoms = prisonNumber()
+    assertThat(personSummaryRepository.findByIdOrNull(newNoms)).isNull()
+    personSummaryRepository.save(prisoner(oldNoms).toPersonSummary())
+
+    sendDomainEvent(mergeEvent(oldNoms, newNoms))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsDomainEventsQueue.countAllMessagesOnQueue() } matches { it == 0 }
     assertThat(personSummaryRepository.findByIdOrNull(newNoms)).isNull()
+    assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
   }
 
   @Test

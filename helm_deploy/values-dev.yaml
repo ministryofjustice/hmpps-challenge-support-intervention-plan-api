@@ -2,7 +2,6 @@
 # Per environment values which override defaults in hmpps-challenge-support-intervention-plan-api/values.yaml
 
 generic-service:
-  replicaCount: 2
 
   ingress:
     host: csip-api-dev.hmpps.service.justice.gov.uk
@@ -17,7 +16,6 @@ generic-service:
     API_BASE_URL_HMPPS_AUTH: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
     API_BASE_URL_MANAGE_USERS: "https://manage-users-api-dev.hmpps.service.justice.gov.uk"
     API_BASE_URL_PRISONER_SEARCH: "https://prisoner-search-dev.prison.service.justice.gov.uk"
-    SERVICE_PUBLISH_EVENTS: true
     SERVICE_BASE_URL: "https://csip-api-dev.hmpps.service.justice.gov.uk"
     SERVICE_ACTIVE_PRISONS: "MDI,LEI,KMI"
 
