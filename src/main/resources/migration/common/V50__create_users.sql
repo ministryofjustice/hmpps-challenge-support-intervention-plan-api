@@ -6,8 +6,8 @@ alter default privileges in schema public grant select on tables to read_only_gr
 alter default privileges in schema public grant select on sequences to read_only_group;
 
 create role read_write_group in group read_only_group;
-grant insert, update, delete on all tables in schema public to read_write_group;
-alter default privileges in schema public grant insert, update, delete on tables to read_write_group;
+grant insert, update, delete, truncate on all tables in schema public to read_write_group;
+alter default privileges in schema public grant insert, update, delete, truncate on tables to read_write_group;
 
 create or replace function create_user(username text, password text, read_only boolean) returns void as
 $$
