@@ -38,10 +38,22 @@ begin
 end ;
 $$ language plpgsql;
 
-/* example usage to create user
+
+-- example usage to create user
+/*
    select create_user('first_last', 'secret_password', true);
    will create first_last_ro (read only)
 
    select create_user('first_last', 'secret_password', false);
    will create first_last_rw (read write)
+*/
+
+-- to remove a user
+/*
+    drop user 'username_ro'; -- must be the full username
+*/
+
+-- to view users with login access
+/*
+    select * from pg_roles where rolcanlogin = true;
 */
