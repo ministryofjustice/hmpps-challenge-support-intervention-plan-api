@@ -45,6 +45,7 @@ fun Referral.verifyAgainst(request: SyncReferralRequest) {
   assertThat(refererAreaOfWork.code).isEqualTo(request.refererAreaCode)
   assertThat(incidentInvolvement?.code).isEqualTo(request.incidentInvolvementCode)
   request.saferCustodyScreeningOutcome?.also { requireNotNull(saferCustodyScreeningOutcome).verifyAgainst(it) }
+  request.investigation?.also { requireNotNull(investigation).verifyAgainst(it) }
 }
 
 fun ContributoryFactor.verifyAgainst(request: SyncContributoryFactorRequest) {
