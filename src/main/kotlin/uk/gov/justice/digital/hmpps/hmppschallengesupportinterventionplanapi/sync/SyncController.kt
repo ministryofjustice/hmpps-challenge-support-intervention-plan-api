@@ -11,6 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.orm.ObjectOptimisticLockingFailureException
+import org.springframework.retry.policy.SimpleRetryPolicy
+import org.springframework.retry.support.RetryTemplate
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -35,7 +37,7 @@ import java.util.UUID
 @RestController
 @RequestMapping(path = ["/sync/csip-records"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "9. Sync CSIP Record Controller", description = "Endpoint for sync operations")
-class SyncController(private val csip: SyncCsipRecord) {
+class SyncController(private val csip: SyncCsipRecord, private val retry: RetryTemplate) {
   @Operation(summary = "Retrieve all CSIP records for a prisoner.")
   @ApiResponses(
     value = [
@@ -89,14 +91,7 @@ class SyncController(private val csip: SyncCsipRecord) {
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
   fun syncCsipRecord(@Valid @RequestBody request: SyncCsipRequest): SyncResponse {
     setSyncContext(request)
-    return try {
-      csip.sync(request)
-    } catch (ex: RuntimeException) {
-      when (ex) {
-        is DataIntegrityViolationException, is ObjectOptimisticLockingFailureException -> csip.sync(request)
-        else -> throw ex
-      }
-    }
+    return retry.execute<SyncResponse, RuntimeException> { csip.sync(request) }
   }
 
   @ApiResponses(

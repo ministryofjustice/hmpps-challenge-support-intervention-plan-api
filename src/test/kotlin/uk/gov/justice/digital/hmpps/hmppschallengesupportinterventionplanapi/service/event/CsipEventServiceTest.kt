@@ -30,7 +30,7 @@ class CsipEventServiceTest {
 
   @Test
   fun `handle event - publish enabled`() {
-    val serviceConfig = ServiceConfig(setOf(PRISON_CODE_LEEDS), baseUrl, true)
+    val serviceConfig = ServiceConfig(setOf(PRISON_CODE_LEEDS), baseUrl, true, 4, 200)
     val csipEventService = EntityEventService(serviceConfig, telemetryClient, domainEventPublisher)
     val csipEvent = csipUpdatedEvent()
 
@@ -51,7 +51,7 @@ class CsipEventServiceTest {
 
   @Test
   fun `handle event - publish disabled`() {
-    val serviceConfig = ServiceConfig(setOf(PRISON_CODE_LEEDS), baseUrl, false)
+    val serviceConfig = ServiceConfig(setOf(PRISON_CODE_LEEDS), baseUrl, false, 4, 200)
     val csipEventService = EntityEventService(serviceConfig, telemetryClient, domainEventPublisher)
     val csipEvent = csipUpdatedEvent()
 

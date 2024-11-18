@@ -678,6 +678,45 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `200 success - concurrently updates the same reviews`() {
+    val csip = dataSetup(generateCsipRecord(legacyId = newId()).withReferral()) {
+      requireNotNull(it.referral).withInvestigation()
+      it.withPlan()
+      val plan = requireNotNull(it.plan).withReview(legacyId = newId())
+      requireNotNull(plan.reviews().first()).withAttendee(legacyId = newId())
+      it
+    }
+    val review = csip.plan!!.reviews().first()
+    val attendee = review.attendees().first()
+
+    val investigationRequest = syncInvestigationRequest(occurrenceReason = "Updated concurrently")
+    val planRequest = syncPlanRequest(
+      reviews = listOf(
+        syncReviewRequest(
+          id = review.legacyId!!, uuid = review.id,
+          attendees = listOf(syncAttendeeRequest(id = attendee.legacyId!!, uuid = attendee.id)),
+        ),
+      ),
+    )
+    val csipRequest = syncCsipRequest(
+      id = csip.legacyId!!,
+      uuid = csip.id,
+      prisonNumber = csip.prisonNumber,
+      referral = syncReferralRequest(investigation = investigationRequest),
+      plan = planRequest,
+    )
+    val request1 = CompletableFuture.supplyAsync { syncCsipRecord(csipRequest) }
+    val request2 = CompletableFuture.supplyAsync { syncCsipRecord(csipRequest) }
+    val request3 = CompletableFuture.supplyAsync { syncCsipRecord(csipRequest) }
+    val request4 = CompletableFuture.supplyAsync { syncCsipRecord(csipRequest) }
+
+    allOf(request1, request2, request3, request4).join()
+
+    val saved = csipRecordRepository.getCsipRecord(csip.id)
+    saved.verifyAgainst(csipRequest)
+  }
+
+  @Test
   fun `200 success - save a new csip record where person summary already exists`() {
     val existing = dataSetup(generateCsipRecord()) { it.withCompletedReferral().withPlan() }
     val request = syncCsipRequest(referral = syncReferralRequest(), prisonNumber = existing.prisonNumber)
