@@ -21,4 +21,6 @@ data class ServiceConfig(
   val activePrisons: Set<String>,
   val baseUrl: String,
   val publishEvents: Boolean,
+  val retryAttempts: Int,
+  val backOffInterval: Long,
 )
