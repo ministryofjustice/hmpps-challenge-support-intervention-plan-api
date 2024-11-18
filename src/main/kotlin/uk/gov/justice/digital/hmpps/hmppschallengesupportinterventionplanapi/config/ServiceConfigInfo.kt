@@ -22,5 +22,5 @@ data class ServiceConfig(
   val baseUrl: String,
   val publishEvents: Boolean,
   val retryAttempts: Int,
-  val backOffInterval: Long
+  val backOffInterval: Long,
 )

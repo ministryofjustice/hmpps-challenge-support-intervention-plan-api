@@ -693,7 +693,8 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val planRequest = syncPlanRequest(
       reviews = listOf(
         syncReviewRequest(
-          id = review.legacyId!!, uuid = review.id,
+          id = review.legacyId!!,
+          uuid = review.id,
           attendees = listOf(syncAttendeeRequest(id = attendee.legacyId!!, uuid = attendee.id)),
         ),
       ),
