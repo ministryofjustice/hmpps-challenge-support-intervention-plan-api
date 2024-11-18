@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.hibernate.exception.ConstraintViolationException
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
@@ -87,7 +89,15 @@ class SyncController(private val csip: SyncCsipRecord) {
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
   fun syncCsipRecord(@Valid @RequestBody request: SyncCsipRequest): SyncResponse {
     setSyncContext(request)
-    return csip.sync(request)
+    return try {
+      csip.sync(request)
+    } catch (dive: DataIntegrityViolationException) {
+      if (dive.cause is ConstraintViolationException) {
+        csip.sync(request)
+      } else {
+        throw dive
+      }
+    }
   }
 
   @ApiResponses(

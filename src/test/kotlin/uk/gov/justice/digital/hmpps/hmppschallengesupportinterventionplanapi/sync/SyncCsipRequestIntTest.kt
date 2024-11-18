@@ -67,6 +67,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletableFuture.allOf
 
 class SyncCsipRequestIntTest : IntegrationTestBase() {
 
@@ -621,6 +623,29 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val csipMapping = response.mappings.first { it.component == RECORD }
     val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
     saved.verifyAgainst(request)
+  }
+
+  @Test
+  fun `200 success - concurrently saves the same investigation`() {
+    val investigationRequest = syncInvestigationRequest(
+      interviews = listOf(syncInterviewRequest(), syncInterviewRequest()),
+    )
+    val csipRequest = syncCsipRequest(referral = syncReferralRequest(investigation = investigationRequest))
+    val request1 = CompletableFuture.supplyAsync { syncCsipRecord(csipRequest) }
+    val request2 = CompletableFuture.supplyAsync {
+      syncCsipRecord(
+        csipRequest.copy(
+          referral = csipRequest.referral!!.copy(investigation = investigationRequest.copy(interviews = listOf())),
+        ),
+      )
+    }
+
+    allOf(request1, request2).join()
+
+    val csipMapping = request1.get().mappings.firstOrNull { it.component == RECORD }
+      ?: request2.get().mappings.first { it.component == RECORD }
+    val saved = csipRecordRepository.getCsipRecord(csipMapping.uuid)
+    saved.verifyAgainst(csipRequest)
   }
 
   @Test
