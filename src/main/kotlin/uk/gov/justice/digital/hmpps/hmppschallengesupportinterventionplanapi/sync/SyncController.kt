@@ -7,10 +7,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.hibernate.exception.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -91,11 +91,10 @@ class SyncController(private val csip: SyncCsipRecord) {
     setSyncContext(request)
     return try {
       csip.sync(request)
-    } catch (dive: DataIntegrityViolationException) {
-      if (dive.cause is ConstraintViolationException) {
-        csip.sync(request)
-      } else {
-        throw dive
+    } catch (ex: RuntimeException) {
+      when (ex) {
+        is DataIntegrityViolationException, is ObjectOptimisticLockingFailureException -> csip.sync(request)
+        else -> throw ex
       }
     }
   }
