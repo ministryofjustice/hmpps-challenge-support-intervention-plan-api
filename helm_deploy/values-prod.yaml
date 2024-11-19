@@ -16,8 +16,6 @@ generic-service:
     jobName: csip-prod-to-preprod-restore
     enabled: true
     timeout: 900
-    storageRequest: "16Gi"
-    storageLimit: "32Gi"
     namespace_secrets:
       rds-postgresql-instance-output:
         DB_NAME: "database_name"
