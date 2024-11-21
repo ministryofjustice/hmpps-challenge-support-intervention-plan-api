@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.8"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.9"
   kotlin("plugin.spring") version "2.0.21"
   kotlin("plugin.jpa") version "2.0.21"
   id("com.google.cloud.tools.jib") version "3.4.4"
@@ -18,7 +18,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.8")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.17.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.18.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
@@ -36,12 +36,12 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.1.1")
 
   // Test dependencies
-  testImplementation("org.testcontainers:postgresql:1.20.3")
+  testImplementation("org.testcontainers:postgresql:1.20.4")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
   testImplementation("org.wiremock:wiremock-standalone:3.9.2")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.2")
-  testImplementation("org.testcontainers:localstack:1.20.3")
+  testImplementation("org.testcontainers:localstack:1.20.4")
   testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
