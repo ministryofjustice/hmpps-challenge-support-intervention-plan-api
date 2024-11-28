@@ -14,7 +14,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.LAST_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_NUMBER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.RESTRICTED_PATIENT
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS_CODE
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.SUPPORTING_PRISON_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
@@ -29,8 +31,10 @@ class CsipSummary(
   val prisonNumber: String,
   val firstName: String,
   val lastName: String,
+  val restrictedPatient: Boolean,
   val prisonCode: String?,
   val cellLocation: String?,
+  val supportingPrisonCode: String?,
 
   val referralDate: LocalDate,
   val nextReviewDate: LocalDate?,
@@ -49,7 +53,9 @@ class CsipSummary(
     val PRISON_NUMBER: String = CsipSummary::prisonNumber.name
     val FIRST_NAME: String = CsipSummary::firstName.name
     val LAST_NAME: String = CsipSummary::lastName.name
+    val RESTRICTED_PATIENT: String = CsipSummary::restrictedPatient.name
     val PRISON_CODE: String = CsipSummary::prisonCode.name
+    val SUPPORTING_PRISON_CODE: String = CsipSummary::supportingPrisonCode.name
     val CELL_LOCATION: String = CsipSummary::cellLocation.name
     val STATUS_CODE: String = CsipSummary::statusCode.name
     val REFERRAL_DATE: String = CsipSummary::referralDate.name
@@ -106,6 +112,14 @@ interface CurrentCsipAndCounts {
 
 fun summaryMatchesPrison(prisonNumber: String) =
   Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_CODE]), prisonNumber.lowercase()) }
+
+fun summaryPrisonInvolvement(prisonCodes: Set<String>) =
+  Specification<CsipSummary> { csip, _, cb ->
+    cb.or(csip.get<String>(PRISON_CODE).`in`(prisonCodes), csip.get<String>(SUPPORTING_PRISON_CODE).`in`(prisonCodes))
+  }
+
+fun summaryWithoutRestrictedPatients() =
+  Specification<CsipSummary> { csip, _, cb -> cb.equal(csip.get<Boolean>(RESTRICTED_PATIENT), false) }
 
 fun summaryMatchesPrisonNumber(prisonNumber: String) =
   Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_NUMBER]), prisonNumber.lowercase()) }

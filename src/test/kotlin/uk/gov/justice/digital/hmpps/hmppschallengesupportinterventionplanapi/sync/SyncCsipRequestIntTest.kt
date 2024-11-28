@@ -729,7 +729,16 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     saved.verifyAgainst(request)
     saved.personSummary.verifyAgainst(
       with(existing.personSummary) {
-        prisoner(request.prisonNumber, firstName, lastName, prisonCode, status, cellLocation)
+        prisoner(
+          request.prisonNumber,
+          firstName,
+          lastName,
+          prisonCode,
+          status,
+          restrictedPatient,
+          cellLocation,
+          supportingPrisonCode,
+        )
       },
     )
   }
@@ -745,7 +754,16 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     saved.verifyAgainst(request)
     saved.personSummary.verifyAgainst(
       with(request.personSummary!!) {
-        prisoner(request.prisonNumber, firstName, lastName, prisonCode, status, cellLocation)
+        prisoner(
+          request.prisonNumber,
+          firstName,
+          lastName,
+          prisonCode,
+          status,
+          restrictedPatient ?: false,
+          cellLocation,
+          supportingPrisonCode,
+        )
       },
     )
   }

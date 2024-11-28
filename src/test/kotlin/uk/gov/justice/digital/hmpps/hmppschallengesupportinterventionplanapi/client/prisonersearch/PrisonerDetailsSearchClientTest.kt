@@ -41,7 +41,9 @@ class PrisonerDetailsSearchClientTest {
         "Last",
         PRISON_CODE_LEEDS,
         "ACTIVE IN",
+        false,
         "A-1-002",
+        null,
       ),
     )
     server.verify(exactly(1), getRequestedFor(urlEqualTo("/prisoner/$PRISON_NUMBER")))

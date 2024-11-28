@@ -124,7 +124,16 @@ class SyncCsipRecord(
       ?: personSummaryService.getPersonSummaryByPrisonNumber(prisonNumber)
 
   private fun PersonSummaryRequest.toPersonSummary(prisonNumber: String) =
-    PersonSummary(prisonNumber, firstName, lastName, status, prisonCode, cellLocation)
+    PersonSummary(
+      prisonNumber,
+      firstName,
+      lastName,
+      status,
+      restrictedPatient ?: false,
+      prisonCode,
+      cellLocation,
+      supportingPrisonCode,
+    )
 
   private fun SyncCsipRequest.toCsipRecord(personSummary: PersonSummary): CsipRecord =
     CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId)

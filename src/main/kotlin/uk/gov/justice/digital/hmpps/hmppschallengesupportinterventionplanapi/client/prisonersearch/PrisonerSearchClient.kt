@@ -37,5 +37,7 @@ data class PrisonerDetails(
   val lastName: String,
   val prisonId: String?,
   val status: String,
+  val restrictedPatient: Boolean,
   val cellLocation: String?,
+  val supportingPrisonId: String?,
 )

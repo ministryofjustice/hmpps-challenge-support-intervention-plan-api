@@ -17,8 +17,10 @@ class PersonSummary(
   firstName: String,
   lastName: String,
   status: String,
+  restrictedPatient: Boolean,
   prisonCode: String?,
   cellLocation: String?,
+  supportingPrisonCode: String?,
 ) {
   var firstName: String = firstName
     private set
@@ -26,23 +28,47 @@ class PersonSummary(
     private set
   var status: String = status
     private set
+  var restrictedPatient: Boolean = restrictedPatient
+    private set
   var prisonCode: String? = prisonCode
     private set
   var cellLocation: String? = cellLocation
+    private set
+  var supportingPrisonCode: String? = supportingPrisonCode
     private set
 
   @Version
   val version: Int? = null
 
-  fun update(firstName: String, lastName: String, status: String, prisonCode: String?, cellLocation: String?) {
+  fun update(
+    firstName: String,
+    lastName: String,
+    status: String,
+    restrictedPatient: Boolean,
+    prisonCode: String?,
+    cellLocation: String?,
+    supportingPrisonCode: String?,
+  ) {
     this.firstName = firstName
     this.lastName = lastName
     this.status = status
+    this.restrictedPatient = restrictedPatient
     this.prisonCode = prisonCode
     this.cellLocation = cellLocation
+    this.supportingPrisonCode = supportingPrisonCode
   }
 }
 
-fun PrisonerDetails.toPersonSummary() = PersonSummary(prisonerNumber, firstName, lastName, status, prisonId, cellLocation)
+fun PrisonerDetails.toPersonSummary() =
+  PersonSummary(
+    prisonerNumber,
+    firstName,
+    lastName,
+    status,
+    restrictedPatient,
+    prisonId,
+    cellLocation,
+    supportingPrisonId,
+  )
 
 interface PersonSummaryRepository : JpaRepository<PersonSummary, String>

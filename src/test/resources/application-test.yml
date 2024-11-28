@@ -12,6 +12,7 @@ spring:
     password: csip
   flyway:
     locations: classpath:/migration/common,classpath:/migration/test
+  jpa.show-sql: true
 
 api:
   base:

@@ -17,9 +17,11 @@ object SyncRequestGenerator {
     firstName: String = "First",
     lastName: String = "Last",
     status: String = "ACTIVE IN",
+    restrictedPatient: Boolean = false,
     prisonCode: String? = "LEI",
     cellLocation: String? = cellLocation(),
-  ) = PersonSummaryRequest(firstName, lastName, status, prisonCode, cellLocation)
+    supportingPrisonCode: String? = null,
+  ) = PersonSummaryRequest(firstName, lastName, status, restrictedPatient, prisonCode, cellLocation, supportingPrisonCode)
 
   fun syncCsipRequest(
     logCode: String? = null,
