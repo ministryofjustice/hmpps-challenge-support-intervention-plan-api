@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 
 data class FindCsipRequest(
-  @Parameter(description = "The prison code for the location of the prisoner", example = "MDI")
-  val prisonCode: String,
+  @Parameter(description = "Please use the prisonCodes parameter", example = "MDI", deprecated = true)
+  val prisonCode: String?,
   @Parameter(
     description = "Either the prison number or the name(s) of the prisoner space separated",
     example = "First Last",
@@ -25,6 +25,13 @@ data class FindCsipRequest(
   val query: String?,
   @Parameter(description = "The status of the CSIP record", example = "CSIP_OPEN")
   val status: CsipStatus?,
+  @Parameter(
+    description = "A collection of prison codes that are involved in the care of the prisoner",
+    required = false,
+  )
+  val prisonCodes: Set<String> = emptySet(),
+  @Parameter(description = "Indicates whether or not to include restricted patients in the search", required = false)
+  val includeRestrictedPatients: Boolean = false,
 
   override val page: Int = 1,
   override val size: Int = 10,

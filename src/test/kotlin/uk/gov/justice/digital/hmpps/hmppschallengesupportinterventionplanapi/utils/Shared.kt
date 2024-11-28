@@ -132,8 +132,19 @@ fun prisoner(
   lastName: String = "Last",
   prisonId: String? = "LEI",
   status: String = "ACTIVE IN",
+  restrictedPatient: Boolean = false,
   cellLocation: String? = cellLocation(),
-) = PrisonerDetails(prisonerNumber, firstName, lastName, prisonId, status, cellLocation)
+  supportingPrisonId: String? = null,
+) = PrisonerDetails(
+  prisonerNumber,
+  firstName,
+  lastName,
+  prisonId,
+  status,
+  restrictedPatient,
+  cellLocation,
+  supportingPrisonId,
+)
 
 fun CsipModel.verifyAgainst(csip: CsipRecord) {
   assertThat(recordUuid).isEqualTo(csip.id)

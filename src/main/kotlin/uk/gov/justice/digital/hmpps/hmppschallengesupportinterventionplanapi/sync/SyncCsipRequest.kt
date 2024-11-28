@@ -40,8 +40,10 @@ data class PersonSummaryRequest(
   val firstName: String,
   val lastName: String,
   val status: String,
+  val restrictedPatient: Boolean?,
   val prisonCode: String?,
   val cellLocation: String?,
+  val supportingPrisonCode: String?,
 )
 
 data class RequestMapping(val component: CsipComponent, val legacyId: Long, val id: UUID?)

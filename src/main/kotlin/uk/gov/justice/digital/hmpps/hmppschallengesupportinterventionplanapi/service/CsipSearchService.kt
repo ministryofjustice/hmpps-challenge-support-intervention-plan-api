@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrison
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrisonNumber
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryPrisonInvolvement
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryWithoutRestrictedPatients
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipOverview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResult
@@ -22,9 +24,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 @Service
 @Transactional(readOnly = true)
 class CsipSearchService(private val csipSummaryRepository: CsipSummaryRepository) {
-  fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults =
-    csipSummaryRepository.findAll(request.asSpecification(), request.pageable())
-      .map { it.toSearchResult() }.asCsipSearchResults()
+  fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults = with(request) {
+    require(prisonCode != null || prisonCodes.isNotEmpty()) { "At least one prison code must be provided" }
+    csipSummaryRepository.findAll(asSpecification(), pageable()).map { it.toSearchResult() }.asCsipSearchResults()
+  }
 
   fun getOverviewForPrison(prisonCode: String): CsipOverview =
     CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
@@ -36,7 +39,7 @@ private fun Page<CsipSearchResult>.asCsipSearchResults() = CsipSearchResults(
 )
 
 private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = listOfNotNull(
-  summaryMatchesPrison(prisonCode),
+  prisonCode?.let(::summaryMatchesPrison),
   queryString()?.let {
     if (it.isPrisonNumber()) {
       summaryMatchesPrisonNumber(it)
@@ -45,6 +48,8 @@ private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = list
     }
   },
   status?.let { summaryHasStatus(it) },
+  if (prisonCodes.isEmpty()) null else summaryPrisonInvolvement(prisonCodes),
+  if (includeRestrictedPatients) null else summaryWithoutRestrictedPatients(),
 ).reduce { spec, current -> spec.and(current) }
 
 private fun CsipSummary.toSearchResult() =

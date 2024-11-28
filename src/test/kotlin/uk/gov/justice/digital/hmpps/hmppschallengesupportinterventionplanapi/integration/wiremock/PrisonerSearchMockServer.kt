@@ -45,7 +45,9 @@ class PrisonerSearchServer : WireMockServer(8112) {
                   "Last",
                   PRISON_CODE_LEEDS,
                   "ACTIVE IN",
+                  false,
                   "A-1-002",
+                  null,
                 ),
               ),
             )

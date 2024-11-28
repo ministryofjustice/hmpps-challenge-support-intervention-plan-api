@@ -16,7 +16,15 @@ class PersonSummaryService(
   fun updateExistingDetails(prisonNumber: String) {
     personSummaryRepository.findByIdOrNull(prisonNumber)?.also {
       val prisoner = requireNotNull(prisonerSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
-      it.update(prisoner.firstName, prisoner.lastName, prisoner.status, prisoner.prisonId, prisoner.cellLocation)
+      it.update(
+        prisoner.firstName,
+        prisoner.lastName,
+        prisoner.status,
+        prisoner.restrictedPatient,
+        prisoner.prisonId,
+        prisoner.cellLocation,
+        prisoner.supportingPrisonId,
+      )
     }
   }
 
@@ -33,8 +41,10 @@ class PersonSummaryService(
           prisoner.firstName,
           prisoner.lastName,
           prisoner.status,
+          prisoner.restrictedPatient,
           prisoner.prisonId,
           prisoner.cellLocation,
+          prisoner.supportingPrisonId,
         ),
       )
     } else {
