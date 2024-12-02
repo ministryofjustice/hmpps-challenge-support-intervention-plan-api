@@ -82,7 +82,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
         .withInvestigation()
-        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "ACC"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "ACC"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -107,7 +107,7 @@ class CsipStatusIntTest : IntegrationTestBase() {
       it.withCompletedReferral()
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
-        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "CUR"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
@@ -146,11 +146,53 @@ class CsipStatusIntTest : IntegrationTestBase() {
       requireNotNull(it.referral)
         .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
         .withInvestigation()
-        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"))
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "NFA"))
     }
 
     val saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
+  }
+
+  @Test
+  fun `csip status - NoFurtherAction 3`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
+        .withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "NFA"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
+  }
+
+  @Test
+  fun `csip status - Outside of CSIP`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
+        .withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "WIN"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.SUPPORT_OUTSIDE_CSIP.name)
+  }
+
+  @Test
+  fun `csip status - ACCT Support`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withCompletedReferral()
+      requireNotNull(it.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "CUR"))
+        .withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "ACC"))
+    }
+
+    val saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.ACCT_SUPPORT.name)
   }
 
   @Test
@@ -188,6 +230,10 @@ class CsipStatusIntTest : IntegrationTestBase() {
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.AWAITING_DECISION.name)
 
+    record.changeScreeningOutcome("CUR")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.PLAN_PENDING.name)
+
     record.changeDecision("ACC")
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.ACCT_SUPPORT.name)
@@ -200,9 +246,13 @@ class CsipStatusIntTest : IntegrationTestBase() {
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
 
+    record.changeScreeningOutcome("OPE")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
+
     record.changeScreeningOutcome("CUR")
     saved = service.retrieveCsipRecord(record.id)
-    assertThat(saved.status.code).isEqualTo(CsipStatus.PLAN_PENDING.name)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
 
     record.addPlan()
     saved = service.retrieveCsipRecord(record.id)
