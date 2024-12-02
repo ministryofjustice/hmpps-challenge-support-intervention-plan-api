@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus.AWAITING_DECISION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus.CSIP_CLOSED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus.CSIP_OPEN
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus.NO_FURTHER_ACTION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResult
@@ -222,6 +224,13 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       requireNotNull(referral.investigation).withInterview()
       it
     }
+    val noFurtherAction = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
+      it.withReferral()
+      val referral = requireNotNull(it.referral).withInvestigation()
+      requireNotNull(referral.investigation).withInterview()
+      referral.withDecisionAndActions(givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "NFA"))
+      it
+    }
 
     val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = CSIP_CLOSED, size = 100))
     assertThat(res1.content.size).isEqualTo(1)
@@ -234,6 +243,10 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     val res3 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = AWAITING_DECISION, size = 100))
     assertThat(res3.content.size).isEqualTo(1)
     res3.content.first().verifyAgainst(awaitingDecision)
+
+    val res4 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = NO_FURTHER_ACTION, size = 100))
+    assertThat(res4.content.size).isEqualTo(1)
+    res4.content.first().verifyAgainst(noFurtherAction)
   }
 
   @Test
