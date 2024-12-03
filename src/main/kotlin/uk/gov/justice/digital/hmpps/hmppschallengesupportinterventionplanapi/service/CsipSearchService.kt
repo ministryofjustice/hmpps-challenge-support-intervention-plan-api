@@ -6,8 +6,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryHasStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesName
@@ -15,7 +13,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryPrisonInvolvement
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryWithoutRestrictedPatients
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipOverview
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipSearchResult
@@ -28,7 +25,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 @Transactional(readOnly = true)
 class CsipSearchService(
   private val csipSummaryRepository: CsipSummaryRepository,
-  private val referenceDataRepository: ReferenceDataRepository,
 ) {
   fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults = with(request) {
     require(prisonCode != null || prisonCodes.isNotEmpty()) { "At least one prison code must be provided" }
@@ -47,9 +43,7 @@ class CsipSearchService(
         summaryMatchesName(it)
       }
     },
-    status?.let {
-      summaryHasStatus(referenceDataRepository.findByKey(ReferenceDataKey(ReferenceDataType.STATUS, it.name))!!.id)
-    },
+    status?.let { summaryHasStatus(status) },
     if (prisonCodes.isEmpty()) null else summaryPrisonInvolvement(prisonCodes),
     if (includeRestrictedPatients) null else summaryWithoutRestrictedPatients(),
   ).reduce { spec, current -> spec.and(current) }

@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.RESTRICTED_PATIENT
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS_ID
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.STATUS_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.Companion.SUPPORTING_PRISON_CODE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts
@@ -39,7 +39,6 @@ class CsipSummary(
   val referralDate: LocalDate,
   val nextReviewDate: LocalDate?,
   val caseManager: String?,
-  val statusId: Long,
   @Enumerated(EnumType.STRING)
   val statusCode: CsipStatus,
   val statusDescription: String,
@@ -58,7 +57,7 @@ class CsipSummary(
     val PRISON_CODE: String = CsipSummary::prisonCode.name
     val SUPPORTING_PRISON_CODE: String = CsipSummary::supportingPrisonCode.name
     val CELL_LOCATION: String = CsipSummary::cellLocation.name
-    val STATUS_ID: String = CsipSummary::statusId.name
+    val STATUS_CODE: String = CsipSummary::statusCode.name
     val REFERRAL_DATE: String = CsipSummary::referralDate.name
     val STATUS_DESCRIPTION: String = CsipSummary::statusDescription.name
   }
@@ -136,8 +135,8 @@ fun summaryMatchesName(name: String) =
     cb.and(*matches)
   }
 
-fun summaryHasStatus(statusId: Long) = Specification<CsipSummary> { csip, _, cb ->
-  cb.equal(csip.get<String>(STATUS_ID), statusId)
+fun summaryHasStatus(status: CsipStatus) = Specification<CsipSummary> { csip, _, cb ->
+  cb.equal(csip.get<String>(STATUS_CODE), status.name)
 }
 
 fun CsipSummary.status() = ReferenceData(statusCode.name, statusDescription)
