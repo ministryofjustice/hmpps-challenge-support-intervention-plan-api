@@ -29,7 +29,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @NullSource
-  @ValueSource(strings = ["ROLE_SOME_OTHER", ROLE_CSIP_UI])
+  @ValueSource(strings = ["ROLE_SOME_OTHER"])
   fun `403 forbidden - no required role`(role: String?) {
     val response = getLatestCsipResponseSpec(prisonNumber(), role).errorResponse(HttpStatus.FORBIDDEN)
 
@@ -42,9 +42,10 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `200 ok - when no csip records`() {
-    val response = getLatestCsipRecord("NEXIST")
+  @ParameterizedTest
+  @ValueSource(strings = [ROLE_CSIP_RO, ROLE_CSIP_UI])
+  fun `200 ok - when no csip records`(role: String) {
+    val response = getLatestCsipRecord("NEXIST", role = role)
 
     with(response) {
       assertThat(currentCsip).isNull()
