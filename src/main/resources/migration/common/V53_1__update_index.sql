@@ -1,0 +1,1 @@
+create index if not exists idx_person_summary_supporting_prison_code on person_summary (supporting_prison_code);
