@@ -16,6 +16,7 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus.CSIP_OPEN
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.AttendeesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.FirstReviewRequest
@@ -115,8 +116,9 @@ class Plan(
   }
 
   fun nextReviewDate(): LocalDate? {
-    val nextReviewDate = reviews().maxByOrNull { it.reviewSequence }?.nextReviewDate
-    return listOfNotNull(nextReviewDate, firstCaseReviewDate).firstOrNull()
+    if (CSIP_OPEN.name != csipRecord.status?.code) return null
+    if (reviews.isEmpty()) return firstCaseReviewDate
+    return reviews().maxByOrNull { it.reviewSequence }?.nextReviewDate
   }
 }
 
