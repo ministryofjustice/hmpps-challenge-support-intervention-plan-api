@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -57,7 +58,11 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - returns matching CSIP OPEN record`() {
     val prisoner = prisoner().toPersonSummary()
-    val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) { it }
+    val firstReviewDate = LocalDate.now().plusWeeks(1)
+    val current = dataSetup(
+      generateCsipRecord(prisoner).withCompletedReferral()
+        .withPlan(firstCaseReviewDate = firstReviewDate),
+    ) { it }
     dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
       requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
       it
@@ -67,7 +72,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     with(response) {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
-        assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
+        assertThat(nextReviewDate).isEqualTo(firstReviewDate)
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
         assertThat(status.description).isEqualTo(current.status!!.description)
       }
@@ -92,8 +97,34 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     with(response) {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
-        assertThat(nextReviewDate).isEqualTo(current.plan?.firstCaseReviewDate)
+        assertThat(nextReviewDate).isNull()
         assertThat(status.code).isEqualTo(CsipStatus.AWAITING_DECISION.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
+      }
+      assertThat(totalOpenedCsipCount).isEqualTo(1)
+      assertThat(totalReferralCount).isEqualTo(2)
+    }
+  }
+
+  @Test
+  fun `200 ok - returns matching PLAN_PENDING record`() {
+    val prisoner = prisoner().toPersonSummary()
+    val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral()) {
+      requireNotNull(it.referral).withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(DECISION_OUTCOME_TYPE, "CUR"))
+      it
+    }
+    dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
+      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      it
+    }
+
+    val response = getLatestCsipRecord(prisoner.prisonNumber)
+    with(response) {
+      with(requireNotNull(currentCsip)) {
+        assertThat(referralDate).isEqualTo(current.referral?.referralDate)
+        assertThat(nextReviewDate).isNull()
+        assertThat(status.code).isEqualTo(CsipStatus.PLAN_PENDING.name)
         assertThat(status.description).isEqualTo(current.status!!.description)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
@@ -107,6 +138,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
       requireNotNull(it.plan).withReview(
         actions = setOf(ReviewAction.CLOSE_CSIP),
+        nextReviewDate = LocalDate.now().plusDays(7),
         csipClosedDate = LocalDate.now().minusDays(1),
       )
       it
@@ -122,7 +154,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     with(response) {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
-        assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
+        assertThat(nextReviewDate).isNull()
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_CLOSED.name)
         assertThat(status.description).isEqualTo(current.status!!.description)
         assertThat(closedDate).isEqualTo(current.plan!!.reviews().first().csipClosedDate)
@@ -143,6 +175,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(status.code).isEqualTo(CsipStatus.REFERRAL_PENDING.name)
         assertThat(status.description).isEqualTo(current.status!!.description)
         assertThat(referralDate).isNull()
+        assertThat(nextReviewDate).isNull()
       }
       assertThat(totalOpenedCsipCount).isEqualTo(0)
       assertThat(totalReferralCount).isEqualTo(0)
@@ -152,13 +185,14 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - returns matching overdue review date`() {
     val prisoner = prisoner().toPersonSummary()
+    val overdueReviewDate = LocalDate.now().minusDays(10)
     val current = dataSetup(
       generateCsipRecord(prisoner).withCompletedReferral()
         .withPlan(firstCaseReviewDate = LocalDate.now().minusDays(30)),
     ) {
       requireNotNull(it.plan).withReview(
         actions = setOf(ReviewAction.REMAIN_ON_CSIP),
-        nextReviewDate = LocalDate.now().minusDays(10),
+        nextReviewDate = overdueReviewDate,
       )
       it
     }
@@ -173,7 +207,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     with(response) {
       with(requireNotNull(currentCsip)) {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
-        assertThat(nextReviewDate).isEqualTo(current.plan?.nextReviewDate())
+        assertThat(nextReviewDate).isEqualTo(overdueReviewDate)
         assertThat(status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
         assertThat(status.description).isEqualTo(current.status!!.description)
         assertThat(reviewOverdueDays).isEqualTo(10)
