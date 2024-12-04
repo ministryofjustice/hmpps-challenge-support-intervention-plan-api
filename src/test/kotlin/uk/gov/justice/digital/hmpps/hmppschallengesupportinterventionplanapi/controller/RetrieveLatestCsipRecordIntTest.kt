@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.DECISION_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -98,6 +99,32 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         assertThat(referralDate).isEqualTo(current.referral?.referralDate)
         assertThat(nextReviewDate).isNull()
         assertThat(status.code).isEqualTo(CsipStatus.AWAITING_DECISION.name)
+        assertThat(status.description).isEqualTo(current.status!!.description)
+      }
+      assertThat(totalOpenedCsipCount).isEqualTo(1)
+      assertThat(totalReferralCount).isEqualTo(2)
+    }
+  }
+
+  @Test
+  fun `200 ok - returns matching PLAN_PENDING record`() {
+    val prisoner = prisoner().toPersonSummary()
+    val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral()) {
+      requireNotNull(it.referral).withInvestigation()
+        .withDecisionAndActions(outcome = givenReferenceData(DECISION_OUTCOME_TYPE, "CUR"))
+      it
+    }
+    dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
+      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      it
+    }
+
+    val response = getLatestCsipRecord(prisoner.prisonNumber)
+    with(response) {
+      with(requireNotNull(currentCsip)) {
+        assertThat(referralDate).isEqualTo(current.referral?.referralDate)
+        assertThat(nextReviewDate).isNull()
+        assertThat(status.code).isEqualTo(CsipStatus.PLAN_PENDING.name)
         assertThat(status.description).isEqualTo(current.status!!.description)
       }
       assertThat(totalOpenedCsipCount).isEqualTo(1)
