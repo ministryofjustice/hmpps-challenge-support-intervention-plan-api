@@ -126,9 +126,10 @@ class MergeReferralIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `200 ok - completes referral without contributory factors`() {
-    val csip = dataSetup(generateCsipRecord().withReferral()) { it }
-    val referral = requireNotNull(csip.referral)
+  fun `200 ok - completes referral without changes to contributory factors`() {
+    val referral = dataSetup(generateCsipRecord().withReferral()) {
+      requireNotNull(it.referral).withContributoryFactor()
+    }
 
     val request = mergeReferralRequest(
       incidentTypeCode = referral.incidentType.code,
@@ -162,7 +163,7 @@ class MergeReferralIntTest : IntegrationTestBase() {
     }
 
     verifyAudit(referral, RevisionType.MOD, setOf(REFERRAL))
-    verifyDomainEvents(csip.prisonNumber, saved.id, CSIP_UPDATED)
+    verifyDomainEvents(referral.csipRecord.prisonNumber, saved.id, CSIP_UPDATED)
   }
 
   @Test
