@@ -57,7 +57,7 @@ class UpdateCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `401 unauthorised`() {
-    webTestClient.post().uri("/csip-records/${UUID.randomUUID()}").exchange().expectStatus().isUnauthorized
+    webTestClient.patch().uri("/csip-records/${UUID.randomUUID()}").exchange().expectStatus().isUnauthorized
   }
 
   @Test

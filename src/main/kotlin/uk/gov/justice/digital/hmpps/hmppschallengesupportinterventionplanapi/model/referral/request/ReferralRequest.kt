@@ -45,3 +45,23 @@ data class UpdateReferralRequest(
   override val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
   override val isReferralComplete: Boolean?,
 ) : ReferralRequest
+
+@Schema(description = "The detail for updating a CSIP referral")
+data class MergeReferralRequest(
+  override val incidentDate: LocalDate,
+  override val incidentTime: LocalTime?,
+  override val incidentTypeCode: String,
+  override val incidentLocationCode: String,
+  override val referredBy: String,
+  override val refererAreaCode: String,
+  override val isProactiveReferral: Boolean?,
+  override val isStaffAssaulted: Boolean?,
+  override val assaultedStaffName: String?,
+  override val incidentInvolvementCode: String?,
+  override val descriptionOfConcern: String?,
+  override val knownReasons: String?,
+  override val otherInformation: String?,
+  override val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
+  override val isReferralComplete: Boolean?,
+  override val contributoryFactors: List<MergeContributoryFactorRequest>,
+) : ReferralRequest, ContributoryFactorsRequest

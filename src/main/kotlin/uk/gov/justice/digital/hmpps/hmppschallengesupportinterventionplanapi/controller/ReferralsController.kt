@@ -14,13 +14,16 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ContributoryFactor
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.MergeReferralRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpdateContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.ReferralService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -112,4 +115,40 @@ class ReferralsController(private val referralService: ReferralService) {
     ) contributoryFactorUuid: UUID,
     @Valid @RequestBody request: UpdateContributoryFactorRequest,
   ): ContributoryFactor = referralService.updateContributoryFactor(contributoryFactorUuid, request)
+
+  @Operation(summary = "Merge the referral with contributory factors")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Referral updated and contributory factors merged",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorised, requires a valid Oauth2 token",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Forbidden, requires an appropriate role",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "The CSIP referral associated with this identifier was not found.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PutMapping("/csip-records/{recordUuid}/referral")
+  @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
+  fun mergeReferral(
+    @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
+    @Valid @RequestBody request: MergeReferralRequest,
+  ): CsipRecord = referralService.mergeReferral(recordUuid, request)
 }
