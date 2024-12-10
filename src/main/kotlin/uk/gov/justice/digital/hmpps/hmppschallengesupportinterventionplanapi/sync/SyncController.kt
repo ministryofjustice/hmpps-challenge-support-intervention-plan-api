@@ -148,7 +148,7 @@ class SyncController(private val csip: SyncCsipRecord, private val retry: RetryT
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("hasAnyRole('$ROLE_NOMIS')")
-  fun deleteCsipRecord(@PathVariable id: UUID, @RequestBody request: DefaultLegacyActioned) {
+  fun deleteRecord(@PathVariable id: UUID, @RequestBody request: DefaultLegacyActioned) {
     setSyncContext(request)
     csip.deleteCsipRecord(id)
   }
