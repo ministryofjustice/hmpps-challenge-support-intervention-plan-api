@@ -6,7 +6,10 @@ generic-service:
   resources:
     requests:
       cpu: 128m
-      memory: 768Mi
+      memory: 1024Mi
+    limits:
+      cpu: 2048m
+      memory: 1280Mi
 
   image:
     repository: quay.io/hmpps/hmpps-challenge-support-intervention-plan-api
@@ -23,7 +26,7 @@ generic-service:
 
   # Environment variables to load into the deployment
   env:
-    JDK_JAVA_OPTIONS: "-XX:MaxRAMPercentage=70.0"
+    JDK_JAVA_OPTIONS: "-Xmx512m -XX:+UseG1GC"
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
