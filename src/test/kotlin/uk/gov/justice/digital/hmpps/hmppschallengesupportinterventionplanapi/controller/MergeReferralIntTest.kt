@@ -171,7 +171,8 @@ class MergeReferralIntTest : IntegrationTestBase() {
     val referral = dataSetup(generateCsipRecord().withReferral()) {
       requireNotNull(it.referral)
         .withContributoryFactor(givenReferenceData(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, "MEN"))
-        .withContributoryFactor(givenReferenceData(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, "SMO"))
+        .withContributoryFactor(givenReferenceData(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, "SMO"), comment = "First SMO")
+        .withContributoryFactor(givenReferenceData(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, "SMO"), comment = "Second SMO")
     }
 
     val request = mergeReferralRequest(
@@ -190,6 +191,14 @@ class MergeReferralIntTest : IntegrationTestBase() {
         mergeContributoryFactorRequest(
           type = "MEN",
           id = referral.contributoryFactors().first { it.contributoryFactorType.code == "MEN" }.id,
+        ),
+        mergeContributoryFactorRequest(
+          type = "SMO",
+          id = referral.contributoryFactors().first { it.contributoryFactorType.code == "SMO" }.id,
+        ),
+        mergeContributoryFactorRequest(
+          type = "SMO",
+          id = referral.contributoryFactors().last { it.contributoryFactorType.code == "SMO" }.id,
         ),
       ),
     )
@@ -211,9 +220,9 @@ class MergeReferralIntTest : IntegrationTestBase() {
         assertThat(referralCompletedDate).isEqualTo(LocalDate.now())
         assertThat(referralCompletedBy).isEqualTo(TEST_USER)
         assertThat(referralCompletedByDisplayName).isEqualTo(TEST_USER_NAME)
-        assertThat(contributoryFactors()).hasSize(4)
+        assertThat(contributoryFactors()).hasSize(5)
         assertThat(contributoryFactors().map { it.contributoryFactorType.code })
-          .containsExactlyInAnyOrderElementsOf(listOf("MEN", "MED", "NRT", "SMO"))
+          .containsExactlyInAnyOrderElementsOf(listOf("MEN", "MED", "NRT", "SMO", "SMO"))
       }
     }
 
