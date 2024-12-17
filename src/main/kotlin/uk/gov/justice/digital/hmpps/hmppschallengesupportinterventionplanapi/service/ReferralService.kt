@@ -66,13 +66,13 @@ class ReferralService(
     )
     referral.update(request) { type, code -> referenceDataRepository.getActiveReferenceData(type, code) }
     request.contributoryFactors.forEach { toMerge ->
-      if (toMerge.id == null) {
+      if (toMerge.factorUuid == null) {
         verify(referral.doesNotHaveFactor(toMerge.factorTypeCode)) {
           ResourceAlreadyExistException(FACTOR_ALREADY_EXISTS)
         }
         referral.addContributoryFactor(toMerge) { type, code -> requireNotNull(rdMap[ReferenceDataKey(type, code)]) }
       } else {
-        referral.contributoryFactors().single { it.id == toMerge.id }.update(toMerge) { type, code ->
+        referral.contributoryFactors().single { it.id == toMerge.factorUuid }.update(toMerge) { type, code ->
           requireNotNull(rdMap[ReferenceDataKey(type, code)])
         }
       }

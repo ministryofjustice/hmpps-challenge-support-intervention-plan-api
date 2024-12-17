@@ -19,5 +19,5 @@ data class UpdateContributoryFactorRequest(
 data class MergeContributoryFactorRequest(
   override val factorTypeCode: String,
   override val comment: String?,
-  val id: UUID?,
+  val factorUuid: UUID?,
 ) : ContributoryFactorRequest
