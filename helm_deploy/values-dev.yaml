@@ -33,4 +33,4 @@ generic-prometheus-alerts:
 
 generic-data-analytics-extractor:
   enabled: true
-  cronJobSchedule: "0 21 * * 1-5"
+  cronJobSchedule: "0 1 * * 1-5"
