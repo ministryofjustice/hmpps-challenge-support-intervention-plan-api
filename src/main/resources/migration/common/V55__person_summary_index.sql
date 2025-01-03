@@ -1,0 +1,1 @@
+create index if not exists idx_person_summary_prison_person on person_summary (lower(prison_code), lower(prison_number))
