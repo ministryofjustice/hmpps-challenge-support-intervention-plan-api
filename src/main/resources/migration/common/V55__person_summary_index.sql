@@ -1,1 +1,2 @@
-create index if not exists idx_person_summary_prison_person on person_summary (lower(prison_code), lower(prison_number))
+create index if not exists idx_person_summary_prison_person_lower on person_summary (lower(prison_code), lower(prison_number));
+create index if not exists idx_person_summary_prison_number_lower on person_summary (lower(prison_number));
