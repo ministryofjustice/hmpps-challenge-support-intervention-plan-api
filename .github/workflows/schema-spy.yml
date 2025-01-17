@@ -23,7 +23,26 @@ on:
         description: Regex of tables to be excluded
         type: string
         default: 'flyway_schema_history'
-
+      init_db_cli:
+        description: Command line to initialise database
+        type: string
+        default: './gradlew check'
+      database_name:
+        description: Database name
+        type: string
+        required: true
+      database_user:
+        description: Database user name
+        type: string
+        required: true
+      database_password:
+        description: Database user password
+        type: string
+        required: true
+      database_schema:
+        description: Database schema name
+        type: string
+        required: true
 jobs:
   schema-spy:
     name: Schema Spy report generation
@@ -60,8 +79,8 @@ jobs:
           curl -L https://github.com/schemaspy/schemaspy/releases/download/v${{ inputs.schemaspy_version }}/schemaspy-${{ inputs.schemaspy_version }}.jar --output /tmp/schemaspy.jar
           curl -L https://jdbc.postgresql.org/download/postgresql-${{ inputs.postgres_driver_version }}.jar --output /tmp/postgres-driver.jar
           export JAVA_OPTS="${{ inputs.java_options }}"
-          ./gradlew initialiseDatabase
-          java -jar /tmp/schemaspy.jar -t pgsql -dp /tmp/postgres-driver.jar -db postgres -host localhost -port 5432 -s csip -vizjs -u csip -p csip -I << parameters.exclude >> -o /report/schemaspy
+          ${{ inputs.init_db_cli }}
+          java -jar /tmp/schemaspy.jar -t pgsql -dp /tmp/postgres-driver.jar -db ${{ inputs.database_name }} -host localhost -port 5432 -s ${{ inputs.database_schema }} -vizjs -u ${{ inputs.database_user }} -p ${{ inputs.database_password }} -I ${{ inputs.exclude }} -o /report/schemaspy
           echo '<html><head><meta http-equiv="refresh" content="0; url=report/index.html" /></head><body><a href="report/index.html">Open Schema Report</a></body></html>' > /report/index.html
 
       - name: upload report
