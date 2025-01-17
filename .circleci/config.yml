@@ -95,7 +95,7 @@ jobs:
         description: Postgres driver version
 
     executor:
-      name: java_localstack_postgres_with_db_name
+      name: hmpps/java_localstack_postgres_with_db_name
       jdk_tag: << parameters.jdk_tag >>
       localstack_tag: << parameters.localstack_tag >>
       postgres_tag: << parameters.postgres_tag >>
