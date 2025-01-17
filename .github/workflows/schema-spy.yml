@@ -76,7 +76,7 @@ jobs:
             *.gradle*
             **/gradle-wrapper.properties
 
-      - name: create report
+      - name: Initialise database and generate Schema Spy report
         shell: bash
         run: |
           docker compose -f ${{ inputs.docker_compose_file }} up -d 
