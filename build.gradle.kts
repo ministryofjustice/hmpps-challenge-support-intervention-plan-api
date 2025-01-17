@@ -74,6 +74,18 @@ tasks {
   val jibDockerBuild by getting {
     dependsOn += copyAgentJar
   }
+
+  register("initialiseDatabase", Test::class) {
+    include("**/InitialiseDatabase.class")
+  }
+
+  test {
+    exclude("**/InitialiseDatabase.class")
+  }
+
+  getByName("initialiseDatabase") {
+    onlyIf { gradle.startParameter.taskNames.contains("initialiseDatabase") }
+  }
 }
 
 tasks.named("test") {

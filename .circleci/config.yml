@@ -53,6 +53,8 @@ workflows:
               ignore: /.*/
       - hmpps/helm_lint:
           name: helm_lint
+      - hmpps/database_schema_report:
+          initialise_database: "./gradlew initialiseDatabase"
       - hmpps/build_multiplatform_docker:
           name: build_docker
           filters:
