@@ -42,89 +42,6 @@ jobs:
           path: build/reports/tests
       - store_artifacts:
           path: build/reports/jacoco
-  database_schema_report:
-    parameters:
-      jdk_tag:
-        type: string
-        default: "21.0"
-      localstack_tag:
-        type: string
-        default: "3.0"
-      postgres_tag:
-        type: string
-        default: "16.1"
-      initialise_database:
-        type: string
-        default: "./gradlew check"
-        description: A command which will initialise the database schema
-      database_name:
-        type: string
-        default: "postgres"
-        description: Name of the database
-      host:
-        type: string
-        default: "localhost"
-        description: Host name of the database
-      schema:
-        type: string
-        default: "public"
-        description: Schema name
-      exclude:
-        type: string
-        default: "flyway_schema_history"
-        description: Regex of tables to be excluded
-      schemaspy_version:
-        type: string
-        default: "6.2.4"
-        description: Schemaspy version
-      postgres_driver_version:
-        type: string
-        default: "42.7.3"
-        description: Postgres driver version
-
-    executor:
-      name: hmpps/java_localstack_postgres_with_db_name
-      jdk_tag: << parameters.jdk_tag >>
-      localstack_tag: << parameters.localstack_tag >>
-      postgres_tag: << parameters.postgres_tag >>
-      postgres_db: << parameters.database_name >>
-
-    steps:
-      - checkout
-      - run:
-          name: Install schemaspy
-          command: curl -L https://github.com/schemaspy/schemaspy/releases/download/v<< parameters.schemaspy_version >>/schemaspy-<< parameters.schemaspy_version >>.jar --output /tmp/schemaspy.jar
-      - run:
-          name: Install postgres jdbc driver
-          command: curl -L https://jdbc.postgresql.org/download/postgresql-<< parameters.postgres_driver_version >>.jar --output /tmp/postgres-driver.jar
-      - run:
-          name: Execute a command to initialise the database schema
-          command: << parameters.initialise_database >>
-      - run:
-          name: Generate database schema report
-          command: |
-            java -jar /tmp/schemaspy.jar \
-              -t pgsql \
-              -dp /tmp/postgres-driver.jar \
-              -db  << parameters.database_name >> \
-              -host << parameters.host >> \
-              -port 5432 \
-              -s << parameters.schema >> \
-              -vizjs \
-              -u root \
-              -p dev \
-              -I << parameters.exclude >> \
-              -o /tmp/schemaspy
-      - run:
-          name: generate index file
-          command: |
-            echo '<html><head><meta http-equiv="refresh" content="0; url=report/index.html" /></head><body><a href="report/index.html">Open Schema Report</a></body></html>' > /tmp/index.html
-      - store_artifacts:
-          path: /tmp/index.html
-          destination: schema/index.html
-      - store_artifacts:
-          path: /tmp/schemaspy
-          destination: schema/report
 
 workflows:
   version: 2
@@ -136,8 +53,6 @@ workflows:
               ignore: /.*/
       - hmpps/helm_lint:
           name: helm_lint
-#      - database_schema_report:
-#          initialise_database: "./gradlew initialiseDatabase"
       - hmpps/build_multiplatform_docker:
           name: build_docker
           filters:
