@@ -65,22 +65,10 @@ jobs:
         type: string
         default: "localhost"
         description: Host name of the database
-      port:
-        type: integer
-        default: 5432
-        description: Port number of the database
       schema:
         type: string
         default: "public"
         description: Schema name
-      user:
-        type: string
-        default: "root"
-        description: Database user name
-      password:
-        type: string
-        default: "dev"
-        description: Database password
       exclude:
         type: string
         default: "flyway_schema_history"
@@ -100,8 +88,6 @@ jobs:
       localstack_tag: << parameters.localstack_tag >>
       postgres_tag: << parameters.postgres_tag >>
       postgres_db: << parameters.database_name >>
-      postgres_username: << parameters.user >>
-      postgres_password: << parameters.password >>
 
     steps:
       - checkout
@@ -122,11 +108,11 @@ jobs:
               -dp /tmp/postgres-driver.jar \
               -db  << parameters.database_name >> \
               -host << parameters.host >> \
-              -port << parameters.port >> \
+              -port 5432 \
               -s << parameters.schema >> \
               -vizjs \
-              -u << parameters.user >> \
-              -p << parameters.password >> \
+              -u root \
+              -p dev \
               -I << parameters.exclude >> \
               -o /tmp/schemaspy
       - run:
@@ -150,8 +136,8 @@ workflows:
               ignore: /.*/
       - hmpps/helm_lint:
           name: helm_lint
-      - database_schema_report:
-          initialise_database: "./gradlew initialiseDatabase"
+#      - database_schema_report:
+#          initialise_database: "./gradlew initialiseDatabase"
       - hmpps/build_multiplatform_docker:
           name: build_docker
           filters:

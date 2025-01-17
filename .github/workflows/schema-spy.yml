@@ -1,0 +1,80 @@
+name: SchemaSpy report
+
+on:
+  push:
+    branches:
+      - '**'
+
+  workflow_dispatch:
+    inputs:
+      java_version:
+        description: Java version
+        type: string
+        required: false
+        default: '21'
+      java_options:
+        description: Java options
+        type: string
+        default: '-Xmx512m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process'
+        required: false
+      schemaspy_version:
+        description: Schema Spy version
+        type: string
+        required: true
+        default: '6.2.4'
+      postgres_driver_version:
+        description: Postgres version
+        type: string
+        required: true
+        default: '42.7.3'
+      exclude:
+        description: Regex of tables to be excluded
+        type: string
+        required: true
+        default: 'flyway_schema_history'
+
+jobs:
+  schema-spy:
+    name: Schema Spy report generation
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    environment: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '${{ inputs.java_version }}'
+          cache: 'gradle'
+          cache-dependency-path: |
+            *.gradle*
+            **/gradle-wrapper.properties
+
+      - name: create report
+        shell: bash
+        run: |
+          docker-compose -f docker-compose-local.yml up -d 
+          curl -L https://github.com/schemaspy/schemaspy/releases/download/v${{ inputs.schemaspy_version }}/schemaspy-${{ inputs.schemaspy_version }}.jar --output /tmp/schemaspy.jar
+          curl -L https://jdbc.postgresql.org/download/postgresql-${{ inputs.postgres_driver_version }}.jar --output /tmp/postgres-driver.jar
+          export JAVA_OPTS="${{ inputs.java_options }}"
+          ./gradlew initialiseDatabase
+          java -jar /tmp/schemaspy.jar -t pgsql -dp /tmp/postgres-driver.jar -db postgres -host localhost -port 5432 -s csip -vizjs -u csip -p csip -I << parameters.exclude >> -o /report/schemaspy
+          echo '<html><head><meta http-equiv="refresh" content="0; url=report/index.html" /></head><body><a href="report/index.html">Open Schema Report</a></body></html>' > /report/index.html
+
+      - name: upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema_spy_report
+          path: |
+            report/
+
+#      - name: Publish HTML report
+#        uses: JamesIves/github-pages-deploy-action@15de0f09300eea763baee31dff6c6184995c5f6a # v4.7.2
+#        with:
+#          folder: schema-spy-report
+#          target-folder: schema-spy-report
+#
+#      - name: Add HTML report URL to the job summary
+#        run: echo '[Schema Spy HTML Report](https://ministryofjustice.github.io/hmpps-challenge-support-intervention-plan-api/schema-spy-report)' | tee -a "$GITHUB_STEP_SUMMARY"
