@@ -1,10 +1,6 @@
 name: SchemaSpy report
 
 on:
-  push:
-    branches:
-      - '**'
-
   workflow_call:
     inputs:
       java_version:
@@ -74,7 +70,6 @@ jobs:
           echo '<html><head><meta http-equiv="refresh" content="0; url=report/index.html" /></head><body><a href="report/index.html">Open Schema Report</a></body></html>' > /report/index.html
 
       - name: upload report
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: schema_spy_report

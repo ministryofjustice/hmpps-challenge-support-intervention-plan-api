@@ -1,0 +1,11 @@
+name: SchemaSpy on push
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  schema-spy:
+    uses: ./.github/workflows/schema-spy.yml
+    secrets: inherit
