@@ -102,7 +102,6 @@ jobs:
       postgres_db: << parameters.database_name >>
       postgres_username: << parameters.user >>
       postgres_password: << parameters.password >>
-      postgres_port: << parameters.port >>
 
     steps:
       - checkout
