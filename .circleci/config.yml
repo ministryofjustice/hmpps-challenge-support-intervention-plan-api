@@ -55,9 +55,9 @@ workflows:
           name: helm_lint
       - hmpps/database_schema_report:
           initialise_database: "./gradlew initialiseDatabase"
-          user: csip
-          password: csip
-          database_name: csip
+          user: "csip"
+          password: "csip"
+          database_name: "csip"
       - hmpps/build_multiplatform_docker:
           name: build_docker
           filters:
