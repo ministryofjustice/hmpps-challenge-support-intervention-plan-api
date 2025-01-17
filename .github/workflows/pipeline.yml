@@ -3,7 +3,7 @@ name: SchemaSpy on push
 on:
   push:
     branches:
-      - '**'
+      - main
 
 jobs:
   schema-spy:
