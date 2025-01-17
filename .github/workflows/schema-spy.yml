@@ -78,8 +78,8 @@ jobs:
           docker compose -f docker-compose-local.yml up -d 
           curl -L https://github.com/schemaspy/schemaspy/releases/download/v${{ inputs.schemaspy_version }}/schemaspy-${{ inputs.schemaspy_version }}.jar --output /tmp/schemaspy.jar
           curl -L https://jdbc.postgresql.org/download/postgresql-${{ inputs.postgres_driver_version }}.jar --output /tmp/postgres-driver.jar
-          export JAVA_OPTS="${{ inputs.java_options }}"
-          ${{ inputs.init_db_cli }}
+#          export JAVA_OPTS="${{ inputs.java_options }}"
+#          ${{ inputs.init_db_cli }}
           java -jar /tmp/schemaspy.jar -t pgsql -dp /tmp/postgres-driver.jar -db ${{ inputs.database_name }} -host localhost -port 5432 -s ${{ inputs.database_schema }} -vizjs -u ${{ inputs.database_user }} -p ${{ inputs.database_password }} -I ${{ inputs.exclude }} -o /tmp/schema-spy-report
 
       - name: upload report
