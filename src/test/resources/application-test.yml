@@ -7,9 +7,9 @@ management.endpoint:
 
 spring:
   datasource:
-    url: 'jdbc:postgresql://localhost:5432/csip'
-    username: csip
-    password: csip
+    url: 'jdbc:postgresql://localhost:5432/postgres'
+    username: root
+    password: dev
   flyway:
     locations: classpath:/migration/common,classpath:/migration/test
   jpa.show-sql: true

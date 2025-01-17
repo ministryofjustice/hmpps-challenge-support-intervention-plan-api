@@ -19,9 +19,9 @@ object PostgresContainer {
 
     return PostgreSQLContainer<Nothing>("postgres:16").apply {
       withEnv("HOSTNAME_EXTERNAL", "localhost")
-      withDatabaseName("csip")
-      withUsername("csip")
-      withPassword("csip")
+      withDatabaseName("postgres")
+      withUsername("root")
+      withPassword("dev")
       setWaitStrategy(Wait.forListeningPort())
       withReuse(false)
       start()

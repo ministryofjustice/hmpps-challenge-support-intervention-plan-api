@@ -20,8 +20,8 @@ jobs:
       localstack_tag: "3"
       services: ""
       postgres_tag: "16"
-      postgres_username: "csip"
-      postgres_password: "csip"
+      postgres_username: "root"
+      postgres_password: "dev"
     steps:
       - checkout
       - restore_cache:
@@ -55,9 +55,6 @@ workflows:
           name: helm_lint
       - hmpps/database_schema_report:
           initialise_database: "./gradlew initialiseDatabase"
-          user: "csip"
-          password: "csip"
-          database_name: "csip"
       - hmpps/build_multiplatform_docker:
           name: build_docker
           filters:
