@@ -6,27 +6,22 @@ on:
       java_version:
         description: Java version
         type: string
-        required: true
         default: '21'
       java_options:
         description: Java options
         type: string
         default: '-Xmx512m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process'
-        required: true
       schemaspy_version:
         description: Schema Spy version
         type: string
-        required: true
         default: '6.2.4'
       postgres_driver_version:
         description: Postgres version
         type: string
-        required: true
         default: '42.7.3'
       exclude:
         description: Regex of tables to be excluded
         type: string
-        required: true
         default: 'flyway_schema_history'
 
 jobs:
