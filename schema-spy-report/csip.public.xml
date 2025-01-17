@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 16.6 (Debian 16.6-1.pgdg120+1)">
+   <sequences>
+      <sequence increment="1" name="audit_revision_id_seq" startValue="1"/>
+      <sequence increment="1" name="reference_data_reference_data_id_seq" startValue="1"/>
+   </sequences>
+   <tables>
+      <table name="attendee" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="attendee_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="review_id" foreignKey="attendee_review_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="review"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="role" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="attended" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="contribution" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="attendee_id" sequenceNumberInPK="1"/>
+         <index name="attendee_pkey" unique="true">
+            <column ascending="true" name="attendee_id"/>
+         </index>
+         <index name="attendee_legacy_id_key" unique="true">
+            <column ascending="true" name="legacy_id"/>
+         </index>
+         <index name="idx_attendee_review_id" unique="false">
+            <column ascending="true" name="review_id"/>
+         </index>
+      </table>
+      <table name="attendee_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="attendee_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="attendee_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="review_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="role" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="attended" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="contribution" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="role_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="attended_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="contribution_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="attendee_id" sequenceNumberInPK="2"/>
+         <index name="attendee_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="attendee_id"/>
+         </index>
+      </table>
+      <table name="audit_revision" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('audit_revision_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee_audit"/>
+            <child column="rev_id" foreignKey="attendee_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="attendee_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="contributory_factor"/>
+            <child column="contributory_factor_type_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="contributory_factor_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="contributory_factor_audit"/>
+            <child column="rev_id" foreignKey="contributory_factor_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_record"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_record_audit"/>
+            <child column="rev_id" foreignKey="csip_record_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record_audit"/>
+            <child column="outcome_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="decision_and_actions_audit"/>
+            <child column="rev_id" foreignKey="decision_and_actions_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions_audit"/>
+            <child column="signed_off_by_role_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="decision_and_actions_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="identified_need"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="identified_need_audit"/>
+            <child column="rev_id" foreignKey="identified_need_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="identified_need_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview"/>
+            <child column="interviewee_role_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview_audit"/>
+            <child column="rev_id" foreignKey="interview_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="interview_audit"/>
+            <child column="rev_id" foreignKey="investigation_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="investigation_audit"/>
+            <child column="rev_id" foreignKey="person_summary_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="person_summary_audit"/>
+            <child column="rev_id" foreignKey="plan_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan_audit"/>
+            <child column="incident_involvement_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral_audit"/>
+            <child column="incident_location_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral_audit"/>
+            <child column="incident_type_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral_audit"/>
+            <child column="referer_area_of_work_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral_audit"/>
+            <child column="rev_id" foreignKey="referral_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral_audit"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review"/>
+            <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review_audit"/>
+            <child column="rev_id" foreignKey="review_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="review_audit"/>
+            <child column="outcome_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome_audit"/>
+            <child column="rev_id" foreignKey="safer_custody_screening_outcome_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome_audit"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="timestamp" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="username" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="caseload_id" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="source" nullable="true" remarks="" size="6" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="affected_components" nullable="true" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="audit_revision_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <checkConstraint constraint="((affected_components &lt;@ ARRAY['RECORD'::character varying, 'REFERRAL'::character varying, 'CONTRIBUTORY_FACTOR'::character varying, 'SAFER_CUSTODY_SCREENING_OUTCOME'::character varying, 'INVESTIGATION'::character varying, 'INTERVIEW'::character varying, 'DECISION_AND_ACTIONS'::character varying, 'PLAN'::character varying, 'IDENTIFIED_NEED'::character varying, 'REVIEW'::character varying, 'ATTENDEE'::character varying]))" name="affected_components_enum_check"/>
+         <checkConstraint constraint="(((source)::text = ANY ((ARRAY['DPS'::character varying, 'NOMIS'::character varying])::text[])))" name="check_source"/>
+      </table>
+      <table name="contributory_factor" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="contributory_factor_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="referral_id" foreignKey="contributory_factor_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="contributory_factor_type_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="reference_data_id" foreignKey="contributory_factor_contributory_factor_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="comment" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="contributory_factor_id" sequenceNumberInPK="1"/>
+         <index name="contributory_factor_pkey" unique="true">
+            <column ascending="true" name="contributory_factor_id"/>
+         </index>
+         <index name="contributory_factor_legacy_id_key" unique="true">
+            <column ascending="true" name="legacy_id"/>
+         </index>
+         <index name="idx_contributory_factor_contributory_factor_type_id" unique="false">
+            <column ascending="true" name="contributory_factor_type_id"/>
+         </index>
+         <index name="idx_contributory_factor_record_id" unique="false">
+            <column ascending="true" name="referral_id"/>
+         </index>
+      </table>
+      <table name="contributory_factor_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="contributory_factor_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="contributory_factor_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="referral_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="contributory_factor_type_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="comment" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="contributory_factor_type_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="comment_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="contributory_factor_id" sequenceNumberInPK="2"/>
+         <index name="contributory_factor_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="contributory_factor_id"/>
+         </index>
+      </table>
+      <table name="csip_record" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="record_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="plan_id" foreignKey="plan_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
+            <child column="referral_id" foreignKey="referral_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12">
+            <parent column="prison_number" foreignKey="fk_csip_prison_number" implied="false" onDeleteCascade="false" schema="public" table="person_summary"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prison_code_when_recorded" nullable="true" remarks="" size="6" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="log_code" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="status_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="reference_data_id" foreignKey="csip_record_status_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <primaryKey column="record_id" sequenceNumberInPK="1"/>
+         <index name="csip_record_pkey" unique="true">
+            <column ascending="true" name="record_id"/>
+         </index>
+         <index name="csip_record_legacy_id_key" unique="true">
+            <column ascending="true" name="legacy_id"/>
+         </index>
+         <index name="idx_csip_record_prison_number" unique="false">
+            <column ascending="true" name="prison_number"/>
+         </index>
+         <index name="idx_csip_record_prison_number_lower" unique="false"/>
+         <index name="idx_csip_record_status_id" unique="false">
+            <column ascending="true" name="status_id"/>
+         </index>
+      </table>
+      <table name="csip_record_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="csip_record_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="record_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12">
+            <parent column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="person_summary"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="prison_code_when_recorded" nullable="true" remarks="" size="6" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="log_code" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="log_code_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="8" name="prison_number_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="record_id" sequenceNumberInPK="2"/>
+         <index name="csip_record_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="record_id"/>
+         </index>
+      </table>
+      <table name="csip_summary" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" WITH latest_review AS (&#10;         SELECT DISTINCT ON (review.plan_id) review.plan_id,&#10;            review.review_id,&#10;            review.next_review_date,&#10;            review.csip_closed_date&#10;           FROM review&#10;          ORDER BY review.plan_id, review.review_sequence DESC&#10;        )&#10; SELECT person.prison_number,&#10;    person.first_name,&#10;    person.last_name,&#10;    person.restricted_patient,&#10;    person.prison_code,&#10;    person.cell_location,&#10;    person.supporting_prison_code,&#10;    ref.referral_date,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_OPEN'::text) THEN&#10;            CASE&#10;                WHEN (rev.review_id IS NOT NULL) THEN rev.next_review_date&#10;                ELSE p.first_case_review_date&#10;            END&#10;            ELSE NULL::date&#10;        END AS next_review_date,&#10;    p.case_manager,&#10;    csip.record_id AS id,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_CLOSED'::text) THEN rev.csip_closed_date&#10;            ELSE NULL::date&#10;        END AS closed_date,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_OPEN'::text) THEN 1&#10;            WHEN ((st.code)::text = 'CSIP_CLOSED'::text) THEN 3&#10;            WHEN ((st.code)::text = ANY ((ARRAY['NO_FURTHER_ACTION'::character varying, 'SUPPORT_OUTSIDE_CSIP'::character varying])::text[])) THEN 4&#10;            ELSE 2&#10;        END AS priority,&#10;    st.code AS status_code,&#10;    st.description AS status_description&#10;   FROM (((((csip_record csip&#10;     JOIN person_summary person ON (((person.prison_number)::text = (csip.prison_number)::text)))&#10;     JOIN referral ref ON ((ref.referral_id = csip.record_id)))&#10;     LEFT JOIN plan p ON ((p.plan_id = csip.record_id)))&#10;     LEFT JOIN latest_review rev ON ((rev.plan_id = p.plan_id)))&#10;     JOIN reference_data st ON ((st.reference_data_id = csip.status_id)));">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="prison_number" nullable="true" remarks="" size="10" type="varchar" typeCode="12">
+            <parent column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="person_summary"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="first_name" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="last_name" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="restricted_patient" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="cell_location" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="supporting_prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="referral_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="next_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="case_manager" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="priority" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="status_code" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="status_description" nullable="true" remarks="" size="40" type="varchar" typeCode="12"/>
+      </table>
+      <table name="decision_and_actions" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="decision_and_actions_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="referral_id" foreignKey="decision_and_actions_decision_and_actions_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="conclusion" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="outcome_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="decision_and_actions_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="signed_off_by_role_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="decision_and_actions_signed_off_by_role_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="next_steps" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="actions" nullable="false" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="action_other" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <primaryKey column="decision_and_actions_id" sequenceNumberInPK="1"/>
+         <index name="decision_and_actions_pkey" unique="true">
+            <column ascending="true" name="decision_and_actions_id"/>
+         </index>
+         <index name="idx_decision_and_actions_outcome_id" unique="false">
+            <column ascending="true" name="outcome_id"/>
+         </index>
+         <index name="idx_decision_and_actions_signed_off_role_id" unique="false">
+            <column ascending="true" name="signed_off_by_role_id"/>
+         </index>
+         <checkConstraint constraint="((actions &lt;@ ARRAY['OPEN_CSIP_ALERT'::character varying, 'NON_ASSOCIATIONS_UPDATED'::character varying, 'OBSERVATION_BOOK'::character varying, 'UNIT_OR_CELL_MOVE'::character varying, 'CSRA_OR_RSRA_REVIEW'::character varying, 'SERVICE_REFERRAL'::character varying, 'SIM_REFERRAL'::character varying]))" name="actions_enum_check"/>
+      </table>
+      <table name="decision_and_actions_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="decision_and_actions_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="decision_and_actions_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="conclusion" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="outcome_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="signed_off_by_role_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="next_steps" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="actions" nullable="true" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="action_other" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="conclusion_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="outcome_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="signed_off_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="recorded_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="recorded_by_display_name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="next_steps_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="actions_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="action_other_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="decision_and_actions_id" sequenceNumberInPK="2"/>
+         <index name="decision_and_actions_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="decision_and_actions_id"/>
+         </index>
+      </table>
+      <table name="identified_need" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="identified_need_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="plan_id" foreignKey="identified_need_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="identified_need" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="responsible_person" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="created_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="target_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="intervention" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="progression" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="identified_need_id" sequenceNumberInPK="1"/>
+         <index name="identified_need_pkey" unique="true">
+            <column ascending="true" name="identified_need_id"/>
+         </index>
+         <index name="identified_need_legacy_id_key" unique="true">
+            <column ascending="true" name="legacy_id"/>
+         </index>
+         <index name="idx_identified_need_record_id" unique="false">
+            <column ascending="true" name="plan_id"/>
+         </index>
+      </table>
+      <table name="identified_need_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="identified_need_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="identified_need_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="plan"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="identified_need" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="responsible_person" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="target_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="intervention" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="progression" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="identified_need_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="responsible_person_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="created_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="target_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="closed_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="intervention_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="progression_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="identified_need_id" sequenceNumberInPK="2"/>
+         <index name="identified_need_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="identified_need_id"/>
+         </index>
+      </table>
+      <table name="interview" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="interview_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="investigation_id" foreignKey="interview_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="investigation"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="interviewee" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="interview_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="interviewee_role_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="interview_interviewee_role_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="interview_text" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="interview_id" sequenceNumberInPK="1"/>
+         <index name="interview_pkey" unique="true">
+            <column ascending="true" name="interview_id"/>
+         </index>
+         <index name="idx_interview_interviewee_role_id" unique="false">
+            <column ascending="true" name="interviewee_role_id"/>
+         </index>
+         <index name="idx_interview_record_id" unique="false">
+            <column ascending="true" name="investigation_id"/>
+         </index>
+         <index name="interview_legacy_id_key" unique="true">
+            <column ascending="true" name="legacy_id"/>
+         </index>
+      </table>
+      <table name="interview_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="interview_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="interview_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="investigation_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="investigation"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="interviewee" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="interview_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="interviewee_role_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="interview_text" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="interviewee_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="interview_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="interviewee_role_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="interview_text_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="interview_id" sequenceNumberInPK="2"/>
+         <index name="interview_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="interview_id"/>
+         </index>
+      </table>
+      <table name="investigation" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="investigation_id" foreignKey="interview_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="interview"/>
+            <child column="investigation_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview_audit"/>
+            <parent column="referral_id" foreignKey="investigation_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="staff_involved" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="evidence_secured" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="occurrence_reason" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="persons_usual_behaviour" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="persons_trigger" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="protective_factors" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <primaryKey column="investigation_id" sequenceNumberInPK="1"/>
+         <index name="investigation_pkey" unique="true">
+            <column ascending="true" name="investigation_id"/>
+         </index>
+      </table>
+      <table name="investigation_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="investigation_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="staff_involved" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="evidence_secured" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="occurrence_reason" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="persons_usual_behaviour" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="persons_trigger" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="protective_factors" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="staff_involved_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="evidence_secured_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="occurrence_reason_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="persons_usual_behaviour_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="persons_trigger_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="protective_factors_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="investigation_id" sequenceNumberInPK="2"/>
+         <index name="investigation_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="investigation_id"/>
+         </index>
+      </table>
+      <table name="person_summary" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12">
+            <child column="prison_number" foreignKey="fk_csip_prison_number" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
+            <child column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_record_audit"/>
+            <child column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_summary"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="first_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="last_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="cell_location" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="7" name="restricted_patient" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="supporting_prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <primaryKey column="prison_number" sequenceNumberInPK="1"/>
+         <index name="person_summary_pkey" unique="true">
+            <column ascending="true" name="prison_number"/>
+         </index>
+         <index name="idx_person_summary_first_name_lower" unique="false"/>
+         <index name="idx_person_summary_last_name_lower" unique="false"/>
+         <index name="idx_person_summary_prison_code" unique="false">
+            <column ascending="true" name="prison_code"/>
+         </index>
+         <index name="idx_person_summary_prison_code_lower" unique="false"/>
+         <index name="idx_person_summary_prison_number_lower" unique="false"/>
+         <index name="idx_person_summary_prison_person_lower" unique="false"/>
+         <index name="idx_person_summary_supporting_prison_code" unique="false">
+            <column ascending="true" name="supporting_prison_code"/>
+         </index>
+      </table>
+      <table name="person_summary_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="person_summary_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="last_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="status" nullable="false" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="cell_location" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="first_name_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="last_name_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="status_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="prison_code_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="cell_location_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="13" name="restricted_patient" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="supporting_prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="15" name="restricted_patient_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="16" name="supporting_prison_code_modified" nullable="false" remarks="" size="16" type="varchar" typeCode="12"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="prison_number" sequenceNumberInPK="2"/>
+         <index name="person_summary_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="prison_number"/>
+         </index>
+      </table>
+      <table name="plan" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="plan_id" foreignKey="identified_need_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="identified_need"/>
+            <child column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="identified_need_audit"/>
+            <child column="plan_id" foreignKey="review_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="review"/>
+            <child column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review_audit"/>
+            <parent column="record_id" foreignKey="plan_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="case_manager" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="reason_for_plan" nullable="true" remarks="" size="240" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_case_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <primaryKey column="plan_id" sequenceNumberInPK="1"/>
+         <index name="plan_pkey" unique="true">
+            <column ascending="true" name="plan_id"/>
+         </index>
+      </table>
+      <table name="plan_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="plan_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="case_manager" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="reason_for_plan" nullable="true" remarks="" size="240" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="first_case_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="case_manager_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="reason_for_plan_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="first_case_review_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="plan_id" sequenceNumberInPK="2"/>
+         <index name="plan_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="plan_id"/>
+         </index>
+      </table>
+      <table name="reference_data" numRows="112" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('reference_data_reference_data_id_seq'::regclass)" digits="0" id="0" name="reference_data_id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="contributory_factor_type_id" foreignKey="contributory_factor_contributory_factor_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
+            <child column="status_id" foreignKey="csip_record_status_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
+            <child column="outcome_id" foreignKey="decision_and_actions_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions"/>
+            <child column="signed_off_by_role_id" foreignKey="decision_and_actions_signed_off_by_role_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions"/>
+            <child column="interviewee_role_id" foreignKey="interview_interviewee_role_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="interview"/>
+            <child column="incident_involvement_id" foreignKey="referral_incident_involvement_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+            <child column="incident_location_id" foreignKey="referral_incident_location_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+            <child column="incident_type_id" foreignKey="referral_incident_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+            <child column="referer_area_of_work_id" foreignKey="referral_referer_area_of_work_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+            <child column="outcome_id" foreignKey="safer_custody_screening_outcome_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="domain" nullable="false" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="code" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="description" nullable="true" remarks="" size="40" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="list_sequence" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="last_modified_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="last_modified_by" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="9" name="deactivated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="deactivated_by" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <primaryKey column="reference_data_id" sequenceNumberInPK="1"/>
+         <index name="reference_data_pkey" unique="true">
+            <column ascending="true" name="reference_data_id"/>
+         </index>
+         <index name="reference_data_domain_code_key" unique="true">
+            <column ascending="true" name="domain"/>
+            <column ascending="true" name="code"/>
+         </index>
+         <index name="unq_reference_data_domain_list_sequence" unique="true">
+            <column ascending="true" name="domain"/>
+            <column ascending="true" name="list_sequence"/>
+            <column ascending="true" name="code"/>
+         </index>
+         <checkConstraint constraint="(((domain)::text = ANY ((ARRAY['AREA_OF_WORK'::character varying, 'CONTRIBUTORY_FACTOR_TYPE'::character varying, 'DECISION_OUTCOME_TYPE'::character varying, 'DECISION_SIGNER_ROLE'::character varying, 'INCIDENT_INVOLVEMENT'::character varying, 'INCIDENT_LOCATION'::character varying, 'INCIDENT_TYPE'::character varying, 'INTERVIEWEE_ROLE'::character varying, 'SCREENING_OUTCOME_TYPE'::character varying, 'STATUS'::character varying])::text[])))" name="reference_data_domain_enum_check"/>
+      </table>
+      <table name="referral" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="referral_id" foreignKey="contributory_factor_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
+            <child column="referral_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="contributory_factor_audit"/>
+            <child column="decision_and_actions_id" foreignKey="decision_and_actions_decision_and_actions_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions"/>
+            <child column="investigation_id" foreignKey="investigation_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="investigation"/>
+            <child column="safer_custody_screening_outcome_id" foreignKey="safer_custody_screening_outco_safer_custody_screening_outc_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome"/>
+            <parent column="record_id" foreignKey="referral_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="incident_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="incident_time" nullable="true" remarks="" size="15" type="time" typeCode="92"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="incident_type_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="referral_incident_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="incident_location_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="referral_incident_location_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="referred_by" nullable="false" remarks="" size="240" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="referer_area_of_work_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="referral_referer_area_of_work_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="referral_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="proactive_referral" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="staff_assaulted" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="assaulted_staff_name" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="incident_involvement_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="referral_incident_involvement_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="description_of_concern" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="known_reasons" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="other_information" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="safer_custody_team_informed" nullable="true" remarks="" size="12" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="referral_complete" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="referral_completed_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="referral_completed_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="referral_completed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <primaryKey column="referral_id" sequenceNumberInPK="1"/>
+         <index name="referral_pkey" unique="true">
+            <column ascending="true" name="referral_id"/>
+         </index>
+         <index name="idx_referral_incident_involvement_id" unique="false">
+            <column ascending="true" name="incident_involvement_id"/>
+         </index>
+         <index name="idx_referral_incident_location_id" unique="false">
+            <column ascending="true" name="incident_location_id"/>
+         </index>
+         <index name="idx_referral_incident_type_id" unique="false">
+            <column ascending="true" name="incident_type_id"/>
+         </index>
+         <index name="idx_referral_referer_area_of_work_id" unique="false">
+            <column ascending="true" name="referer_area_of_work_id"/>
+         </index>
+         <index name="idx_referral_referral_date" unique="false">
+            <column ascending="true" name="referral_date"/>
+         </index>
+         <checkConstraint constraint="(((safer_custody_team_informed)::text = ANY ((ARRAY['YES'::character varying, 'NO'::character varying, 'DO_NOT_KNOW'::character varying])::text[])))" name="safer_custody_team_informed_enum_check"/>
+      </table>
+      <table name="referral_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="referral_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="incident_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="incident_time" nullable="true" remarks="" size="15" type="time" typeCode="92"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="incident_type_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="incident_location_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="referred_by" nullable="true" remarks="" size="240" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="referer_area_of_work_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="referral_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="proactive_referral" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="staff_assaulted" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="assaulted_staff_name" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="incident_involvement_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="description_of_concern" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="known_reasons" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="other_information" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="safer_custody_team_informed" nullable="true" remarks="" size="12" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="referral_complete" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="referral_completed_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="referral_completed_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="21" name="referral_completed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="22" name="incident_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="23" name="incident_time_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="24" name="incident_type_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="25" name="incident_location_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="26" name="referred_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="27" name="referer_area_of_work_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="28" name="referral_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="29" name="proactive_referral_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="30" name="staff_assaulted_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="31" name="assaulted_staff_name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="32" name="incident_involvement_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="33" name="description_of_concern_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="34" name="known_reasons_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="35" name="other_information_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="36" name="safer_custody_team_informed_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="37" name="referral_complete_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="38" name="referral_completed_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="39" name="referral_completed_by_display_name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="40" name="referral_completed_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="referral_id" sequenceNumberInPK="2"/>
+         <index name="referral_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="referral_id"/>
+         </index>
+      </table>
+      <table name="review" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="review_id" foreignKey="attendee_review_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="attendee"/>
+            <child column="review_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee_audit"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="plan_id" foreignKey="review_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="review_sequence" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="next_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="actions" nullable="false" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="csip_closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="summary" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="review_id" sequenceNumberInPK="1"/>
+         <index name="review_pkey" unique="true">
+            <column ascending="true" name="review_id"/>
+         </index>
+         <index name="idx_review_record_id" unique="false">
+            <column ascending="true" name="plan_id"/>
+         </index>
+         <index name="review_legacy_id_key" unique="true">
+            <column ascending="true" name="legacy_id"/>
+         </index>
+         <checkConstraint constraint="((actions &lt;@ ARRAY['RESPONSIBLE_PEOPLE_INFORMED'::character varying, 'CSIP_UPDATED'::character varying, 'REMAIN_ON_CSIP'::character varying, 'CASE_NOTE'::character varying, 'CLOSE_CSIP'::character varying]))" name="review_actions_enum_check"/>
+      </table>
+      <table name="review_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="review_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="plan"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="review_sequence" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="next_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="csip_closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="summary" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="actions" nullable="true" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="review_sequence_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="review_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="recorded_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="recorded_by_display_name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="next_review_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="csip_closed_date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="summary_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="actions_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="review_id" sequenceNumberInPK="2"/>
+         <index name="review_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="review_id"/>
+         </index>
+      </table>
+      <table name="safer_custody_screening_outcome" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="safer_custody_screening_outcome_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="referral_id" foreignKey="safer_custody_screening_outco_safer_custody_screening_outc_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="outcome_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="reference_data_id" foreignKey="safer_custody_screening_outcome_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="recorded_by" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="recorded_by_display_name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="reason_for_decision" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <primaryKey column="safer_custody_screening_outcome_id" sequenceNumberInPK="1"/>
+         <index name="safer_custody_screening_outcome_pkey" unique="true">
+            <column ascending="true" name="safer_custody_screening_outcome_id"/>
+         </index>
+         <index name="idx_safer_custody_screening_outcome_outcome_id" unique="false">
+            <column ascending="true" name="outcome_id"/>
+         </index>
+      </table>
+      <table name="safer_custody_screening_outcome_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="safer_custody_screening_outcome_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="safer_custody_screening_outcome_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="outcome_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="reason_for_decision" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="outcome_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="recorded_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="recorded_by_display_name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="date_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="reason_for_decision_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
+         <primaryKey column="safer_custody_screening_outcome_id" sequenceNumberInPK="2"/>
+         <index name="safer_custody_screening_outcome_audit_pkey" unique="true">
+            <column ascending="true" name="rev_id"/>
+            <column ascending="true" name="safer_custody_screening_outcome_id"/>
+         </index>
+      </table>
+   </tables>
+</database>
