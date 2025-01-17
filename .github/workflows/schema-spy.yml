@@ -87,13 +87,13 @@ jobs:
         with:
           name: schema_spy_report
           path: |
-            tmp/schema-spy-report/
+            /tmp/schema-spy-report/
 
-#      - name: Publish HTML report
-#        uses: JamesIves/github-pages-deploy-action@15de0f09300eea763baee31dff6c6184995c5f6a # v4.7.2
-#        with:
-#          folder: schema-spy-report
-#          target-folder: schema-spy-report
+      - name: Publish HTML report
+        uses: JamesIves/github-pages-deploy-action@15de0f09300eea763baee31dff6c6184995c5f6a # v4.7.2
+        with:
+          folder: /tmp/schema-spy-report/
+          target-folder: schema-spy-report
 #
 #      - name: Add HTML report URL to the job summary
 #        run: echo '[Schema Spy HTML Report](https://ministryofjustice.github.io/hmpps-challenge-support-intervention-plan-api/schema-spy-report)' | tee -a "$GITHUB_STEP_SUMMARY"
