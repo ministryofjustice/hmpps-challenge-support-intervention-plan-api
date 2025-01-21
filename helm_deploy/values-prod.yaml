@@ -28,10 +28,23 @@ generic-service:
         DB_PASS_PREPROD: "database_password"
         DB_HOST_PREPROD: "rds_instance_address"
 
+  retryDlqCronjob:
+    enabled: true
+    retryDlqSchedule: "0 * * * *"
+
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
   alertSeverity: hmpps-alerts-api-prod
+  sqsOldestAlertQueueNames:
+    - "hmpps-move-and-improve-production-hmpps_csip_domain_events_queue"
+  sqsNumberAlertQueueNames:
+    - "hmpps-move-and-improve-production-hmpps_csip_domain_events_dlq"
+  sqsAlertsOldestThreshold: 10
+  sqsAlertsTotalMessagesThreshold: 1
+  rdsAlertsDatabases:
+    cloud-platform-6a3f7ffd5b6cea41: 'CSIP DB'
+  rdsAlertsConnectionThreshold: 100
 
 generic-data-analytics-extractor:
   enabled: true
