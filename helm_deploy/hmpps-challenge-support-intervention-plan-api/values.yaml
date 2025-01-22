@@ -69,6 +69,10 @@ generic-service:
       - digital_staff_and_mojo
       - moj_cloud_platform
 
+  retryDlqCronjob:
+    enabled: true
+    retryDlqSchedule: "0 * * * *"
+
 generic-prometheus-alerts:
   targetApplication: hmpps-challenge-support-intervention-plan-api
 
