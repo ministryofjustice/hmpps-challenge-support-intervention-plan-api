@@ -167,8 +167,7 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
-  private fun getInvestigation(recordUuid: UUID) =
-    csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
+  private fun getInvestigation(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
 
   private fun Investigation.verifyAgainst(request: UpdateInvestigationRequest) {
     assertThat(staffInvolved).isEqualTo(request.staffInvolved)

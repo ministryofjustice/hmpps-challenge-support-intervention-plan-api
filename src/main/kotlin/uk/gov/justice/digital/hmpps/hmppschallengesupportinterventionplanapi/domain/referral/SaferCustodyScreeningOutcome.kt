@@ -37,7 +37,8 @@ class SaferCustodyScreeningOutcome(
   recordedBy: String,
   recordedByDisplayName: String,
   reasonForDecision: String?,
-) : SimpleVersion(), CsipAware {
+) : SimpleVersion(),
+  CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
@@ -75,11 +76,10 @@ class SaferCustodyScreeningOutcome(
   }
 }
 
-fun SaferCustodyScreeningOutcome.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.SaferCustodyScreeningOutcome(
-    outcome = outcome.toReferenceDataModel(),
-    recordedBy = recordedBy,
-    recordedByDisplayName = recordedByDisplayName,
-    date = date,
-    reasonForDecision = reasonForDecision,
-  )
+fun SaferCustodyScreeningOutcome.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.SaferCustodyScreeningOutcome(
+  outcome = outcome.toReferenceDataModel(),
+  recordedBy = recordedBy,
+  recordedByDisplayName = recordedByDisplayName,
+  date = date,
+  reasonForDecision = reasonForDecision,
+)

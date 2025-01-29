@@ -95,10 +95,9 @@ interface CompletableRequest {
   val completedByDisplayName: String?
 }
 
-fun CsipRequestContext.asCompletable(completed: Boolean?): CompletableRequest =
-  object : CompletableRequest {
-    override val completed: Boolean? = completed
-    override val completedDate: LocalDate? = if (completed == true) requestAt.toLocalDate() else null
-    override val completedBy: String? = if (completed == true) username else null
-    override val completedByDisplayName: String? = if (completed == true) userDisplayName else null
-  }
+fun CsipRequestContext.asCompletable(completed: Boolean?): CompletableRequest = object : CompletableRequest {
+  override val completed: Boolean? = completed
+  override val completedDate: LocalDate? = if (completed == true) requestAt.toLocalDate() else null
+  override val completedBy: String? = if (completed == true) username else null
+  override val completedByDisplayName: String? = if (completed == true) userDisplayName else null
+}

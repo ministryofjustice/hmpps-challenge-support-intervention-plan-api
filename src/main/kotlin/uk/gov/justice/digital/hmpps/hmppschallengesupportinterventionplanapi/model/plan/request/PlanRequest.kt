@@ -9,7 +9,8 @@ data class CreatePlanRequest(
   override val reasonForPlan: String,
   override val nextCaseReviewDate: LocalDate,
   override val identifiedNeeds: List<CreateIdentifiedNeedRequest> = listOf(),
-) : PlanRequest, IdentifiedNeedsRequest
+) : PlanRequest,
+  IdentifiedNeedsRequest
 
 @Schema(description = "The request for updating a CSIP Plan for a CSIP record")
 data class UpdatePlanRequest(

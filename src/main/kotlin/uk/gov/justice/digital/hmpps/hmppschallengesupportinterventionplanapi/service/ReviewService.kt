@@ -36,14 +36,11 @@ class ReviewService(
   }
 
   @PublishCsipEvent(CSIP_UPDATED)
-  fun updateReview(reviewUuid: UUID, request: UpdateReviewRequest): Review =
-    reviewRepository.getReview(reviewUuid).update(request).toModel()
+  fun updateReview(reviewUuid: UUID, request: UpdateReviewRequest): Review = reviewRepository.getReview(reviewUuid).update(request).toModel()
 
   @PublishCsipEvent(CSIP_UPDATED)
-  fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee =
-    reviewRepository.getReview(reviewUuid).addAttendee(request).toModel()
+  fun addAttendee(reviewUuid: UUID, request: CreateAttendeeRequest): Attendee = reviewRepository.getReview(reviewUuid).addAttendee(request).toModel()
 
   @PublishCsipEvent(CSIP_UPDATED)
-  fun updateAttendee(attendeeUuid: UUID, request: UpdateAttendeeRequest): Attendee =
-    attendeeRepository.getAttendee(attendeeUuid).update(request).toModel()
+  fun updateAttendee(attendeeUuid: UUID, request: UpdateAttendeeRequest): Attendee = attendeeRepository.getAttendee(attendeeUuid).update(request).toModel()
 }

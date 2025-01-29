@@ -48,7 +48,10 @@ data class SyncReferralRequest(
   val investigation: SyncInvestigationRequest?,
   @field:Valid
   val decisionAndActions: SyncDecisionAndActionsRequest?,
-) : ReferralRequest, CompletableRequest, ReferralDateRequest, ContributoryFactorsRequest {
+) : ReferralRequest,
+  CompletableRequest,
+  ReferralDateRequest,
+  ContributoryFactorsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     add(ReferenceDataKey(INCIDENT_TYPE, incidentTypeCode))
     add(ReferenceDataKey(INCIDENT_LOCATION, incidentLocationCode))
@@ -74,9 +77,10 @@ data class SyncContributoryFactorRequest(
   override val comment: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisIdentifiable, ContributoryFactorRequest, LegacyIdAware {
-  fun findRequiredReferenceDataKeys() =
-    setOf(ReferenceDataKey(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, factorTypeCode))
+) : NomisIdentifiable,
+  ContributoryFactorRequest,
+  LegacyIdAware {
+  fun findRequiredReferenceDataKeys() = setOf(ReferenceDataKey(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, factorTypeCode))
 }
 
 data class SyncScreeningOutcomeRequest(
@@ -86,6 +90,5 @@ data class SyncScreeningOutcomeRequest(
   override val recordedBy: String,
   override val recordedByDisplayName: String,
 ) : ScreeningOutcomeRequest {
-  fun findRequiredReferenceDataKeys() =
-    setOf(ReferenceDataKey(ReferenceDataType.SCREENING_OUTCOME_TYPE, outcomeTypeCode))
+  fun findRequiredReferenceDataKeys() = setOf(ReferenceDataKey(ReferenceDataType.SCREENING_OUTCOME_TYPE, outcomeTypeCode))
 }

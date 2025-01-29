@@ -31,8 +31,7 @@ class CsipSearchService(
     csipSummaryRepository.findAll(asSpecification(), pageable()).map { it.toSearchResult() }.asCsipSearchResults()
   }
 
-  fun getOverviewForPrison(prisonCode: String): CsipOverview =
-    CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
+  fun getOverviewForPrison(prisonCode: String): CsipOverview = CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
 
   private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = listOfNotNull(
     prisonCode?.let(::summaryMatchesPrison),
@@ -54,8 +53,7 @@ private fun Page<CsipSearchResult>.asCsipSearchResults() = CsipSearchResults(
   PageMeta(totalElements),
 )
 
-private fun CsipSummary.toSearchResult() =
-  CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status())
+private fun CsipSummary.toSearchResult() = CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status())
 
 private fun CsipSummary.prisoner() = Prisoner(prisonNumber, firstName, lastName, cellLocation)
 

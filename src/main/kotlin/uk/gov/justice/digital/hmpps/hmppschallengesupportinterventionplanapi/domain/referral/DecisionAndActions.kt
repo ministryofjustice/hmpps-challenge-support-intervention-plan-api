@@ -40,7 +40,8 @@ class DecisionAndActions(
 
   outcome: ReferenceData?,
   signedOffBy: ReferenceData?,
-) : SimpleVersion(), CsipAware {
+) : SimpleVersion(),
+  CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -105,15 +106,14 @@ class DecisionAndActions(
   }
 }
 
-fun DecisionAndActions.toModel() =
-  DecisionAndActionsModel(
-    conclusion,
-    outcome?.toReferenceDataModel(),
-    signedOffBy?.toReferenceDataModel(),
-    recordedBy,
-    recordedByDisplayName,
-    date,
-    nextSteps,
-    actions,
-    actionOther,
-  )
+fun DecisionAndActions.toModel() = DecisionAndActionsModel(
+  conclusion,
+  outcome?.toReferenceDataModel(),
+  signedOffBy?.toReferenceDataModel(),
+  recordedBy,
+  recordedByDisplayName,
+  date,
+  nextSteps,
+  actions,
+  actionOther,
+)

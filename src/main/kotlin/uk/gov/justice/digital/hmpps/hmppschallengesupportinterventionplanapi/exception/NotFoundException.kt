@@ -9,11 +9,8 @@ fun <E : RuntimeException> verify(boolean: Boolean, exception: () -> E) {
   if (!boolean) throw exception()
 }
 
-fun <T, E : RuntimeException> verifyExists(value: T?, exception: () -> E): T {
-  return value ?: throw exception()
-}
+fun <T, E : RuntimeException> verifyExists(value: T?, exception: () -> E): T = value ?: throw exception()
 
-fun verifyCsipRecordExists(csipRecordRepository: CsipRecordRepository, uuid: UUID) =
-  verifyExists(csipRecordRepository.findById(uuid)) {
-    NotFoundException("CSIP Record", uuid.toString())
-  }
+fun verifyCsipRecordExists(csipRecordRepository: CsipRecordRepository, uuid: UUID) = verifyExists(csipRecordRepository.findById(uuid)) {
+  NotFoundException("CSIP Record", uuid.toString())
+}

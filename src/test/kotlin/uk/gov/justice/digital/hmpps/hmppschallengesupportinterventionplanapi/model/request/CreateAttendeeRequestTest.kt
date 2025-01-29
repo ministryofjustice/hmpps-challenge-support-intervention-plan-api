@@ -34,12 +34,10 @@ class CreateAttendeeRequestTest : RequestValidationTest() {
     role: String? = "Role",
     isAttended: Boolean? = true,
     contribution: String? = null,
-  ): CreateAttendeeRequest {
-    return CreateAttendeeRequest(
-      name = name,
-      role = role,
-      isAttended = isAttended,
-      contribution = contribution,
-    )
-  }
+  ): CreateAttendeeRequest = CreateAttendeeRequest(
+    name = name,
+    role = role,
+    isAttended = isAttended,
+    contribution = contribution,
+  )
 }

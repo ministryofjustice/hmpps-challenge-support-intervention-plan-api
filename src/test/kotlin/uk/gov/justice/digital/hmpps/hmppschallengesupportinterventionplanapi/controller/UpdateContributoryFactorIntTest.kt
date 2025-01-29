@@ -180,8 +180,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
     request: UpdateContributoryFactorRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): ContributoryFactor =
-    updateContributoryFactorResponseSpec(csipUuid, request, username, role).successResponse(OK)
+  ): ContributoryFactor = updateContributoryFactorResponseSpec(csipUuid, request, username, role).successResponse(OK)
 
   private fun getContributoryFactory(uuid: UUID) = contributoryFactorRepository.getContributoryFactor(uuid)
 }

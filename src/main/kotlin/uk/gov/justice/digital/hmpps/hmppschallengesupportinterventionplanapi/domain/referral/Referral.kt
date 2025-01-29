@@ -81,7 +81,8 @@ class Referral(
   refererAreaOfWork: ReferenceData,
 
   incidentInvolvement: ReferenceData?,
-) : SimpleVersion(), CsipAware {
+) : SimpleVersion(),
+  CsipAware {
   override fun csipRecord() = csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -218,10 +219,14 @@ class Referral(
     }
   }
 
-  private fun isCompletingReferral() =
-    referralComplete != true && proactiveReferral != null && staffAssaulted != null && descriptionOfConcern != null &&
-      knownReasons != null && incidentInvolvement != null && contributoryFactors().isNotEmpty() &&
-      (staffAssaulted == false || assaultedStaffName != null)
+  private fun isCompletingReferral() = referralComplete != true &&
+    proactiveReferral != null &&
+    staffAssaulted != null &&
+    descriptionOfConcern != null &&
+    knownReasons != null &&
+    incidentInvolvement != null &&
+    contributoryFactors().isNotEmpty() &&
+    (staffAssaulted == false || assaultedStaffName != null)
 
   fun complete(request: CompletableRequest): Referral = apply {
     referralCompletedDate = request.completedDate
@@ -292,12 +297,11 @@ class Referral(
     referenceProvider: (ReferenceDataType, String) -> ReferenceData,
     type: ReferenceDataType,
     newCode: String,
-  ): ReferenceData =
-    if (newCode != existing.code) {
-      referenceProvider(type, newCode)
-    } else {
-      existing
-    }
+  ): ReferenceData = if (newCode != existing.code) {
+    referenceProvider(type, newCode)
+  } else {
+    existing
+  }
 }
 
 fun Referral.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Referral(

@@ -39,7 +39,9 @@ class Attendee(
   contribution: String?,
 
   legacyId: Long? = null,
-) : SimpleVersion(), Identifiable, CsipAware {
+) : SimpleVersion(),
+  Identifiable,
+  CsipAware {
   override fun csipRecord() = review.plan.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -73,8 +75,7 @@ class Attendee(
 
 interface AttendeeRepository : JpaRepository<Attendee, UUID>
 
-fun AttendeeRepository.getAttendee(id: UUID) =
-  findByIdOrNull(id) ?: throw NotFoundException("Attendee", id.toString())
+fun AttendeeRepository.getAttendee(id: UUID) = findByIdOrNull(id) ?: throw NotFoundException("Attendee", id.toString())
 
 fun Attendee.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee(
   id,

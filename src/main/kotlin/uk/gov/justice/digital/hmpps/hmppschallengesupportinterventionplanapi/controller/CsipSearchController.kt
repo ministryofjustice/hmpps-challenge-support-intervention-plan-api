@@ -53,8 +53,7 @@ class CsipSearchController(private val search: CsipSearchService) {
   )
   @GetMapping("/search/csip-records")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun findCsipRecords(@Valid @ParameterObject request: FindCsipRequest): CsipSearchResults =
-    search.findMatchingCsipRecords(request)
+  fun findCsipRecords(@Valid @ParameterObject request: FindCsipRequest): CsipSearchResults = search.findMatchingCsipRecords(request)
 
   @Operation(summary = "Retrieve an overview of CSIP records for a given prison")
   @ApiResponses(

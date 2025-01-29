@@ -19,16 +19,16 @@ annotation class ValidPlanDetail(
 )
 
 class PlanRequestValidator : ConstraintValidator<ValidPlanDetail, PlanRequest> {
-  override fun isValid(request: PlanRequest, context: ConstraintValidatorContext): Boolean {
-    return with(request) {
-      listOfNotNull(
-        caseManager,
-        reasonForPlan,
-        if (request is FirstReviewRequest) request.firstCaseReviewDate else null,
-        nextCaseReviewDate,
-      ).isNotEmpty() ||
-        request is IdentifiedNeedsRequest && request.identifiedNeeds.isNotEmpty() ||
-        request is ReviewsRequest && request.reviews.isNotEmpty()
-    }
+  override fun isValid(request: PlanRequest, context: ConstraintValidatorContext): Boolean = with(request) {
+    listOfNotNull(
+      caseManager,
+      reasonForPlan,
+      if (request is FirstReviewRequest) request.firstCaseReviewDate else null,
+      nextCaseReviewDate,
+    ).isNotEmpty() ||
+      request is IdentifiedNeedsRequest &&
+      request.identifiedNeeds.isNotEmpty() ||
+      request is ReviewsRequest &&
+      request.reviews.isNotEmpty()
   }
 }

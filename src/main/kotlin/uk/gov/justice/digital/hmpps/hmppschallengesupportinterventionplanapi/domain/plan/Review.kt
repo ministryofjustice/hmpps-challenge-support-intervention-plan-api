@@ -54,7 +54,9 @@ class Review(
   actions: Set<ReviewAction>,
 
   legacyId: Long? = null,
-) : SimpleVersion(), Identifiable, CsipAware {
+) : SimpleVersion(),
+  Identifiable,
+  CsipAware {
   override fun csipRecord() = plan.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -108,17 +110,16 @@ class Review(
     nextReviewDate = date
   }
 
-  fun addAttendee(request: AttendeeRequest) =
-    Attendee(
-      this,
-      request.name,
-      request.role,
-      request.isAttended,
-      request.contribution,
-      if (request is LegacyIdAware) request.legacyId else null,
-    ).apply {
-      attendees.add(this)
-    }
+  fun addAttendee(request: AttendeeRequest) = Attendee(
+    this,
+    request.name,
+    request.role,
+    request.isAttended,
+    request.contribution,
+    if (request is LegacyIdAware) request.legacyId else null,
+  ).apply {
+    attendees.add(this)
+  }
 }
 
 interface ReviewRepository : JpaRepository<Review, UUID> {
@@ -126,8 +127,7 @@ interface ReviewRepository : JpaRepository<Review, UUID> {
   override fun findById(uuid: UUID): Optional<Review>
 }
 
-fun ReviewRepository.getReview(reviewUuid: UUID): Review =
-  findById(reviewUuid).orElseThrow { NotFoundException("Review", reviewUuid.toString()) }
+fun ReviewRepository.getReview(reviewUuid: UUID): Review = findById(reviewUuid).orElseThrow { NotFoundException("Review", reviewUuid.toString()) }
 
 fun Review.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Review(
   id,

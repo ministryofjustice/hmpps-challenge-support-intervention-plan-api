@@ -22,20 +22,18 @@ annotation class ValidInvestigationDetail(
 }
 
 class InvestigationRequestValidator : ConstraintValidator<ValidInvestigationDetail, InvestigationRequest> {
-  override fun isValid(request: InvestigationRequest, context: ConstraintValidatorContext): Boolean {
-    return with(request) {
-      val oneFieldNotNull = listOfNotNull(
-        staffInvolved,
-        evidenceSecured,
-        occurrenceReason,
-        personsUsualBehaviour,
-        personsTrigger,
-        protectiveFactors,
-      ).isNotEmpty()
+  override fun isValid(request: InvestigationRequest, context: ConstraintValidatorContext): Boolean = with(request) {
+    val oneFieldNotNull = listOfNotNull(
+      staffInvolved,
+      evidenceSecured,
+      occurrenceReason,
+      personsUsualBehaviour,
+      personsTrigger,
+      protectiveFactors,
+    ).isNotEmpty()
 
-      val atLeastOneInterview = request is InterviewsRequest && request.interviews.isNotEmpty()
+    val atLeastOneInterview = request is InterviewsRequest && request.interviews.isNotEmpty()
 
-      oneFieldNotNull || atLeastOneInterview
-    }
+    oneFieldNotNull || atLeastOneInterview
   }
 }

@@ -41,7 +41,8 @@ class Plan(
   caseManager: String?,
   reasonForPlan: String?,
   firstCaseReviewDate: LocalDate?,
-) : SimpleVersion(), CsipAware {
+) : SimpleVersion(),
+  CsipAware {
   override fun csipRecord() = csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -82,20 +83,19 @@ class Plan(
     }
   }
 
-  fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed =
-    IdentifiedNeed(
-      this,
-      request.identifiedNeed,
-      request.responsiblePerson,
-      request.createdDate,
-      request.targetDate,
-      request.closedDate,
-      request.intervention,
-      request.progression,
-      legacyId = if (request is LegacyIdAware) request.legacyId else null,
-    ).apply {
-      identifiedNeeds.add(this)
-    }
+  fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed = IdentifiedNeed(
+    this,
+    request.identifiedNeed,
+    request.responsiblePerson,
+    request.createdDate,
+    request.targetDate,
+    request.closedDate,
+    request.intervention,
+    request.progression,
+    legacyId = if (request is LegacyIdAware) request.legacyId else null,
+  ).apply {
+    identifiedNeeds.add(this)
+  }
 
   fun addReview(request: ReviewRequest): Review = Review(
     this,

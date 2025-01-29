@@ -44,7 +44,9 @@ class Interview(
   interviewText: String?,
 
   legacyId: Long? = null,
-) : SimpleVersion(), Identifiable, CsipAware {
+) : SimpleVersion(),
+  Identifiable,
+  CsipAware {
   override fun csipRecord() = investigation.referral.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -85,14 +87,12 @@ class Interview(
 
 interface InterviewRepository : JpaRepository<Interview, UUID>
 
-fun InterviewRepository.getInterview(id: UUID) =
-  findByIdOrNull(id) ?: throw NotFoundException("Interview", id.toString())
+fun InterviewRepository.getInterview(id: UUID) = findByIdOrNull(id) ?: throw NotFoundException("Interview", id.toString())
 
-fun Interview.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Interview(
-    interviewUuid = id,
-    interviewee = interviewee,
-    interviewDate = interviewDate,
-    intervieweeRole = intervieweeRole.toReferenceDataModel(),
-    interviewText = interviewText,
-  )
+fun Interview.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Interview(
+  interviewUuid = id,
+  interviewee = interviewee,
+  interviewDate = interviewDate,
+  intervieweeRole = intervieweeRole.toReferenceDataModel(),
+  interviewText = interviewText,
+)

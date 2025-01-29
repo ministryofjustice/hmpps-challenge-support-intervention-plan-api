@@ -116,8 +116,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     request: CreateReviewRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Review =
-    addReviewResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
+  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Review = addReviewResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun createReviewRequest(
     reviewDate: LocalDate = LocalDate.now(),

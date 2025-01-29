@@ -106,13 +106,12 @@ class MergeEventIntTest : IntegrationTestBase() {
     verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, Source.NOMIS, oldNoms)
   }
 
-  private fun mergeEvent(previousNomsNumber: String, newNomsNumber: String): HmppsDomainEvent<MergeInformation> =
-    HmppsDomainEvent(
-      occurredAt = ZonedDateTime.now(),
-      eventType = PRISONER_MERGED,
-      detailUrl = null,
-      description = "A prisoner was merged from $previousNomsNumber to $newNomsNumber",
-      MergeInformation(newNomsNumber, previousNomsNumber),
-      PersonReference.withPrisonNumber(newNomsNumber),
-    )
+  private fun mergeEvent(previousNomsNumber: String, newNomsNumber: String): HmppsDomainEvent<MergeInformation> = HmppsDomainEvent(
+    occurredAt = ZonedDateTime.now(),
+    eventType = PRISONER_MERGED,
+    detailUrl = null,
+    description = "A prisoner was merged from $previousNomsNumber to $newNomsNumber",
+    MergeInformation(newNomsNumber, previousNomsNumber),
+    PersonReference.withPrisonNumber(newNomsNumber),
+  )
 }

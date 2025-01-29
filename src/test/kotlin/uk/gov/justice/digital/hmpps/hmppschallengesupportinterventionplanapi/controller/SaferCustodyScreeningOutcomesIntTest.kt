@@ -162,8 +162,7 @@ class SaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
   ) = createScreeningOutcomeResponseSpec(recordUuid, request, username)
     .successResponse<SaferCustodyScreeningOutcome>(HttpStatus.CREATED)
 
-  private fun getScreeningOutcome(recordUuid: UUID) =
-    csipRecordRepository.getCsipRecord(recordUuid).referral!!.saferCustodyScreeningOutcome!!
+  private fun getScreeningOutcome(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.saferCustodyScreeningOutcome!!
 
   companion object {
     private fun createScreeningOutcomeRequest(
