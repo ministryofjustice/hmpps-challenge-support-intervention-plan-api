@@ -180,8 +180,7 @@ class UpdateIdentifiedNeedIntTest : IntegrationTestBase() {
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
-  private fun getIdentifiedNeed(identifiedNeedUuid: UUID) =
-    identifiedNeedRepository.getIdentifiedNeed(identifiedNeedUuid)
+  private fun getIdentifiedNeed(identifiedNeedUuid: UUID) = identifiedNeedRepository.getIdentifiedNeed(identifiedNeedUuid)
 
   private fun IdentifiedNeed.verifyAgainst(request: UpdateIdentifiedNeedRequest) {
     assertThat(identifiedNeed).isEqualTo(request.identifiedNeed)

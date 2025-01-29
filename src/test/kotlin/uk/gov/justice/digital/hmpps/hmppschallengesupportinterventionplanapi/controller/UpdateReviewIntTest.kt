@@ -190,8 +190,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     request: UpdateReviewRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): Review =
-    updateReviewResponseSpec(reviewUuid, request, username, role).successResponse(OK)
+  ): Review = updateReviewResponseSpec(reviewUuid, request, username, role).successResponse(OK)
 
   private fun getReview(uuid: UUID) = reviewRepository.getReview(uuid)
 }

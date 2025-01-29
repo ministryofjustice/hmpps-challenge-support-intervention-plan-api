@@ -70,12 +70,10 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
     response.verifyAgainst(record)
   }
 
-  fun getCsipRecordResponseSpec(recordUuid: UUID, role: String? = ROLE_CSIP_UI): WebTestClient.ResponseSpec =
-    webTestClient.get()
-      .uri("/csip-records/$recordUuid")
-      .headers(setAuthorisation(roles = listOfNotNull(role)))
-      .exchange()
+  fun getCsipRecordResponseSpec(recordUuid: UUID, role: String? = ROLE_CSIP_UI): WebTestClient.ResponseSpec = webTestClient.get()
+    .uri("/csip-records/$recordUuid")
+    .headers(setAuthorisation(roles = listOfNotNull(role)))
+    .exchange()
 
-  fun getCsipRecord(recordUuid: UUID, role: String = ROLE_CSIP_UI): CsipRecord =
-    getCsipRecordResponseSpec(recordUuid, role).successResponse()
+  fun getCsipRecord(recordUuid: UUID, role: String = ROLE_CSIP_UI): CsipRecord = getCsipRecordResponseSpec(recordUuid, role).successResponse()
 }

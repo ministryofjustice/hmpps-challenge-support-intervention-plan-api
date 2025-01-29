@@ -16,15 +16,14 @@ annotation class ValidDecisionDetail(
 )
 
 class DecisionRequestValidator : ConstraintValidator<ValidDecisionDetail, DecisionAndActionsRequest> {
-  override fun isValid(request: DecisionAndActionsRequest, context: ConstraintValidatorContext): Boolean {
-    return with(request) {
-      listOfNotNull(
-        conclusion,
-        outcomeTypeCode,
-        signedOffByRoleCode,
-        nextSteps,
-        actionOther,
-      ).isNotEmpty() || actions.isNotEmpty()
-    }
+  override fun isValid(request: DecisionAndActionsRequest, context: ConstraintValidatorContext): Boolean = with(request) {
+    listOfNotNull(
+      conclusion,
+      outcomeTypeCode,
+      signedOffByRoleCode,
+      nextSteps,
+      actionOther,
+    ).isNotEmpty() ||
+      actions.isNotEmpty()
   }
 }

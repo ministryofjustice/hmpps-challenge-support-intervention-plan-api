@@ -115,8 +115,7 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     request: CreateAttendeeRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee =
-    addAttendeeResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
+  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee = addAttendeeResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun createAttendeeRequest(
     name: String? = "name",
@@ -132,6 +131,5 @@ class AddAttendeeIntTest : IntegrationTestBase() {
     assertThat(contribution).isEqualTo(request.contribution)
   }
 
-  private fun getAttendee(reviewUuid: UUID, attendeeUuid: UUID): Attendee =
-    reviewRepository.getReview(reviewUuid).attendees().first { it.id == attendeeUuid }
+  private fun getAttendee(reviewUuid: UUID, attendeeUuid: UUID): Attendee = reviewRepository.getReview(reviewUuid).attendees().first { it.id == attendeeUuid }
 }

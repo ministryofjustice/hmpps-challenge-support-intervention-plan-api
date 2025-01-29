@@ -25,34 +25,35 @@ internal const val PRISON_CODE_LEEDS = "LEI"
 class ManageUsersServer : WireMockServer(8111) {
   private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
-  fun stubGetUserDetails(username: String = TEST_USER, name: String = TEST_USER_NAME): StubMapping =
-    stubFor(
-      get("/users/$username")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              mapper.writeValueAsString(
-                UserDetails(
-                  username = username,
-                  active = true,
-                  name = name,
-                  authSource = "nomis",
-                  userId = "123",
-                  uuid = UUID.randomUUID(),
-                  activeCaseLoadId = PRISON_CODE_LEEDS,
-                ),
+  fun stubGetUserDetails(username: String = TEST_USER, name: String = TEST_USER_NAME): StubMapping = stubFor(
+    get("/users/$username")
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            mapper.writeValueAsString(
+              UserDetails(
+                username = username,
+                active = true,
+                name = name,
+                authSource = "nomis",
+                userId = "123",
+                uuid = UUID.randomUUID(),
+                activeCaseLoadId = PRISON_CODE_LEEDS,
               ),
-            )
-            .withStatus(200),
-        ),
-    )
+            ),
+          )
+          .withStatus(200),
+      ),
+  )
 
-  fun stubGetUserDetailsException(username: String = USER_THROW_EXCEPTION): StubMapping =
-    stubFor(get("/users/$username").willReturn(aResponse().withStatus(500)))
+  fun stubGetUserDetailsException(username: String = USER_THROW_EXCEPTION): StubMapping = stubFor(get("/users/$username").willReturn(aResponse().withStatus(500)))
 }
 
-class ManageUsersExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class ManageUsersExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val manageUsers = ManageUsersServer()

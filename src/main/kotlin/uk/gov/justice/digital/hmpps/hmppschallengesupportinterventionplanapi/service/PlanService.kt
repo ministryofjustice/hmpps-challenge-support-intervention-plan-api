@@ -41,8 +41,7 @@ class PlanService(
   }
 
   @PublishCsipEvent(CSIP_UPDATED)
-  fun updateIdentifiedNeed(identifiedNeedUuid: UUID, request: UpdateIdentifiedNeedRequest): IdentifiedNeed =
-    identifiedNeedRepository.getIdentifiedNeed(identifiedNeedUuid).update(request).toModel()
+  fun updateIdentifiedNeed(identifiedNeedUuid: UUID, request: UpdateIdentifiedNeedRequest): IdentifiedNeed = identifiedNeedRepository.getIdentifiedNeed(identifiedNeedUuid).update(request).toModel()
 
   @PublishCsipEvent(CSIP_UPDATED)
   fun createPlanWithIdentifiedNeeds(recordUuid: UUID, request: CreatePlanRequest): Plan {

@@ -85,5 +85,4 @@ class ReferralService(
   }
 }
 
-private fun Referral.doesNotHaveFactor(typeCode: String, id: UUID? = null) =
-  contributoryFactors().none { it.contributoryFactorType.code == typeCode && it.id != id }
+private fun Referral.doesNotHaveFactor(typeCode: String, id: UUID? = null) = contributoryFactors().none { it.contributoryFactorType.code == typeCode && it.id != id }

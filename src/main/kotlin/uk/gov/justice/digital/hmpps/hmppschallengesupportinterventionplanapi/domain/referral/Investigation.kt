@@ -33,7 +33,8 @@ class Investigation(
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
-) : SimpleVersion(), CsipAware {
+) : SimpleVersion(),
+  CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -89,13 +90,12 @@ class Investigation(
   }
 }
 
-fun Investigation.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Investigation(
-    staffInvolved = staffInvolved,
-    evidenceSecured = evidenceSecured,
-    occurrenceReason = occurrenceReason,
-    personsUsualBehaviour = personsUsualBehaviour,
-    personsTrigger = personsTrigger,
-    protectiveFactors = protectiveFactors,
-    interviews = interviews().map { it.toModel() },
-  )
+fun Investigation.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Investigation(
+  staffInvolved = staffInvolved,
+  evidenceSecured = evidenceSecured,
+  occurrenceReason = occurrenceReason,
+  personsUsualBehaviour = personsUsualBehaviour,
+  personsTrigger = personsTrigger,
+  protectiveFactors = protectiveFactors,
+  interviews = interviews().map { it.toModel() },
+)

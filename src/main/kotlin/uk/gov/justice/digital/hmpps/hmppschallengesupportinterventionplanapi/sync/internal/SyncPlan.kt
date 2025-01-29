@@ -33,11 +33,8 @@ class SyncPlan {
   }
 }
 
-private fun Plan.findNeed(uuid: UUID?, legacyId: Long): IdentifiedNeed? =
-  identifiedNeeds().find { it.byId(uuid) || it.byLegacyId(legacyId) }
+private fun Plan.findNeed(uuid: UUID?, legacyId: Long): IdentifiedNeed? = identifiedNeeds().find { it.byId(uuid) || it.byLegacyId(legacyId) }
 
-private fun Plan.findReview(uuid: UUID?, legacyId: Long): Review? =
-  reviews().find { it.byId(uuid) || it.byLegacyId(legacyId) }
+private fun Plan.findReview(uuid: UUID?, legacyId: Long): Review? = reviews().find { it.byId(uuid) || it.byLegacyId(legacyId) }
 
-private fun Review.findAttendee(uuid: UUID?, legacyId: Long): Attendee? =
-  attendees().find { it.byId(uuid) || it.byLegacyId(legacyId) }
+private fun Review.findAttendee(uuid: UUID?, legacyId: Long): Attendee? = attendees().find { it.byId(uuid) || it.byLegacyId(legacyId) }

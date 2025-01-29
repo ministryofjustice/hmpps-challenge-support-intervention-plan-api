@@ -12,23 +12,21 @@ import java.util.UUID
 
 @Component
 class ManageUsersClient(@Qualifier("manageUsersWebClient") private val webClient: WebClient) {
-  fun getUserDetails(username: String): UserDetails? {
-    return try {
-      webClient
-        .get()
-        .uri("/users/{username}", username)
-        .exchangeToMono { res ->
-          when (res.statusCode()) {
-            HttpStatus.NOT_FOUND -> Mono.empty()
-            HttpStatus.OK -> res.bodyToMono<UserDetails>()
-            else -> res.createError()
-          }
+  fun getUserDetails(username: String): UserDetails? = try {
+    webClient
+      .get()
+      .uri("/users/{username}", username)
+      .exchangeToMono { res ->
+        when (res.statusCode()) {
+          HttpStatus.NOT_FOUND -> Mono.empty()
+          HttpStatus.OK -> res.bodyToMono<UserDetails>()
+          else -> res.createError()
         }
-        .retryIdempotentRequestOnTransientException()
-        .block()
-    } catch (e: Exception) {
-      throw DownstreamServiceException("Get user details request failed", e)
-    }
+      }
+      .retryIdempotentRequestOnTransientException()
+      .block()
+  } catch (e: Exception) {
+    throw DownstreamServiceException("Get user details request failed", e)
   }
 }
 

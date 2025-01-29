@@ -79,12 +79,11 @@ class DecisionAndActionsController(
   fun upsertDecision(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody request: UpsertDecisionAndActionsRequest,
-  ): ResponseEntity<DecisionAndActions> =
-    decisionActionsService.upsertDecisionAndActionsRequest(recordUuid, request).let {
-      if (it.new) {
-        ResponseEntity.status(HttpStatus.CREATED).body(it)
-      } else {
-        ResponseEntity.ok(it)
-      }
+  ): ResponseEntity<DecisionAndActions> = decisionActionsService.upsertDecisionAndActionsRequest(recordUuid, request).let {
+    if (it.new) {
+      ResponseEntity.status(HttpStatus.CREATED).body(it)
+    } else {
+      ResponseEntity.ok(it)
     }
+  }
 }

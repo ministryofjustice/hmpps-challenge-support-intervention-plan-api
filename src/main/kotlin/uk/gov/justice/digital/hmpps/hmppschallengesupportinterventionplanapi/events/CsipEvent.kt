@@ -22,15 +22,14 @@ sealed interface CsipBaseEvent : DomainEventable {
   val recordUuid: UUID
   val previousPrisonNumber: String?
   override fun detailPath(): String = "/csip-records/$recordUuid"
-  override fun toDomainEvent(baseUrl: String): DomainEvent =
-    HmppsDomainEvent(
-      eventType = type.eventType,
-      additionalInformation = additionalInformation(),
-      description = type.description,
-      occurredAt = occurredAt.toZoneDateTime(),
-      detailUrl = "$baseUrl${detailPath()}",
-      personReference = PersonReference.withPrisonNumber(prisonNumber),
-    )
+  override fun toDomainEvent(baseUrl: String): DomainEvent = HmppsDomainEvent(
+    eventType = type.eventType,
+    additionalInformation = additionalInformation(),
+    description = type.description,
+    occurredAt = occurredAt.toZoneDateTime(),
+    detailUrl = "$baseUrl${detailPath()}",
+    personReference = PersonReference.withPrisonNumber(prisonNumber),
+  )
 }
 
 data class CsipEvent(
@@ -40,8 +39,7 @@ data class CsipEvent(
   override val occurredAt: LocalDateTime,
   override val previousPrisonNumber: String? = null,
 ) : CsipBaseEvent {
-  override fun additionalInformation(): AdditionalInformation =
-    previousPrisonNumber?.let { CsipMovedInformation(recordUuid, previousPrisonNumber) } ?: CsipInformation(recordUuid)
+  override fun additionalInformation(): AdditionalInformation = previousPrisonNumber?.let { CsipMovedInformation(recordUuid, previousPrisonNumber) } ?: CsipInformation(recordUuid)
 }
 
 interface CsipBaseInformation : AdditionalInformation {

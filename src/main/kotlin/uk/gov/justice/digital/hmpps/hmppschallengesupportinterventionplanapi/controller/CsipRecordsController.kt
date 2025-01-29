@@ -66,8 +66,7 @@ class CsipRecordsController(val csipRecordService: CsipRecordService) {
   )
   @GetMapping("/prisoners/{prisonNumber}/csip-records/current")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_RO', '$ROLE_CSIP_UI')")
-  fun getCurrentCsipRecord(@PathVariable prisonNumber: String): CurrentCsipDetail =
-    csipRecordService.findCurrentCsip(prisonNumber) ?: CurrentCsipDetail.NONE
+  fun getCurrentCsipRecord(@PathVariable prisonNumber: String): CurrentCsipDetail = csipRecordService.findCurrentCsip(prisonNumber) ?: CurrentCsipDetail.NONE
 
   @Operation(
     summary = "Create a CSIP record for a prisoner.",

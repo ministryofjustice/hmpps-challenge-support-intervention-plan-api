@@ -79,6 +79,5 @@ class SaferCustodyScreeningOutcomesController(
   fun createScreeningOutcome(
     @PathVariable @Parameter(description = "CSIP record unique identifier", required = true) recordUuid: UUID,
     @Valid @RequestBody createSaferCustodyScreeningOutcomeRequest: CreateSaferCustodyScreeningOutcomeRequest,
-  ): SaferCustodyScreeningOutcome =
-    screeningOutcomeService.createScreeningOutcome(recordUuid, createSaferCustodyScreeningOutcomeRequest)
+  ): SaferCustodyScreeningOutcome = screeningOutcomeService.createScreeningOutcome(recordUuid, createSaferCustodyScreeningOutcomeRequest)
 }

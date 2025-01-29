@@ -60,7 +60,6 @@ class InvestigationService(
   }
 
   @PublishCsipEvent(CSIP_UPDATED)
-  fun updateInterview(interviewUuid: UUID, request: UpdateInterviewRequest): Interview =
-    interviewRepository.getInterview(interviewUuid).update(request, referenceDataRepository::getActiveReferenceData)
-      .toModel()
+  fun updateInterview(interviewUuid: UUID, request: UpdateInterviewRequest): Interview = interviewRepository.getInterview(interviewUuid).update(request, referenceDataRepository::getActiveReferenceData)
+    .toModel()
 }

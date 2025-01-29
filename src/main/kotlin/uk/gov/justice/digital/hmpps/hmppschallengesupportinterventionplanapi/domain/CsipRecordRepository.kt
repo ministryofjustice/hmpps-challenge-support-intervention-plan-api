@@ -24,8 +24,7 @@ interface CsipRecordRepository :
   fun findByPrisonNumberAndIdIn(prisonNumber: String, ids: Set<UUID>): List<CsipRecord>
 }
 
-fun CsipRecordRepository.getCsipRecord(recordUuid: UUID) =
-  findById(recordUuid) ?: throw NotFoundException("CSIP Record", recordUuid.toString())
+fun CsipRecordRepository.getCsipRecord(recordUuid: UUID) = findById(recordUuid) ?: throw NotFoundException("CSIP Record", recordUuid.toString())
 
 fun CsipRecordRepository.saveAndRefresh(record: CsipRecord): CsipRecord {
   val saved = saveAndFlush(record)
@@ -33,5 +32,4 @@ fun CsipRecordRepository.saveAndRefresh(record: CsipRecord): CsipRecord {
   return saved
 }
 
-fun matchesPrisonNumber(prisonNumber: String) =
-  Specification<CsipRecord> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_NUMBER]), prisonNumber.lowercase()) }
+fun matchesPrisonNumber(prisonNumber: String) = Specification<CsipRecord> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_NUMBER]), prisonNumber.lowercase()) }

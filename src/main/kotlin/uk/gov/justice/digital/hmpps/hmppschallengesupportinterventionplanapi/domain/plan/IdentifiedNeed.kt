@@ -43,7 +43,9 @@ class IdentifiedNeed(
   progression: String?,
 
   legacyId: Long? = null,
-) : SimpleVersion(), Identifiable, CsipAware {
+) : SimpleVersion(),
+  Identifiable,
+  CsipAware {
   override fun csipRecord() = plan.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -86,17 +88,15 @@ class IdentifiedNeed(
 
 interface IdentifiedNeedRepository : JpaRepository<IdentifiedNeed, UUID>
 
-fun IdentifiedNeedRepository.getIdentifiedNeed(id: UUID) =
-  findByIdOrNull(id) ?: throw NotFoundException("Identified Need", id.toString())
+fun IdentifiedNeedRepository.getIdentifiedNeed(id: UUID) = findByIdOrNull(id) ?: throw NotFoundException("Identified Need", id.toString())
 
-fun IdentifiedNeed.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.IdentifiedNeed(
-    id,
-    identifiedNeed,
-    responsiblePerson,
-    createdDate,
-    targetDate,
-    closedDate,
-    intervention,
-    progression,
-  )
+fun IdentifiedNeed.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.IdentifiedNeed(
+  id,
+  identifiedNeed,
+  responsiblePerson,
+  createdDate,
+  targetDate,
+  closedDate,
+  intervention,
+  progression,
+)

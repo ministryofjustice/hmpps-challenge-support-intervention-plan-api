@@ -39,8 +39,7 @@ data class FindCsipRequest(
   @Parameter(description = "The sort to apply to the results", example = "referralDate,desc")
   override val sort: String = "referralDate,desc",
 ) : PagedRequest {
-  override fun validSortFields(): Set<String> =
-    setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS)
+  override fun validSortFields(): Set<String> = setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS)
 
   private fun sortByDate(direction: Direction) = by(direction, CsipSummary.REFERRAL_DATE, CsipSummary.ID)
   private fun sortByName(direction: Direction): Sort = by(direction, LAST_NAME, FIRST_NAME, PRISON_NUMBER)
@@ -48,14 +47,12 @@ data class FindCsipRequest(
 
   fun queryString(): String? = query?.replace("\u0000", "")?.trim()?.takeIf { it.isNotBlank() }
 
-  override fun buildSort(field: String, direction: Direction): Sort {
-    return when (field) {
-      REFERRAL_DATE -> sortByDate(direction).and(sortByName(ASC))
-      NAME -> sortByName(direction).and(sortByDate(DESC))
-      LOCATION -> by(direction, PRISON_CODE, CELL_LOCATION).and(tieBreaker())
-      STATUS -> by(direction, STATUS_DESCRIPTION).and(tieBreaker())
-      else -> by(direction, field).and(tieBreaker())
-    }
+  override fun buildSort(field: String, direction: Direction): Sort = when (field) {
+    REFERRAL_DATE -> sortByDate(direction).and(sortByName(ASC))
+    NAME -> sortByName(direction).and(sortByDate(DESC))
+    LOCATION -> by(direction, PRISON_CODE, CELL_LOCATION).and(tieBreaker())
+    STATUS -> by(direction, STATUS_DESCRIPTION).and(tieBreaker())
+    else -> by(direction, field).and(tieBreaker())
   }
 
   companion object {

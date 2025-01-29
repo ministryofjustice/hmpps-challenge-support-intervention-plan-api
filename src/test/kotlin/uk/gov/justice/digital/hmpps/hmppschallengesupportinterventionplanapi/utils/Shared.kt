@@ -46,8 +46,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 
 const val LOG_CODE = "ZXY987"
 
-fun createContributoryFactorRequest(type: String = "BAS", comment: String? = "comment about the factor") =
-  CreateContributoryFactorRequest(type, comment)
+fun createContributoryFactorRequest(type: String = "BAS", comment: String? = "comment about the factor") = CreateContributoryFactorRequest(type, comment)
 
 fun createInterviewRequest(
   roleCode: String = "OTHER",

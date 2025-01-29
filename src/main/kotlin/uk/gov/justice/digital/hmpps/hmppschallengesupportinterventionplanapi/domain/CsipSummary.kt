@@ -63,7 +63,9 @@ class CsipSummary(
   }
 }
 
-interface CsipSummaryRepository : JpaRepository<CsipSummary, UUID>, JpaSpecificationExecutor<CsipSummary> {
+interface CsipSummaryRepository :
+  JpaRepository<CsipSummary, UUID>,
+  JpaSpecificationExecutor<CsipSummary> {
 
   @Query(
     """
@@ -110,30 +112,25 @@ interface CurrentCsipAndCounts {
   val referred: Int
 }
 
-fun summaryMatchesPrison(prisonNumber: String) =
-  Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_CODE]), prisonNumber.lowercase()) }
+fun summaryMatchesPrison(prisonNumber: String) = Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_CODE]), prisonNumber.lowercase()) }
 
-fun summaryPrisonInvolvement(prisonCodes: Set<String>) =
-  Specification<CsipSummary> { csip, _, cb ->
-    cb.or(csip.get<String>(PRISON_CODE).`in`(prisonCodes), csip.get<String>(SUPPORTING_PRISON_CODE).`in`(prisonCodes))
-  }
+fun summaryPrisonInvolvement(prisonCodes: Set<String>) = Specification<CsipSummary> { csip, _, cb ->
+  cb.or(csip.get<String>(PRISON_CODE).`in`(prisonCodes), csip.get<String>(SUPPORTING_PRISON_CODE).`in`(prisonCodes))
+}
 
-fun summaryWithoutRestrictedPatients() =
-  Specification<CsipSummary> { csip, _, cb -> cb.equal(csip.get<Boolean>(RESTRICTED_PATIENT), false) }
+fun summaryWithoutRestrictedPatients() = Specification<CsipSummary> { csip, _, cb -> cb.equal(csip.get<Boolean>(RESTRICTED_PATIENT), false) }
 
-fun summaryMatchesPrisonNumber(prisonNumber: String) =
-  Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_NUMBER]), prisonNumber.lowercase()) }
+fun summaryMatchesPrisonNumber(prisonNumber: String) = Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_NUMBER]), prisonNumber.lowercase()) }
 
-fun summaryMatchesName(name: String) =
-  Specification<CsipSummary> { csip, _, cb ->
-    val matches = name.split("\\s".toRegex()).map {
-      cb.or(
-        cb.like(cb.lower(csip[LAST_NAME]), "%${it.lowercase()}%", '\\'),
-        cb.like(cb.lower(csip[FIRST_NAME]), "%${it.lowercase()}%", '\\'),
-      )
-    }.toTypedArray()
-    cb.and(*matches)
-  }
+fun summaryMatchesName(name: String) = Specification<CsipSummary> { csip, _, cb ->
+  val matches = name.split("\\s".toRegex()).map {
+    cb.or(
+      cb.like(cb.lower(csip[LAST_NAME]), "%${it.lowercase()}%", '\\'),
+      cb.like(cb.lower(csip[FIRST_NAME]), "%${it.lowercase()}%", '\\'),
+    )
+  }.toTypedArray()
+  cb.and(*matches)
+}
 
 fun summaryHasStatus(status: CsipStatus) = Specification<CsipSummary> { csip, _, cb ->
   cb.equal(csip.get<String>(STATUS_CODE), status.name)

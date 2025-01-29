@@ -46,8 +46,6 @@ class SyncReferral {
   }
 }
 
-private fun Referral.findContributoryFactor(uuid: UUID?, legacyId: Long): ContributoryFactor? =
-  contributoryFactors().find { it.byId(uuid) || it.byLegacyId(legacyId) }
+private fun Referral.findContributoryFactor(uuid: UUID?, legacyId: Long): ContributoryFactor? = contributoryFactors().find { it.byId(uuid) || it.byLegacyId(legacyId) }
 
-private fun Investigation.findInterview(uuid: UUID?, legacyId: Long) =
-  interviews().find { it.byId(uuid) || it.byLegacyId(legacyId) }
+private fun Investigation.findInterview(uuid: UUID?, legacyId: Long) = interviews().find { it.byId(uuid) || it.byLegacyId(legacyId) }

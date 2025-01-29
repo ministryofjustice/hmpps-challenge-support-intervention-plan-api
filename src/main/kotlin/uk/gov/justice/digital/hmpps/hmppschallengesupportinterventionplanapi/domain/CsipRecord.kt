@@ -53,7 +53,8 @@ class CsipRecord(
   logCode: String? = null,
 
   legacyId: Long? = null,
-) : SimpleVersion(), Identifiable {
+) : SimpleVersion(),
+  Identifiable {
 
   @Audited(withModifiedFlag = false)
   @Id

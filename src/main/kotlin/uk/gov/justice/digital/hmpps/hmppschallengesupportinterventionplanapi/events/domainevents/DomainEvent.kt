@@ -36,8 +36,7 @@ data class HmppsDomainEvent<T : AdditionalInformation>(
 
 interface AdditionalInformation
 
-data class PrisonerUpdatedInformation(val nomsNumber: String, val categoriesChanged: Set<String>) :
-  AdditionalInformation {
+data class PrisonerUpdatedInformation(val nomsNumber: String, val categoriesChanged: Set<String>) : AdditionalInformation {
   companion object {
     val CATEGORIES_OF_INTEREST = setOf("PERSONAL_DETAILS", "STATUS", "LOCATION")
   }

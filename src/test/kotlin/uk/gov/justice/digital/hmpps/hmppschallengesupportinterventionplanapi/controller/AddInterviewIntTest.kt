@@ -191,8 +191,7 @@ class AddInterviewIntTest : IntegrationTestBase() {
     request: CreateInterviewRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Interview =
-    addInterviewResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
+  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Interview = addInterviewResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   companion object {
     private const val INVALID = "is invalid"

@@ -18,15 +18,13 @@ interface ReferenceDataRepository : JpaRepository<ReferenceData, Long> {
   fun findByKeyIn(keys: Set<ReferenceDataKey>): Collection<ReferenceData>
 }
 
-fun ReferenceDataRepository.getActiveReferenceData(type: ReferenceDataType, code: String) =
-  getActiveReferenceData(ReferenceDataKey(type, code))
+fun ReferenceDataRepository.getActiveReferenceData(type: ReferenceDataType, code: String) = getActiveReferenceData(ReferenceDataKey(type, code))
 
-fun ReferenceDataRepository.getActiveReferenceData(key: ReferenceDataKey) =
-  verifyExists(findByKey(key)) {
-    InvalidInputException(key.domain.name, key.code)
-  }.also {
-    verify(it.isActive()) { NotActiveException(key.domain.name, key.code) }
-  }
+fun ReferenceDataRepository.getActiveReferenceData(key: ReferenceDataKey) = verifyExists(findByKey(key)) {
+  InvalidInputException(key.domain.name, key.code)
+}.also {
+  verify(it.isActive()) { NotActiveException(key.domain.name, key.code) }
+}
 
 fun ReferenceDataRepository.verifyAllReferenceData(
   type: ReferenceDataType,

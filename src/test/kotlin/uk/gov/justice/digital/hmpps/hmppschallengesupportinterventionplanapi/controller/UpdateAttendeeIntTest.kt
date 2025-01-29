@@ -151,8 +151,7 @@ class UpdateAttendeeIntTest : IntegrationTestBase() {
     request: UpdateAttendeeRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee =
-    updateAttendeeResponseSpec(attendeeId, request, username, role).successResponse()
+  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee = updateAttendeeResponseSpec(attendeeId, request, username, role).successResponse()
 
   private fun updateAttendeeRequest(
     name: String? = "name",

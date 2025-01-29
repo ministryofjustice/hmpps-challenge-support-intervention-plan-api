@@ -3,7 +3,5 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.en
 import org.springframework.core.convert.converter.Converter
 
 class ReferenceDataTypeConverter : Converter<String, ReferenceDataType> {
-  override fun convert(source: String): ReferenceDataType {
-    return ReferenceDataType.fromDomain(source)
-  }
+  override fun convert(source: String): ReferenceDataType = ReferenceDataType.fromDomain(source)
 }

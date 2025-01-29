@@ -25,7 +25,8 @@ data class CreateReferralRequest(
   override val isReferralComplete: Boolean?,
   @field:NotEmpty(message = "A referral must have at least one contributory factor.")
   override val contributoryFactors: List<CreateContributoryFactorRequest>,
-) : ReferralRequest, ContributoryFactorsRequest
+) : ReferralRequest,
+  ContributoryFactorsRequest
 
 @Schema(description = "The detail for updating a CSIP referral")
 data class UpdateReferralRequest(
@@ -64,4 +65,5 @@ data class MergeReferralRequest(
   override val isSaferCustodyTeamInformed: OptionalYesNoAnswer,
   override val isReferralComplete: Boolean?,
   override val contributoryFactors: List<MergeContributoryFactorRequest>,
-) : ReferralRequest, ContributoryFactorsRequest
+) : ReferralRequest,
+  ContributoryFactorsRequest

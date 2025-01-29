@@ -11,23 +11,21 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 
 @Component
 class PrisonerSearchClient(@Qualifier("prisonerSearchWebClient") private val webClient: WebClient) {
-  fun getPrisoner(prisonerId: String): PrisonerDetails? {
-    return try {
-      webClient
-        .get()
-        .uri("/prisoner/{prisonerId}", prisonerId)
-        .exchangeToMono { res ->
-          when (res.statusCode()) {
-            HttpStatus.NOT_FOUND -> Mono.empty()
-            HttpStatus.OK -> res.bodyToMono<PrisonerDetails>()
-            else -> res.createError()
-          }
+  fun getPrisoner(prisonerId: String): PrisonerDetails? = try {
+    webClient
+      .get()
+      .uri("/prisoner/{prisonerId}", prisonerId)
+      .exchangeToMono { res ->
+        when (res.statusCode()) {
+          HttpStatus.NOT_FOUND -> Mono.empty()
+          HttpStatus.OK -> res.bodyToMono<PrisonerDetails>()
+          else -> res.createError()
         }
-        .retryIdempotentRequestOnTransientException()
-        .block()
-    } catch (e: Exception) {
-      throw DownstreamServiceException("Get prisoner request failed", e)
-    }
+      }
+      .retryIdempotentRequestOnTransientException()
+      .block()
+  } catch (e: Exception) {
+    throw DownstreamServiceException("Get prisoner request failed", e)
   }
 }
 

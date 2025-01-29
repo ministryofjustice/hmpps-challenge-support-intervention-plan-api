@@ -59,16 +59,15 @@ class PersonSummary(
   }
 }
 
-fun PrisonerDetails.toPersonSummary() =
-  PersonSummary(
-    prisonerNumber,
-    firstName,
-    lastName,
-    status,
-    restrictedPatient,
-    prisonId,
-    cellLocation,
-    supportingPrisonId,
-  )
+fun PrisonerDetails.toPersonSummary() = PersonSummary(
+  prisonerNumber,
+  firstName,
+  lastName,
+  status,
+  restrictedPatient,
+  prisonId,
+  cellLocation,
+  supportingPrisonId,
+)
 
 interface PersonSummaryRepository : JpaRepository<PersonSummary, String>
