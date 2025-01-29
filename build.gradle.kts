@@ -6,6 +6,7 @@ plugins {
   kotlin("plugin.spring") version "2.0.21"
   kotlin("plugin.jpa") version "2.0.21"
   id("com.google.cloud.tools.jib") version "3.4.4"
+  id("io.gatling.gradle") version "3.13.1.2"
   jacoco
 }
 
@@ -14,6 +15,10 @@ configurations {
 }
 
 dependencies {
+
+  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
+  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
