@@ -263,6 +263,27 @@ class CreateCsipRecordsIntTest : IntegrationTestBase() {
     verifyDomainEvents(prisoner.prisonerNumber, response.recordUuid, CSIP_CREATED)
   }
 
+  @Test
+  fun `201 created - CSIP record created with null character in text`() {
+    val logCode = "TST/123"
+    val request = createCsipRecordRequest(
+      createReferralRequest(contributoryFactorTypeCode = listOf("AFL"), referralComplete = true),
+      logCode + Char.MIN_VALUE,
+    )
+
+    val prisoner = givenPrisoner(prisoner())
+    val response = webTestClient.createCsipRecord(prisoner.prisonerNumber, request)
+
+    with(response) {
+      assertThat(this.logCode).isEqualTo(logCode)
+    }
+
+    val saved = csipRecordRepository.getCsipRecord(response.recordUuid)
+    assertThat(saved.logCode).isEqualTo(logCode)
+    verifyAudit(saved, RevisionType.ADD, setOf(RECORD, REFERRAL, CONTRIBUTORY_FACTOR))
+    verifyDomainEvents(prisoner.prisonerNumber, response.recordUuid, CSIP_CREATED)
+  }
+
   private fun urlToTest(prisonNumber: String) = "/prisoners/$prisonNumber/csip-records"
 
   private fun WebTestClient.createCsipResponseSpec(
