@@ -18,6 +18,7 @@ import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
@@ -95,13 +96,13 @@ class DecisionAndActions(
   ): DecisionAndActions = apply {
     outcome = outcomeType
     signedOffBy = signedOffByRole
-    conclusion = request.conclusion
-    recordedBy = request.recordedBy
+    ::conclusion.ifAppended(request.conclusion)
+    ::recordedBy.ifAppended(request.recordedBy)
     recordedByDisplayName = request.recordedByDisplayName
     date = request.date
-    nextSteps = request.nextSteps
+    ::nextSteps.ifAppended(request.nextSteps)
     actions = request.actions
-    actionOther = request.actionOther
+    ::actionOther.ifAppended(request.actionOther)
   }
 }
 

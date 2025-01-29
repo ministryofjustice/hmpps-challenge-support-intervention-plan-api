@@ -225,11 +225,11 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
         outcome = givenRandom(ReferenceDataType.DECISION_OUTCOME_TYPE),
         signedOffBy = givenRandom(ReferenceDataType.DECISION_SIGNER_ROLE),
         actions = setOf(DecisionAction.OPEN_CSIP_ALERT),
-        conclusion = "a conclusion",
+        conclusion = "an extended comprehensive conclusion",
         recordedBy = "outcomeRecordedBy",
         recordedByDisplayName = "outcomeRecordedByDisplayName",
         date = LocalDate.now(),
-        nextSteps = "next steps",
+        nextSteps = "some next steps - followed by more steps?",
       )
       it
     }
@@ -278,13 +278,13 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     outcomeSignedOffByRoleCode: String = "CUSTMAN",
     actions: Set<DecisionAction> = setOf(),
   ) = UpsertDecisionAndActionsRequest(
-    conclusion = "a conclusion",
+    conclusion = "an extended comprehensive conclusion",
     outcomeTypeCode = outcomeTypeCode,
     signedOffByRoleCode = outcomeSignedOffByRoleCode,
     recordedBy = "outcomeRecordedBy",
     recordedByDisplayName = "outcomeRecordedByDisplayName",
     date = LocalDate.now(),
-    nextSteps = "next steps",
+    nextSteps = "some next steps - followed by more steps?",
     actionOther = null,
     actions = actions,
   )

@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
@@ -97,7 +98,7 @@ class Review(
     recordedByDisplayName = request.recordedByDisplayName
     nextReviewDate = request.nextReviewDate
     csipClosedDate = request.csipClosedDate
-    summary = request.summary
+    ::summary.ifAppended(request.summary)
     actions = request.actions
     if (request is LegacyIdAware) {
       legacyId = request.legacyId

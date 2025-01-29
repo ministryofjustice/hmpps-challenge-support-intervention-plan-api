@@ -16,6 +16,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
@@ -76,7 +77,7 @@ class Interview(
     interviewee = request.interviewee
     interviewDate = request.interviewDate
     intervieweeRole = rdSupplier(ReferenceDataType.INTERVIEWEE_ROLE, request.intervieweeRoleCode)
-    interviewText = request.interviewText
+    ::interviewText.ifAppended(request.interviewText)
     if (request is LegacyIdAware) {
       legacyId = request.legacyId
     }

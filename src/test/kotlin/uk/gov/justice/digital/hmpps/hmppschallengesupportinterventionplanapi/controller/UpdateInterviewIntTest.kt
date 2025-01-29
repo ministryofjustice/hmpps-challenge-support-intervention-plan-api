@@ -210,7 +210,7 @@ class UpdateInterviewIntTest : IntegrationTestBase() {
     interviewee = "interviewee",
     interviewDate = LocalDate.of(2024, 7, 1),
     intervieweeRoleCode = "OTHER",
-    interviewText = "interviewText",
+    interviewText = "an updated block of text for the interview",
   )
 
   private fun urlToTest(interviewUuid: UUID) = "/csip-records/referral/investigation/interviews/$interviewUuid"

@@ -128,13 +128,20 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - no changes made to investigation`() {
+    val request = investigationRequest()
     val record = dataSetup(generateCsipRecord().withReferral()) {
-      requireNotNull(it.referral).withInvestigation()
+      requireNotNull(it.referral).withInvestigation(
+        staffInvolved = request.staffInvolved,
+        evidenceSecured = request.evidenceSecured,
+        occurrenceReason = request.occurrenceReason,
+        personsUsualBehaviour = request.personsUsualBehaviour,
+        personsTrigger = request.personsTrigger,
+        protectiveFactors = request.protectiveFactors,
+      )
       it
     }
 
     requireNotNull(record.referral?.investigation)
-    val request = investigationRequest()
 
     val response = updateInvestigation(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
@@ -180,12 +187,12 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
   }
 
   private fun investigationRequest() = UpdateInvestigationRequest(
-    staffInvolved = "staffInvolved",
-    evidenceSecured = "evidenceSecured",
-    occurrenceReason = "occurrenceReason",
-    personsUsualBehaviour = "personsUsualBehaviour",
-    personsTrigger = "personsTrigger",
-    protectiveFactors = "protectiveFactors",
+    staffInvolved = "Staff were involved",
+    evidenceSecured = "Some evidence that was secured",
+    occurrenceReason = "The reason this happened",
+    personsUsualBehaviour = "The persons usual behaviour",
+    personsTrigger = "The trigger for the person",
+    protectiveFactors = "Some protective factors",
   )
 
   private fun urlToTest(recordUuid: UUID) = "/csip-records/$recordUuid/referral/investigation"

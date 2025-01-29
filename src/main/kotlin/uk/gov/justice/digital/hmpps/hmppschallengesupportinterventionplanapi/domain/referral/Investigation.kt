@@ -15,6 +15,7 @@ import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
@@ -80,12 +81,12 @@ class Investigation(
   }
 
   fun update(request: InvestigationRequest) = apply {
-    staffInvolved = request.staffInvolved
-    evidenceSecured = request.evidenceSecured
-    occurrenceReason = request.occurrenceReason
-    personsUsualBehaviour = request.personsUsualBehaviour
-    personsTrigger = request.personsTrigger
-    protectiveFactors = request.protectiveFactors
+    ::staffInvolved.ifAppended(request.staffInvolved)
+    ::evidenceSecured.ifAppended(request.evidenceSecured)
+    ::occurrenceReason.ifAppended(request.occurrenceReason)
+    ::personsUsualBehaviour.ifAppended(request.personsUsualBehaviour)
+    ::personsTrigger.ifAppended(request.personsTrigger)
+    ::protectiveFactors.ifAppended(request.protectiveFactors)
   }
 }
 

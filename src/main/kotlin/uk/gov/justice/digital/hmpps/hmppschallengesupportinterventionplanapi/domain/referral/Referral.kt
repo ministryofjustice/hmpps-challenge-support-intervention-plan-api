@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
@@ -200,17 +201,15 @@ class Referral(
     proactiveReferral = update.isProactiveReferral
     staffAssaulted = update.isStaffAssaulted
     assaultedStaffName = update.assaultedStaffName
-    descriptionOfConcern = update.descriptionOfConcern
-    knownReasons = update.knownReasons
-    otherInformation = update.otherInformation
+    ::descriptionOfConcern.ifAppended(update.descriptionOfConcern)
+    ::knownReasons.ifAppended(update.knownReasons)
+    ::otherInformation.ifAppended(update.otherInformation)
     saferCustodyTeamInformed = update.isSaferCustodyTeamInformed
 
-    if (update is CompletableRequest) {
-      complete(update)
-    } else if (update.isReferralComplete != referralComplete) {
-      complete(csipRequestContext().asCompletable(update.isReferralComplete))
-    } else if (isCompletingReferral()) {
-      complete(csipRequestContext().asCompletable(true))
+    when {
+      update is CompletableRequest -> complete(update)
+      update.isReferralComplete != referralComplete -> complete(csipRequestContext().asCompletable(update.isReferralComplete))
+      isCompletingReferral() -> complete(csipRequestContext().asCompletable(true))
     }
 
     if (update is ReferralDateRequest) {

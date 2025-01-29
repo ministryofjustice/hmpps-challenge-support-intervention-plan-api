@@ -408,7 +408,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
         .withInvestigation()
         .withDecisionAndActions()
       requireNotNull(referral.investigation)
-        .withInterview(interviewee = "Initial Interviewee", interviewText = "The initial text of the interview")
+        .withInterview(interviewee = "Initial Interviewee", interviewText = "Text of the interview")
       val plan = requireNotNull(it.withPlan().plan)
         .withNeed()
         .withReview()
@@ -431,6 +431,8 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
         ),
         saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(),
         investigation = syncInvestigationRequest(
+          personsTrigger = "A longer person trigger",
+          protectiveFactors = "Some protective factors",
           interviews = listOf(
             syncInterviewRequest(uuid = initial.referral!!.investigation!!.interviews().first().id),
             syncInterviewRequest(),
@@ -451,8 +453,10 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
               syncAttendeeRequest(uuid = initial.plan!!.reviews().first().attendees().first().id),
               syncAttendeeRequest("Another attendee"),
             ),
+            summary = "A longer summary of the review",
           ),
           syncReviewRequest(
+            summary = "A longer summary of the review",
             actions = setOf(ReviewAction.CSIP_UPDATED),
             attendees = listOf(
               syncAttendeeRequest(),
@@ -475,7 +479,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val factors = contributoryFactorRepository.findAllById(factorRequests.map { it.id })
     factors.forEach { i -> i.verifyAgainst(requireNotNull(factorRequests.find { it.legacyId == i.legacyId })) }
 
-    val interviewRequests = request.referral!!.investigation!!.interviews
+    val interviewRequests = request.referral.investigation!!.interviews
     val interviews = interviewRepository.findAllById(interviewRequests.map { it.id })
     interviews.forEach { i -> i.verifyAgainst(requireNotNull(interviewRequests.find { it.legacyId == i.legacyId })) }
 
@@ -483,11 +487,11 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val needs = identifiedNeedRepository.findAllById(needRequests.map { it.id })
     needs.forEach { i -> i.verifyAgainst(requireNotNull(needRequests.find { it.legacyId == i.legacyId })) }
 
-    val reviewRequests = request.plan!!.reviews
+    val reviewRequests = request.plan.reviews
     val reviews = reviewRepository.findAllById(reviewRequests.map { it.id })
     reviews.forEach { i -> i.verifyAgainst(requireNotNull(reviewRequests.find { it.legacyId == i.legacyId })) }
 
-    val attendeeRequests = request.plan!!.reviews.flatMap { it.attendees }
+    val attendeeRequests = request.plan.reviews.flatMap { it.attendees }
     val attendees = attendeeRepository.findAllById(attendeeRequests.map { it.id })
     attendees.forEach { i -> i.verifyAgainst(requireNotNull(attendeeRequests.find { it.legacyId == i.legacyId })) }
 
@@ -551,7 +555,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     assertThat(response.mappings.single { it.component == CONTRIBUTORY_FACTOR })
       .isEqualTo(ResponseMapping(CONTRIBUTORY_FACTOR, factorRequest.legacyId, factor.id))
 
-    val interviewRequest = request.referral!!.investigation!!.interviews.first()
+    val interviewRequest = request.referral.investigation!!.interviews.first()
     assertThat(response.mappings.single { it.component == INTERVIEW })
       .isEqualTo(ResponseMapping(INTERVIEW, interviewRequest.legacyId, interview.id))
 
@@ -559,7 +563,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     assertThat(response.mappings.single { it.component == IDENTIFIED_NEED })
       .isEqualTo(ResponseMapping(IDENTIFIED_NEED, needRequest.legacyId, need.id))
 
-    val reviewRequest = request.plan!!.reviews.first()
+    val reviewRequest = request.plan.reviews.first()
     assertThat(response.mappings.single { it.component == REVIEW })
       .isEqualTo(ResponseMapping(REVIEW, reviewRequest.legacyId, review.id))
 
@@ -655,7 +659,11 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
       it
     }
 
-    val investigationRequest = syncInvestigationRequest(occurrenceReason = "Updated concurrently")
+    val investigationRequest = syncInvestigationRequest(
+      occurrenceReason = "Updated concurrently",
+      personsTrigger = "A longer person trigger",
+      protectiveFactors = "Some protective factors",
+    )
     val csipRequest = syncCsipRequest(
       id = csip.legacyId!!,
       uuid = csip.id,
@@ -689,7 +697,12 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val review = csip.plan!!.reviews().first()
     val attendee = review.attendees().first()
 
-    val investigationRequest = syncInvestigationRequest(occurrenceReason = "Updated concurrently")
+    val investigationRequest =
+      syncInvestigationRequest(
+        occurrenceReason = "Updated concurrently",
+        personsTrigger = "A longer person trigger",
+        protectiveFactors = "Some protective factors",
+      )
     val planRequest = syncPlanRequest(
       reviews = listOf(
         syncReviewRequest(
@@ -892,6 +905,78 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     res.first { it.recordUuid == csip2.id }.verifyAgainst(csip2)
   }
 
+  @Test
+  fun `200 success - updating wit truncated text does not overwrite existing full text`() {
+    val initial = dataSetup(generateCsipRecord(legacyId = newId())) {
+      val referral = requireNotNull(it.withReferral().referral)
+        .withSaferCustodyScreeningOutcome()
+        .withContributoryFactor(legacyId = newId())
+        .withInvestigation()
+        .withDecisionAndActions(actionOther = "Other Action Information")
+      requireNotNull(referral.investigation)
+        .withInterview(legacyId = newId())
+      val plan = requireNotNull(it.withPlan().plan)
+        .withNeed(legacyId = newId(), progression = "A longer text about progression")
+        .withReview(legacyId = newId())
+      plan.reviews().first().withAttendee(legacyId = newId())
+      it
+    }
+
+    val referral = checkNotNull(initial.referral)
+    val factor = referral.contributoryFactors().first()
+    val interview = referral.investigation!!.interviews().first()
+    val plan = checkNotNull(initial.plan)
+    val need = plan.identifiedNeeds().first()
+    val review = plan.reviews().first()
+    val attendee = review.attendees().first()
+
+    val request = syncCsipRequest(
+      id = checkNotNull(initial.legacyId),
+      uuid = initial.id,
+      logCode = LOG_CODE,
+      referral = syncReferralRequest(
+        incidentTime = LocalTime.now(),
+        contributoryFactors = listOf(syncContributoryFactorRequest(id = factor.legacyId!!, comment = "A comment..")),
+        saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(reasonForDecision = "A reason for the dec.."),
+        investigation = syncInvestigationRequest(
+          staffInvolved = "staff..",
+          evidenceSecured = "evidence..",
+          occurrenceReason = "occur..",
+          personsTrigger = "trigger..",
+          personsUsualBehaviour = "behaviour..",
+          protectiveFactors = "factors..",
+          interviews = listOf(syncInterviewRequest(id = interview.legacyId!!)),
+        ),
+        decisionAndActions = syncDecisionRequest(nextSteps = "next..", actionOther = "Other"),
+      ),
+      plan = syncPlanRequest(
+        identifiedNeeds = listOf(
+          syncNeedRequest(
+            id = need.legacyId!!,
+            intervention = "intervention..",
+            progression = "progression..",
+          ),
+        ),
+        reviews = listOf(
+          syncReviewRequest(
+            id = review.legacyId!!,
+            actions = setOf(ReviewAction.CASE_NOTE),
+            attendees = listOf(syncAttendeeRequest(id = attendee.legacyId!!, contribution = "Contribution..")),
+            summary = "A brief..",
+          ),
+        ),
+      ),
+    )
+
+    syncCsipRecord(request)
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
+
+    transactionTemplate.execute {
+      val saved = csipRecordRepository.getCsipRecord(initial.id)
+      verifyLongTextFieldsUnchanged(saved, initial)
+    }
+  }
+
   private fun syncCsipResponseSpec(
     request: SyncCsipRequest,
   ) = webTestClient.put().uri(URL)
@@ -909,6 +994,31 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     .expectStatus().isOk.expectBodyList<CsipRecord>().returnResult().responseBody!!
 
   private fun syncCsipRecord(request: SyncCsipRequest) = syncCsipResponseSpec(request).successResponse<SyncResponse>()
+
+  private fun verifyLongTextFieldsUnchanged(
+    saved: uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord,
+    initial: uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord,
+  ) {
+    listOf<(uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord) -> String?>(
+      { it.referral!!.contributoryFactors().first().comment },
+      { it.referral!!.saferCustodyScreeningOutcome?.reasonForDecision },
+      { it.referral!!.investigation?.staffInvolved },
+      { it.referral!!.investigation?.evidenceSecured },
+      { it.referral!!.investigation?.occurrenceReason },
+      { it.referral!!.investigation?.personsTrigger },
+      { it.referral!!.investigation?.personsUsualBehaviour },
+      { it.referral!!.investigation?.protectiveFactors },
+      { it.referral!!.decisionAndActions?.conclusion },
+      { it.referral!!.decisionAndActions?.nextSteps },
+      { it.referral!!.decisionAndActions?.actionOther },
+      { it.plan!!.identifiedNeeds().first().intervention },
+      { it.plan!!.identifiedNeeds().first().progression },
+      { it.plan!!.reviews().first().summary },
+      { it.plan!!.reviews().first().attendees().first().contribution },
+    ).forEach {
+      assertThat(it(saved)).isEqualTo(it(initial))
+    }
+  }
 
   companion object {
     private const val URL = "/sync/csip-records"

@@ -16,6 +16,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
@@ -64,7 +65,7 @@ class ContributoryFactor(
     private set
 
   fun update(request: ContributoryFactorRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
-    comment = request.comment
+    ::comment.ifAppended(request.comment)
     contributoryFactorType = rdSupplier(ReferenceDataType.CONTRIBUTORY_FACTOR_TYPE, request.factorTypeCode)
     if (request is LegacyIdAware) {
       legacyId = request.legacyId

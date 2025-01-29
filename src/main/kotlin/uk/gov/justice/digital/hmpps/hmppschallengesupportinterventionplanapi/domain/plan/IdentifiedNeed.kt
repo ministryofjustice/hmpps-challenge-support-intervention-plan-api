@@ -15,6 +15,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.ifAppended
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
@@ -76,8 +77,8 @@ class IdentifiedNeed(
     createdDate = request.createdDate
     targetDate = request.targetDate
     closedDate = request.closedDate
-    intervention = request.intervention
-    progression = request.progression
+    ::intervention.ifAppended(request.intervention)
+    ::progression.ifAppended(request.progression)
     if (request is LegacyIdAware) {
       legacyId = request.legacyId
     }

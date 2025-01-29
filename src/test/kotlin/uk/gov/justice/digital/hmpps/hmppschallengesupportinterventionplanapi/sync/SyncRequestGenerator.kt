@@ -177,8 +177,8 @@ object SyncRequestGenerator {
     createdDate: LocalDate = LocalDate.now(),
     targetDate: LocalDate = LocalDate.now().plusWeeks(12),
     closedDate: LocalDate? = null,
-    intervention: String = "Intervention",
-    progression: String? = "Progression",
+    intervention: String = "A description of the intervention",
+    progression: String? = "A description of the progression",
     id: Long = newId(),
     uuid: UUID? = null,
   ) = SyncNeedRequest(
@@ -213,7 +213,7 @@ object SyncRequestGenerator {
     name: String? = "Attendee name",
     role: String? = "",
     isAttended: Boolean? = true,
-    contribution: String? = "Contribution",
+    contribution: String? = "A larger contribution",
     id: Long = newId(),
     uuid: UUID? = null,
   ) = SyncAttendeeRequest(name, role, isAttended, contribution, id, uuid)

@@ -102,7 +102,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     }
 
     val request = updateReviewRequest(
-      summary = "a summary goes here",
+      summary = "A brief summary of the review updated by the request",
       actions = setOf(ReviewAction.RESPONSIBLE_PEOPLE_INFORMED),
       reviewDate = LocalDate.now().plusDays(3),
       nextReviewDate = LocalDate.now().plusDays(4),
