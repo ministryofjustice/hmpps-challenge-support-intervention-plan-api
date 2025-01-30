@@ -113,12 +113,17 @@ class Plan(
     if (request is AttendeesRequest) {
       request.attendees.forEach { addAttendee(it) }
     }
+    csipClosedDate?.also { closeOpenNeeds(it) }
   }
 
   fun nextReviewDate(): LocalDate? {
     if (CSIP_OPEN.name != csipRecord.status?.code) return null
     if (reviews.isEmpty()) return firstCaseReviewDate
     return reviews().maxByOrNull { it.reviewSequence }?.nextReviewDate
+  }
+
+  internal fun closeOpenNeeds(date: LocalDate) {
+    identifiedNeeds.forEach { it.closeNeedIfOpen(date) }
   }
 }
 

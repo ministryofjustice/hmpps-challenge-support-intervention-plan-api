@@ -98,6 +98,41 @@ class AddReviewIntTest : IntegrationTestBase() {
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
+  @Test
+  fun `201 created - review closes csip and any open needs`() {
+    val record = dataSetup(generateCsipRecord()) {
+      it.withPlan()
+      requireNotNull(it.plan).withNeed()
+      it
+    }
+
+    val request = createReviewRequest(
+      nextReviewDate = null,
+      attendees = listOf(createAttendeeRequest()),
+      csipClosedDate = LocalDate.now(),
+      actions = setOf(ReviewAction.CLOSE_CSIP),
+    )
+    val response = addReview(record.id, request)
+
+    val review = getReview(response.reviewUuid)
+    review.verifyAgainst(request)
+
+    val need = review.plan.identifiedNeeds().first()
+    assertThat(need.closedDate).isEqualTo(review.csipClosedDate)
+
+    verifyAudit(
+      review,
+      RevisionType.ADD,
+      setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE, CsipComponent.IDENTIFIED_NEED),
+    )
+    verifyAudit(
+      need,
+      RevisionType.MOD,
+      setOf(CsipComponent.REVIEW, CsipComponent.ATTENDEE, CsipComponent.IDENTIFIED_NEED),
+    )
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
+  }
+
   private fun urlToTest(csipRecordUuid: UUID) = "/csip-records/$csipRecordUuid/plan/reviews"
 
   private fun addReviewResponseSpec(
@@ -149,5 +184,9 @@ class AddReviewIntTest : IntegrationTestBase() {
     assertThat(attendees().size).isEqualTo(request.attendees.size)
   }
 
-  private fun getReview(uuid: UUID): Review = reviewRepository.getReview(uuid)
+  private fun getReview(uuid: UUID): Review = transactionTemplate.execute {
+    val review = reviewRepository.getReview(uuid)
+    review.plan.identifiedNeeds()
+    review
+  }!!
 }

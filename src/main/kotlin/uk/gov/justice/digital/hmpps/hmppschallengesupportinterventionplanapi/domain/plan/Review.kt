@@ -104,6 +104,7 @@ class Review(
     if (request is LegacyIdAware) {
       legacyId = request.legacyId
     }
+    csipClosedDate?.also { plan.closeOpenNeeds(it) }
   }
 
   fun updateNextReviewDate(date: LocalDate?) {
