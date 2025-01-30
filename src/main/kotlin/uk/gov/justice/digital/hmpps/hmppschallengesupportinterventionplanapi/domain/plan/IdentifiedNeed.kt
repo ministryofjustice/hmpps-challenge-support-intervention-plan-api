@@ -84,6 +84,10 @@ class IdentifiedNeed(
       legacyId = request.legacyId
     }
   }
+
+  fun closeNeedIfOpen(date: LocalDate) {
+    closedDate = closedDate ?: date
+  }
 }
 
 interface IdentifiedNeedRepository : JpaRepository<IdentifiedNeed, UUID>
