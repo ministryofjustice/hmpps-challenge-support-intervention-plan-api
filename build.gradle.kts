@@ -18,7 +18,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.1.1")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.0.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.1.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
@@ -39,7 +39,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.20.4")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
-  testImplementation("org.wiremock:wiremock-standalone:3.10.0")
+  testImplementation("org.wiremock:wiremock-standalone:3.11.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.2")
   testImplementation("org.testcontainers:localstack:1.20.4")
   testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
