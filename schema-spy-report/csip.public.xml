@@ -730,6 +730,10 @@
          <index name="idx_review_record_id" unique="false">
             <column ascending="true" name="plan_id"/>
          </index>
+         <index name="idx_review_sequence" unique="true">
+            <column ascending="true" name="plan_id"/>
+            <column ascending="true" name="review_sequence"/>
+         </index>
          <index name="review_legacy_id_key" unique="true">
             <column ascending="true" name="legacy_id"/>
          </index>
