@@ -1,0 +1,1 @@
+create unique index if not exists idx_review_sequence on review(plan_id, review_sequence);
