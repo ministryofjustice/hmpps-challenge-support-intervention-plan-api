@@ -13,6 +13,7 @@ import io.gatling.javaapi.http.HttpDsl.http
 import io.gatling.javaapi.http.HttpDsl.status
 import java.lang.System.getenv
 import java.time.Duration.ofMinutes
+import java.time.Duration.ofSeconds
 
 class CsipSimulation : Simulation() {
 
@@ -33,21 +34,21 @@ class CsipSimulation : Simulation() {
       .queryParam("size", 25)
       .headers(authorisationHeader)
       .check(status().shouldBe(200))
-      .check(jsonPath("$.totalPages").exists().saveAs("totalPages")),
+      .check(jsonPath("$.metadata.totalElements").exists().saveAs("totalElements")),
   )
 
   private val prisonerProfile = scenario("Viewing prisoner profile").exec(getToken)
     .repeat(10).on(feed(personIdentifiers), getCurrentCsip())
 
   private val viewCsipForPerson = scenario("Viewing csip details for a person").exec(getToken)
-    .repeat(1).on(feed(personIdentifiers), getCurrentCsip(), searchForCsip())
+    .repeat(1).on(feed(personIdentifiers), searchForCsip().pause(ofSeconds(5)), getCurrentCsip().pause(ofSeconds(2)))
 
   private val createCsipForPerson = scenario("Creating a csip for a person").exec(getToken)
     .repeat(1).on(feed(personIdentifiers), getCurrentCsip())
 
   init {
     setUp(
-      prisonerProfile.injectClosed(constantConcurrentUsers(40).during(ofMinutes(10))),
+      prisonerProfile.injectClosed(constantConcurrentUsers(20).during(ofMinutes(10))),
       viewCsipForPerson.injectOpen(atOnceUsers(2), rampUsersPerSec(0.5).to(20.0).during(ofMinutes(10))),
       createCsipForPerson.injectOpen(atOnceUsers(1), rampUsersPerSec(0.2).to(10.0).during(ofMinutes(10))),
     ).protocols(httpProtocol)

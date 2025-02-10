@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CurrentCsipAndCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
@@ -15,7 +16,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.verifyAllReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.saveAndRefresh
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsip
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CurrentCsipDetail
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CreateCsipRecordRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.UpdateCsipRecordRequest
 import java.util.UUID
@@ -88,7 +89,7 @@ class CsipRecordService(
   fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? =
     csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
       CurrentCsipDetail(
-        CurrentCsip(it.current.status(), it.current.referralDate(), it.current.nextReviewDate, it.current.closedDate),
+        CurrentCsip(it.status(), it.referralDate(), it.nextReviewDate, it.closedDate),
         it.opened,
         it.referred,
       )
@@ -101,6 +102,8 @@ class CsipRecordService(
       )
   }
 
-  private fun uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary.referralDate() =
+  private fun CurrentCsipAndCounts.referralDate() =
     if (statusCode == CsipStatus.REFERRAL_PENDING) null else referralDate
+
+  private fun CurrentCsipAndCounts.status() = ReferenceData(statusCode.name, statusDescription)
 }

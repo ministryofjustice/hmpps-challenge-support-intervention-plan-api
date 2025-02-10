@@ -12,6 +12,7 @@ import io.gatling.javaapi.http.HttpDsl.http
 import io.gatling.javaapi.http.HttpDsl.status
 import java.lang.System.getenv
 import java.time.Duration.ofMinutes
+import java.time.Duration.ofSeconds
 
 class PrisonAdminSimulation : Simulation() {
 
@@ -32,26 +33,10 @@ class PrisonAdminSimulation : Simulation() {
       .headers(authorisationHeader)
       .check(status().shouldBe(200))
       .check(jsonPath("$.metadata.totalElements").exists().saveAs("totalElements")),
-  ).exec {
-    it.set("totalElements", "#{totalElements}")
-    it.set("currentPage", 1)
-    val elements = it.getInt("totalElements")
-    it.set("totalPages", elements/pageSize)
-  }.repeat { it.getString("totalPages")?.toInt()?.minus(1) ?: 0 }.on(
-    exec { it.set("currentPage", it.getInt("currentPage") + 1) }
-      .exec(
-        http("Find csip records page #{currentPage} / #{totalPages}")
-          .get("/search/csip-records")
-          .queryParam("prisonCode", "#{prisonCode}")
-          .queryParam("size", pageSize)
-          .queryParam("page", "#{currentPage}")
-          .headers(authorisationHeader)
-          .check(status().shouldBe(200)),
-      ),
   )
 
   private val overview = scenario("Prison admin view").exec(getToken)
-    .repeat(1).on(feed(prisonCodes), overviewByPrison(), retrieveForPrison(25))
+    .repeat(1).on(feed(prisonCodes), overviewByPrison().pause(ofSeconds(3)), retrieveForPrison(25).pause(ofSeconds(2)))
 
   init {
     setUp(

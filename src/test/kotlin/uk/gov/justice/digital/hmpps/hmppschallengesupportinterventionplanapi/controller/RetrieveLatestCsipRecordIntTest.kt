@@ -138,7 +138,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
       requireNotNull(it.plan).withReview(
         actions = setOf(ReviewAction.CLOSE_CSIP),
-        nextReviewDate = LocalDate.now().plusDays(7),
+        nextReviewDate = null,
         csipClosedDate = LocalDate.now().minusDays(1),
       )
       it

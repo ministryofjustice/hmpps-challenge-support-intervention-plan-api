@@ -56,6 +56,7 @@ interface IdentifiedNeedsRequest {
   val identifiedNeeds: List<IdentifiedNeedRequest>
 }
 
+@CloseDateIfClosing
 interface ReviewRequest {
   @get:Schema(description = "The date of the review.", example = "2021-09-27")
   val reviewDate: LocalDate

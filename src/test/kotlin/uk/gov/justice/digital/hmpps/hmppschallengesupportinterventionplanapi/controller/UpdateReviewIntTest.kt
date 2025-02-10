@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REVIEW
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction.CLOSE_CSIP
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction.RESPONSIBLE_PEOPLE_INFORMED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
@@ -80,6 +82,38 @@ class UpdateReviewIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `400 bad request - close csip without closed date`() {
+    val response = updateReviewResponseSpec(
+      randomUUID(),
+      updateReviewRequest(actions = setOf(CLOSE_CSIP), csipClosedDate = null),
+    ).errorResponse(HttpStatus.BAD_REQUEST)
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: Closing a CSIP record requires both the action and closed date to be provided.")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: Closing a CSIP record requires both the action and closed date to be provided.")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `400 bad request - close date without action to close`() {
+    val response = updateReviewResponseSpec(
+      randomUUID(),
+      updateReviewRequest(actions = setOf(ReviewAction.REMAIN_ON_CSIP), csipClosedDate = LocalDate.now()),
+    ).errorResponse(HttpStatus.BAD_REQUEST)
+
+    with(response) {
+      assertThat(status).isEqualTo(400)
+      assertThat(errorCode).isNull()
+      assertThat(userMessage).isEqualTo("Validation failure: Closing a CSIP record requires both the action and closed date to be provided.")
+      assertThat(developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: Closing a CSIP record requires both the action and closed date to be provided.")
+      assertThat(moreInfo).isNull()
+    }
+  }
+
+  @Test
   fun `404 not found - review not found`() {
     val uuid = randomUUID()
     val response = updateReviewResponseSpec(uuid, updateReviewRequest())
@@ -103,7 +137,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val request = updateReviewRequest(
       summary = "a summary goes here",
-      actions = setOf(ReviewAction.RESPONSIBLE_PEOPLE_INFORMED),
+      actions = setOf(RESPONSIBLE_PEOPLE_INFORMED, CLOSE_CSIP),
       reviewDate = LocalDate.now().plusDays(3),
       nextReviewDate = LocalDate.now().plusDays(4),
       csipClosedDate = LocalDate.now().plusDays(5),
@@ -112,8 +146,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val saved = getReview(response.reviewUuid)
     assertThat(saved.summary).isEqualTo(request.summary)
-    assertThat(saved.actions).contains(ReviewAction.RESPONSIBLE_PEOPLE_INFORMED)
-    assertThat(saved.actions.size).isEqualTo(1)
+    assertThat(saved.actions).containsExactlyInAnyOrder(RESPONSIBLE_PEOPLE_INFORMED, CLOSE_CSIP)
     assertThat(saved.reviewDate).isEqualTo(LocalDate.now().plusDays(3))
     assertThat(saved.nextReviewDate).isEqualTo(LocalDate.now().plusDays(4))
     assertThat(saved.csipClosedDate).isEqualTo(LocalDate.now().plusDays(5))
@@ -132,7 +165,6 @@ class UpdateReviewIntTest : IntegrationTestBase() {
         csipClosedDate = null,
         summary = "A brief summary of the review",
         actions = setOf(),
-        attendees = null,
       )
       plan.reviews().first()
     }
@@ -163,7 +195,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     actions: Set<ReviewAction> = setOf(),
     reviewDate: LocalDate = LocalDate.now(),
     nextReviewDate: LocalDate? = LocalDate.now().plusDays(3),
-    csipClosedDate: LocalDate? = LocalDate.now().plusDays(5),
+    csipClosedDate: LocalDate? = null,
   ) = UpdateReviewRequest(
     reviewDate,
     recordedBy = TEST_USER,
@@ -190,8 +222,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     request: UpdateReviewRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): Review =
-    updateReviewResponseSpec(reviewUuid, request, username, role).successResponse(OK)
+  ): Review = updateReviewResponseSpec(reviewUuid, request, username, role).successResponse(OK)
 
   private fun getReview(uuid: UUID) = reviewRepository.getReview(uuid)
 }
