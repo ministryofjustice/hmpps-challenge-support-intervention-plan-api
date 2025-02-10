@@ -14,7 +14,8 @@ data class CreateReviewRequest(
   override val summary: String?,
   override val actions: Set<ReviewAction> = setOf(),
   override val attendees: List<CreateAttendeeRequest>,
-) : ReviewRequest, AttendeesRequest
+) : ReviewRequest,
+  AttendeesRequest
 
 @Schema(description = "The request body to update a Review for a CSIP Plan")
 data class UpdateReviewRequest(

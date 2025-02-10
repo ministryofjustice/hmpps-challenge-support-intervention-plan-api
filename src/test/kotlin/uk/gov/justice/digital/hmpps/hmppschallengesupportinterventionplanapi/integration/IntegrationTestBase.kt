@@ -158,20 +158,18 @@ abstract class IntegrationTestBase {
     domainEventsTopic.publish(event.eventType, objectMapper.writeValueAsString(event))
   }
 
-  internal fun HmppsQueue.countAllMessagesOnQueue() =
-    sqsClient.countAllMessagesOnQueue(queueUrl).get()
+  internal fun HmppsQueue.countAllMessagesOnQueue() = sqsClient.countAllMessagesOnQueue(queueUrl).get()
 
-  fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<HmppsDomainEvent<*>> =
-    sqsClient.receiveMessage(
-      ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
-    ).get().messages()
-      .map { objectMapper.readValue<Notification>(it.body()) }
-      .map {
-        when (it.eventType) {
-          CSIP_MOVED.eventType -> objectMapper.readValue<HmppsDomainEvent<CsipMovedInformation>>(it.message)
-          else -> objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
-        }
+  fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<HmppsDomainEvent<*>> = sqsClient.receiveMessage(
+    ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
+  ).get().messages()
+    .map { objectMapper.readValue<Notification>(it.body()) }
+    .map {
+      when (it.eventType) {
+        CSIP_MOVED.eventType -> objectMapper.readValue<HmppsDomainEvent<CsipMovedInformation>>(it.message)
+        else -> objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
       }
+    }
 
   fun switchEventPublish(publish: Boolean) {
     val current = entityEventService.getByName<ServiceConfig>("serviceConfig")
@@ -252,11 +250,9 @@ abstract class IntegrationTestBase {
     }
   }
 
-  fun givenRandom(type: ReferenceDataType) =
-    referenceDataRepository.findByKeyDomain(type).filter { it.isActive() }.random()
+  fun givenRandom(type: ReferenceDataType) = referenceDataRepository.findByKeyDomain(type).filter { it.isActive() }.random()
 
-  fun givenReferenceData(type: ReferenceDataType, code: String) =
-    requireNotNull(referenceDataRepository.findByKey(ReferenceDataKey(type, code)))
+  fun givenReferenceData(type: ReferenceDataType, code: String) = requireNotNull(referenceDataRepository.findByKey(ReferenceDataKey(type, code)))
 
   fun givenPrisoner(prisonerDetails: PrisonerDetails): PrisonerDetails = prisonerDetails.also {
     prisonerSearch.stubGetPrisoner(it)
@@ -516,13 +512,11 @@ abstract class IntegrationTestBase {
     isUserToken: Boolean = false,
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, client, roles, isUserToken = isUserToken)
 
-  internal fun WebTestClient.ResponseSpec.errorResponse(status: HttpStatus) =
-    expectStatus().isEqualTo(status)
-      .expectBody<ErrorResponse>()
-      .returnResult().responseBody!!
+  internal fun WebTestClient.ResponseSpec.errorResponse(status: HttpStatus) = expectStatus().isEqualTo(status)
+    .expectBody<ErrorResponse>()
+    .returnResult().responseBody!!
 
-  internal final inline fun <reified T> WebTestClient.ResponseSpec.successResponse(status: HttpStatus = HttpStatus.OK): T =
-    expectStatus().isEqualTo(status)
-      .expectBody(T::class.java)
-      .returnResult().responseBody!!
+  internal final inline fun <reified T> WebTestClient.ResponseSpec.successResponse(status: HttpStatus = HttpStatus.OK): T = expectStatus().isEqualTo(status)
+    .expectBody(T::class.java)
+    .returnResult().responseBody!!
 }

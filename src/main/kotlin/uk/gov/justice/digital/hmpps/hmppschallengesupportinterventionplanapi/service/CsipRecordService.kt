@@ -76,34 +76,29 @@ class CsipRecordService(
   }
 
   @PublishCsipEvent(CSIP_DELETED)
-  fun deleteCsipRecord(recordUuid: UUID): Boolean =
-    csipRecordRepository.findById(recordUuid)?.also {
-      val remaining = csipRecordRepository.countByPrisonNumber(it.prisonNumber)
-      csipRecordRepository.delete(it)
-      if (remaining == 1) {
-        personSummaryRepository.delete(it.personSummary)
-      }
-    } != null
+  fun deleteCsipRecord(recordUuid: UUID): Boolean = csipRecordRepository.findById(recordUuid)?.also {
+    val remaining = csipRecordRepository.countByPrisonNumber(it.prisonNumber)
+    csipRecordRepository.delete(it)
+    if (remaining == 1) {
+      personSummaryRepository.delete(it.personSummary)
+    }
+  } != null
 
   @Transactional(readOnly = true)
-  fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? =
-    csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
-      CurrentCsipDetail(
-        CurrentCsip(it.status(), it.referralDate(), it.nextReviewDate, it.closedDate),
-        it.opened,
-        it.referred,
-      )
-    }
-
-  private fun getPersonSummary(prisonNumber: String): PersonSummary {
-    return personSummaryRepository.findByIdOrNull(prisonNumber)
-      ?: personSummaryRepository.save(
-        requireNotNull(personSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }.toPersonSummary(),
-      )
+  fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? = csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
+    CurrentCsipDetail(
+      CurrentCsip(it.status(), it.referralDate(), it.nextReviewDate, it.closedDate),
+      it.opened,
+      it.referred,
+    )
   }
 
-  private fun CurrentCsipAndCounts.referralDate() =
-    if (statusCode == CsipStatus.REFERRAL_PENDING) null else referralDate
+  private fun getPersonSummary(prisonNumber: String): PersonSummary = personSummaryRepository.findByIdOrNull(prisonNumber)
+    ?: personSummaryRepository.save(
+      requireNotNull(personSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }.toPersonSummary(),
+    )
+
+  private fun CurrentCsipAndCounts.referralDate() = if (statusCode == CsipStatus.REFERRAL_PENDING) null else referralDate
 
   private fun CurrentCsipAndCounts.status() = ReferenceData(statusCode.name, statusDescription)
 }

@@ -213,8 +213,7 @@ class AddContributoryFactorIntTest : IntegrationTestBase() {
     request: CreateContributoryFactorRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): ContributoryFactor =
-    addContributoryFactorResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
+  ): ContributoryFactor = addContributoryFactorResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun getContributoryFactory(uuid: UUID) = contributoryFactorRepository.getContributoryFactor(uuid)
 

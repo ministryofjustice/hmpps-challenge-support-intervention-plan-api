@@ -16,7 +16,7 @@ annotation class CloseDateIfClosing(
 )
 
 class ClosedDateValidator : ConstraintValidator<CloseDateIfClosing, ReviewRequest> {
-  override fun isValid(request: ReviewRequest, context: ConstraintValidatorContext): Boolean =
-    (request.actions.contains(ReviewAction.CLOSE_CSIP) && request.csipClosedDate != null) ||
-      request.csipClosedDate == null && !request.actions.contains(ReviewAction.CLOSE_CSIP)
+  override fun isValid(request: ReviewRequest, context: ConstraintValidatorContext): Boolean = (request.actions.contains(ReviewAction.CLOSE_CSIP) && request.csipClosedDate != null) ||
+    request.csipClosedDate == null &&
+    !request.actions.contains(ReviewAction.CLOSE_CSIP)
 }

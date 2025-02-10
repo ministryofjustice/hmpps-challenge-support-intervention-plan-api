@@ -110,8 +110,7 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     request: CreateIdentifiedNeedRequest,
     username: String? = TEST_USER,
     role: String = ROLE_CSIP_UI,
-  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.IdentifiedNeed =
-    addIdentifiedNeedResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
+  ): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.IdentifiedNeed = addIdentifiedNeedResponseSpec(csipUuid, request, username, role).successResponse(CREATED)
 
   private fun IdentifiedNeed.verifyAgainst(request: CreateIdentifiedNeedRequest) {
     assertThat(identifiedNeed).isEqualTo(request.identifiedNeed)
@@ -123,6 +122,5 @@ class AddIdentifiedNeedIntTest : IntegrationTestBase() {
     assertThat(progression).isEqualTo(request.progression)
   }
 
-  private fun getIdentifiedNeed(uuid: UUID): IdentifiedNeed =
-    identifiedNeedRepository.getIdentifiedNeed(uuid)
+  private fun getIdentifiedNeed(uuid: UUID): IdentifiedNeed = identifiedNeedRepository.getIdentifiedNeed(uuid)
 }

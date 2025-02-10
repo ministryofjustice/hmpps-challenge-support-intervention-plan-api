@@ -20,49 +20,48 @@ internal const val PRISON_NUMBER_THROW_EXCEPTION = "THROW"
 class PrisonerSearchServer : WireMockServer(8112) {
   private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
-  fun stubGetPrisoner(prisonerDetails: PrisonerDetails): StubMapping =
-    stubFor(
-      get("/prisoner/${prisonerDetails.prisonerNumber}")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(mapper.writeValueAsString(prisonerDetails))
-            .withStatus(200),
-        ),
-    )
+  fun stubGetPrisoner(prisonerDetails: PrisonerDetails): StubMapping = stubFor(
+    get("/prisoner/${prisonerDetails.prisonerNumber}")
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(mapper.writeValueAsString(prisonerDetails))
+          .withStatus(200),
+      ),
+  )
 
-  fun stubGetPrisoner(prisonNumber: String = PRISON_NUMBER): StubMapping =
-    stubFor(
-      get("/prisoner/$prisonNumber")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              mapper.writeValueAsString(
-                PrisonerDetails(
-                  prisonerNumber = prisonNumber,
-                  "First",
-                  "Last",
-                  PRISON_CODE_LEEDS,
-                  "ACTIVE IN",
-                  false,
-                  "A-1-002",
-                  null,
-                ),
+  fun stubGetPrisoner(prisonNumber: String = PRISON_NUMBER): StubMapping = stubFor(
+    get("/prisoner/$prisonNumber")
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            mapper.writeValueAsString(
+              PrisonerDetails(
+                prisonerNumber = prisonNumber,
+                "First",
+                "Last",
+                PRISON_CODE_LEEDS,
+                "ACTIVE IN",
+                false,
+                "A-1-002",
+                null,
               ),
-            )
-            .withStatus(200),
-        ),
-    )
+            ),
+          )
+          .withStatus(200),
+      ),
+  )
 
-  fun stubGetPrisonerException(prisonNumber: String = PRISON_NUMBER_THROW_EXCEPTION): StubMapping =
-    stubFor(get("/prisoner/$prisonNumber").willReturn(aResponse().withStatus(500)))
+  fun stubGetPrisonerException(prisonNumber: String = PRISON_NUMBER_THROW_EXCEPTION): StubMapping = stubFor(get("/prisoner/$prisonNumber").willReturn(aResponse().withStatus(500)))
 
-  fun stubGetPrisonerNotFoundException(prisonNumber: String = PRISON_NUMBER_NOT_FOUND): StubMapping =
-    stubFor(get("/prisoner/$prisonNumber").willReturn(aResponse().withStatus(404)))
+  fun stubGetPrisonerNotFoundException(prisonNumber: String = PRISON_NUMBER_NOT_FOUND): StubMapping = stubFor(get("/prisoner/$prisonNumber").willReturn(aResponse().withStatus(404)))
 }
 
-class PrisonerSearchExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class PrisonerSearchExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val prisonerSearch = PrisonerSearchServer()

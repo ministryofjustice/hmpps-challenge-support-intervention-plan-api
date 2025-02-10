@@ -339,20 +339,18 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   private fun searchCsipRecordsResponseSpec(
     request: FindCsipRequest,
     role: String = ROLE_CSIP_UI,
-  ): WebTestClient.ResponseSpec =
-    webTestClient.get()
-      .uri { ub ->
-        ub.path(BASE_URL)
-        request.asParams().forEach {
-          ub.queryParam(it.first, it.second)
-        }
-        ub.build()
+  ): WebTestClient.ResponseSpec = webTestClient.get()
+    .uri { ub ->
+      ub.path(BASE_URL)
+      request.asParams().forEach {
+        ub.queryParam(it.first, it.second)
       }
-      .headers(setAuthorisation(roles = listOfNotNull(role)))
-      .exchange()
+      ub.build()
+    }
+    .headers(setAuthorisation(roles = listOfNotNull(role)))
+    .exchange()
 
-  private fun searchCsipRecords(request: FindCsipRequest): CsipSearchResults =
-    searchCsipRecordsResponseSpec(request).successResponse()
+  private fun searchCsipRecords(request: FindCsipRequest): CsipSearchResults = searchCsipRecordsResponseSpec(request).successResponse()
 
   companion object {
     private const val BASE_URL = "/search/csip-records"

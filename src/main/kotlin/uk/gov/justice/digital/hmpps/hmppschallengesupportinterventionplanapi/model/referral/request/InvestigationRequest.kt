@@ -14,7 +14,8 @@ data class CreateInvestigationRequest(
   override val personsTrigger: String?,
   override val protectiveFactors: String?,
   override val interviews: List<CreateInterviewRequest> = listOf(),
-) : InvestigationRequest, InterviewsRequest
+) : InvestigationRequest,
+  InterviewsRequest
 
 @Schema(description = "The request body to update an investigation on the incident that motivated the CSIP referral.")
 @ValidInvestigationDetail

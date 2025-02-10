@@ -91,8 +91,7 @@ class MoveCsipRequestIntTest : IntegrationTestBase() {
     private const val URL = "/sync/csip-records/move"
   }
 
-  private fun moveCsipRequest(from: String = prisonNumber(), to: String = prisonNumber(), ids: Set<UUID> = setOf()) =
-    MoveCsipRequest(from, to, ids)
+  private fun moveCsipRequest(from: String = prisonNumber(), to: String = prisonNumber(), ids: Set<UUID> = setOf()) = MoveCsipRequest(from, to, ids)
 
   private fun syncCsipResponseSpec(
     request: MoveCsipRequest,

@@ -217,12 +217,10 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     }
   }
 
-  fun getLatestCsipResponseSpec(prisonNumber: String, role: String? = ROLE_CSIP_RO): WebTestClient.ResponseSpec =
-    webTestClient.get()
-      .uri("/prisoners/$prisonNumber/csip-records/current")
-      .headers(setAuthorisation(roles = listOfNotNull(role)))
-      .exchange()
+  fun getLatestCsipResponseSpec(prisonNumber: String, role: String? = ROLE_CSIP_RO): WebTestClient.ResponseSpec = webTestClient.get()
+    .uri("/prisoners/$prisonNumber/csip-records/current")
+    .headers(setAuthorisation(roles = listOfNotNull(role)))
+    .exchange()
 
-  fun getLatestCsipRecord(prisonNumber: String, role: String = ROLE_CSIP_RO): CurrentCsipDetail =
-    getLatestCsipResponseSpec(prisonNumber, role).successResponse()
+  fun getLatestCsipRecord(prisonNumber: String, role: String = ROLE_CSIP_RO): CurrentCsipDetail = getLatestCsipResponseSpec(prisonNumber, role).successResponse()
 }

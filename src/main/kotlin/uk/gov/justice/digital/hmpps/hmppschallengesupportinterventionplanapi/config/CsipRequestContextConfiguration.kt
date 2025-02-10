@@ -15,8 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 
 @Configuration
-class CsipRequestContextConfiguration(private val csipRequestContextInterceptor: CsipRequestContextInterceptor) :
-  WebMvcConfigurer {
+class CsipRequestContextConfiguration(private val csipRequestContextInterceptor: CsipRequestContextInterceptor) : WebMvcConfigurer {
   override fun addInterceptors(registry: InterceptorRegistry) {
     registry.addInterceptor(csipRequestContextInterceptor)
       .addPathPatterns("/reference-data/**")
@@ -48,16 +47,13 @@ class CsipRequestContextInterceptor(
     return true
   }
 
-  private fun authentication(): AuthAwareAuthenticationToken =
-    SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken?
-      ?: throw AccessDeniedException("User is not authenticated")
+  private fun authentication(): AuthAwareAuthenticationToken = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken?
+    ?: throw AccessDeniedException("User is not authenticated")
 
-  private fun getUsername(): String =
-    authentication().name
-      .trim().takeUnless(String::isBlank)
-      ?.also { if (it.length > 64) throw ValidationException("Created by must be <= 64 characters") }
-      ?: throw ValidationException("Could not find non empty username")
+  private fun getUsername(): String = authentication().name
+    .trim().takeUnless(String::isBlank)
+    ?.also { if (it.length > 64) throw ValidationException("Created by must be <= 64 characters") }
+    ?: throw ValidationException("Could not find non empty username")
 
-  private fun getUserDetails(username: String) =
-    userService.getUserDetails(username) ?: throw ValidationException("User details for supplied username not found")
+  private fun getUserDetails(username: String) = userService.getUserDetails(username) ?: throw ValidationException("User details for supplied username not found")
 }

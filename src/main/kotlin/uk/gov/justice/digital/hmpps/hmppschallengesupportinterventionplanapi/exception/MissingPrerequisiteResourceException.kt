@@ -9,10 +9,13 @@ interface MissingComponentException {
 }
 
 class MissingReferralException(override val recordUuid: UUID) :
-  MissingPrerequisiteResourceException("CSIP Record is missing a referral."), MissingComponentException
+  MissingPrerequisiteResourceException("CSIP Record is missing a referral."),
+  MissingComponentException
 
 class MissingInvestigationException(override val recordUuid: UUID) :
-  MissingPrerequisiteResourceException("CSIP Record is missing an investigation."), MissingComponentException
+  MissingPrerequisiteResourceException("CSIP Record is missing an investigation."),
+  MissingComponentException
 
 class MissingPlanException(override val recordUuid: UUID) :
-  MissingPrerequisiteResourceException("CSIP Record is missing a plan."), MissingComponentException
+  MissingPrerequisiteResourceException("CSIP Record is missing a plan."),
+  MissingComponentException

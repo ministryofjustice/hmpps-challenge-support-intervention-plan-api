@@ -41,7 +41,8 @@ class Plan(
   caseManager: String?,
   reasonForPlan: String?,
   firstCaseReviewDate: LocalDate?,
-) : SimpleVersion(), CsipAware {
+) : SimpleVersion(),
+  CsipAware {
   override fun csipRecord() = csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -82,20 +83,19 @@ class Plan(
     }
   }
 
-  fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed =
-    IdentifiedNeed(
-      this,
-      request.identifiedNeed,
-      request.responsiblePerson,
-      request.createdDate,
-      request.targetDate,
-      request.closedDate,
-      request.intervention,
-      request.progression,
-      legacyId = if (request is LegacyIdAware) request.legacyId else null,
-    ).apply {
-      identifiedNeeds.add(this)
-    }
+  fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed = IdentifiedNeed(
+    this,
+    request.identifiedNeed,
+    request.responsiblePerson,
+    request.createdDate,
+    request.targetDate,
+    request.closedDate,
+    request.intervention,
+    request.progression,
+    legacyId = if (request is LegacyIdAware) request.legacyId else null,
+  ).apply {
+    identifiedNeeds.add(this)
+  }
 
   fun addReview(request: ReviewRequest): Review = Review(
     this,
@@ -113,12 +113,17 @@ class Plan(
     if (request is AttendeesRequest) {
       request.attendees.forEach { addAttendee(it) }
     }
+    csipClosedDate?.also { closeOpenNeeds(it) }
   }
 
   fun nextReviewDate(): LocalDate? {
     if (CSIP_OPEN.name != csipRecord.status?.code) return null
     if (reviews.isEmpty()) return firstCaseReviewDate
     return reviews().maxByOrNull { it.reviewSequence }?.nextReviewDate
+  }
+
+  internal fun closeOpenNeeds(date: LocalDate) {
+    identifiedNeeds.forEach { it.closeNeedIfOpen(date) }
   }
 }
 

@@ -27,9 +27,9 @@ data class SyncInvestigationRequest(
   override val protectiveFactors: String?,
   @field:Valid
   override val interviews: List<SyncInterviewRequest>,
-) : InvestigationRequest, InterviewsRequest {
-  fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> =
-    interviews.flatMap { it.findRequiredReferenceDataKeys() }.toSet()
+) : InvestigationRequest,
+  InterviewsRequest {
+  fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = interviews.flatMap { it.findRequiredReferenceDataKeys() }.toSet()
 
   fun requestMappings(): Set<RequestMapping> = buildSet {
     addAll(interviews.map { RequestMapping(CsipComponent.INTERVIEW, it.legacyId, it.id) })
@@ -43,9 +43,10 @@ data class SyncInterviewRequest(
   override val interviewText: String?,
   override val legacyId: Long,
   override val id: UUID?,
-) : NomisIdentifiable, InterviewRequest, LegacyIdAware {
-  fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> =
-    setOf(ReferenceDataKey(ReferenceDataType.INTERVIEWEE_ROLE, intervieweeRoleCode))
+) : NomisIdentifiable,
+  InterviewRequest,
+  LegacyIdAware {
+  fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = setOf(ReferenceDataKey(ReferenceDataType.INTERVIEWEE_ROLE, intervieweeRoleCode))
 }
 
 @ValidDecisionDetail

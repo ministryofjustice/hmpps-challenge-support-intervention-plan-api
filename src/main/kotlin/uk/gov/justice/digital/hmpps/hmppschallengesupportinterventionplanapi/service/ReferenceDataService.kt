@@ -13,10 +13,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 class ReferenceDataService(
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
-  fun getReferenceDataForDomain(domain: ReferenceDataType, includeInactive: Boolean): Collection<ReferenceData> =
-    referenceDataRepository.findByKeyDomain(domain).toReferenceDataModels(includeInactive)
+  fun getReferenceDataForDomain(domain: ReferenceDataType, includeInactive: Boolean): Collection<ReferenceData> = referenceDataRepository.findByKeyDomain(domain).toReferenceDataModels(includeInactive)
 }
 
-fun Collection<ReferenceDataEntity>.toReferenceDataModels(includeInactive: Boolean) =
-  filter { includeInactive || it.isActive() }.sortedWith(compareBy(ReferenceDataEntity::listSequence))
-    .map { it.toReferenceDataModel() }
+fun Collection<ReferenceDataEntity>.toReferenceDataModels(includeInactive: Boolean) = filter { includeInactive || it.isActive() }.sortedWith(compareBy(ReferenceDataEntity::listSequence))
+  .map { it.toReferenceDataModel() }

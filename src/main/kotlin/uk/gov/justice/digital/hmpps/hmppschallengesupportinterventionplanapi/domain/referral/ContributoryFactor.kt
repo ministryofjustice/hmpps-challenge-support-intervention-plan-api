@@ -42,7 +42,9 @@ class ContributoryFactor(
   comment: String?,
 
   legacyId: Long? = null,
-) : SimpleVersion(), Identifiable, CsipAware {
+) : SimpleVersion(),
+  Identifiable,
+  CsipAware {
   override fun csipRecord() = referral.csipRecord
 
   @Audited(withModifiedFlag = false)
@@ -74,12 +76,10 @@ class ContributoryFactor(
 
 interface ContributoryFactorRepository : JpaRepository<ContributoryFactor, UUID>
 
-fun ContributoryFactorRepository.getContributoryFactor(id: UUID) =
-  findByIdOrNull(id) ?: throw NotFoundException("Contributory Factor", id.toString())
+fun ContributoryFactorRepository.getContributoryFactor(id: UUID) = findByIdOrNull(id) ?: throw NotFoundException("Contributory Factor", id.toString())
 
-fun ContributoryFactor.toModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ContributoryFactor(
-    factorUuid = id,
-    factorType = contributoryFactorType.toReferenceDataModel(),
-    comment = comment,
-  )
+fun ContributoryFactor.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ContributoryFactor(
+  factorUuid = id,
+  factorType = contributoryFactorType.toReferenceDataModel(),
+  comment = comment,
+)

@@ -97,10 +97,9 @@ class SyncCsipRecord(
     }
   }
 
-  private fun findCsipRecord(uuid: UUID?, legacyId: Long): CsipRecord? =
-    uuid?.let { csipRepository.getCsipRecord(it) } ?: csipRepository.findByLegacyId(legacyId)?.also {
-      telemetry.trackEvent("CsipLegacyLookup", mapOf("legacyId" to legacyId.toString()), mapOf())
-    }
+  private fun findCsipRecord(uuid: UUID?, legacyId: Long): CsipRecord? = uuid?.let { csipRepository.getCsipRecord(it) } ?: csipRepository.findByLegacyId(legacyId)?.also {
+    telemetry.trackEvent("CsipLegacyLookup", mapOf("legacyId" to legacyId.toString()), mapOf())
+  }
 
   private fun validatedReferenceData(keys: Set<ReferenceDataKey>): Map<ReferenceDataKey, ReferenceData> {
     val rd = referenceDaRepository.findByKeyIn(keys).associateBy { it.key }
@@ -119,25 +118,21 @@ class SyncCsipRecord(
     }
   }
 
-  private fun SyncCsipRequest.toPersonSummary() =
-    personSummary?.toPersonSummary(prisonNumber)?.let(personSummaryService::savePersonSummary)
-      ?: personSummaryService.getPersonSummaryByPrisonNumber(prisonNumber)
+  private fun SyncCsipRequest.toPersonSummary() = personSummary?.toPersonSummary(prisonNumber)?.let(personSummaryService::savePersonSummary)
+    ?: personSummaryService.getPersonSummaryByPrisonNumber(prisonNumber)
 
-  private fun PersonSummaryRequest.toPersonSummary(prisonNumber: String) =
-    PersonSummary(
-      prisonNumber,
-      firstName,
-      lastName,
-      status,
-      restrictedPatient ?: false,
-      prisonCode,
-      cellLocation,
-      supportingPrisonCode,
-    )
+  private fun PersonSummaryRequest.toPersonSummary(prisonNumber: String) = PersonSummary(
+    prisonNumber,
+    firstName,
+    lastName,
+    status,
+    restrictedPatient ?: false,
+    prisonCode,
+    cellLocation,
+    supportingPrisonCode,
+  )
 
-  private fun SyncCsipRequest.toCsipRecord(personSummary: PersonSummary): CsipRecord =
-    CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId)
+  private fun SyncCsipRequest.toCsipRecord(personSummary: PersonSummary): CsipRecord = CsipRecord(personSummary, prisonCodeWhenRecorded, logCode, legacyId)
 
-  fun findFor(prisonNumber: String): List<CsipModel> =
-    csipRepository.findAll(matchesPrisonNumber(prisonNumber)).map { it.toModel() }
+  fun findFor(prisonNumber: String): List<CsipModel> = csipRepository.findAll(matchesPrisonNumber(prisonNumber)).map { it.toModel() }
 }

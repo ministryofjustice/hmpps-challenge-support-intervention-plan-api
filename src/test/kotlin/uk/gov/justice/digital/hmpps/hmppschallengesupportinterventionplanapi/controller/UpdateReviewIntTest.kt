@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.ReviewRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.getReview
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.IDENTIFIED_NEED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.PLAN
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.RECORD
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.REVIEW
@@ -30,13 +31,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.USER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Review
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.ReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.UpdateReviewRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.sync.verifyAgainst
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
 import java.util.UUID
 import java.util.UUID.randomUUID
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Review as ReviewEntity
 
 class UpdateReviewIntTest : IntegrationTestBase() {
 
@@ -155,6 +159,33 @@ class UpdateReviewIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `200 ok - review updated to close csip, closes open needs`() {
+    val review = dataSetup(generateCsipRecord().withPlan()) {
+      val plan = requireNotNull(it.plan).withNeed().withReview()
+      plan.reviews().first()
+    }
+
+    val request = updateReviewRequest(
+      summary = "a summary goes here",
+      actions = setOf(ReviewAction.CLOSE_CSIP),
+      reviewDate = LocalDate.now().minusDays(10),
+      nextReviewDate = LocalDate.now().minusDays(1),
+      csipClosedDate = LocalDate.now(),
+    )
+    val response = updateReview(review.id, request)
+
+    val saved = getReview(response.reviewUuid)
+    saved.verifyAgainst(request)
+
+    val need = saved.plan.identifiedNeeds().first()
+    assertThat(need.closedDate).isEqualTo(saved.csipClosedDate)
+
+    verifyAudit(saved, RevisionType.MOD, setOf(REVIEW, IDENTIFIED_NEED))
+    verifyAudit(need, RevisionType.MOD, setOf(REVIEW, IDENTIFIED_NEED))
+    verifyDomainEvents(review.csipRecord().prisonNumber, review.csipRecord().id, CSIP_UPDATED)
+  }
+
+  @Test
   fun `200 ok - review not updated with no change`() {
     val review = dataSetup(generateCsipRecord().withPlan()) {
       val plan = requireNotNull(it.plan).withReview(
@@ -224,5 +255,19 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     role: String = ROLE_CSIP_UI,
   ): Review = updateReviewResponseSpec(reviewUuid, request, username, role).successResponse(OK)
 
-  private fun getReview(uuid: UUID) = reviewRepository.getReview(uuid)
+  private fun getReview(uuid: UUID): ReviewEntity = transactionTemplate.execute {
+    val review = reviewRepository.getReview(uuid)
+    review.plan.identifiedNeeds()
+    review
+  }!!
+
+  private fun ReviewEntity.verifyAgainst(request: ReviewRequest) {
+    assertThat(reviewDate).isEqualTo(request.reviewDate)
+    assertThat(recordedBy).isEqualTo(request.recordedBy)
+    assertThat(recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
+    assertThat(nextReviewDate).isEqualTo(request.nextReviewDate)
+    assertThat(csipClosedDate).isEqualTo(request.csipClosedDate)
+    assertThat(summary).isEqualTo(request.summary)
+    assertThat(actions).containsExactlyInAnyOrderElementsOf(request.actions)
+  }
 }

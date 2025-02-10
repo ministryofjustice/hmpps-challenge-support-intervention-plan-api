@@ -70,18 +70,15 @@ class CsipOverviewIntTest : IntegrationTestBase() {
   private fun getCsipOverviewResponseSpec(
     prisonCode: String = OVERVIEW_PRISON_CODE,
     role: String = ROLE_CSIP_UI,
-  ): WebTestClient.ResponseSpec =
-    webTestClient.get().uri(urlToTest(prisonCode))
-      .headers(setAuthorisation(roles = listOfNotNull(role)))
-      .exchange()
+  ): WebTestClient.ResponseSpec = webTestClient.get().uri(urlToTest(prisonCode))
+    .headers(setAuthorisation(roles = listOfNotNull(role)))
+    .exchange()
 
-  private fun getCsipOverview(prisonCode: String = "OVE", role: String = ROLE_CSIP_UI): CsipOverview =
-    getCsipOverviewResponseSpec(prisonCode, role).successResponse()
+  private fun getCsipOverview(prisonCode: String = "OVE", role: String = ROLE_CSIP_UI): CsipOverview = getCsipOverviewResponseSpec(prisonCode, role).successResponse()
 
   private fun urlToTest(prisonCode: String) = "/prisons/$prisonCode/csip-records/overview"
 
-  private fun csip() =
-    generateCsipRecord(prisoner(prisonId = OVERVIEW_PRISON_CODE).toPersonSummary(), OVERVIEW_PRISON_CODE)
+  private fun csip() = generateCsipRecord(prisoner(prisonId = OVERVIEW_PRISON_CODE).toPersonSummary(), OVERVIEW_PRISON_CODE)
 
   private fun referralSubmitted() = dataSetup(csip()) { it.withCompletedReferral() }
 

@@ -317,7 +317,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     assertThat(factors.size).isEqualTo(factorMappings.size)
     factors.forEach { i -> i.verifyAgainst(requireNotNull(factorRequests.find { it.legacyId == i.legacyId })) }
 
-    val interviewRequests = request.referral!!.investigation!!.interviews
+    val interviewRequests = request.referral.investigation!!.interviews
     val interviewMappings = response.mappings.filter { it.component == INTERVIEW }
     assertThat(interviewRequests.size).isEqualTo(interviewMappings.size)
     val interviews = interviewRepository.findAllById(interviewMappings.map { it.uuid })
@@ -331,14 +331,14 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     assertThat(needs.size).isEqualTo(needMappings.size)
     needs.forEach { i -> i.verifyAgainst(requireNotNull(needRequests.find { it.legacyId == i.legacyId })) }
 
-    val reviewRequests = request.plan!!.reviews
+    val reviewRequests = request.plan.reviews
     val reviewMappings = response.mappings.filter { it.component == REVIEW }
     assertThat(reviewRequests.size).isEqualTo(reviewMappings.size)
     val reviews = reviewRepository.findAllById(reviewMappings.map { it.uuid })
     assertThat(reviews.size).isEqualTo(reviewMappings.size)
     reviews.forEach { i -> i.verifyAgainst(requireNotNull(reviewRequests.find { it.legacyId == i.legacyId })) }
 
-    val attendeeRequests = request.plan!!.reviews.flatMap { it.attendees }
+    val attendeeRequests = request.plan.reviews.flatMap { it.attendees }
     val attendeeMappings = response.mappings.filter { it.component == ATTENDEE }
     assertThat(attendeeRequests.size).isEqualTo(attendeeMappings.size)
     val attendees = attendeeRepository.findAllById(attendeeMappings.map { it.uuid })
@@ -483,11 +483,11 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val needs = identifiedNeedRepository.findAllById(needRequests.map { it.id })
     needs.forEach { i -> i.verifyAgainst(requireNotNull(needRequests.find { it.legacyId == i.legacyId })) }
 
-    val reviewRequests = request.plan!!.reviews
+    val reviewRequests = request.plan.reviews
     val reviews = reviewRepository.findAllById(reviewRequests.map { it.id })
     reviews.forEach { i -> i.verifyAgainst(requireNotNull(reviewRequests.find { it.legacyId == i.legacyId })) }
 
-    val attendeeRequests = request.plan!!.reviews.flatMap { it.attendees }
+    val attendeeRequests = request.plan.reviews.flatMap { it.attendees }
     val attendees = attendeeRepository.findAllById(attendeeRequests.map { it.id })
     attendees.forEach { i -> i.verifyAgainst(requireNotNull(attendeeRequests.find { it.legacyId == i.legacyId })) }
 
@@ -551,7 +551,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     assertThat(response.mappings.single { it.component == CONTRIBUTORY_FACTOR })
       .isEqualTo(ResponseMapping(CONTRIBUTORY_FACTOR, factorRequest.legacyId, factor.id))
 
-    val interviewRequest = request.referral!!.investigation!!.interviews.first()
+    val interviewRequest = request.referral.investigation!!.interviews.first()
     assertThat(response.mappings.single { it.component == INTERVIEW })
       .isEqualTo(ResponseMapping(INTERVIEW, interviewRequest.legacyId, interview.id))
 
@@ -559,7 +559,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     assertThat(response.mappings.single { it.component == IDENTIFIED_NEED })
       .isEqualTo(ResponseMapping(IDENTIFIED_NEED, needRequest.legacyId, need.id))
 
-    val reviewRequest = request.plan!!.reviews.first()
+    val reviewRequest = request.plan.reviews.first()
     assertThat(response.mappings.single { it.component == REVIEW })
       .isEqualTo(ResponseMapping(REVIEW, reviewRequest.legacyId, review.id))
 

@@ -27,12 +27,10 @@ class UpdateAttendeeRequestTest : RequestValidationTest() {
     role: String? = "Role",
     isAttended: Boolean? = true,
     contribution: String? = null,
-  ): UpdateAttendeeRequest {
-    return UpdateAttendeeRequest(
-      name = name,
-      role = role,
-      isAttended = isAttended,
-      contribution = contribution,
-    )
-  }
+  ): UpdateAttendeeRequest = UpdateAttendeeRequest(
+    name = name,
+    role = role,
+    isAttended = isAttended,
+    contribution = contribution,
+  )
 }

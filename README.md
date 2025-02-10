@@ -5,6 +5,8 @@
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://hmpps-challenge-support-intervention-plan-api-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html?configUrl=/v3/api-docs)
 [![Event docs](https://img.shields.io/badge/Event_docs-view-85EA2D.svg)](https://studio.asyncapi.com/?readOnly&url=https://raw.githubusercontent.com/ministryofjustice/hmpps-challenge-support-intervention-plan-api/main/async-api.yml)
 
+Datebase Schema diagram: https://ministryofjustice.github.io/hmpps-challenge-support-intervention-plan-api/schema-spy-report/
+
 ## HMPPS Project Setup instructions
 
 For more instructions and general hmpps project setup guidelines:

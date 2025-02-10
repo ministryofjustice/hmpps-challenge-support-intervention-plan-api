@@ -44,10 +44,9 @@ data class ReferenceDataKey(
   override val code: String,
 ) : ReferenceDataLookup
 
-fun ReferenceData.toReferenceDataModel() =
-  uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData(
-    code = code,
-    description = description,
-    listSequence = listSequence,
-    deactivatedAt = deactivatedAt,
-  )
+fun ReferenceData.toReferenceDataModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData(
+  code = code,
+  description = description,
+  listSequence = listSequence,
+  deactivatedAt = deactivatedAt,
+)

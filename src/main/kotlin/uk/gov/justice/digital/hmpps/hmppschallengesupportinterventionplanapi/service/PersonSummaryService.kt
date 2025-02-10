@@ -28,8 +28,7 @@ class PersonSummaryService(
     }
   }
 
-  fun savePersonSummary(personSummary: PersonSummary): PersonSummary =
-    personSummaryRepository.findByIdOrNull(personSummary.prisonNumber) ?: personSummaryRepository.save(personSummary)
+  fun savePersonSummary(personSummary: PersonSummary): PersonSummary = personSummaryRepository.findByIdOrNull(personSummary.prisonNumber) ?: personSummaryRepository.save(personSummary)
 
   fun getPersonSummaryByPrisonNumber(prisonNumber: String): PersonSummary {
     val person = personSummaryRepository.findByIdOrNull(prisonNumber)
@@ -52,6 +51,5 @@ class PersonSummaryService(
     }
   }
 
-  fun removePersonSummaryByPrisonNumber(prisonNumber: String) =
-    personSummaryRepository.findByIdOrNull(prisonNumber)?.also(personSummaryRepository::delete)
+  fun removePersonSummaryByPrisonNumber(prisonNumber: String) = personSummaryRepository.findByIdOrNull(prisonNumber)?.also(personSummaryRepository::delete)
 }

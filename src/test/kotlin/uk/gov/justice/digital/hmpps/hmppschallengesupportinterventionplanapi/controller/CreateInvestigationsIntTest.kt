@@ -187,6 +187,5 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
   ) = createInvestigationResponseSpec(recordUuid, request, username, role)
     .successResponse<Investigation>(HttpStatus.CREATED)
 
-  private fun getInvestigation(recordUuid: UUID) =
-    csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
+  private fun getInvestigation(recordUuid: UUID) = csipRecordRepository.getCsipRecord(recordUuid).referral!!.investigation!!
 }
