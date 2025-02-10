@@ -12,7 +12,6 @@ import io.gatling.javaapi.http.HttpDsl.http
 import io.gatling.javaapi.http.HttpDsl.status
 import java.lang.System.getenv
 import java.time.Duration.ofMinutes
-import java.time.Duration.ofSeconds
 
 class PrisonAdminSimulation : Simulation() {
 
@@ -36,11 +35,11 @@ class PrisonAdminSimulation : Simulation() {
   )
 
   private val overview = scenario("Prison admin view").exec(getToken)
-    .repeat(1).on(feed(prisonCodes), overviewByPrison().pause(ofSeconds(3)), retrieveForPrison(25).pause(ofSeconds(2)))
+    .repeat(1).on(feed(prisonCodes), overviewByPrison(), retrieveForPrison(25))
 
   init {
     setUp(
-      overview.injectOpen(atOnceUsers(1), rampUsersPerSec(0.1).to(10.0).during(ofMinutes(5))),
+      overview.injectOpen(atOnceUsers(2), rampUsersPerSec(0.05).to(5.0).during(ofMinutes(5))),
     ).protocols(httpProtocol)
   }
 }

@@ -34,14 +34,37 @@ class CsipSimulation : Simulation() {
       .queryParam("size", 25)
       .headers(authorisationHeader)
       .check(status().shouldBe(200))
-      .check(jsonPath("$.metadata.totalElements").exists().saveAs("totalElements")),
-  )
+      .check(jsonPath("$.content[0].id").optional().saveAs("csipId1"))
+      .check(jsonPath("$.content[1].id").optional().saveAs("csipId2")),
+
+  ).pause(ofSeconds(2))
+    .doIf {
+      it.get<String>("csipId1") != null
+    }.then(
+      exec(
+        http("Find csip by id")
+          .get("/csip-records/#{csipId1}")
+          .headers(authorisationHeader)
+          .check(status().shouldBe(200)),
+      ),
+    )
+    .pause(ofSeconds(2))
+    .doIf {
+      it.get<String>("csipId2") != null
+    }.then(
+      exec(
+        http("Find csip by id")
+          .get("/csip-records/#{csipId2}")
+          .headers(authorisationHeader)
+          .check(status().shouldBe(200)),
+      ),
+    )
 
   private val prisonerProfile = scenario("Viewing prisoner profile").exec(getToken)
     .repeat(10).on(feed(personIdentifiers), getCurrentCsip())
 
   private val viewCsipForPerson = scenario("Viewing csip details for a person").exec(getToken)
-    .repeat(1).on(feed(personIdentifiers), searchForCsip().pause(ofSeconds(5)), getCurrentCsip().pause(ofSeconds(2)))
+    .repeat(1).on(feed(personIdentifiers), getCurrentCsip().pause(ofSeconds(2)), searchForCsip().pause(ofSeconds(5)))
 
   private val createCsipForPerson = scenario("Creating a csip for a person").exec(getToken)
     .repeat(1).on(feed(personIdentifiers), getCurrentCsip())
