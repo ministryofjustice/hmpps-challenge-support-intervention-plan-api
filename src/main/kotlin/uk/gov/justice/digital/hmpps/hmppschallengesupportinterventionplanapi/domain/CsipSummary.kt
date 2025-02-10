@@ -69,45 +69,93 @@ interface CsipSummaryRepository :
 
   @Query(
     """
-    with counts as (
-        select  csip.prisonNumber prisonNumber, 
-                sum(case when p.id is not null then 1 else 0 end) as op,
-                sum(case when ref.referralComplete = true then 1 else 0 end) as re
-        from CsipRecord csip
-        join csip.referral ref
-        left join csip.plan p
-        where csip.prisonNumber = :prisonNumber
-        group by csip.prisonNumber
-    )
-    select cur as current, c.op as opened, c.re as referred from CsipSummary cur
-    join counts c on c.prisonNumber = cur.prisonNumber
-    where cur.prisonNumber = :prisonNumber
-    order by cur.priority, cur.referralDate desc, cur.id desc
+    with counts as (select csip.prison_number                                        as prisonNumber,
+                       sum(case when p.plan_id is not null then 1 else 0 end)        as op,
+                       sum(case when ref.referral_complete = true then 1 else 0 end) as re
+                from csip_record csip
+                         join referral ref on ref.referral_id = csip.record_id
+                         left join plan p on p.plan_id = csip.record_id
+                where csip.prison_number = :prisonNumber
+                group by csip.prison_number),
+         latest_review as (select distinct on (r.plan_id) r.plan_id,
+                                                          r.review_id,
+                                                          r.next_review_date,
+                                                          r.csip_closed_date
+                       from review r
+                                join csip_record csip on csip.record_id = r.plan_id
+                       where csip.prison_number = :prisonNumber
+                       order by r.plan_id, r.review_sequence desc)
+    select csip.record_id                        as id,
+           ref.referral_date                     as referralDate,
+           case
+               when rev.review_id is not null then rev.next_review_date
+               else p.first_case_review_date end as nextReviewDate,
+           rev.csip_closed_date                  as closedDate,
+           status.code                           as statusCode,
+           status.description                    as statusDescription,
+           case
+               when status.code = 'CSIP_OPEN' then 1
+               when status.code = 'CSIP_CLOSED' then 3
+               when status.code in ('NO_FURTHER_ACTION', 'SUPPORT_OUTSIDE_CSIP') then 4
+               else 2
+               end                               as priority,
+           counts.op                             as opened,
+           counts.re                             as referred
+    from csip_record csip
+             join reference_data status on status.reference_data_id = csip.status_id
+             join referral ref on ref.referral_id = csip.record_id
+             left join plan p on p.plan_id = csip.record_id
+             left join latest_review rev on rev.plan_id = p.plan_id
+             join counts on csip.prison_number = counts.prisonNumber
+    where csip.prison_number = :prisonNumber
+    order by priority, referral_date desc, id desc
     limit 1
   """,
+    nativeQuery = true,
   )
   fun findCurrentWithCounts(prisonNumber: String): CurrentCsipAndCounts?
 
   @Query(
     """
-    select new uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts(
-       sum(case when csip.statusCode = 'REFERRAL_SUBMITTED' then 1 else 0 end),
-       sum(case when csip.statusCode = 'INVESTIGATION_PENDING' then 1 else 0 end),
-       sum(case when csip.statusCode = 'AWAITING_DECISION' then 1 else 0 end),
-       sum(case when csip.statusCode = 'PLAN_PENDING' then 1 else 0 end),
-       sum(case when csip.statusCode = 'CSIP_OPEN' then 1 else 0 end),
-       sum(case when csip.statusCode = 'CSIP_OPEN' and csip.nextReviewDate < current_date then 1 else 0 end)
-    )
-   from CsipSummary csip
-   where csip.prisonCode = :prisonCode
-   group by csip.prisonCode
+    with latest_review as (select distinct on (r.plan_id) r.plan_id,
+                                                          r.review_id,
+                                                          r.next_review_date,
+                                                          r.csip_closed_date
+                       from review r
+                                join csip_record csip on csip.record_id = r.plan_id
+                                join person_summary ps on ps.prison_number = csip.prison_number
+                       where ps.prison_code = :prisonCode
+                       order by r.plan_id, r.review_sequence desc)
+    select sum(case when status.code = 'REFERRAL_SUBMITTED' then 1 else 0 end)      as submittedReferrals,
+           sum(case when status.code = 'INVESTIGATION_PENDING' then 1 else 0 end)   as pendingInvestigations,
+           sum(case when status.code = 'AWAITING_DECISION' then 1 else 0 end)       as awaitingDecisions,
+           sum(case when status.code = 'PLAN_PENDING' then 1 else 0 end)            as pendingPlans,
+           sum(case when status.code = 'CSIP_OPEN' then 1 else 0 end)               as open,
+           sum(case
+                   when status.code = 'CSIP_OPEN' and coalesce(lr.next_review_date, p.first_case_review_date) < current_date
+                       then 1
+                   else 0 end)                                                      as overdueReviews
+    from csip_record csip
+             join person_summary ps on ps.prison_number = csip.prison_number
+             join reference_data status on status.reference_data_id = csip.status_id
+             left join plan p on p.plan_id = csip.record_id
+             left join latest_review lr on lr.plan_id = p.plan_id
+    where ps.prison_code = :prisonCode
+    group by ps.prison_code
   """,
+    nativeQuery = true,
   )
   fun getOverviewCounts(prisonCode: String): CsipCounts?
 }
 
 interface CurrentCsipAndCounts {
-  val current: CsipSummary
+  val id: UUID
+  val referralDate: LocalDate
+  val nextReviewDate: LocalDate?
+  val closedDate: LocalDate?
+  val statusCode: CsipStatus
+  val statusDescription: String
+  val priority: Int
   val opened: Int
   val referred: Int
 }
