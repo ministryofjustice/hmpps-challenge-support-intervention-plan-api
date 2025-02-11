@@ -90,12 +90,14 @@ interface CsipSummaryRepository :
 
   @Query(
     """
-    select sum(case when csip.statusCode = 'REFERRAL_SUBMITTED' then 1 else 0 end)                                  as submittedReferrals,
+    select new uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipCounts(
+           sum(case when csip.statusCode = 'REFERRAL_SUBMITTED' then 1 else 0 end)                                  as submittedReferrals,
            sum(case when csip.statusCode = 'INVESTIGATION_PENDING' then 1 else 0 end)                               as pendingInvestigations,
            sum(case when csip.statusCode = 'AWAITING_DECISION' then 1 else 0 end)                                   as awaitingDecisions,
            sum(case when csip.statusCode = 'PLAN_PENDING' then 1 else 0 end)                                        as pendingPlans,
            sum(case when csip.statusCode = 'CSIP_OPEN' then 1 else 0 end)                                           as open,
            sum(case when csip.statusCode = 'CSIP_OPEN' and csip.nextReviewDate < current_date then 1 else 0 end)    as overdueReviews
+    )
     from CsipSummary csip
     where csip.prisonCode = :prisonCode
     group by csip.prisonCode
