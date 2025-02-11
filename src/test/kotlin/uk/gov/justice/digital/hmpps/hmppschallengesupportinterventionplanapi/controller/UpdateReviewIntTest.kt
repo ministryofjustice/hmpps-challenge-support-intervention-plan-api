@@ -141,19 +141,17 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val request = updateReviewRequest(
       summary = "a summary goes here",
-      actions = setOf(RESPONSIBLE_PEOPLE_INFORMED, CLOSE_CSIP),
+      actions = setOf(RESPONSIBLE_PEOPLE_INFORMED),
       reviewDate = LocalDate.now().plusDays(3),
       nextReviewDate = LocalDate.now().plusDays(4),
-      csipClosedDate = LocalDate.now().plusDays(5),
     )
     val response = updateReview(review.id, request)
 
     val saved = getReview(response.reviewUuid)
-    assertThat(saved.summary).isEqualTo(request.summary)
-    assertThat(saved.actions).containsExactlyInAnyOrder(RESPONSIBLE_PEOPLE_INFORMED, CLOSE_CSIP)
-    assertThat(saved.reviewDate).isEqualTo(LocalDate.now().plusDays(3))
-    assertThat(saved.nextReviewDate).isEqualTo(LocalDate.now().plusDays(4))
-    assertThat(saved.csipClosedDate).isEqualTo(LocalDate.now().plusDays(5))
+    saved.verifyAgainst(request)
+    assertThat(saved.plan.nextReviewDate).isEqualTo(saved.nextReviewDate)
+    assertThat(saved.plan.closedDate).isNull()
+
     verifyAudit(saved, RevisionType.MOD, setOf(REVIEW))
     verifyDomainEvents(review.csipRecord().prisonNumber, review.csipRecord().id, CSIP_UPDATED)
   }
@@ -167,7 +165,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val request = updateReviewRequest(
       summary = "a summary goes here",
-      actions = setOf(ReviewAction.CLOSE_CSIP),
+      actions = setOf(CLOSE_CSIP),
       reviewDate = LocalDate.now().minusDays(10),
       nextReviewDate = LocalDate.now().minusDays(1),
       csipClosedDate = LocalDate.now(),
@@ -176,6 +174,8 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val saved = getReview(response.reviewUuid)
     saved.verifyAgainst(request)
+    assertThat(saved.plan.nextReviewDate).isNull()
+    assertThat(saved.plan.closedDate).isEqualTo(saved.csipClosedDate)
 
     val need = saved.plan.identifiedNeeds().first()
     assertThat(need.closedDate).isEqualTo(saved.csipClosedDate)

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -75,11 +76,13 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - csip records details are correctly returned`() {
     val prisonCode1 = "SPE"
+    val prisonCode2 = "OTH"
+    clearDown(prisonCode1, prisonCode2)
+
     val csip1 = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode1).toPersonSummary())) {
       it.withReferral().withPlan().plan!!.withReview()
       it
     }
-    val prisonCode2 = "OTH"
     val csip2 = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode2).toPersonSummary())) { it.withReferral() }
 
     val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode1))
@@ -93,7 +96,9 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - csip records details are returned based on prison codes`() {
-    val prisonCodes = listOf("MAC", "CAN")
+    val prisonCodes = arrayOf("MAC", "CAN")
+    clearDown(*prisonCodes)
+
     dataSetup(generateCsipRecord(prisoner(prisonId = prisonCodes[0]).toPersonSummary())) {
       it.withReferral().withPlan().plan!!.withReview()
       it
@@ -119,6 +124,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - can find for a prison number`() {
+    clearDown(SEARCH_PRISON_CODE)
     val csip1 = dataSetup(generateCsipRecord(prisoner(prisonId = SEARCH_PRISON_CODE).toPersonSummary())) {
       it.withReferral().withPlan()
     }
@@ -143,6 +149,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - can include or exclude restricted patients`() {
     val prisonCode = "RESP"
+    clearDown(prisonCode)
+
     val csip1 = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
       it.withReferral().withPlan()
     }
@@ -160,6 +168,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `200 ok - can find and sort by name`() {
+    clearDown(SEARCH_PRISON_CODE)
+
     val csip1 = dataSetup(
       generateCsipRecord(
         prisoner(prisonId = SEARCH_PRISON_CODE, firstName = "James", lastName = "Johnson").toPersonSummary(),
@@ -210,6 +220,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - can find by status`() {
     val prisonCode = "STA"
+    clearDown(prisonCode)
+
     val closedCsip = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
       it.withReferral().withPlan()
       requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
@@ -252,6 +264,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   @Test
   fun `200 ok - can sort by fields`() {
     val prisonCode = "SOR"
+    clearDown(prisonCode)
+
     val csip1 = dataSetup(
       generateCsipRecord(
         prisoner(
@@ -365,7 +379,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       page: Int = 1,
       size: Int = 10,
       sort: String = "referralDate,desc",
-    ) = FindCsipRequest(prisonCode, query, status, prisonCodes, includeRestrictedPatients ?: false, page, size, sort)
+    ) = FindCsipRequest(prisonCode, query, status, prisonCodes, includeRestrictedPatients == true, page, size, sort)
 
     @JvmStatic
     fun parameterValidations() = listOf(
@@ -392,7 +406,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(id).isEqualTo(csip.id)
     assertThat(status.code).isEqualTo(csip.status!!.code)
     assertThat(referralDate).isEqualTo(csip.referral!!.referralDate)
-    assertThat(nextReviewDate).isEqualTo(csip.plan?.nextReviewDate())
+    assertThat(nextReviewDate).isEqualTo(csip.plan?.nextReviewDate)
     assertThat(caseManager).isEqualTo(csip.plan?.caseManager)
     prisoner.verifyAgainst(csip.personSummary)
   }
@@ -402,5 +416,17 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     assertThat(firstName).isEqualTo(person.firstName)
     assertThat(lastName).isEqualTo(person.lastName)
     assertThat(location).isEqualTo(person.cellLocation)
+  }
+
+  private fun matchesPrison(vararg prisonCodes: String) = Specification<CsipRecord> { csip, _, cb ->
+    val person = csip.join<CsipRecord, PersonSummary>("personSummary")
+    cb.or(person.get<String>("prisonCode").`in`(prisonCodes.toSet()), person.get<String>("supportingPrisonCode").`in`(prisonCodes.toSet()))
+  }
+
+  private fun clearDown(vararg prisonCodes: String) = transactionTemplate.executeWithoutResult {
+    csipRecordRepository.findAll(matchesPrison(*prisonCodes)).forEach {
+      csipRecordRepository.delete(it)
+      personSummaryRepository.delete(it.personSummary)
+    }
   }
 }

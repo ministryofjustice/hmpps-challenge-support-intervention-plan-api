@@ -87,7 +87,7 @@ class CsipRecordService(
   @Transactional(readOnly = true)
   fun findCurrentCsip(prisonNumber: String): CurrentCsipDetail? = csipSummaryRepository.findCurrentWithCounts(prisonNumber)?.let {
     CurrentCsipDetail(
-      CurrentCsip(it.status(), it.referralDate(), it.nextReviewDate, it.closedDate),
+      CurrentCsip(it.status(), it.referralDate(), it.current.nextReviewDate, it.current.closedDate),
       it.opened,
       it.referred,
     )
@@ -98,7 +98,7 @@ class CsipRecordService(
       requireNotNull(personSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }.toPersonSummary(),
     )
 
-  private fun CurrentCsipAndCounts.referralDate() = if (statusCode == CsipStatus.REFERRAL_PENDING) null else referralDate
+  private fun CurrentCsipAndCounts.referralDate() = if (current.statusCode == CsipStatus.REFERRAL_PENDING) null else current.referralDate
 
-  private fun CurrentCsipAndCounts.status() = ReferenceData(statusCode.name, statusDescription)
+  private fun CurrentCsipAndCounts.status() = ReferenceData(current.statusCode.name, current.statusDescription)
 }

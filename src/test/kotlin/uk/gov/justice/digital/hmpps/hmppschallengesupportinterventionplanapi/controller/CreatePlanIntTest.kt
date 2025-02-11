@@ -125,6 +125,7 @@ class CreatePlanIntTest : IntegrationTestBase() {
     assertThat(caseManager).isEqualTo(request.caseManager)
     assertThat(reasonForPlan).isEqualTo(request.reasonForPlan)
     assertThat(firstCaseReviewDate).isEqualTo(request.nextCaseReviewDate)
+    assertThat(nextReviewDate).isEqualTo(request.nextCaseReviewDate)
     assertThat(identifiedNeeds().size).isEqualTo(request.identifiedNeeds.size)
   }
 

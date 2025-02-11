@@ -16,14 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.context.jdbc.Sql
-import org.springframework.test.context.jdbc.SqlMergeMode
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
@@ -87,6 +85,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpdateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertDecisionAndActionsRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.getByName
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
@@ -103,8 +102,6 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 
-@SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
-@Sql("classpath:test_data/reset-database.sql")
 @ExtendWith(HmppsAuthApiExtension::class, ManageUsersExtension::class, PrisonerSearchExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -119,7 +116,7 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var objectMapper: ObjectMapper
 
-  @SpyBean
+  @MockitoSpyBean
   lateinit var hmppsQueueService: HmppsQueueService
 
   @Autowired
@@ -366,6 +363,7 @@ abstract class IntegrationTestBase {
       legacyId,
     )
     getByName<MutableList<IdentifiedNeed>>("identifiedNeeds") += need
+    updateCalculatedDates()
   }
 
   fun Plan.withReview(
@@ -384,6 +382,7 @@ abstract class IntegrationTestBase {
       reviewDate, recordedBy, recordedByDisplayName, nextReviewDate, csipClosedDate, summary, actions, legacyId,
     )
     getByName<MutableList<Review>>("reviews") += review
+    updateCalculatedDates()
   }
 
   fun Review.withAttendee(
@@ -503,6 +502,9 @@ abstract class IntegrationTestBase {
     hmppsEventsTestQueue.sqsClient.purgeQueue(
       PurgeQueueRequest.builder().queueUrl(hmppsEventsTestQueue.queueUrl).build(),
     ).get()
+
+    val existingId = csipRecordRepository.findAll().mapNotNull { it.legacyId }.maxOrNull() ?: 0
+    NomisIdGenerator.setStartingIdValue(existingId + 1)
   }
 
   internal fun setAuthorisation(

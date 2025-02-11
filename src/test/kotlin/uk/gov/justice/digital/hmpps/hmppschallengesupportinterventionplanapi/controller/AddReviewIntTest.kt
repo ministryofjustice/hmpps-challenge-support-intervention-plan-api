@@ -91,6 +91,7 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
+    assertThat(review.plan.nextReviewDate).isEqualTo(review.nextReviewDate)
 
     val attendeeUuids = review.attendees().map { it.id }
     assertThat(attendeeUuids.size).isEqualTo(2)
@@ -116,6 +117,8 @@ class AddReviewIntTest : IntegrationTestBase() {
 
     val review = getReview(response.reviewUuid)
     review.verifyAgainst(request)
+    assertThat(review.plan.nextReviewDate).isNull()
+    assertThat(review.plan.closedDate).isEqualTo(review.csipClosedDate)
 
     val need = review.plan.identifiedNeeds().first()
     assertThat(need.closedDate).isEqualTo(review.csipClosedDate)

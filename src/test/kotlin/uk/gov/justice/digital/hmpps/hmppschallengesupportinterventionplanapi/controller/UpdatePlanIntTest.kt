@@ -131,6 +131,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.getCsipRecord(record.id).plan
     requireNotNull(plan).verifyAgainst(request)
     assertThat(plan.firstCaseReviewDate).isEqualTo(request.nextCaseReviewDate)
+    assertThat(plan.nextReviewDate).isEqualTo(request.nextCaseReviewDate)
     verifyAudit(plan, RevisionType.MOD, setOf(CsipComponent.PLAN))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
@@ -156,6 +157,7 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     val plan = getPlan(record.id)
     plan.verifyAgainst(request)
     assertThat(plan.firstCaseReviewDate).isEqualTo(record.plan?.firstCaseReviewDate)
+    assertThat(plan.nextReviewDate).isEqualTo(request.nextCaseReviewDate)
     assertThat(plan.reviews().maxByOrNull { it.reviewSequence }!!.nextReviewDate).isEqualTo(request.nextCaseReviewDate)
     verifyAudit(plan, RevisionType.MOD, setOf(CsipComponent.PLAN, CsipComponent.REVIEW))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)

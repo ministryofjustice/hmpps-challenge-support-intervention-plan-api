@@ -16,7 +16,7 @@ import org.hibernate.envers.NotAudited
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus.CSIP_OPEN
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.AttendeesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.FirstReviewRequest
@@ -60,12 +60,24 @@ class Plan(
     private set
 
   @NotAudited
+  var nextReviewDate: LocalDate? = null
+    private set
+
+  @NotAudited
+  var closedDate: LocalDate? = null
+    private set
+
+  @NotAudited
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
   private var identifiedNeeds: MutableList<IdentifiedNeed> = mutableListOf()
 
   @NotAudited
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])
   private var reviews: MutableList<Review> = mutableListOf()
+
+  init {
+    updateCalculatedDates()
+  }
 
   fun identifiedNeeds() = identifiedNeeds.toList()
 
@@ -81,6 +93,7 @@ class Plan(
         reviews.maxByOrNull { it.reviewSequence }!!.updateNextReviewDate(request.nextCaseReviewDate)
       }
     }
+    updateCalculatedDates()
   }
 
   fun addIdentifiedNeed(request: IdentifiedNeedRequest): IdentifiedNeed = IdentifiedNeed(
@@ -114,13 +127,21 @@ class Plan(
       request.attendees.forEach { addAttendee(it) }
     }
     csipClosedDate?.also { closeOpenNeeds(it) }
+    updateCalculatedDates()
   }
 
-  fun nextReviewDate(): LocalDate? {
-    if (CSIP_OPEN.name != csipRecord.status?.code) return null
+  internal fun updateCalculatedDates() {
+    nextReviewDate = nextReviewDate()
+    closedDate = closedDate()
+  }
+
+  private fun nextReviewDate(): LocalDate? {
     if (reviews.isEmpty()) return firstCaseReviewDate
+    if (reviews.any { it.actions.contains(ReviewAction.CLOSE_CSIP) }) return null
     return reviews().maxByOrNull { it.reviewSequence }?.nextReviewDate
   }
+
+  private fun closedDate(): LocalDate? = reviews.firstOrNull { it.actions.contains(ReviewAction.CLOSE_CSIP) }?.csipClosedDate
 
   internal fun closeOpenNeeds(date: LocalDate) {
     identifiedNeeds.forEach { it.closeNeedIfOpen(date) }
@@ -131,7 +152,7 @@ fun Plan.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportintervent
   caseManager,
   reasonForPlan,
   firstCaseReviewDate,
-  nextReviewDate(),
+  nextReviewDate,
   identifiedNeeds().map { it.toModel() },
   reviews().map { it.toModel() },
 )

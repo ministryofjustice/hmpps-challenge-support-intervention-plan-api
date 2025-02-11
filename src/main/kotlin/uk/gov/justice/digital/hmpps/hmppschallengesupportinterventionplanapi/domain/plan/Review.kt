@@ -97,18 +97,19 @@ class Review(
     reviewDate = request.reviewDate
     recordedBy = request.recordedBy
     recordedByDisplayName = request.recordedByDisplayName
-    nextReviewDate = request.nextReviewDate
+    actions = request.actions
     csipClosedDate = request.csipClosedDate
     summary = request.summary
-    actions = request.actions
     if (request is LegacyIdAware) {
       legacyId = request.legacyId
     }
     csipClosedDate?.also { plan.closeOpenNeeds(it) }
+    updateNextReviewDate(request.nextReviewDate)
   }
 
-  fun updateNextReviewDate(date: LocalDate?) {
+  internal fun updateNextReviewDate(date: LocalDate?) {
     nextReviewDate = date
+    plan.updateCalculatedDates()
   }
 
   fun addAttendee(request: AttendeeRequest) = Attendee(
