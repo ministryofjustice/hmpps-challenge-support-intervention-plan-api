@@ -20,7 +20,7 @@ set next_review_date = case
 where plan.next_review_date is null;
 
 update plan
-set closed_date = closed_date = (select csip_closed_date
+set closed_date = (select csip_closed_date
                                  from review
                                  where review.plan_id = plan.plan_id
                                  order by review_sequence desc
