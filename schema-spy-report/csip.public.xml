@@ -210,7 +210,7 @@
             <column ascending="true" name="record_id"/>
          </index>
       </table>
-      <table name="csip_summary" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" WITH latest_review AS (&#10;         SELECT DISTINCT ON (review.plan_id) review.plan_id,&#10;            review.review_id,&#10;            review.next_review_date,&#10;            review.csip_closed_date&#10;           FROM review&#10;          ORDER BY review.plan_id, review.review_sequence DESC&#10;        )&#10; SELECT person.prison_number,&#10;    person.first_name,&#10;    person.last_name,&#10;    person.restricted_patient,&#10;    person.prison_code,&#10;    person.cell_location,&#10;    person.supporting_prison_code,&#10;    ref.referral_date,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_OPEN'::text) THEN&#10;            CASE&#10;                WHEN (rev.review_id IS NOT NULL) THEN rev.next_review_date&#10;                ELSE p.first_case_review_date&#10;            END&#10;            ELSE NULL::date&#10;        END AS next_review_date,&#10;    p.case_manager,&#10;    csip.record_id AS id,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_CLOSED'::text) THEN rev.csip_closed_date&#10;            ELSE NULL::date&#10;        END AS closed_date,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_OPEN'::text) THEN 1&#10;            WHEN ((st.code)::text = 'CSIP_CLOSED'::text) THEN 3&#10;            WHEN ((st.code)::text = ANY ((ARRAY['NO_FURTHER_ACTION'::character varying, 'SUPPORT_OUTSIDE_CSIP'::character varying])::text[])) THEN 4&#10;            ELSE 2&#10;        END AS priority,&#10;    st.code AS status_code,&#10;    st.description AS status_description&#10;   FROM (((((csip_record csip&#10;     JOIN person_summary person ON (((person.prison_number)::text = (csip.prison_number)::text)))&#10;     JOIN referral ref ON ((ref.referral_id = csip.record_id)))&#10;     LEFT JOIN plan p ON ((p.plan_id = csip.record_id)))&#10;     LEFT JOIN latest_review rev ON ((rev.plan_id = p.plan_id)))&#10;     JOIN reference_data st ON ((st.reference_data_id = csip.status_id)));">
+      <table name="csip_summary" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" SELECT person.prison_number,&#10;    person.first_name,&#10;    person.last_name,&#10;    person.restricted_patient,&#10;    person.prison_code,&#10;    person.cell_location,&#10;    person.supporting_prison_code,&#10;    ref.referral_date,&#10;    p.next_review_date,&#10;    p.case_manager,&#10;    csip.record_id AS id,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_CLOSED'::text) THEN p.closed_date&#10;            ELSE NULL::date&#10;        END AS closed_date,&#10;        CASE&#10;            WHEN ((st.code)::text = 'CSIP_OPEN'::text) THEN 1&#10;            WHEN ((st.code)::text = 'CSIP_CLOSED'::text) THEN 3&#10;            WHEN ((st.code)::text = ANY ((ARRAY['NO_FURTHER_ACTION'::character varying, 'SUPPORT_OUTSIDE_CSIP'::character varying])::text[])) THEN 4&#10;            ELSE 2&#10;        END AS priority,&#10;    st.code AS status_code,&#10;    st.description AS status_description&#10;   FROM ((((csip_record csip&#10;     JOIN person_summary person ON (((person.prison_number)::text = (csip.prison_number)::text)))&#10;     JOIN referral ref ON ((ref.referral_id = csip.record_id)))&#10;     LEFT JOIN plan p ON ((p.plan_id = csip.record_id)))&#10;     JOIN reference_data st ON ((st.reference_data_id = csip.status_id)));">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="prison_number" nullable="true" remarks="" size="10" type="varchar" typeCode="12">
             <parent column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="person_summary"/>
          </column>
@@ -524,9 +524,14 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="reason_for_plan" nullable="true" remarks="" size="240" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_case_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="next_review_date" nullable="true" remarks="Next review date is calculated and stored in this field for performance reasons. This will be the first case review date when no reviews exist or the next review date of the most recent review when a review exists." size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="closed_date" nullable="true" remarks="Closed date is calculated and stored in this field for performance reasons. This will be the closed date from the review that closes the CSIP." size="13" type="date" typeCode="91"/>
          <primaryKey column="plan_id" sequenceNumberInPK="1"/>
          <index name="plan_pkey" unique="true">
             <column ascending="true" name="plan_id"/>
+         </index>
+         <index name="idx_plan_next_review_date" unique="false">
+            <column ascending="true" name="next_review_date"/>
          </index>
       </table>
       <table name="plan_audit" remarks="" schema="public" type="TABLE">
@@ -548,7 +553,7 @@
             <column ascending="true" name="plan_id"/>
          </index>
       </table>
-      <table name="reference_data" numRows="112" remarks="" schema="public" type="TABLE">
+      <table name="reference_data" numRows="122" remarks="" schema="public" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('reference_data_reference_data_id_seq'::regclass)" digits="0" id="0" name="reference_data_id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
             <child column="contributory_factor_type_id" foreignKey="contributory_factor_contributory_factor_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
             <child column="status_id" foreignKey="csip_record_status_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>

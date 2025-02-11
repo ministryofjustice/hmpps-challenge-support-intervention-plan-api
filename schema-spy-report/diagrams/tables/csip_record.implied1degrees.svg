@@ -168,7 +168,7 @@
 <text text-anchor="start" x="31.5" y="-43.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
 <polygon fill="#ffffff" stroke="transparent" points="66.5,-37.7 66.5,-56.7 129.5,-56.7 129.5,-37.7 66.5,-37.7"/>
 <polygon fill="none" stroke="#000000" points="66.5,-37.7 66.5,-56.7 129.5,-56.7 129.5,-37.7 66.5,-37.7"/>
-<text text-anchor="start" x="81.8807" y="-43.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">112 rows</text>
+<text text-anchor="start" x="81.8807" y="-43.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">122 rows</text>
 <polygon fill="#ffffff" stroke="transparent" points="129.5,-37.7 129.5,-56.7 169.5,-56.7 169.5,-37.7 129.5,-37.7"/>
 <polygon fill="none" stroke="#000000" points="129.5,-37.7 129.5,-56.7 169.5,-56.7 169.5,-37.7 129.5,-37.7"/>
 <text text-anchor="start" x="144.7904" y="-43.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">10 &gt;</text>
@@ -186,7 +186,7 @@
 <g id="node5" class="node">
 <title>plan</title>
 <g id="a_node5"><a xlink:href="../../tables/plan.html" xlink:title="plan" target="_top">
-<polygon fill="#ffffff" stroke="transparent" points="643,-319.2 643,-402.2 816,-402.2 816,-319.2 643,-319.2"/>
+<polygon fill="#ffffff" stroke="transparent" points="643,-297.2 643,-402.2 816,-402.2 816,-297.2 643,-297.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="643.5,-378.7 643.5,-401.7 816.5,-401.7 816.5,-378.7 643.5,-378.7"/>
 <polygon fill="none" stroke="#000000" points="643.5,-378.7 643.5,-401.7 816.5,-401.7 816.5,-378.7 643.5,-378.7"/>
 <text text-anchor="start" x="648.5" y="-387.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">plan</text>
@@ -194,17 +194,20 @@
 <polygon fill="none" stroke="#000000" points="643.5,-356.7 643.5,-378.7 816.5,-378.7 816.5,-356.7 643.5,-356.7"/>
 <image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="648.5" y="-373.7"/>
 <text text-anchor="start" x="663.5" y="-363.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">plan_id</text>
-<polygon fill="none" stroke="#000000" points="643.5,-337.7 643.5,-356.7 816.5,-356.7 816.5,-337.7 643.5,-337.7"/>
-<text text-anchor="start" x="646.5" y="-343.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
-<polygon fill="#ffffff" stroke="transparent" points="643.5,-318.7 643.5,-337.7 723.5,-337.7 723.5,-318.7 643.5,-318.7"/>
-<polygon fill="none" stroke="#000000" points="643.5,-318.7 643.5,-337.7 723.5,-337.7 723.5,-318.7 643.5,-318.7"/>
-<text text-anchor="start" x="646.5" y="-324.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
-<polygon fill="#ffffff" stroke="transparent" points="723.5,-318.7 723.5,-337.7 765.5,-337.7 765.5,-318.7 723.5,-318.7"/>
-<polygon fill="none" stroke="#000000" points="723.5,-318.7 723.5,-337.7 765.5,-337.7 765.5,-318.7 723.5,-318.7"/>
-<text text-anchor="start" x="756.3862" y="-324.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-<polygon fill="#ffffff" stroke="transparent" points="765.5,-318.7 765.5,-337.7 816.5,-337.7 816.5,-318.7 765.5,-318.7"/>
-<polygon fill="none" stroke="#000000" points="765.5,-318.7 765.5,-337.7 816.5,-337.7 816.5,-318.7 765.5,-318.7"/>
-<text text-anchor="start" x="797.9053" y="-324.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">2 &gt;</text>
+<polygon fill="#ffffff" stroke="transparent" points="643.5,-334.7 643.5,-356.7 816.5,-356.7 816.5,-334.7 643.5,-334.7"/>
+<polygon fill="none" stroke="#000000" points="643.5,-334.7 643.5,-356.7 816.5,-356.7 816.5,-334.7 643.5,-334.7"/>
+<text text-anchor="start" x="663.5" y="-341.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">next_review_date</text>
+<polygon fill="none" stroke="#000000" points="643.5,-315.7 643.5,-334.7 816.5,-334.7 816.5,-315.7 643.5,-315.7"/>
+<text text-anchor="start" x="646.5" y="-321.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
+<polygon fill="#ffffff" stroke="transparent" points="643.5,-296.7 643.5,-315.7 723.5,-315.7 723.5,-296.7 643.5,-296.7"/>
+<polygon fill="none" stroke="#000000" points="643.5,-296.7 643.5,-315.7 723.5,-315.7 723.5,-296.7 643.5,-296.7"/>
+<text text-anchor="start" x="646.5" y="-302.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
+<polygon fill="#ffffff" stroke="transparent" points="723.5,-296.7 723.5,-315.7 765.5,-315.7 765.5,-296.7 723.5,-296.7"/>
+<polygon fill="none" stroke="#000000" points="723.5,-296.7 723.5,-315.7 765.5,-315.7 765.5,-296.7 723.5,-296.7"/>
+<text text-anchor="start" x="756.3862" y="-302.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+<polygon fill="#ffffff" stroke="transparent" points="765.5,-296.7 765.5,-315.7 816.5,-315.7 816.5,-296.7 765.5,-296.7"/>
+<polygon fill="none" stroke="#000000" points="765.5,-296.7 765.5,-315.7 816.5,-315.7 816.5,-296.7 765.5,-296.7"/>
+<text text-anchor="start" x="797.9053" y="-302.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">2 &gt;</text>
 </a>
 </g>
 </g>
@@ -286,16 +289,16 @@
 <!-- referral&#45;&gt;reference_data -->
 <g id="edge7" class="edge">
 <title>referral:w&#45;&gt;reference_data:e</title>
-<path fill="none" stroke="#000000" d="M581.0617,-179.7163C430.3056,-180.0549 386.4128,-185.3495 230,-165.7 202.7118,-162.2719 197.0026,-152.7 169.5,-152.7"/>
-<polygon fill="#000000" stroke="#000000" points="587.5,-179.7091 595.5041,-183.3 591.5,-179.7045 595.5,-179.7 595.5,-179.7 595.5,-179.7 591.5,-179.7045 595.4959,-176.1 587.5,-179.7091 587.5,-179.7091"/>
-<ellipse fill="none" stroke="#000000" cx="584.3" cy="-179.7127" rx="3.2" ry="3.2"/>
+<path fill="none" stroke="#000000" d="M581.0606,-179.7108C430.2976,-179.9332 386.5553,-183.325 230,-164.7 202.7792,-161.4616 196.9127,-152.7 169.5,-152.7"/>
+<polygon fill="#000000" stroke="#000000" points="587.5,-179.706 595.5027,-183.3 591.5,-179.703 595.5,-179.7 595.5,-179.7 595.5,-179.7 591.5,-179.703 595.4973,-176.1 587.5,-179.706 587.5,-179.706"/>
+<ellipse fill="none" stroke="#000000" cx="584.3" cy="-179.7085" rx="3.2" ry="3.2"/>
 </g>
 <!-- referral&#45;&gt;reference_data -->
 <g id="edge8" class="edge">
 <title>referral:w&#45;&gt;reference_data:e</title>
-<path fill="none" stroke="#000000" d="M581.0356,-136.087C506.6447,-138.6175 191.0575,-152.7 169.5,-152.7"/>
-<polygon fill="#000000" stroke="#000000" points="587.5029,-135.914 595.5963,-139.2987 591.5014,-135.807 595.5,-135.7 595.5,-135.7 595.5,-135.7 591.5014,-135.807 595.4037,-132.1013 587.5029,-135.914 587.5029,-135.914"/>
-<ellipse fill="none" stroke="#000000" cx="584.304" cy="-135.9996" rx="3.2" ry="3.2"/>
+<path fill="none" stroke="#000000" d="M581.0647,-135.7187C430.3708,-136.1158 387.4902,-142.7793 230,-149.7 203.104,-150.8819 196.4219,-152.7 169.5,-152.7"/>
+<polygon fill="#000000" stroke="#000000" points="587.5,-135.7104 595.5047,-139.3 591.5,-135.7052 595.5,-135.7 595.5,-135.7 595.5,-135.7 591.5,-135.7052 595.4953,-132.1 587.5,-135.7104 587.5,-135.7104"/>
+<ellipse fill="none" stroke="#000000" cx="584.3" cy="-135.7146" rx="3.2" ry="3.2"/>
 </g>
 </g>
 </svg>
