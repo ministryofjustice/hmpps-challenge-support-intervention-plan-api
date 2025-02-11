@@ -19,6 +19,18 @@ set next_review_date = case
                            else plan.first_case_review_date end
 where plan.next_review_date is null;
 
+update plan
+set closed_date = closed_date = (select csip_closed_date
+                                 from review
+                                 where review.plan_id = plan.plan_id
+                                 order by review_sequence desc
+                                 limit 1)
+from csip_record csip
+         join reference_data status on status.reference_data_id = csip.status_id
+where plan.plan_id = csip.record_id
+  and plan.closed_date is null
+  and status.code = 'CSIP_CLOSED';
+
 drop view csip_summary;
 create view csip_summary
 as
