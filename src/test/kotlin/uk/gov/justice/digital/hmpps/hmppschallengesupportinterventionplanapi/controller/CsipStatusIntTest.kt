@@ -25,26 +25,29 @@ class CsipStatusIntTest : IntegrationTestBase() {
       csip.withCompletedReferral().withPlan()
       val plan = requireNotNull(csip.plan)
       plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
-        .withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+        .withReview(actions = setOf(ReviewAction.CLOSE_CSIP), csipClosedDate = LocalDate.now())
       csip
     }
 
     val saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.CSIP_CLOSED.name)
+    assertThat(saved.plan?.nextCaseReviewDate).isNull()
   }
 
   @Test
   fun `csip status - CsipOpen`() {
+    val nextReviewDate = LocalDate.now().plusWeeks(6)
     val record = dataSetup(generateCsipRecord()) {
       it.withCompletedReferral().withPlan()
       val plan = requireNotNull(it.plan)
       plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
-        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP))
+        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP), nextReviewDate = nextReviewDate)
       it
     }
 
     val saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
+    assertThat(saved.plan?.nextCaseReviewDate).isEqualTo(nextReviewDate)
   }
 
   @Test
