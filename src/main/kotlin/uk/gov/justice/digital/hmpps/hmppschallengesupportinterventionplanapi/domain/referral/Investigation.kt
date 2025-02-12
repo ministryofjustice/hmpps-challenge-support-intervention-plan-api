@@ -34,6 +34,7 @@ class Investigation(
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
   val recordedBy: String?,
+  val recordedByDisplayName: String?,
 ) : SimpleVersion(),
   CsipAware {
   override fun csipRecord() = referral.csipRecord
@@ -99,5 +100,6 @@ fun Investigation.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupport
   personsTrigger = personsTrigger,
   protectiveFactors = protectiveFactors,
   recordedBy = recordedBy,
+  recordedByDisplayName = recordedByDisplayName,
   interviews = interviews().map { it.toModel() },
 )

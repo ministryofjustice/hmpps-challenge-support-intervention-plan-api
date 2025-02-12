@@ -17,6 +17,7 @@ import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyDoesNotExist
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.ContributoryFactorRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.DecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.ReferralDateRequest
@@ -274,7 +276,12 @@ class Referral(
     verifyDoesNotExist(investigation) {
       ResourceAlreadyExistException("Referral already has an investigation")
     }
-    investigation = Investigation(this, csipRequestContext().userDisplayName).update(request)
+    val context = csipRequestContext()
+    val (recordedBy, recordedByDisplayName) = when (request) {
+      is CreateInvestigationRequest -> request or context
+      else -> context.username to context.userDisplayName
+    }
+    investigation = Investigation(this, recordedBy, recordedByDisplayName).update(request)
     return investigation!!
   }
 
@@ -290,6 +297,12 @@ class Referral(
     }
     decisionAndActions!!.upsert(request, outcome, signedOffBy)
     return decisionAndActions!!
+  }
+
+  private infix fun CreateInvestigationRequest.or(context: CsipRequestContext): Pair<String, String> = if (recordedBy == null || recordedByDisplayName == null) {
+    context.username to context.userDisplayName
+  } else {
+    recordedBy to recordedByDisplayName
   }
 
   private fun updateReferenceData(
