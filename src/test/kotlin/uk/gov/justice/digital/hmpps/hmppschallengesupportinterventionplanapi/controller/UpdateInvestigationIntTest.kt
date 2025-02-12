@@ -161,8 +161,10 @@ class UpdateInvestigationIntTest : IntegrationTestBase() {
 
     val response = updateInvestigation(record.id, request, status = HttpStatus.OK)
     response.verifyAgainst(request)
+    assertThat(response.recordedBy).isEqualTo("A N Other")
 
     val investigation = getInvestigation(record.id)
+    assertThat(investigation.recordedBy).isEqualTo("A N Other")
     verifyAudit(investigation, RevisionType.MOD, setOf(CsipComponent.INVESTIGATION))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }

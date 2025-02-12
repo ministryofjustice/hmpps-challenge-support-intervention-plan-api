@@ -33,7 +33,7 @@ class Investigation(
   @OneToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "investigation_id")
   val referral: Referral,
-  val recordedBy: String? = null,
+  val recordedBy: String?,
 ) : SimpleVersion(),
   CsipAware {
   override fun csipRecord() = referral.csipRecord
