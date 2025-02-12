@@ -274,7 +274,7 @@ class Referral(
     verifyDoesNotExist(investigation) {
       ResourceAlreadyExistException("Referral already has an investigation")
     }
-    investigation = Investigation(this).update(request)
+    investigation = Investigation(this, csipRequestContext().userDisplayName).update(request)
     return investigation!!
   }
 

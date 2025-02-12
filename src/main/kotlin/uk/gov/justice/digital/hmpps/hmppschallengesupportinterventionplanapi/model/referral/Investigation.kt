@@ -23,6 +23,9 @@ data class Investigation(
   @Schema(description = "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence")
   val protectiveFactors: String?,
 
+  @Schema(description = "Display name of the user that created the investigation")
+  val recordedBy: String?,
+
   @Schema(description = "The interviews in relation to the Investigation")
   val interviews: Collection<Interview>,
 ) {

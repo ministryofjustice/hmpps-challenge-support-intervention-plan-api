@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInterviewRequest
@@ -149,6 +150,7 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     assertThat(personsTrigger).isEqualTo(request.personsTrigger)
     assertThat(protectiveFactors).isEqualTo(request.protectiveFactors)
     assertThat(interviews.size).isEqualTo(request.interviews.size)
+    assertThat(recordedBy).isEqualTo(TEST_USER_NAME)
   }
 
   private fun createInvestigationRequest(
