@@ -57,7 +57,10 @@ kotlin {
 
 tasks {
   withType<KotlinCompile> {
-    compilerOptions.jvmTarget = JVM_21
+    compilerOptions {
+      jvmTarget = JVM_21
+      freeCompilerArgs.add("-Xwhen-guards")
+    }
   }
 
   val copyAgentJar by registering(Copy::class) {
