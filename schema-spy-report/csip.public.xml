@@ -425,6 +425,8 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="persons_trigger" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="protective_factors" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
          <primaryKey column="investigation_id" sequenceNumberInPK="1"/>
          <index name="investigation_pkey" unique="true">
             <column ascending="true" name="investigation_id"/>
@@ -448,6 +450,10 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="persons_usual_behaviour_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="persons_trigger_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="protective_factors_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="recorded_by_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="recorded_by_display_name_modified" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
          <primaryKey column="rev_id" sequenceNumberInPK="1"/>
          <primaryKey column="investigation_id" sequenceNumberInPK="2"/>
          <index name="investigation_audit_pkey" unique="true">
