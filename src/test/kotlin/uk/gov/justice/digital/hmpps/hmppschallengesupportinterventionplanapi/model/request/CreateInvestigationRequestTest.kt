@@ -14,6 +14,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = null,
       personsTrigger = "personsTrigger",
       protectiveFactors = null,
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -28,6 +30,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = null,
       personsTrigger = null,
       protectiveFactors = null,
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertSingleValidationError(
@@ -46,6 +50,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = null,
       personsTrigger = null,
       protectiveFactors = null,
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertSingleValidationError(
@@ -64,6 +70,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = null,
       personsTrigger = null,
       protectiveFactors = null,
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertSingleValidationError(
@@ -82,6 +90,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = "n".repeat(4001),
       personsTrigger = null,
       protectiveFactors = null,
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertSingleValidationError(
@@ -100,6 +110,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = null,
       personsTrigger = "n".repeat(4001),
       protectiveFactors = null,
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertSingleValidationError(
@@ -118,6 +130,8 @@ class CreateInvestigationRequestTest : RequestValidationTest() {
       personsUsualBehaviour = null,
       personsTrigger = null,
       protectiveFactors = "n".repeat(4001),
+      recordedBy = null,
+      recordedByDisplayName = null,
       listOf(),
     )
     assertSingleValidationError(

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_UPDATED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.TEST_USER_NAME
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ValidInvestigationDetail.Companion.WITH_INTERVIEW_MESSAGE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInterviewRequest
@@ -135,9 +136,30 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
 
     val response = createInvestigation(record.id, request)
     response.verifyAgainst(request)
+    assertThat(response.recordedBy).isEqualTo(TEST_USER)
+    assertThat(response.recordedByDisplayName).isEqualTo(TEST_USER_NAME)
 
     val investigation = getInvestigation(record.id)
     verifyAudit(investigation, RevisionType.ADD, setOf(CsipComponent.INVESTIGATION, INTERVIEW))
+    verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
+  }
+
+  @Test
+  fun `201 created - create investigation with recorded by details`() {
+    val username = "J1264BC"
+    val displayName = "John Smith"
+    val record = dataSetup(generateCsipRecord()) { it.withReferral() }
+    val request = createInvestigationRequest(recordedBy = username, recordedByDisplayName = displayName)
+
+    val response = createInvestigation(record.id, request)
+    response.verifyAgainst(request)
+    assertThat(response.recordedBy).isEqualTo(request.recordedBy)
+    assertThat(response.recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
+
+    val investigation = getInvestigation(record.id)
+    assertThat(investigation.recordedBy).isEqualTo(request.recordedBy)
+    assertThat(investigation.recordedByDisplayName).isEqualTo(request.recordedByDisplayName)
+    verifyAudit(investigation, RevisionType.ADD, setOf(CsipComponent.INVESTIGATION))
     verifyDomainEvents(record.prisonNumber, record.id, CSIP_UPDATED)
   }
 
@@ -158,6 +180,8 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     personsUsualBehaviour: String? = "personsUsualBehaviour",
     personsTrigger: String? = "personsTrigger",
     protectiveFactors: String? = "protectiveFactors",
+    recordedBy: String? = null,
+    recordedByDisplayName: String? = null,
     interviews: List<CreateInterviewRequest> = listOf(),
   ) = CreateInvestigationRequest(
     staffInvolved,
@@ -166,6 +190,8 @@ class CreateInvestigationsIntTest : IntegrationTestBase() {
     personsUsualBehaviour,
     personsTrigger,
     protectiveFactors,
+    recordedBy,
+    recordedByDisplayName,
     interviews,
   )
 

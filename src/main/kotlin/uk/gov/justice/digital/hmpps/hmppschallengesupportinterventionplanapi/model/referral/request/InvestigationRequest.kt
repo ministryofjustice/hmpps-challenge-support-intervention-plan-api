@@ -13,6 +13,8 @@ data class CreateInvestigationRequest(
   override val personsUsualBehaviour: String?,
   override val personsTrigger: String?,
   override val protectiveFactors: String?,
+  val recordedBy: String?,
+  val recordedByDisplayName: String?,
   override val interviews: List<CreateInterviewRequest> = listOf(),
 ) : InvestigationRequest,
   InterviewsRequest
