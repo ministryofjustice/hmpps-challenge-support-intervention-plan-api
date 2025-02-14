@@ -67,7 +67,7 @@ class SaferCustodyScreeningOutcome(
   @Column(name = "safer_custody_screening_outcome_id")
   val id: UUID = referral.id
 
-  fun update(request: ScreeningOutcomeRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
+  internal fun update(request: ScreeningOutcomeRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
     outcome = rdSupplier(ReferenceDataType.SCREENING_OUTCOME_TYPE, request.outcomeTypeCode)
     date = request.date
     recordedBy = request.recordedBy

@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.verifyExists
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateSaferCustodyScreeningOutcomeRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertSaferCustodyScreeningOutcomeRequest
 import java.util.UUID
 
 @Service
@@ -28,7 +29,20 @@ class SaferCustodyScreeningOutcomeService(
   ): SaferCustodyScreeningOutcome {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
-      createSaferCustodyScreeningOutcome(request = request, referenceDataRepository::getActiveReferenceData).toModel()
+      upsertSaferCustodyScreeningOutcome(request = request, referenceDataRepository::getActiveReferenceData).toModel()
+    }
+  }
+
+  @PublishCsipEvent(CSIP_UPDATED)
+  fun upsertScreeningOutcome(
+    recordUuid: UUID,
+    request: UpsertSaferCustodyScreeningOutcomeRequest,
+  ): SaferCustodyScreeningOutcome {
+    val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
+    return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
+      val screening = this.saferCustodyScreeningOutcome
+      upsertSaferCustodyScreeningOutcome(request = request, referenceDataRepository::getActiveReferenceData).toModel()
+        .apply { new = screening == null }
     }
   }
 }

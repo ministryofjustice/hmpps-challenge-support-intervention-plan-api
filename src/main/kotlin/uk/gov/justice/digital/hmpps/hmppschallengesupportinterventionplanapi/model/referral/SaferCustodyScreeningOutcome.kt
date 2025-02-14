@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import java.time.LocalDate
@@ -20,4 +21,7 @@ data class SaferCustodyScreeningOutcome(
 
   @Schema(description = "The reasons for the safer custody screening outcome decision.")
   val reasonForDecision: String?,
-)
+) {
+  @JsonIgnore
+  var new: Boolean = false
+}

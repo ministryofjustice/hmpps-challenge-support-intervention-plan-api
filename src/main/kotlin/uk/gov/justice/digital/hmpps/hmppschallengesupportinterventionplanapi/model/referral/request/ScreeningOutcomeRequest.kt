@@ -33,3 +33,12 @@ data class CreateSaferCustodyScreeningOutcomeRequest(
   override val recordedBy: String,
   override val recordedByDisplayName: String,
 ) : ScreeningOutcomeRequest
+
+@Schema(description = "The request body to create or update the Safer Custody Screening Outcome on the CSIP referral")
+data class UpsertSaferCustodyScreeningOutcomeRequest(
+  override val outcomeTypeCode: String,
+  override val date: LocalDate,
+  override val reasonForDecision: String,
+  override val recordedBy: String,
+  override val recordedByDisplayName: String,
+) : ScreeningOutcomeRequest
