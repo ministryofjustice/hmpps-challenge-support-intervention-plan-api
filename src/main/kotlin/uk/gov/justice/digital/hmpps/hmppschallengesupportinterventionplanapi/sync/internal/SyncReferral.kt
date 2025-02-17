@@ -28,8 +28,7 @@ class SyncReferral {
       ResponseMapping(CsipComponent.CONTRIBUTORY_FACTOR, it.legacyId, cf.id)
     }.toSet()
     request.saferCustodyScreeningOutcome?.also {
-      referral.saferCustodyScreeningOutcome?.update(it, rdSupplier)
-        ?: referral.createSaferCustodyScreeningOutcome(request.saferCustodyScreeningOutcome, rdSupplier)
+      referral.upsertSaferCustodyScreeningOutcome(it, rdSupplier)
     }
     val interviewMappings = request.investigation?.let { inv ->
       val investigation = referral.investigation?.update(inv) ?: referral.createInvestigation(inv)
