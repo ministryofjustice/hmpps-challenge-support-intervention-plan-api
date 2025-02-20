@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.2"
   kotlin("plugin.spring") version "2.1.10"
   kotlin("plugin.jpa") version "2.1.10"
   id("com.google.cloud.tools.jib") version "3.4.4"
-  id("io.gatling.gradle") version "3.13.4"
+  id("io.gatling.gradle") version "3.13.4.1"
   jacoco
 }
 
@@ -22,18 +22,18 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.2.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.3.0")
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.2.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.1")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.2")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
@@ -41,12 +41,12 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.3.1")
 
   // Test dependencies
-  testImplementation("org.testcontainers:postgresql:1.20.4")
+  testImplementation("org.testcontainers:postgresql:1.20.5")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
   testImplementation("org.wiremock:wiremock-standalone:3.12.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.2")
-  testImplementation("org.testcontainers:localstack:1.20.4")
+  testImplementation("org.testcontainers:localstack:1.20.5")
   testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
