@@ -16,8 +16,8 @@ configurations {
 
 dependencies {
 
-  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
-  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
 
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -44,7 +44,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.20.5")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
-  testImplementation("org.wiremock:wiremock-standalone:3.12.0")
+  testImplementation("org.wiremock:wiremock-standalone:3.12.1")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.20.5")
   testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
