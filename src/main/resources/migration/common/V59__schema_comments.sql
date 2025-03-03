@@ -1,5 +1,6 @@
+-- CSIP tables
 COMMENT ON TABLE reference_data IS 'Reference data used to populate properties that have fixed lists of valid options e.g. categories, decisions and statuses';
-COMMENT ON TABLE csip_record IS 'Root CSIP entity associating a person with a CSIP and all the child entities. Conceptually a CSIP folder';
+COMMENT ON TABLE csip_record IS 'Root CSIP entity associating a person with a CSIP and all the child entities. Conceptually a CSIP folder. All 1:1 child entities use the record_id value for their primary key';
 COMMENT ON TABLE person_summary IS 'Summary data for people with CSIPs. Used to optimise searching and pagination. Domain events cause the summary data to be updated keeping it accurate';
 COMMENT ON TABLE referral IS 'The referral that caused the CSIP record to be created. Referrals are step 1 of the CSIP process';
 COMMENT ON TABLE contributory_factor IS 'The contributory factors the referrer has identified as part of the referral';
@@ -12,7 +13,20 @@ COMMENT ON TABLE identified_need IS 'The needs identified in the plan or at subs
 COMMENT ON TABLE review IS 'The reviews of the plan. Plans are reviewed regularly as step 6 of the CSIP process. Plans can close the CSIP completing the CSIP process';
 COMMENT ON TABLE attendee IS 'Records the people who attended the review, their role and contribution';
 
-    -- Migration to add schema comments
+--CSIP Hibernate Envers tables
+COMMENT ON TABLE audit_revision IS 'Hibernate Envers audit revision records. A revision is created for every set of changes to the CSIP entity graph and the history of every mutable property change is tracked. Full audit history starts from the 15th of November 2024';
+COMMENT ON TABLE csip_record_audit IS 'CSIP record property changes';
+COMMENT ON TABLE person_summary_audit IS 'Person summary property changes';
+COMMENT ON TABLE referral_audit IS 'Referral property changes';
+COMMENT ON TABLE contributory_factor_audit IS 'Contributory factor property changes';
+COMMENT ON TABLE safer_custody_screening_outcome_audit IS 'Screening property changes';
+COMMENT ON TABLE investigation_audit IS 'Investigation property changes';
+COMMENT ON TABLE interview_audit IS 'Interview property changes';
+COMMENT ON TABLE decision_and_actions_audit IS 'Decision and actions property changes';
+COMMENT ON TABLE plan_audit IS 'Plan property changes';
+COMMENT ON TABLE identified_need_audit IS 'Identified needs property changes';
+COMMENT ON TABLE review_audit IS 'Review property changes';
+COMMENT ON TABLE attendee_audit IS 'Attendee property changes';
 
 -- csip_record table
 COMMENT ON COLUMN csip_record.record_id IS 'not null unique. Mapped to OFFENDER_CSIP_REPORTS';
