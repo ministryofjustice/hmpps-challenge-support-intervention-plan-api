@@ -29,36 +29,36 @@ COMMENT ON TABLE review_audit IS 'Review property changes';
 COMMENT ON TABLE attendee_audit IS 'Attendee property changes';
 
 -- csip_record table
-COMMENT ON COLUMN csip_record.record_id IS 'not null unique. Mapped to OFFENDER_CSIP_REPORTS';
-COMMENT ON COLUMN csip_record.legacy_id IS 'unique. Prevents duplicate records via NOMIS -> DPS sync';
-COMMENT ON COLUMN csip_record.prison_number IS 'not null. The prison number of the person the CSIP record is for';
+COMMENT ON COLUMN csip_record.record_id IS 'Public primary key for the CSIP and the shared primary key for 1:1 child entities';
+COMMENT ON COLUMN csip_record.prison_number IS 'The prison number of the person the CSIP record is for';
 COMMENT ON COLUMN csip_record.prison_code_when_recorded IS 'The prison code where the person was resident at the time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.AGY_LOC_ID';
-COMMENT ON COLUMN csip_record.log_code IS 'User entered identifier for the CSIP record. Defaults to the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ';
-COMMENT ON COLUMN csip_record.version IS 'increments on each update';
+COMMENT ON COLUMN csip_record.log_code IS 'User entered identifier for the CSIP record. Usually starts with the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ';
+COMMENT ON COLUMN csip_record.status_id IS 'Foreign key to reference data using the ''STATUS'' domain for the overall CSIP status. Status is calculated in NOMIS and not stored in the database';
+COMMENT ON COLUMN csip_record.legacy_id IS 'The NOMIS OFFENDER_CSIP_REPORTS.CSIP_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
+COMMENT ON COLUMN csip_record.version IS 'Supports bulk Hibernate operations';
 
 -- referral table
-COMMENT ON COLUMN referral.referral_id IS 'not null. Maps csip_record.record_id';
-COMMENT ON COLUMN referral.incident_date IS 'not null. The date the incident that motivated the CSIP referral occurred. Maps to RFR_INCIDENT_DATE';
-COMMENT ON COLUMN referral.incident_time IS 'The time the incident that motivated the CSIP referral occurred. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME';
-COMMENT ON COLUMN referral.incident_type_id IS 'not null. FK to reference_data. The type of incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE';
-COMMENT ON COLUMN referral.incident_location_id IS 'not null. FK to reference_data. The location of the incident that motivated the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION';
-COMMENT ON COLUMN referral.referred_by IS 'not null. The person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY';
-COMMENT ON COLUMN referral.referer_area_of_work_id IS 'not null. FK to reference_data. The area of work of the person reporting the incident or creating the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION';
-COMMENT ON COLUMN referral.referral_date IS 'not null. The date the CSIP referral was raised. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED';
-COMMENT ON COLUMN referral.proactive_referral IS 'Was this referral proactive or preventative. Maps to OFFENDER_CSIP_REPORTS.RFR_PROACTIVE_RESPONSE where the default is ''N''';
-COMMENT ON COLUMN referral.staff_assaulted IS 'Were any members of staff assaulted in the incident. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_ASSAULTED where the default is ''N''';
-COMMENT ON COLUMN referral.assaulted_staff_name IS 'Name or names of assaulted members of staff if any. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_NAME. 1000 character limit';
-COMMENT ON COLUMN referral.release_date IS 'The release date of the person in prison. Can be planned released date or the date they were released. Maps to OFFENDER_CSIP_REPORTS.CDR_RELEASE_DATE. Likely set by another screen in NOMIS';
-COMMENT ON COLUMN referral.incident_involvement_id IS 'not null. FK to reference_data. The type of involvement the person had in the incident. Maps to OFFENDER_CSIP_REPORTS.CDR_INVOLVEMENT';
-COMMENT ON COLUMN referral.description_of_concern IS 'not null. The reasons why there is cause for concern. Maps to OFFENDER_CSIP_REPORTS.CDR_CONCERN_DESCRIPTION';
-COMMENT ON COLUMN referral.known_reasons IS 'not null. The reasons already known about the causes of the incident or motivation for CSIP referral. Maps to OFFENDER_CSIP_REPORTS.INV_KNOWN_REASONS';
-COMMENT ON COLUMN referral.other_information IS 'Any other information about the incident or reasons for CSIP referral. Maps to OFFENDER_CSIP_REPORTS.CDR_OTHER_INFORMATION';
+COMMENT ON COLUMN referral.referral_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
+COMMENT ON COLUMN referral.incident_date IS 'The date the incident that motivated the CSIP referral occurred. Will be displayed on the UI as date behaviour first occurred for a proactive referral Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_DATE';
+COMMENT ON COLUMN referral.incident_time IS 'The time the incident that motivated the CSIP referral occurred. Will be displayed on the UI as time behaviour first occurred for a proactive referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME';
+COMMENT ON COLUMN referral.incident_type_id IS 'Foreign key to reference data using the ''INCIDENT_TYPE'' domain for the type of incident (or behavior for a proactive referral) that motivated the CSIP referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE';
+COMMENT ON COLUMN referral.incident_location_id IS 'Foreign key to reference data using the ''INCIDENT_LOCATION'' domain for the location of the incident (or behavior for a proactive referral) that motivated the CSIP referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION';
+COMMENT ON COLUMN referral.referred_by IS 'Either the display name of the user making the referral or free text if making the referral on behalf of someone else. Therefore not guaranteed to match user information. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY';
+COMMENT ON COLUMN referral.referer_area_of_work_id IS 'Foreign key to reference data using the ''AREA_OF_WORK'' domain for the area of work of the person making the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION';
+COMMENT ON COLUMN referral.referral_date IS 'The date the referral was submitted. Set to today by the UI. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED';
+COMMENT ON COLUMN referral.proactive_referral IS 'Whether the referral was proactive or the result of an incident. Maps to OFFENDER_CSIP_REPORTS.RFR_PROACTIVE_RESPONSE where the default is ''N''';
+COMMENT ON COLUMN referral.staff_assaulted IS 'Whether any member(s) of staff assaulted in the incident. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_ASSAULTED where the default is ''N''';
+COMMENT ON COLUMN referral.assaulted_staff_name IS 'Names of any assaulted member(s) of staff. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_NAME which has a 1000 character limit';
+COMMENT ON COLUMN referral.incident_involvement_id IS 'Foreign key to reference data using the ''INCIDENT_INVOLVEMENT'' domain for the type of involvement the person had in the incident (or behavior for a proactive referral). The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_INVOLVEMENT';
+COMMENT ON COLUMN referral.description_of_concern IS 'The reasons why there is cause for concern. Maps to OFFENDER_CSIP_REPORTS.CDR_CONCERN_DESCRIPTION which has a 4000 character limit';
+COMMENT ON COLUMN referral.known_reasons IS 'The reasons already known about the causes of the incident or behaviour. Maps to OFFENDER_CSIP_REPORTS.INV_KNOWN_REASONS which has a 4000 character limit';
+COMMENT ON COLUMN referral.other_information IS 'Any other information about the incident or behaviour. Maps to OFFENDER_CSIP_REPORTS.CDR_OTHER_INFORMATION which has a 4000 character limit';
 COMMENT ON COLUMN referral.safer_custody_team_informed IS 'Records whether the safer custody team been informed. Maps to OFFENDER_CSIP_REPORTS.CDR_SENT_DENT where the default is ''N''';
-COMMENT ON COLUMN referral.referral_complete IS 'Is the referral complete. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETE_FLAG where the default is ''N''';
-COMMENT ON COLUMN referral.referral_completed_by IS 'The username of the user who completed the CSIP referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_BY';
-COMMENT ON COLUMN referral.referral_completed_by_display_name IS 'The displayable name of the user who completed the CSIP referral. Not mapped';
-COMMENT ON COLUMN referral.referral_completed_date IS 'The date the referral was completed. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE';
-COMMENT ON COLUMN referral.version IS 'increments on each update';
+COMMENT ON COLUMN referral.referral_complete IS 'Whether the referral complete. Will be true when DPS is used to make a referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETE_FLAG where the default is ''N''';
+COMMENT ON COLUMN referral.referral_completed_by IS 'The username of the user who completed the referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_BY';
+COMMENT ON COLUMN referral.referral_completed_by_display_name IS 'The first and last name of the user who completed the referral. Does not update if their name changes';
+COMMENT ON COLUMN referral.referral_completed_date IS 'The date the referral was completed. Will be set to today when DPS is used to make a referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE';
+COMMENT ON COLUMN referral.version IS 'Supports bulk Hibernate operations';
 
 -- contributory_factor table
 COMMENT ON COLUMN contributory_factor.contributory_factor_id IS 'not null unique. Mapped to OFFENDER_CSIP_FACTORS';
