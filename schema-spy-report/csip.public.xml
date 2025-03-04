@@ -4,17 +4,17 @@
       <sequence increment="1" name="reference_data_reference_data_id_seq" startValue="1"/>
    </sequences>
    <tables>
-      <table name="attendee" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="attendee_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="attendee" remarks="Records the people who attended the review, their role and contribution" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="attendee_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="review_id" nullable="false" remarks="Parent review foreign key" size="2147483647" type="uuid" typeCode="1111">
             <parent column="review_id" foreignKey="attendee_review_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="review"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="role" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="attended" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="contribution" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="name" nullable="true" remarks="Name of review attendee/contributor. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDEE_NAME which has a 100 character limit" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="role" nullable="true" remarks="Role of review attendee/contributor. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDEE_ROLE which has a 50 character limit" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="attended" nullable="true" remarks="Whether the person attended the review. Indicates that they were a contributor if false. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDED where the default is 'N'" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="contribution" nullable="true" remarks="Description of attendee contribution. Maps to OFFENDER_CSIP_ATTENDEES.CONTRIBUTION which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="The NOMIS OFFENDER_CSIP_ATTENDEES.ATTENDEE_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
          <primaryKey column="attendee_id" sequenceNumberInPK="1"/>
@@ -28,11 +28,11 @@
             <column ascending="true" name="review_id"/>
          </index>
       </table>
-      <table name="attendee_audit" remarks="" schema="public" type="TABLE">
+      <table name="attendee_audit" remarks="Attendee property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="attendee_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="attendee_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="review_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review"/>
@@ -55,8 +55,8 @@
             <column ascending="true" name="attendee_id"/>
          </index>
       </table>
-      <table name="audit_revision" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="true" defaultValue="nextval('audit_revision_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+      <table name="audit_revision" remarks="Hibernate Envers audit revision records. A revision is created for every set of changes to the CSIP entity graph and the history of every mutable property change is tracked. Full audit history starts from the 15th of November 2024" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('audit_revision_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="Internal primary key" size="19" type="bigserial" typeCode="-5">
             <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee"/>
             <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee_audit"/>
             <child column="rev_id" foreignKey="attendee_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="attendee_audit"/>
@@ -91,11 +91,11 @@
             <child column="outcome_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome_audit"/>
             <child column="rev_id" foreignKey="safer_custody_screening_outcome_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome_audit"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="timestamp" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="username" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="caseload_id" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="source" nullable="true" remarks="" size="6" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="affected_components" nullable="true" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="timestamp" nullable="false" remarks="The date and time the change happened" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="username" nullable="false" remarks="The username of the user who made the change" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="caseload_id" nullable="true" remarks="The active caseload of the user at the time of the change" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="source" nullable="true" remarks="The system used to make the change. Either DPS or NOMIS" size="6" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="affected_components" nullable="true" remarks="The table or tables that had values affected by the change" size="2147483647" type="_varchar" typeCode="2003"/>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="audit_revision_pkey" unique="true">
             <column ascending="true" name="id"/>
@@ -103,17 +103,17 @@
          <checkConstraint constraint="((affected_components &lt;@ ARRAY['RECORD'::character varying, 'REFERRAL'::character varying, 'CONTRIBUTORY_FACTOR'::character varying, 'SAFER_CUSTODY_SCREENING_OUTCOME'::character varying, 'INVESTIGATION'::character varying, 'INTERVIEW'::character varying, 'DECISION_AND_ACTIONS'::character varying, 'PLAN'::character varying, 'IDENTIFIED_NEED'::character varying, 'REVIEW'::character varying, 'ATTENDEE'::character varying]))" name="affected_components_enum_check"/>
          <checkConstraint constraint="(((source)::text = ANY ((ARRAY['DPS'::character varying, 'NOMIS'::character varying])::text[])))" name="check_source"/>
       </table>
-      <table name="contributory_factor" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="contributory_factor_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="contributory_factor" remarks="The contributory factors the referrer has identified as part of the referral" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="contributory_factor_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="referral_id" nullable="false" remarks="Parent referral foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="referral_id" foreignKey="contributory_factor_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="contributory_factor_type_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="contributory_factor_type_id" nullable="false" remarks="Foreign key to reference data using the 'CONTRIBUTORY_FACTOR_TYPE' domain for the type of contributory factor believed to have caused the incident or behaviour. The reference_data.code value maps to OFFENDER_CSIP_FACTORS.CSIP_FACTOR" size="19" type="int8" typeCode="-5">
             <parent column="reference_data_id" foreignKey="contributory_factor_contributory_factor_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="comment" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="comment" nullable="true" remarks="Additional information about the contributory factor. Maps to OFFENDER_CSIP_FACTORS.COMMENTS which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="legacy_id" nullable="true" remarks="The NOMIS OFFENDER_CSIP_FACTORS.CSIP_FACTOR_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
          <primaryKey column="contributory_factor_id" sequenceNumberInPK="1"/>
@@ -130,11 +130,11 @@
             <column ascending="true" name="referral_id"/>
          </index>
       </table>
-      <table name="contributory_factor_audit" remarks="" schema="public" type="TABLE">
+      <table name="contributory_factor_audit" remarks="Contributory factor property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="contributory_factor_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="contributory_factor_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="referral_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral"/>
@@ -155,21 +155,21 @@
             <column ascending="true" name="contributory_factor_id"/>
          </index>
       </table>
-      <table name="csip_record" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="record_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="csip_record" remarks="Root CSIP entity associating a person with a CSIP and all the child entities. Conceptually a CSIP folder. All 1:1 child entities use the record_id value for their primary key" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="record_id" nullable="false" remarks="Public primary key for the CSIP and the shared primary key for 1:1 child entities" size="2147483647" type="uuid" typeCode="1111">
             <child column="plan_id" foreignKey="plan_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
             <child column="referral_id" foreignKey="referral_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="prison_number" nullable="false" remarks="The prison number of the person the CSIP record is for" size="10" type="varchar" typeCode="12">
             <parent column="prison_number" foreignKey="fk_csip_prison_number" implied="false" onDeleteCascade="false" schema="public" table="person_summary"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prison_code_when_recorded" nullable="true" remarks="" size="6" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="log_code" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prison_code_when_recorded" nullable="true" remarks="The prison code where the person was resident at the time the CSIP record was created. Maps to OFFENDER_CSIP_REPORTS.AGY_LOC_ID" size="6" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="log_code" nullable="true" remarks="User entered identifier for the CSIP record. Usually starts with the prison code. Maps to OFFENDER_CSIP_REPORTS.CSIP_SEQ" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="legacy_id" nullable="true" remarks="The NOMIS OFFENDER_CSIP_REPORTS.CSIP_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="status_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="status_id" nullable="false" remarks="Foreign key to reference data using the 'STATUS' domain for the overall CSIP status. Status is calculated in NOMIS and not stored in the database" size="19" type="int8" typeCode="-5">
             <parent column="reference_data_id" foreignKey="csip_record_status_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
          <primaryKey column="record_id" sequenceNumberInPK="1"/>
@@ -187,11 +187,11 @@
             <column ascending="true" name="status_id"/>
          </index>
       </table>
-      <table name="csip_record_audit" remarks="" schema="public" type="TABLE">
+      <table name="csip_record_audit" remarks="CSIP record property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="csip_record_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="record_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12">
             <parent column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="person_summary"/>
@@ -229,24 +229,24 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="status_code" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="status_description" nullable="true" remarks="" size="40" type="varchar" typeCode="12"/>
       </table>
-      <table name="decision_and_actions" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="decision_and_actions_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="decision_and_actions" remarks="Record of the decision and any actions expected as a result. Recording a decision is an optional step 4 of the CSIP process following an investigation" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="decision_and_actions_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="referral_id" foreignKey="decision_and_actions_decision_and_actions_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="conclusion" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="outcome_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="conclusion" nullable="true" remarks="The conclusion and reasons for the decision. Maps to OFFENDER_CSIP_REPORTS.INV_CONCLUSION which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="outcome_id" nullable="true" remarks="Foreign key to reference data using the 'DECISION_OUTCOME_TYPE' domain for the selected decision. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="decision_and_actions_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="signed_off_by_role_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="signed_off_by_role_id" nullable="true" remarks="Foreign key to reference data using the 'DECISION_SIGNER_ROLE' domain for the role of the person who signed off the decision. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="decision_and_actions_signed_off_by_role_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="next_steps" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="actions" nullable="false" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="action_other" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="true" remarks="The username of the user who recorded the decision. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_RECORDED_BY" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="true" remarks="The first and last name of the user who recorded the decision. Does not update if their name changes" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="date" nullable="true" remarks="The date the decision was made. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="next_steps" nullable="true" remarks="The next steps that should be taken following the decision. Maps to OFFENDER_CSIP_REPORTS.INV_NEXT_STEPS which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="actions" nullable="false" remarks="An enumeration of actions that have been recommended. CSIP to NOMIS mappings: 'OPEN_CSIP_ALERT' -&gt; OFFENDER_CSIP_REPORTS.OPEN_CSIP_ALERT, 'NON_ASSOCIATIONS_UPDATED' -&gt; OFFENDER_CSIP_REPORTS.INV_NON_ASSOC_BOOKED, 'OBSERVATION_BOOK' -&gt; OFFENDER_CSIP_REPORTS.INV_OBSERVATION_BOOK, 'UNIT_OR_CELL_MOVE' -&gt; OFFENDER_CSIP_REPORTS.INV_MOVE, 'CSRA_OR_RSRA_REVIEW' -&gt; OFFENDER_CSIP_REPORTS.INV_REVIEW, 'SERVICE_REFERRAL' -&gt; OFFENDER_CSIP_REPORTS.INV_SERVICE_REFERRAL, 'SIM_REFERRAL' -&gt; OFFENDER_CSIP_REPORTS.INV_SIM_REFERRAL. Only populated via NOMIS and retained for sync and reporting" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="action_other" nullable="true" remarks="Any other actions that are recommended to be considered. Maps to OFFENDER_CSIP_REPORTS.INV_OTHER which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
          <primaryKey column="decision_and_actions_id" sequenceNumberInPK="1"/>
          <index name="decision_and_actions_pkey" unique="true">
             <column ascending="true" name="decision_and_actions_id"/>
@@ -259,11 +259,11 @@
          </index>
          <checkConstraint constraint="((actions &lt;@ ARRAY['OPEN_CSIP_ALERT'::character varying, 'NON_ASSOCIATIONS_UPDATED'::character varying, 'OBSERVATION_BOOK'::character varying, 'UNIT_OR_CELL_MOVE'::character varying, 'CSRA_OR_RSRA_REVIEW'::character varying, 'SERVICE_REFERRAL'::character varying, 'SIM_REFERRAL'::character varying]))" name="actions_enum_check"/>
       </table>
-      <table name="decision_and_actions_audit" remarks="" schema="public" type="TABLE">
+      <table name="decision_and_actions_audit" remarks="Decision and actions property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="decision_and_actions_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="decision_and_actions_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="conclusion" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="outcome_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
@@ -294,20 +294,20 @@
             <column ascending="true" name="decision_and_actions_id"/>
          </index>
       </table>
-      <table name="identified_need" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="identified_need_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="identified_need" remarks="The needs identified in the plan or at subsequent reviews. Includes the plan to resolve the identified need and the progression of that plan" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="identified_need_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="plan_id" foreignKey="identified_need_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="identified_need" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="responsible_person" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="created_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="target_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="intervention" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="progression" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="identified_need" nullable="false" remarks="Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED which has a 1000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="responsible_person" nullable="false" remarks="The name of the person who is responsible for taking action on the intervention. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_PLANS.BY_WHOM which has a 100 character limit" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="created_date" nullable="false" remarks="The date the need was identified. Maps to OFFENDER_CSIP_PLANS.CREATE_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="target_date" nullable="false" remarks="The target date the need should be progressed or resolved. Maps to OFFENDER_CSIP_PLANS.TARGET_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="closed_date" nullable="true" remarks="The date the identified need was resolved and closed. Maps to OFFENDER_CSIP_PLANS.CLOSED_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="intervention" nullable="false" remarks="The planned intervention for the identified need. Maps to OFFENDER_CSIP_PLANS.INTERVENTION which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="progression" nullable="true" remarks="How the plan to address the identified need is progressing. Maps to OFFENDER_CSIP_PLANS.PROGRESSION which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="legacy_id" nullable="true" remarks="The NOMIS OFFENDER_CSIP_PLANS.PLAN_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
          <primaryKey column="identified_need_id" sequenceNumberInPK="1"/>
@@ -321,11 +321,11 @@
             <column ascending="true" name="plan_id"/>
          </index>
       </table>
-      <table name="identified_need_audit" remarks="" schema="public" type="TABLE">
+      <table name="identified_need_audit" remarks="Identified needs property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="identified_need_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="identified_need_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="plan"/>
@@ -354,19 +354,19 @@
             <column ascending="true" name="identified_need_id"/>
          </index>
       </table>
-      <table name="interview" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="interview_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="interview" remarks="The interviews undertaken as part of the investigation" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="interview_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="investigation_id" nullable="false" remarks="Parent investigation foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="investigation_id" foreignKey="interview_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="investigation"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="interviewee" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="interview_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="interviewee_role_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="interviewee" nullable="false" remarks="Name of the person being interviewed. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE which has a 100 character limit" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="interview_date" nullable="false" remarks="The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="interviewee_role_id" nullable="false" remarks="Foreign key to reference data using the 'INTERVIEWEE_ROLE' domain for the role the interviewee played in the incident or behaviour. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="interview_interviewee_role_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="interview_text" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="interview_text" nullable="true" remarks="Information provided in interview. Maps to OFFENDER_CSIP_INTVW.COMMENTS which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="legacy_id" nullable="true" remarks="The NOMIS OFFENDER_CSIP_INTVW.CSIP_INTVW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
          <primaryKey column="interview_id" sequenceNumberInPK="1"/>
@@ -383,11 +383,11 @@
             <column ascending="true" name="legacy_id"/>
          </index>
       </table>
-      <table name="interview_audit" remarks="" schema="public" type="TABLE">
+      <table name="interview_audit" remarks="Interview property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="interview_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="interview_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="investigation_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="investigation"/>
@@ -412,31 +412,31 @@
             <column ascending="true" name="interview_id"/>
          </index>
       </table>
-      <table name="investigation" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="investigation" remarks="The investigation that took place following a 'Progress to investigation' screening outcome. Investigations are an optional step 3 of the CSIP process" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="investigation_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <child column="investigation_id" foreignKey="interview_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="interview"/>
             <child column="investigation_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview_audit"/>
             <parent column="referral_id" foreignKey="investigation_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="staff_involved" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="evidence_secured" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="occurrence_reason" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="persons_usual_behaviour" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="persons_trigger" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="protective_factors" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="recorded_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="staff_involved" nullable="true" remarks="The names of the staff involved in the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_STAFF_INVOLVED which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="evidence_secured" nullable="true" remarks="Any evidence that was secured as part of the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_EVIDENCE_SECURED which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="occurrence_reason" nullable="true" remarks="The reasons why the incident or behaviour occurred. Maps to OFFENDER_CSIP_REPORTS.INV_OCCURRENCE_REASON which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="persons_usual_behaviour" nullable="true" remarks="The normal behaviour of the person in prison. Maps to OFFENDER_CSIP_REPORTS.INV_USUAL_BEHAVIOUR which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="persons_trigger" nullable="true" remarks="What triggers the person in prison has that could have motivated the incident. Maps to OFFENDER_CSIP_REPORTS.INV_PERSONS_TRIGGER which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="protective_factors" nullable="true" remarks="Any protective factors. Maps to OFFENDER_CSIP_REPORTS.INV_PROTECTIVE_FACTORS which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="recorded_by" nullable="true" remarks="The username of the user who recorded the investigation. New field populated from 13th of February 2025 and only via DPS" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="recorded_by_display_name" nullable="true" remarks="The first and last name of the user who recorded the investigation. New field populated from 13th of February 2025 and only via DPS. Does not update if their name changes" size="255" type="varchar" typeCode="12"/>
          <primaryKey column="investigation_id" sequenceNumberInPK="1"/>
          <index name="investigation_pkey" unique="true">
             <column ascending="true" name="investigation_id"/>
          </index>
       </table>
-      <table name="investigation_audit" remarks="" schema="public" type="TABLE">
+      <table name="investigation_audit" remarks="Investigation property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="investigation_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="staff_involved" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="evidence_secured" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
@@ -461,20 +461,20 @@
             <column ascending="true" name="investigation_id"/>
          </index>
       </table>
-      <table name="person_summary" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12">
+      <table name="person_summary" remarks="Summary data for people with CSIPs. Used to optimise searching and pagination. Domain events cause the summary data to be updated keeping it accurate" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="prison_number" nullable="false" remarks="The prison number of the person the summary data is associated with" size="10" type="varchar" typeCode="12">
             <child column="prison_number" foreignKey="fk_csip_prison_number" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
             <child column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_record_audit"/>
             <child column="prison_number" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_summary"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="first_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="last_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="" size="16" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="cell_location" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="false" digits="0" id="7" name="restricted_patient" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="supporting_prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="first_name" nullable="false" remarks="The first name of the person" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="last_name" nullable="false" remarks="The last name of the person" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="The active/inactive in/out status of the person" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="prison_code" nullable="true" remarks="The code of the prison the person is resident at or TRN/OUT if they are not in prison" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="cell_location" nullable="true" remarks="The cell location of the person if they are currently in prison or an alternative location reference" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="7" name="restricted_patient" nullable="false" remarks="Whether the person is a restricted patient" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="supporting_prison_code" nullable="true" remarks="The code of the prison a restricted patient is being supported by" size="16" type="varchar" typeCode="12"/>
          <primaryKey column="prison_number" sequenceNumberInPK="1"/>
          <index name="person_summary_pkey" unique="true">
             <column ascending="true" name="prison_number"/>
@@ -491,11 +491,11 @@
             <column ascending="true" name="supporting_prison_code"/>
          </index>
       </table>
-      <table name="person_summary_audit" remarks="" schema="public" type="TABLE">
+      <table name="person_summary_audit" remarks="Person summary property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="person_summary_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="last_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
@@ -518,20 +518,20 @@
             <column ascending="true" name="prison_number"/>
          </index>
       </table>
-      <table name="plan" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="plan" remarks="The plan that was developed following a screening outcome or decision to 'Progress to CSIP'. Developing a plan is step 5 of the CSIP process" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="plan_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <child column="plan_id" foreignKey="identified_need_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="identified_need"/>
             <child column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="identified_need_audit"/>
             <child column="plan_id" foreignKey="review_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="review"/>
             <child column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review_audit"/>
             <parent column="record_id" foreignKey="plan_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="case_manager" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="reason_for_plan" nullable="true" remarks="" size="240" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_case_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="next_review_date" nullable="true" remarks="Next review date is calculated and stored in this field for performance reasons. This will be the first case review date when no reviews exist or the next review date of the most recent review when a review exists." size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="closed_date" nullable="true" remarks="Closed date is calculated and stored in this field for performance reasons. This will be the closed date from the review that closes the CSIP." size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="case_manager" nullable="true" remarks="The case manager assigned to the CSIP plan. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_REPORTS.CASE_MANAGER which has a 100 character limit" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="reason_for_plan" nullable="true" remarks="The reasons motivating the creation of a CSIP plan. Maps to OFFENDER_CSIP_REPORTS.REASON which has a 240 character limit" size="240" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_case_review_date" nullable="true" remarks="The first date the CSIP plan should be reviewed. Maps to OFFENDER_CSIP_REPORTS.CASE_REV_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="next_review_date" nullable="true" remarks="The next date the plan should be reviewed. Set as the review.review_date value from the latest review. On the plan entity for query optimisation" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="closed_date" nullable="true" remarks="The date the plan was closed. Set as the review.csip_closed_date value from the first review containing an action to close the CSIP. On the plan entity for query optimisation" size="13" type="date" typeCode="91"/>
          <primaryKey column="plan_id" sequenceNumberInPK="1"/>
          <index name="plan_pkey" unique="true">
             <column ascending="true" name="plan_id"/>
@@ -540,11 +540,11 @@
             <column ascending="true" name="next_review_date"/>
          </index>
       </table>
-      <table name="plan_audit" remarks="" schema="public" type="TABLE">
+      <table name="plan_audit" remarks="Plan property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="plan_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="case_manager" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="reason_for_plan" nullable="true" remarks="" size="240" type="varchar" typeCode="12"/>
@@ -559,8 +559,8 @@
             <column ascending="true" name="plan_id"/>
          </index>
       </table>
-      <table name="reference_data" numRows="122" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="true" defaultValue="nextval('reference_data_reference_data_id_seq'::regclass)" digits="0" id="0" name="reference_data_id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+      <table name="reference_data" numRows="122" remarks="Reference data used to populate properties that have fixed lists of valid options e.g. categories, decisions and statuses" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('reference_data_reference_data_id_seq'::regclass)" digits="0" id="0" name="reference_data_id" nullable="false" remarks="Internal primary key. Not returned by API" size="19" type="bigserial" typeCode="-5">
             <child column="contributory_factor_type_id" foreignKey="contributory_factor_contributory_factor_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
             <child column="status_id" foreignKey="csip_record_status_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
             <child column="outcome_id" foreignKey="decision_and_actions_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions"/>
@@ -572,16 +572,16 @@
             <child column="referer_area_of_work_id" foreignKey="referral_referer_area_of_work_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
             <child column="outcome_id" foreignKey="safer_custody_screening_outcome_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="domain" nullable="false" remarks="" size="30" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="code" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="description" nullable="true" remarks="" size="40" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="list_sequence" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="last_modified_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="last_modified_by" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="9" name="deactivated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="deactivated_by" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="domain" nullable="false" remarks="The reference data domain. CSIP to NOMIS mappings: AREA_OF_WORK -&gt; CSIP_FUNC, CONTRIBUTORY_FACTOR_TYPE -&gt; CSIP_FAC, DECISION_OUTCOME_TYPE -&gt; CSIP_OUT, DECISION_SIGNER_ROLE -&gt; CSIP_ROLE, INCIDENT_INVOLVEMENT -&gt; CSIP_INV, INCIDENT_LOCATION -&gt; CSIP_LOC, INCIDENT_TYPE -&gt; CSIP_TYP, INTERVIEWEE_ROLE -&gt; CSIP_INTVROL, SCREENING_OUTCOME_TYPE -&gt; CSIP_OUT, STATUS -&gt; CSIP only domain" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="code" nullable="false" remarks="The short code for the reference data item. Combination of domain and code is unique but individual codes are not guaranteed to be unique across domains. Matches the NOMIS reference data code for the associated domain" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="description" nullable="true" remarks="The description of the reference data item" size="40" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="list_sequence" nullable="true" remarks="Used to order reference data to guarantee the ordering for the UI" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="created_at" nullable="false" remarks="The date and time the reference data item was created" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="The username of the user who created the reference data item" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="last_modified_at" nullable="true" remarks="The date and time the reference data item was last modified" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="last_modified_by" nullable="true" remarks="The username of the user who last modified the reference data item" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="9" name="deactivated_at" nullable="true" remarks="The date and time the reference data item was deactivated" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="deactivated_by" nullable="true" remarks="The username of the user who deactivated the reference data item" size="32" type="varchar" typeCode="12"/>
          <primaryKey column="reference_data_id" sequenceNumberInPK="1"/>
          <index name="reference_data_pkey" unique="true">
             <column ascending="true" name="reference_data_id"/>
@@ -597,8 +597,8 @@
          </index>
          <checkConstraint constraint="(((domain)::text = ANY ((ARRAY['AREA_OF_WORK'::character varying, 'CONTRIBUTORY_FACTOR_TYPE'::character varying, 'DECISION_OUTCOME_TYPE'::character varying, 'DECISION_SIGNER_ROLE'::character varying, 'INCIDENT_INVOLVEMENT'::character varying, 'INCIDENT_LOCATION'::character varying, 'INCIDENT_TYPE'::character varying, 'INTERVIEWEE_ROLE'::character varying, 'SCREENING_OUTCOME_TYPE'::character varying, 'STATUS'::character varying])::text[])))" name="reference_data_domain_enum_check"/>
       </table>
-      <table name="referral" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="referral" remarks="The referral that caused the CSIP record to be created. Referrals are step 1 of the CSIP process" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="referral_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <child column="referral_id" foreignKey="contributory_factor_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
             <child column="referral_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="contributory_factor_audit"/>
             <child column="decision_and_actions_id" foreignKey="decision_and_actions_decision_and_actions_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions"/>
@@ -606,34 +606,34 @@
             <child column="safer_custody_screening_outcome_id" foreignKey="safer_custody_screening_outco_safer_custody_screening_outc_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome"/>
             <parent column="record_id" foreignKey="referral_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="incident_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="incident_time" nullable="true" remarks="" size="15" type="time" typeCode="92"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="incident_type_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="incident_date" nullable="false" remarks="The date the incident that motivated the CSIP referral occurred. Will be displayed on the UI as date behaviour first occurred for a proactive referral Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="incident_time" nullable="true" remarks="The time the incident that motivated the CSIP referral occurred. Will be displayed on the UI as time behaviour first occurred for a proactive referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME" size="15" type="time" typeCode="92"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="incident_type_id" nullable="false" remarks="Foreign key to reference data using the 'INCIDENT_TYPE' domain for the type of incident (or behavior for a proactive referral) that motivated the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="referral_incident_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="incident_location_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="incident_location_id" nullable="false" remarks="Foreign key to reference data using the 'INCIDENT_LOCATION' domain for the location of the incident (or behavior for a proactive referral) that motivated the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="referral_incident_location_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="referred_by" nullable="false" remarks="" size="240" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="referer_area_of_work_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="referred_by" nullable="false" remarks="Either the display name of the user making the referral or free text if making the referral on behalf of someone else. Therefore not guaranteed to match user information. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY" size="240" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="referer_area_of_work_id" nullable="false" remarks="Foreign key to reference data using the 'AREA_OF_WORK' domain for the area of work of the person making the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="referral_referer_area_of_work_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="referral_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="proactive_referral" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="staff_assaulted" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="assaulted_staff_name" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="incident_involvement_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="referral_date" nullable="false" remarks="The date the referral was submitted. Set to today by the UI. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="proactive_referral" nullable="true" remarks="Whether the referral was proactive or the result of an incident. Maps to OFFENDER_CSIP_REPORTS.RFR_PROACTIVE_RESPONSE where the default is 'N'" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="staff_assaulted" nullable="true" remarks="Whether any member(s) of staff assaulted in the incident. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_ASSAULTED where the default is 'N'" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="assaulted_staff_name" nullable="true" remarks="Names of any assaulted member(s) of staff. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_NAME which has a 1000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="incident_involvement_id" nullable="true" remarks="Foreign key to reference data using the 'INCIDENT_INVOLVEMENT' domain for the type of involvement the person had in the incident (or behavior for a proactive referral). The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_INVOLVEMENT" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="referral_incident_involvement_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="description_of_concern" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="known_reasons" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="other_information" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="safer_custody_team_informed" nullable="true" remarks="" size="12" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="referral_complete" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="referral_completed_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="referral_completed_by_display_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="referral_completed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="description_of_concern" nullable="true" remarks="The reasons why there is cause for concern. Maps to OFFENDER_CSIP_REPORTS.CDR_CONCERN_DESCRIPTION which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="known_reasons" nullable="true" remarks="The reasons already known about the causes of the incident or behaviour. Maps to OFFENDER_CSIP_REPORTS.INV_KNOWN_REASONS which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="other_information" nullable="true" remarks="Any other information about the incident or behaviour. Maps to OFFENDER_CSIP_REPORTS.CDR_OTHER_INFORMATION which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="safer_custody_team_informed" nullable="true" remarks="Records whether the safer custody team been informed. Maps to OFFENDER_CSIP_REPORTS.CDR_SENT_DENT where the default is 'N'" size="12" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="referral_complete" nullable="true" remarks="Whether the referral complete. Will be true when DPS is used to make a referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETE_FLAG where the default is 'N'" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="referral_completed_by" nullable="true" remarks="The username of the user who completed the referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_BY" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="referral_completed_by_display_name" nullable="true" remarks="The first and last name of the user who completed the referral. Does not update if their name changes" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="referral_completed_date" nullable="true" remarks="The date the referral was completed. Will be set to today when DPS is used to make a referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
          <primaryKey column="referral_id" sequenceNumberInPK="1"/>
          <index name="referral_pkey" unique="true">
             <column ascending="true" name="referral_id"/>
@@ -655,11 +655,11 @@
          </index>
          <checkConstraint constraint="(((safer_custody_team_informed)::text = ANY ((ARRAY['YES'::character varying, 'NO'::character varying, 'DO_NOT_KNOW'::character varying])::text[])))" name="safer_custody_team_informed_enum_check"/>
       </table>
-      <table name="referral_audit" remarks="" schema="public" type="TABLE">
+      <table name="referral_audit" remarks="Referral property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="referral_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="incident_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="incident_time" nullable="true" remarks="" size="15" type="time" typeCode="92"/>
@@ -714,24 +714,24 @@
             <column ascending="true" name="referral_id"/>
          </index>
       </table>
-      <table name="review" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="review" remarks="The reviews of the plan. Plans are reviewed regularly as step 6 of the CSIP process. Plans can close the CSIP completing the CSIP process" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="review_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111">
             <child column="review_id" foreignKey="attendee_review_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="attendee"/>
             <child column="review_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee_audit"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="plan_id" foreignKey="review_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="review_sequence" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="next_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="actions" nullable="false" remarks="" size="2147483647" type="_varchar" typeCode="2003"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="csip_closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="summary" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="legacy_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="review_sequence" nullable="false" remarks="The review sequence which starts at 1 and increments for each new review. Used to order the reviews. Maps to OFFENDER_CSIP_REVIEWS.REVIEW_SEQ" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_date" nullable="false" remarks="The date of the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="recorded_by" nullable="false" remarks="The username of the person who recorded the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_USER" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="recorded_by_display_name" nullable="false" remarks="The first and last name of the user who recorded the review. Does not update if their name changes" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="next_review_date" nullable="true" remarks="The date of the next review. Maps to OFFENDER_CSIP_REVIEWS.NEXT_REVIEW_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="actions" nullable="false" remarks="An enumeration of actions that should be taken following the review one of which is to close the CSIP. CSIP to NOMIS mappings: 'CLOSE_CSIP' -&gt; OFFENDER_CSIP_REVIEWS.CLOSE_CSIP, 'REMAIN_ON_CSIP' -&gt; OFFENDER_CSIP_REVIEWS.REMAIN_ON_CSIP, 'RESPONSIBLE_PEOPLE_INFORMED' -&gt; OFFENDER_CSIP_REVIEWS.PEOPLE_INFORMED, 'CSIP_UPDATED' -&gt; OFFENDER_CSIP_REVIEWS.CSIP_UPDATED, 'CASE_NOTE' -&gt; OFFENDER_CSIP_REVIEWS.CASE_NOTE. Only CLOSE_CSIP is populated via DPS. The rest are populated via NOMIS only and retained for sync and reporting" size="2147483647" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="csip_closed_date" nullable="true" remarks="The date the CSIP plan was closed following a review outcome decision to close it. Maps to OFFENDER_CSIP_REVIEWS.CLOSE_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="summary" nullable="true" remarks="Additional information about the review. Maps to OFFENDER_CSIP_REVIEWS.SUMMARY which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="legacy_id" nullable="true" remarks="The NOMIS OFFENDER_CSIP_REVIEWS.REVIEW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
          <primaryKey column="review_id" sequenceNumberInPK="1"/>
@@ -750,11 +750,11 @@
          </index>
          <checkConstraint constraint="((actions &lt;@ ARRAY['RESPONSIBLE_PEOPLE_INFORMED'::character varying, 'CSIP_UPDATED'::character varying, 'REMAIN_ON_CSIP'::character varying, 'CASE_NOTE'::character varying, 'CLOSE_CSIP'::character varying]))" name="review_actions_enum_check"/>
       </table>
-      <table name="review_audit" remarks="" schema="public" type="TABLE">
+      <table name="review_audit" remarks="Review property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="review_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="plan"/>
@@ -785,18 +785,18 @@
             <column ascending="true" name="review_id"/>
          </index>
       </table>
-      <table name="safer_custody_screening_outcome" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="safer_custody_screening_outcome_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+      <table name="safer_custody_screening_outcome" remarks="The result of the referral screening process undertaken by the Safer Custody team. Screening is step 2 of the CSIP process which can end if the decision is not to proceed further" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="safer_custody_screening_outcome_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="referral_id" foreignKey="safer_custody_screening_outco_safer_custody_screening_outc_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="outcome_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="outcome_id" nullable="false" remarks="Foreign key to reference data using the 'SCREENING_OUTCOME_TYPE' domain for the selected screening outcome. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="safer_custody_screening_outcome_outcome_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="recorded_by" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="recorded_by_display_name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="reason_for_decision" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="recorded_by" nullable="false" remarks="The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="recorded_by_display_name" nullable="false" remarks="The first and last name of the user who recorded the safer custody screening outcome. Does not update if their name changes" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="date" nullable="false" remarks="The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="reason_for_decision" nullable="true" remarks="The reasons for the safer custody screening outcome decision. Maps to OFFENDER_CSIP_REPORTS.CDR_DECISION_REASON which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="version" nullable="false" remarks="Supports optimistic locking preventing unnecessary select queries for new entities" size="10" type="int4" typeCode="4"/>
          <primaryKey column="safer_custody_screening_outcome_id" sequenceNumberInPK="1"/>
          <index name="safer_custody_screening_outcome_pkey" unique="true">
             <column ascending="true" name="safer_custody_screening_outcome_id"/>
@@ -805,11 +805,11 @@
             <column ascending="true" name="outcome_id"/>
          </index>
       </table>
-      <table name="safer_custody_screening_outcome_audit" remarks="" schema="public" type="TABLE">
+      <table name="safer_custody_screening_outcome_audit" remarks="Screening property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="safer_custody_screening_outcome_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="safer_custody_screening_outcome_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="outcome_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>

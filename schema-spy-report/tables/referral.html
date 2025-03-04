@@ -74,6 +74,19 @@
                 <!-- Content Header (Page header) -->
                 <section class="content-header">
                     <h1>referral</h1><p><span id="recordNumber">-1</span> rows</p><br />
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-file-text-o"></i>
+                            <h3 id="Description" class="box-title">Description</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div><!-- /.box-header -->
+                        <div class="box-body clearfix">
+                            <p>The referral that caused the CSIP record to be created. Referrals are step 1 of the CSIP process</p>
+                        </div><!-- /.box-body -->
+                    </div>
                 </section>
                 <!-- Main content -->
                 <section class="content">
@@ -153,7 +166,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Shared primary key with csip_record. Uses the same value as csip_record.record_id</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="incident_date">incident_date</span></td>
@@ -170,7 +183,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The date the incident that motivated the CSIP referral occurred. Will be displayed on the UI as date behaviour first occurred for a proactive referral Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_DATE</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="incident_time">incident_time</span></td>
@@ -187,7 +200,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The time the incident that motivated the CSIP referral occurred. Will be displayed on the UI as time behaviour first occurred for a proactive referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="incident_type_id">incident_type_id</span></td>
@@ -209,7 +222,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key to reference data using the &lsquo;INCIDENT_TYPE&rsquo; domain for the type of incident (or behavior for a proactive referral) that motivated the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="incident_location_id">incident_location_id</span></td>
@@ -231,7 +244,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key to reference data using the &lsquo;INCIDENT_LOCATION&rsquo; domain for the location of the incident (or behavior for a proactive referral) that motivated the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="referred_by">referred_by</span></td>
@@ -248,7 +261,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Either the display name of the user making the referral or free text if making the referral on behalf of someone else. Therefore not guaranteed to match user information. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="referer_area_of_work_id">referer_area_of_work_id</span></td>
@@ -270,7 +283,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key to reference data using the &lsquo;AREA_OF_WORK&rsquo; domain for the area of work of the person making the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="referral_date">referral_date</span></td>
@@ -287,7 +300,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The date the referral was submitted. Set to today by the UI. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="proactive_referral">proactive_referral</span></td>
@@ -304,7 +317,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Whether the referral was proactive or the result of an incident. Maps to OFFENDER_CSIP_REPORTS.RFR_PROACTIVE_RESPONSE where the default is &lsquo;N&rsquo;</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="staff_assaulted">staff_assaulted</span></td>
@@ -321,7 +334,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Whether any member(s) of staff assaulted in the incident. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_ASSAULTED where the default is &lsquo;N&rsquo;</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="assaulted_staff_name">assaulted_staff_name</span></td>
@@ -338,7 +351,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Names of any assaulted member(s) of staff. Maps to OFFENDER_CSIP_REPORTS.RFR_STAFF_NAME which has a 1000 character limit</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="incident_involvement_id">incident_involvement_id</span></td>
@@ -360,7 +373,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key to reference data using the &lsquo;INCIDENT_INVOLVEMENT&rsquo; domain for the type of involvement the person had in the incident (or behavior for a proactive referral). The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_INVOLVEMENT</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="description_of_concern">description_of_concern</span></td>
@@ -377,7 +390,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The reasons why there is cause for concern. Maps to OFFENDER_CSIP_REPORTS.CDR_CONCERN_DESCRIPTION which has a 4000 character limit</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="known_reasons">known_reasons</span></td>
@@ -394,7 +407,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The reasons already known about the causes of the incident or behaviour. Maps to OFFENDER_CSIP_REPORTS.INV_KNOWN_REASONS which has a 4000 character limit</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="other_information">other_information</span></td>
@@ -411,7 +424,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Any other information about the incident or behaviour. Maps to OFFENDER_CSIP_REPORTS.CDR_OTHER_INFORMATION which has a 4000 character limit</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="safer_custody_team_informed">safer_custody_team_informed</span></td>
@@ -428,7 +441,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Records whether the safer custody team been informed. Maps to OFFENDER_CSIP_REPORTS.CDR_SENT_DENT where the default is &lsquo;N&rsquo;</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="referral_complete">referral_complete</span></td>
@@ -445,7 +458,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Whether the referral complete. Will be true when DPS is used to make a referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETE_FLAG where the default is &lsquo;N&rsquo;</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="referral_completed_by">referral_completed_by</span></td>
@@ -462,7 +475,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The username of the user who completed the referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_BY</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="referral_completed_by_display_name">referral_completed_by_display_name</span></td>
@@ -479,7 +492,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The first and last name of the user who completed the referral. Does not update if their name changes</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="referral_completed_date">referral_completed_date</span></td>
@@ -496,7 +509,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The date the referral was completed. Will be set to today when DPS is used to make a referral. Maps to OFFENDER_CSIP_REPORTS.REFERRAL_COMPLETED_DATE</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="version">version</span></td>
@@ -513,7 +526,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities</p></td>
                                 </tr>
                                 </tbody>
                             </table>

@@ -74,6 +74,19 @@
                 <!-- Content Header (Page header) -->
                 <section class="content-header">
                     <h1>reference_data</h1><p><span id="recordNumber">122</span> rows</p><br />
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-file-text-o"></i>
+                            <h3 id="Description" class="box-title">Description</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div><!-- /.box-header -->
+                        <div class="box-body clearfix">
+                            <p>Reference data used to populate properties that have fixed lists of valid options e.g. categories, decisions and statuses</p>
+                        </div><!-- /.box-body -->
+                    </div>
                 </section>
                 <!-- Main content -->
                 <section class="content">
@@ -173,7 +186,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Internal primary key. Not returned by API</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="domain">domain</span></td>
@@ -190,7 +203,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The reference data domain. CSIP to NOMIS mappings: AREA_OF_WORK -&gt; CSIP_FUNC, CONTRIBUTORY_FACTOR_TYPE -&gt; CSIP_FAC, DECISION_OUTCOME_TYPE -&gt; CSIP_OUT, DECISION_SIGNER_ROLE -&gt; CSIP_ROLE, INCIDENT_INVOLVEMENT -&gt; CSIP_INV, INCIDENT_LOCATION -&gt; CSIP_LOC, INCIDENT_TYPE -&gt; CSIP_TYP, INTERVIEWEE_ROLE -&gt; CSIP_INTVROL, SCREENING_OUTCOME_TYPE -&gt; CSIP_OUT, STATUS -&gt; CSIP only domain</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="code">code</span></td>
@@ -207,7 +220,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The short code for the reference data item. Combination of domain and code is unique but individual codes are not guaranteed to be unique across domains. Matches the NOMIS reference data code for the associated domain</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="description">description</span></td>
@@ -224,7 +237,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The description of the reference data item</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="list_sequence">list_sequence</span></td>
@@ -241,7 +254,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Used to order reference data to guarantee the ordering for the UI</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -258,7 +271,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The date and time the reference data item was created</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -275,7 +288,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The username of the user who created the reference data item</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="last_modified_at">last_modified_at</span></td>
@@ -292,7 +305,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The date and time the reference data item was last modified</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="last_modified_by">last_modified_by</span></td>
@@ -309,7 +322,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The username of the user who last modified the reference data item</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="deactivated_at">deactivated_at</span></td>
@@ -326,7 +339,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The date and time the reference data item was deactivated</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="deactivated_by">deactivated_by</span></td>
@@ -343,7 +356,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>The username of the user who deactivated the reference data item</p></td>
                                 </tr>
                                 </tbody>
                             </table>
