@@ -257,6 +257,8 @@ class CsipStatusIntTest : IntegrationTestBase() {
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
 
+    record.changeScreeningOutcome("OPE")
+    record.changeDecision("CUR")
     record.addPlan()
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
@@ -264,6 +266,10 @@ class CsipStatusIntTest : IntegrationTestBase() {
     record.addReview(ReviewAction.CSIP_UPDATED, ReviewAction.CASE_NOTE, ReviewAction.RESPONSIBLE_PEOPLE_INFORMED)
     saved = service.retrieveCsipRecord(record.id)
     assertThat(saved.status.code).isEqualTo(CsipStatus.CSIP_OPEN.name)
+
+    record.changeDecision("NFA")
+    saved = service.retrieveCsipRecord(record.id)
+    assertThat(saved.status.code).isEqualTo(CsipStatus.NO_FURTHER_ACTION.name)
 
     record.addReview(ReviewAction.CASE_NOTE, ReviewAction.CLOSE_CSIP)
     saved = service.retrieveCsipRecord(record.id)
