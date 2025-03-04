@@ -65,8 +65,8 @@ COMMENT ON COLUMN person_summary.version IS 'Supports bulk Hibernate operations'
 COMMENT ON COLUMN referral.referral_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
 COMMENT ON COLUMN referral.incident_date IS 'The date the incident that motivated the CSIP referral occurred. Will be displayed on the UI as date behaviour first occurred for a proactive referral Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_DATE';
 COMMENT ON COLUMN referral.incident_time IS 'The time the incident that motivated the CSIP referral occurred. Will be displayed on the UI as time behaviour first occurred for a proactive referral. Maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TIME';
-COMMENT ON COLUMN referral.incident_type_id IS 'Foreign key to reference data using the ''INCIDENT_TYPE'' domain for the type of incident (or behavior for a proactive referral) that motivated the CSIP referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE';
-COMMENT ON COLUMN referral.incident_location_id IS 'Foreign key to reference data using the ''INCIDENT_LOCATION'' domain for the location of the incident (or behavior for a proactive referral) that motivated the CSIP referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION';
+COMMENT ON COLUMN referral.incident_type_id IS 'Foreign key to reference data using the ''INCIDENT_TYPE'' domain for the type of incident (or behavior for a proactive referral) that motivated the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_TYPE';
+COMMENT ON COLUMN referral.incident_location_id IS 'Foreign key to reference data using the ''INCIDENT_LOCATION'' domain for the location of the incident (or behavior for a proactive referral) that motivated the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_INCIDENT_LOCATION';
 COMMENT ON COLUMN referral.referred_by IS 'Either the display name of the user making the referral or free text if making the referral on behalf of someone else. Therefore not guaranteed to match user information. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY';
 COMMENT ON COLUMN referral.referer_area_of_work_id IS 'Foreign key to reference data using the ''AREA_OF_WORK'' domain for the area of work of the person making the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION';
 COMMENT ON COLUMN referral.referral_date IS 'The date the referral was submitted. Set to today by the UI. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED';
@@ -85,44 +85,46 @@ COMMENT ON COLUMN referral.referral_completed_date IS 'The date the referral was
 COMMENT ON COLUMN referral.version IS 'Supports bulk Hibernate operations';
 
 -- contributory_factor table
-COMMENT ON COLUMN contributory_factor.contributory_factor_id IS 'not null unique. Mapped to OFFENDER_CSIP_FACTORS';
-COMMENT ON COLUMN contributory_factor.legacy_id IS 'unique. Prevents duplicate contributory factors via NOMIS -> DPS sync';
-COMMENT ON COLUMN contributory_factor.referral_id IS 'not null';
-COMMENT ON COLUMN contributory_factor.contributory_factor_type_id IS 'not null. FK to reference_data. The type of contributory factor to the incident or motivation for CSIP referral. Mapped to OFFENDER_CSIP_FACTORS.CSIP_FACTOR';
-COMMENT ON COLUMN contributory_factor.comment IS 'Additional information about the contributory factor to the incident or motivation for CSIP referral. Maps to OFFENDER_CSIP_FACTORS.COMMENTS';
-COMMENT ON COLUMN contributory_factor.version IS 'increments on each update';
+COMMENT ON COLUMN contributory_factor.contributory_factor_id IS 'Public primary key';
+COMMENT ON COLUMN contributory_factor.referral_id IS 'Parent referral foreign key';
+COMMENT ON COLUMN contributory_factor.contributory_factor_type_id IS 'Foreign key to reference data using the ''CONTRIBUTORY_FACTOR_TYPE'' domain for type of contributory factor believed to have caused the incident or behaviour. The reference_data.code value maps to OFFENDER_CSIP_FACTORS.CSIP_FACTOR';
+COMMENT ON COLUMN contributory_factor.comment IS 'Additional information about the contributory factor. Maps to OFFENDER_CSIP_FACTORS.COMMENTS which has a 4000 character limit';
+COMMENT ON COLUMN contributory_factor.legacy_id IS 'The NOMIS OFFENDER_CSIP_FACTORS.CSIP_FACTOR_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
+COMMENT ON COLUMN contributory_factor.version IS 'Supports bulk Hibernate operations';
 
 -- safer_custody_screening_outcome table
-COMMENT ON COLUMN safer_custody_screening_outcome.safer_custody_screening_outcome_id IS 'not null. Maps referral.referral_id';
-COMMENT ON COLUMN safer_custody_screening_outcome.outcome_id IS 'not null. FK to reference_data. The type of outcome of the safer custody screening. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME';
-COMMENT ON COLUMN safer_custody_screening_outcome.recorded_by IS 'not null. The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY';
-COMMENT ON COLUMN safer_custody_screening_outcome.recorded_by_display_name IS 'not null. The displayable name of the user who recorded the safer custody screening outcome. Not mapped';
-COMMENT ON COLUMN safer_custody_screening_outcome.date IS 'not null. The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE';
-COMMENT ON COLUMN safer_custody_screening_outcome.reason_for_decision IS 'not null. The reasons for the safer custody screening outcome decision. Maps to OFFENDER_CSIP_REPORTS.CDR_DECISION_REASON. 4000 character limit';
-COMMENT ON COLUMN safer_custody_screening_outcome.version IS 'increments on each update';
+COMMENT ON COLUMN safer_custody_screening_outcome.safer_custody_screening_outcome_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
+COMMENT ON COLUMN safer_custody_screening_outcome.outcome_id IS 'Foreign key to reference data using the ''SCREENING_OUTCOME_TYPE'' domain for selected screening outcome. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME';
+COMMENT ON COLUMN safer_custody_screening_outcome.recorded_by IS 'The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY';
+COMMENT ON COLUMN safer_custody_screening_outcome.recorded_by_display_name IS 'The first and last name of the user who recorded the safer custody screening outcome. Does not update if their name changes';
+COMMENT ON COLUMN safer_custody_screening_outcome.date IS 'The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE';
+COMMENT ON COLUMN safer_custody_screening_outcome.reason_for_decision IS 'The reasons for the safer custody screening outcome decision. Maps to OFFENDER_CSIP_REPORTS.CDR_DECISION_REASON which has a 4000 character limit';
+COMMENT ON COLUMN safer_custody_screening_outcome.version IS 'Supports bulk Hibernate operations';
 
 -- investigation table
-COMMENT ON COLUMN investigation.investigation_id IS 'not null. Maps referral.referral_id';
-COMMENT ON COLUMN investigation.staff_involved IS 'The names of the staff involved in the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_STAFF_INVOLVED. 4000 character limit';
-COMMENT ON COLUMN investigation.evidence_secured IS 'Any evidence that was secured as part of the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_EVIDENCE_SECURED. 4000 character limit';
-COMMENT ON COLUMN investigation.occurrence_reason IS 'The reasons why the incident occurred. Maps to OFFENDER_CSIP_REPORTS.INV_OCCURRENCE_REASON. 4000 character limit';
-COMMENT ON COLUMN investigation.persons_usual_behaviour IS 'The normal behaviour of the person in prison. Maps to OFFENDER_CSIP_REPORTS.INV_USUAL_BEHAVIOUR. 4000 character limit';
-COMMENT ON COLUMN investigation.persons_trigger IS 'What triggers the person in prison has that could have motivated the incident. Maps to OFFENDER_CSIP_REPORTS.INV_PERSONS_TRIGGER. 4000 character limit';
-COMMENT ON COLUMN investigation.protective_factors IS 'Any protective factors. Maps to OFFENDER_CSIP_REPORTS.INV_PROTECTIVE_FACTORS. 4000 character limit';
-COMMENT ON COLUMN investigation.version IS 'increments on each update';
+COMMENT ON COLUMN investigation.investigation_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
+COMMENT ON COLUMN investigation.staff_involved IS 'The names of the staff involved in the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_STAFF_INVOLVED which has a 4000 character limit';
+COMMENT ON COLUMN investigation.evidence_secured IS 'Any evidence that was secured as part of the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_EVIDENCE_SECURED which has a 4000 character limit';
+COMMENT ON COLUMN investigation.occurrence_reason IS 'The reasons why the incident or behaviour occurred. Maps to OFFENDER_CSIP_REPORTS.INV_OCCURRENCE_REASON which has a 4000 character limit';
+COMMENT ON COLUMN investigation.persons_usual_behaviour IS 'The normal behaviour of the person in prison. Maps to OFFENDER_CSIP_REPORTS.INV_USUAL_BEHAVIOUR which has a 4000 character limit';
+COMMENT ON COLUMN investigation.persons_trigger IS 'What triggers the person in prison has that could have motivated the incident. Maps to OFFENDER_CSIP_REPORTS.INV_PERSONS_TRIGGER which has a 4000 character limit';
+COMMENT ON COLUMN investigation.protective_factors IS 'Any protective factors. Maps to OFFENDER_CSIP_REPORTS.INV_PROTECTIVE_FACTORS which has a 4000 character limit';
+COMMENT ON COLUMN investigation.recorded_by IS 'The username of the user who recorded the investigation. New field populated from 13th of February 2025 and only via DPS';
+COMMENT ON COLUMN investigation.recorded_by_display_name IS 'The first and last name of the user who recorded the investigation. New field populated from 13th of February 2025 and only via DPS. Does not update if their name changes';
+COMMENT ON COLUMN investigation.version IS 'Supports bulk Hibernate operations';
 
 -- interview table
 COMMENT ON COLUMN interview.interview_id IS 'not null unique. Mapped to OFFENDER_CSIP_INTVW';
-COMMENT ON COLUMN interview.legacy_id IS 'unique. Prevents duplicate interviews via NOMIS -> DPS sync';
-COMMENT ON COLUMN interview.investigation_id IS 'not null';
-COMMENT ON COLUMN interview.interviewee IS 'not null. Name of the person being interviewed. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE';
-COMMENT ON COLUMN interview.interview_date IS 'not null. The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE';
-COMMENT ON COLUMN interview.interviewee_role_id IS 'not null. FK to reference_data. What role the interviewee played in the incident or referral. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE';
-COMMENT ON COLUMN interview.interview_text IS 'Information provided in interview. Maps to OFFENDER_CSIP_INTVW.COMMENTS. 4000 character limit';
-COMMENT ON COLUMN interview.version IS 'increments on each update';
+COMMENT ON COLUMN interview.investigation_id IS 'Parent investigation foreign key';
+COMMENT ON COLUMN interview.interviewee IS 'Name of the person being interviewed. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE which has a 100 character limit';
+COMMENT ON COLUMN interview.interview_date IS 'The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE';
+COMMENT ON COLUMN interview.interviewee_role_id IS 'Foreign key to reference data using the ''INTERVIEWEE_ROLE'' domain for role the interviewee played in the incident or behaviour. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE';
+COMMENT ON COLUMN interview.interview_text IS 'Information provided in interview. Maps to OFFENDER_CSIP_INTVW.COMMENTS which has a 4000 character limit';
+COMMENT ON COLUMN interview.legacy_id IS 'The NOMIS OFFENDER_CSIP_INTVW.CSIP_INTVW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
+COMMENT ON COLUMN interview.version IS 'Supports bulk Hibernate operations';
 
 -- decision_and_actions table
-COMMENT ON COLUMN decision_and_actions.decision_and_actions_id IS 'not null. Maps referral.referral_id';
+COMMENT ON COLUMN decision_and_actions.decision_and_actions_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
 COMMENT ON COLUMN decision_and_actions.conclusion IS 'The conclusion of the referral and reasons for the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_CONCLUSION. 4000 character limit';
 COMMENT ON COLUMN decision_and_actions.outcome_id IS 'not null. FK to reference_data. The outcome decision for the referral. Maps to OFFENDER_CSIP_REPORTS.INV_OUTCOME';
 COMMENT ON COLUMN decision_and_actions.signed_off_by_role_id IS 'FK to reference_data. The role of the person making the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_SIGNED_OFF_BY';
@@ -132,18 +134,17 @@ COMMENT ON COLUMN decision_and_actions.date IS 'The date the outcome decision wa
 COMMENT ON COLUMN decision_and_actions.next_steps IS 'The next steps that should be taken following the outcome decision. Maps to OFFENDER_CSIP_REPORTS.INV_NEXT_STEPS. 4000 character limit';
 COMMENT ON COLUMN decision_and_actions.actions IS 'An enumeration of actions that may have been recommended [''OPEN_CSIP_ALERT'', ''NON_ASSOCIATIONS_UPDATED'', ''OBSERVATION_BOOK'', ''UNIT_OR_CELL_MOVE'', ''CSRA_OR_RSRA_REVIEW'', ''SERVICE_REFERRAL'', ''SIM_REFERRAL'']';
 COMMENT ON COLUMN decision_and_actions.action_other IS 'Any other actions that are recommended to be considered. Maps to OFFENDER_CSIP_REPORTS.INV_OTHER. 4000 character limit';
-COMMENT ON COLUMN decision_and_actions.version IS 'increments on each update';
+COMMENT ON COLUMN decision_and_actions.version IS 'Supports bulk Hibernate operations';
 
 -- plan table
-COMMENT ON COLUMN plan.plan_id IS 'not null. Maps csip_record.record_id';
+COMMENT ON COLUMN plan.plan_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
 COMMENT ON COLUMN plan.case_manager IS 'not null. The case manager assigned to the CSIP plan. Maps to OFFENDER_CSIP_REPORTS.CASE_MANAGER';
 COMMENT ON COLUMN plan.reason_for_plan IS 'not null. The reasons motivating the creation of a CSIP plan. Maps to OFFENDER_CSIP_REPORTS.REASON';
 COMMENT ON COLUMN plan.first_case_review_date IS 'not null. The first date the CSIP plan should be reviewed. Maps to OFFENDER_CSIP_REPORTS.CASE_REV_DATE';
-COMMENT ON COLUMN plan.version IS 'increments on each update';
+COMMENT ON COLUMN plan.version IS 'Supports bulk Hibernate operations';
 
 -- identified_need table
 COMMENT ON COLUMN identified_need.identified_need_id IS 'not null unique. Mapped to OFFENDER_CSIP_PLANS';
-COMMENT ON COLUMN identified_need.legacy_id IS 'unique. Prevents duplicate identified needs via NOMIS -> DPS sync';
 COMMENT ON COLUMN identified_need.plan_id IS 'not null';
 COMMENT ON COLUMN identified_need.identified_need IS 'not null. Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED. 1000 character limit';
 COMMENT ON COLUMN identified_need.responsible_person IS 'not null. The name of the person who is responsible for taking action on the intervention. Maps to OFFENDER_CSIP_PLANS.BY_WHOM. Who identified the need (free text)';
@@ -152,11 +153,11 @@ COMMENT ON COLUMN identified_need.target_date IS 'not null. The target date the 
 COMMENT ON COLUMN identified_need.closed_date IS 'The date the identified need was resolved or closed. Maps to OFFENDER_CSIP_PLANS.CLOSED_DATE';
 COMMENT ON COLUMN identified_need.intervention IS 'not null. The planned intervention for the identified need. Maps to OFFENDER_CSIP_PLANS.INTERVENTION. 4000 character limit';
 COMMENT ON COLUMN identified_need.progression IS 'How the plan to address the identified need. is progressing. Maps to OFFENDER_CSIP_PLANS.PROGRESSION. 4000 character limit';
-COMMENT ON COLUMN identified_need.version IS 'increments on each update';
+COMMENT ON COLUMN identified_need.legacy_id IS 'The NOMIS OFFENDER_CSIP_PLANS.PLAN_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
+COMMENT ON COLUMN identified_need.version IS 'Supports bulk Hibernate operations';
 
 -- review table
 COMMENT ON COLUMN review.review_id IS 'not null unique. Mapped to OFFENDER_CSIP_REVIEWS';
-COMMENT ON COLUMN review.legacy_id IS 'unique. Prevents duplicate reviews via NOMIS -> DPS sync';
 COMMENT ON COLUMN review.plan_id IS 'not null';
 COMMENT ON COLUMN review.review_sequence IS 'not null. The review number. Maps to OFFENDER_CSIP_REVIEWS.REVIEW_SEQ';
 COMMENT ON COLUMN review.review_date IS 'The date of the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATE';
@@ -166,17 +167,18 @@ COMMENT ON COLUMN review.next_review_date IS 'The date of the next review. Maps 
 COMMENT ON COLUMN review.actions IS 'If the actions following the review include: informing people responsible for the person in prison, updating the CSIP plan, deciding the person should remain on the CSIP plan, adding a CSIP case note, and closing the CSIP plan. Maps to OFFENDER_CSIP_REVIEWS.PEOPLE_INFORMED, OFFENDER_CSIP_REVIEWS.CSIP_UPDATED, OFFENDER_CSIP_REVIEWS.REMAIN_ON_CSIP, OFFENDER_CSIP_REVIEWS.CASE_NOTE, and OFFENDER_CSIP_REVIEWS.CLOSE_CSIP, which all have default value ''N''';
 COMMENT ON COLUMN review.csip_closed_date IS 'The date the CSIP plan was closed following a review outcome decision to close it. Maps to OFFENDER_CSIP_REVIEWS.CLOSE_DATE';
 COMMENT ON COLUMN review.summary IS 'Additional information about the review. Maps to OFFENDER_CSIP_REVIEWS.SUMMARY. 4000 character limit';
-COMMENT ON COLUMN review.version IS 'increments on each update';
+COMMENT ON COLUMN review.legacy_id IS 'The NOMIS OFFENDER_CSIP_REVIEWS.REVIEW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
+COMMENT ON COLUMN review.version IS 'Supports bulk Hibernate operations';
 
 -- attendee table
 COMMENT ON COLUMN attendee.attendee_id IS 'not null unique. Mapped to OFFENDER_CSIP_ATTENDEES';
-COMMENT ON COLUMN attendee.legacy_id IS 'unique. Prevents duplicate attendees via NOMIS -> DPS sync';
 COMMENT ON COLUMN attendee.review_id IS 'not null';
 COMMENT ON COLUMN attendee.name IS 'not null. Name of review attendee/contributor. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDEE_NAME';
 COMMENT ON COLUMN attendee.role IS 'not null. Role of review attendee/contributor. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDEE_ROLE';
 COMMENT ON COLUMN attendee.attended IS 'If the person attended the review. Indicates that they were a contributor if false. Maps to OFFENDER_CSIP_ATTENDEES.ATTENDED where the default is ''N''';
 COMMENT ON COLUMN attendee.contribution IS 'Description of attendee contribution. Maps to OFFENDER_CSIP_ATTENDEES.CONTRIBUTION. 4000 character limit';
-COMMENT ON COLUMN attendee.version IS 'increments on each update';
+COMMENT ON COLUMN attendee.legacy_id IS 'The NOMIS OFFENDER_CSIP_ATTENDEES.ATTENDEE_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
+COMMENT ON COLUMN attendee.version IS 'Supports bulk Hibernate operations';
 
 -- audit_revision table
 COMMENT ON COLUMN audit_revision.id IS 'Internal primary key';
