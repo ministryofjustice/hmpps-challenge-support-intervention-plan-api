@@ -28,6 +28,19 @@ COMMENT ON TABLE identified_need_audit IS 'Identified needs property changes';
 COMMENT ON TABLE review_audit IS 'Review property changes';
 COMMENT ON TABLE attendee_audit IS 'Attendee property changes';
 
+-- reference_data table
+COMMENT ON COLUMN reference_data.reference_data_id IS 'Internal primary key. Not returned by API';
+COMMENT ON COLUMN reference_data.domain IS 'The reference data domain. CSIP to NOMIS mappings; AREA_OF_WORK -> CSIP_FUNC, CONTRIBUTORY_FACTOR_TYPE -> CSIP_FAC, DECISION_OUTCOME_TYPE -> CSIP_OUT, DECISION_SIGNER_ROLE -> CSIP_ROLE, INCIDENT_INVOLVEMENT -> CSIP_INV, INCIDENT_LOCATION -> CSIP_LOC, INCIDENT_TYPE -> CSIP_TYP, INTERVIEWEE_ROLE -> CSIP_INTVROL, SCREENING_OUTCOME_TYPE -> CSIP_OUT, STATUS -> CSIP only domain';
+COMMENT ON COLUMN reference_data.code IS 'The short code for the reference data item. Combination of domain and code is unique but individual codes are not guaranteed to be unique across domains. Matches the NOMIS reference data code for the associated domain';
+COMMENT ON COLUMN reference_data.description IS 'The description of the reference data item';
+COMMENT ON COLUMN reference_data.list_sequence IS 'Migrated list sequence from NOMIS. Not used';
+COMMENT ON COLUMN reference_data.created_at IS 'The date and time the reference data item was created';
+COMMENT ON COLUMN reference_data.created_by IS 'The username of the user who created the reference data item';
+COMMENT ON COLUMN reference_data.last_modified_at IS 'The date and time the reference data item was last modified';
+COMMENT ON COLUMN reference_data.last_modified_by IS 'The username of the user who last modified the reference data item';
+COMMENT ON COLUMN reference_data.deactivated_at IS 'The date and time the reference data item was deactivated';
+COMMENT ON COLUMN reference_data.deactivated_by IS 'The username of the user who deactivated the reference data item';
+
 -- csip_record table
 COMMENT ON COLUMN csip_record.record_id IS 'Public primary key for the CSIP and the shared primary key for 1:1 child entities';
 COMMENT ON COLUMN csip_record.prison_number IS 'The prison number of the person the CSIP record is for';
@@ -36,6 +49,17 @@ COMMENT ON COLUMN csip_record.log_code IS 'User entered identifier for the CSIP 
 COMMENT ON COLUMN csip_record.status_id IS 'Foreign key to reference data using the ''STATUS'' domain for the overall CSIP status. Status is calculated in NOMIS and not stored in the database';
 COMMENT ON COLUMN csip_record.legacy_id IS 'The NOMIS OFFENDER_CSIP_REPORTS.CSIP_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API';
 COMMENT ON COLUMN csip_record.version IS 'Supports bulk Hibernate operations';
+
+-- person_summary table
+COMMENT ON COLUMN person_summary.prison_number IS 'The prison number of the person the summary data is associated with';
+COMMENT ON COLUMN person_summary.first_name IS 'The first name of the person';
+COMMENT ON COLUMN person_summary.last_name IS 'The last name of the person';
+COMMENT ON COLUMN person_summary.status IS 'The active/inactive in/out status of the person';
+COMMENT ON COLUMN person_summary.restricted_patient IS 'Whether the person is a restricted patient';
+COMMENT ON COLUMN person_summary.supporting_prison_code IS 'The code of the prison a restricted patient is being supported by';
+COMMENT ON COLUMN person_summary.prison_code IS 'The code of the prison the person is resident at or TRN/OUT if they are not in prison';
+COMMENT ON COLUMN person_summary.cell_location IS 'The cell location of the person if they are currently in prison or an alternative location reference';
+COMMENT ON COLUMN person_summary.version IS 'Supports bulk Hibernate operations';
 
 -- referral table
 COMMENT ON COLUMN referral.referral_id IS 'Shared primary key with csip_record. Uses the same value as csip_record.record_id';
@@ -86,8 +110,6 @@ COMMENT ON COLUMN investigation.persons_usual_behaviour IS 'The normal behaviour
 COMMENT ON COLUMN investigation.persons_trigger IS 'What triggers the person in prison has that could have motivated the incident. Maps to OFFENDER_CSIP_REPORTS.INV_PERSONS_TRIGGER. 4000 character limit';
 COMMENT ON COLUMN investigation.protective_factors IS 'Any protective factors. Maps to OFFENDER_CSIP_REPORTS.INV_PROTECTIVE_FACTORS. 4000 character limit';
 COMMENT ON COLUMN investigation.version IS 'increments on each update';
-recordedBy
-recordedByDisplayName
 
 -- interview table
 COMMENT ON COLUMN interview.interview_id IS 'not null unique. Mapped to OFFENDER_CSIP_INTVW';
@@ -156,13 +178,24 @@ COMMENT ON COLUMN attendee.attended IS 'If the person attended the review. Indic
 COMMENT ON COLUMN attendee.contribution IS 'Description of attendee contribution. Maps to OFFENDER_CSIP_ATTENDEES.CONTRIBUTION. 4000 character limit';
 COMMENT ON COLUMN attendee.version IS 'increments on each update';
 
--- reference_data table
-COMMENT ON COLUMN reference_data.reference_data_id IS 'not null';
-COMMENT ON COLUMN reference_data.domain IS 'not null composite-unique(domain+code).';
-COMMENT ON COLUMN reference_data.code IS 'not null composite-unique(domain+code). The NOMIS reference data code for the CSIP_TYP, CSIP_LOC, CSIP_FUNC, CSIP_INV, CSIP_FAC, CSIP_OUT, CSIP_INTVROL, and CSIP_ROLE domain';
-COMMENT ON COLUMN reference_data.created_at IS 'not null';
-COMMENT ON COLUMN reference_data.created_by IS 'not null';
+-- audit_revision table
+COMMENT ON COLUMN audit_revision.id IS 'Internal primary key';
+COMMENT ON COLUMN audit_revision.timestamp IS 'The date and time the change happened';
+COMMENT ON COLUMN audit_revision.username IS 'The username of the user who made the change';
+COMMENT ON COLUMN audit_revision.caseload_id IS 'The active caseload of the user at the time of the change';
+COMMENT ON COLUMN audit_revision.source IS 'The system used to make the change. Either DPS or NOMIS';
+COMMENT ON COLUMN audit_revision.affected_components IS 'The table or tables that had values affected by the change';
 
--- person_location table
-COMMENT ON COLUMN person_location.prison_number IS 'not null';
-COMMENT ON COLUMN person_location.status IS 'not null';
+-- _audit tables
+COMMENT ON COLUMN csip_record_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN person_summary_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN referral_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN contributory_factor_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN safer_custody_screening_outcome_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN investigation_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN interview_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN decision_and_actions_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN plan_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN identified_need_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN review_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
+COMMENT ON COLUMN attendee_audit.rev_type IS 'Type of change; 0 -> entity was created, 1 -> entity was updated, 2 -> entity was deleted';
