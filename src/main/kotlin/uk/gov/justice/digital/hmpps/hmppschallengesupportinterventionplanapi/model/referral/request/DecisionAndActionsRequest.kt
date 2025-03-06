@@ -45,7 +45,7 @@ interface DecisionAndActionsRequest {
 data class UpsertDecisionAndActionsRequest(
   override val conclusion: String?,
   override val outcomeTypeCode: String,
-  override val signedOffByRoleCode: String,
+  override val signedOffByRoleCode: String?,
   override val recordedBy: String?,
   override val recordedByDisplayName: String?,
   override val date: LocalDate?,
