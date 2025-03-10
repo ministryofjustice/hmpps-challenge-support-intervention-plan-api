@@ -13,6 +13,7 @@ generic-service:
     SERVICE_BASE_URL: "https://csip-api.hmpps.service.justice.gov.uk"
     SERVICE_ACTIVE_PRISONS: "***"
   postgresDatabaseRestore:
+    tag: "sha-a08734f"
     jobName: csip-prod-to-preprod-restore
     enabled: true
     timeout: 900
