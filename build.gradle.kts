@@ -23,7 +23,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.0")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.3.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.4.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
@@ -47,7 +47,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.12.1")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.20.6")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
