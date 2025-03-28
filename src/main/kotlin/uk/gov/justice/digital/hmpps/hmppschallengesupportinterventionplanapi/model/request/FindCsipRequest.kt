@@ -16,20 +16,15 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipStatus
 
 data class FindCsipRequest(
-  @Parameter(description = "Please use the prisonCodes parameter", example = "MDI", deprecated = true)
-  val prisonCode: String?,
+  @Parameter(description = "The location of the person", example = "MDI", deprecated = true)
+  val prisonCode: Set<String> = emptySet(),
   @Parameter(
     description = "Either the prison number or the name(s) of the prisoner space separated",
     example = "First Last",
   )
-  val query: String?,
+  val query: String? = null,
   @Parameter(description = "The status of the CSIP record", example = "CSIP_OPEN")
-  val status: CsipStatus?,
-  @Parameter(
-    description = "A collection of prison codes that are involved in the care of the prisoner",
-    required = false,
-  )
-  val prisonCodes: Set<String> = emptySet(),
+  val status: Set<CsipStatus> = emptySet(),
   @Parameter(description = "Indicates whether or not to include restricted patients in the search", required = false)
   val includeRestrictedPatients: Boolean = false,
 
@@ -39,7 +34,7 @@ data class FindCsipRequest(
   @Parameter(description = "The sort to apply to the results", example = "referralDate,desc")
   override val sort: String = "referralDate,desc",
 ) : PagedRequest {
-  override fun validSortFields(): Set<String> = setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS)
+  override fun validSortFields(): Set<String> = setOf(CASE_MANAGER, LOCATION, NAME, NEXT_REVIEW_DATE, REFERRAL_DATE, STATUS, LOG_CODE, INCIDENT_TYPE)
 
   private fun sortByDate(direction: Direction) = by(direction, CsipSummary.REFERRAL_DATE, CsipSummary.ID)
   private fun sortByName(direction: Direction): Sort = by(direction, LAST_NAME, FIRST_NAME, PRISON_NUMBER)
@@ -62,5 +57,7 @@ data class FindCsipRequest(
     const val NEXT_REVIEW_DATE = "nextReviewDate"
     const val REFERRAL_DATE = "referralDate"
     const val STATUS = "status"
+    const val LOG_CODE = "logCode"
+    const val INCIDENT_TYPE = "incidentType"
   }
 }

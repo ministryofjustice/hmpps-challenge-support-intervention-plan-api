@@ -36,7 +36,9 @@ class CsipSummary(
   val cellLocation: String?,
   val supportingPrisonCode: String?,
 
+  val logCode: String,
   val referralDate: LocalDate,
+  val incidentType: String,
   val nextReviewDate: LocalDate?,
   val caseManager: String?,
   @Enumerated(EnumType.STRING)
@@ -112,8 +114,6 @@ interface CurrentCsipAndCounts {
   val referred: Int
 }
 
-fun summaryMatchesPrison(prisonNumber: String) = Specification<CsipSummary> { csip, _, cb -> cb.equal(cb.lower(csip[PRISON_CODE]), prisonNumber.lowercase()) }
-
 fun summaryPrisonInvolvement(prisonCodes: Set<String>) = Specification<CsipSummary> { csip, _, cb ->
   cb.or(csip.get<String>(PRISON_CODE).`in`(prisonCodes), csip.get<String>(SUPPORTING_PRISON_CODE).`in`(prisonCodes))
 }
@@ -132,8 +132,8 @@ fun summaryMatchesName(name: String) = Specification<CsipSummary> { csip, _, cb 
   cb.and(*matches)
 }
 
-fun summaryHasStatus(status: CsipStatus) = Specification<CsipSummary> { csip, _, cb ->
-  cb.equal(csip.get<String>(STATUS_CODE), status.name)
+fun summaryHasStatus(statuses: Set<CsipStatus>) = Specification<CsipSummary> { csip, _, cb ->
+  csip.get<String>(STATUS_CODE).`in`(statuses.map { it.name })
 }
 
 fun CsipSummary.status() = ReferenceData(statusCode.name, statusDescription)

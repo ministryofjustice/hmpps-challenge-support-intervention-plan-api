@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springdoc.core.annotations.ParameterObject
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -53,7 +52,7 @@ class CsipSearchController(private val search: CsipSearchService) {
   )
   @GetMapping("/search/csip-records")
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
-  fun findCsipRecords(@Valid @ParameterObject request: FindCsipRequest): CsipSearchResults = search.findMatchingCsipRecords(request)
+  fun findCsipRecords(@Valid request: FindCsipRequest): CsipSearchResults = search.findMatchingCsipRecords(request)
 
   @Operation(summary = "Retrieve an overview of CSIP records for a given prison")
   @ApiResponses(

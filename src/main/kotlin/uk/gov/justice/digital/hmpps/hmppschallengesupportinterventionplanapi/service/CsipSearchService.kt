@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryHasStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesName
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrison
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryMatchesPrisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryPrisonInvolvement
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.summaryWithoutRestrictedPatients
@@ -27,14 +26,14 @@ class CsipSearchService(
   private val csipSummaryRepository: CsipSummaryRepository,
 ) {
   fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults = with(request) {
-    require(prisonCode != null || prisonCodes.isNotEmpty()) { "At least one prison code must be provided" }
+    require(prisonCode.isNotEmpty()) { "At least one prison code must be provided" }
     csipSummaryRepository.findAll(asSpecification(), pageable()).map { it.toSearchResult() }.asCsipSearchResults()
   }
 
   fun getOverviewForPrison(prisonCode: String): CsipOverview = CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
 
   private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = listOfNotNull(
-    prisonCode?.let(::summaryMatchesPrison),
+    summaryPrisonInvolvement(prisonCode.toSet()),
     queryString()?.let {
       if (it.isPrisonNumber()) {
         summaryMatchesPrisonNumber(it)
@@ -42,8 +41,7 @@ class CsipSearchService(
         summaryMatchesName(it)
       }
     },
-    status?.let { summaryHasStatus(status) },
-    if (prisonCodes.isEmpty()) null else summaryPrisonInvolvement(prisonCodes),
+    if (status.isNotEmpty()) summaryHasStatus(status.toSet()) else null,
     if (includeRestrictedPatients) null else summaryWithoutRestrictedPatients(),
   ).reduce { spec, current -> spec.and(current) }
 }
@@ -53,7 +51,7 @@ private fun Page<CsipSearchResult>.asCsipSearchResults() = CsipSearchResults(
   PageMeta(totalElements),
 )
 
-private fun CsipSummary.toSearchResult() = CsipSearchResult(id, prisoner(), referralDate, nextReviewDate, caseManager, status())
+private fun CsipSummary.toSearchResult() = CsipSearchResult(id, logCode, prisoner(), referralDate, incidentType, nextReviewDate, caseManager, status())
 
 private fun CsipSummary.prisoner() = Prisoner(prisonNumber, firstName, lastName, cellLocation)
 

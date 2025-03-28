@@ -265,12 +265,14 @@ abstract class IntegrationTestBase {
   }!!
 
   fun CsipRecord.withCompletedReferral(
+    incidentType: () -> ReferenceData = { givenRandom(INCIDENT_TYPE) },
     referralComplete: Boolean = true,
     referralCompletedBy: String = "referralCompletedBy",
     referralCompletedByDisplayName: String = "referralCompletedByDisplayName",
     referralCompletedDate: LocalDate = LocalDate.now().minusDays(1),
     referralDate: LocalDate = LocalDate.now(),
   ) = withReferral(
+    incidentType = incidentType,
     referralDate = referralDate,
     referralComplete = referralComplete,
     referralCompletedBy = referralCompletedBy,
