@@ -250,6 +250,23 @@
                                     <td></td>
                                 </tr>
                                 <tr>
+                                    <td><span id="incident_type">incident_type</span></td>
+                                    <td>varchar</td>
+                                    <td>40</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
                                     <td><span id="next_review_date">next_review_date</span></td>
                                     <td>date</td>
                                     <td>13</td>
@@ -287,6 +304,23 @@
                                     <td><span id="id">id</span></td>
                                     <td>uuid</td>
                                     <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="log_code">log_code</span></td>
+                                    <td>varchar</td>
+                                    <td>10</td>
                                     <td title='nullable'>√</td>
                                     <td title=''></td>
                                     <td>null</td>
@@ -416,7 +450,7 @@
                             </div>
                         </div>
                         <div class="box-body">
-                            <textarea id="sql-script-codemirror" name="sql-script-codemirror" rows="" style="display: none;">SELECT person.prison_number,&#10;    person.first_name,&#10;    person.last_name,&#10;    person.restricted_patient,&#10;    person.prison_code,&#10;    person.cell_location,&#10;    person.supporting_prison_code,&#10;    ref.referral_date,&#10;    p.next_review_date,&#10;    p.case_manager,&#10;    csip.record_id AS id,&#10;        CASE&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_CLOSED&#39;::text) THEN p.closed_date&#10;            ELSE NULL::date&#10;        END AS closed_date,&#10;        CASE&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_OPEN&#39;::text) THEN 1&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_CLOSED&#39;::text) THEN 3&#10;            WHEN ((st.code)::text &#61; ANY ((ARRAY[&#39;NO_FURTHER_ACTION&#39;::character varying, &#39;SUPPORT_OUTSIDE_CSIP&#39;::character varying])::text[])) THEN 4&#10;            ELSE 2&#10;        END AS priority,&#10;    st.code AS status_code,&#10;    st.description AS status_description&#10;   FROM ((((csip_record csip&#10;     JOIN person_summary person ON (((person.prison_number)::text &#61; (csip.prison_number)::text)))&#10;     JOIN referral ref ON ((ref.referral_id &#61; csip.record_id)))&#10;     LEFT JOIN plan p ON ((p.plan_id &#61; csip.record_id)))&#10;     JOIN reference_data st ON ((st.reference_data_id &#61; csip.status_id)));</textarea>
+                            <textarea id="sql-script-codemirror" name="sql-script-codemirror" rows="" style="display: none;">SELECT person.prison_number,&#10;    person.first_name,&#10;    person.last_name,&#10;    person.restricted_patient,&#10;    person.prison_code,&#10;    person.cell_location,&#10;    person.supporting_prison_code,&#10;    ref.referral_date,&#10;    inc.description AS incident_type,&#10;    p.next_review_date,&#10;    p.case_manager,&#10;    csip.record_id AS id,&#10;    csip.log_code,&#10;        CASE&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_CLOSED&#39;::text) THEN p.closed_date&#10;            ELSE NULL::date&#10;        END AS closed_date,&#10;        CASE&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_OPEN&#39;::text) THEN 1&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_CLOSED&#39;::text) THEN 3&#10;            WHEN ((st.code)::text &#61; ANY ((ARRAY[&#39;NO_FURTHER_ACTION&#39;::character varying, &#39;SUPPORT_OUTSIDE_CSIP&#39;::character varying])::text[])) THEN 4&#10;            ELSE 2&#10;        END AS priority,&#10;    st.code AS status_code,&#10;    st.description AS status_description&#10;   FROM (((((csip_record csip&#10;     JOIN person_summary person ON (((person.prison_number)::text &#61; (csip.prison_number)::text)))&#10;     JOIN referral ref ON ((ref.referral_id &#61; csip.record_id)))&#10;     JOIN reference_data inc ON ((inc.reference_data_id &#61; ref.incident_type_id)))&#10;     LEFT JOIN plan p ON ((p.plan_id &#61; csip.record_id)))&#10;     JOIN reference_data st ON ((st.reference_data_id &#61; csip.status_id)));</textarea>
                             <div style="padding-top: 5px;"><hr></div>
                             <div class="box box-solid">
                                 <div class="box-header with-border">
@@ -429,8 +463,8 @@
                                         <li><a href="csip_record.html">csip_record</a></li>
                                         <li><a href="person_summary.html">person_summary</a></li>
                                         <li><a href="referral.html">referral</a></li>
-                                        <li><a href="plan.html">plan</a></li>
                                         <li><a href="reference_data.html">reference_data</a></li>
+                                        <li><a href="plan.html">plan</a></li>
                                     </ul>
                                 </div><!-- /.box-body -->
                             </div>
