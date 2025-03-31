@@ -11,10 +11,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertDecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
@@ -75,10 +77,12 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `screening outcome history correctly returned`() {
+  fun `screening outcome and decision history correctly returned`() {
     val referral = dataSetup(generateCsipRecord().withCompletedReferral()) {
       requireNotNull(it.referral).withSaferCustodyScreeningOutcome(
         givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"),
+      ).withDecisionAndActions(
+        outcome = givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "ACC"),
       )
     }
 
@@ -87,20 +91,38 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
     }
 
     val screeningOutcome = requireNotNull(referral.saferCustodyScreeningOutcome)
+    val decision = requireNotNull(referral.decisionAndActions)
     screeningOutcome.update(screeningOutcomeRequest("CUR"), rdSupplier)
+    decision.upsert(
+      upsertDecisionActionsRequest("NFA"),
+      givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "NFA"),
+      decision.signedOffBy,
+    )
     csipRecordRepository.save(referral.csipRecord)
 
     val saved = retrieveFullCsip(referral.id)
     val newScreeningOutcome = requireNotNull(saved.referral!!.saferCustodyScreeningOutcome)
+    val newDecision = requireNotNull(saved.referral!!.decisionAndActions)
     newScreeningOutcome.update(screeningOutcomeRequest("OPE"), rdSupplier)
+    newDecision.upsert(
+      upsertDecisionActionsRequest("CUR"),
+      givenReferenceData(ReferenceDataType.DECISION_OUTCOME_TYPE, "CUR"),
+      decision.signedOffBy,
+    )
     csipRecordRepository.save(saved)
 
     val response = getCsipRecord(referral.id)
     response.verifyAgainst(saved)
+
     val screeningHistory = requireNotNull(response.referral.saferCustodyScreeningOutcome?.history)
     assertThat(screeningHistory).hasSize(2)
     assertThat(screeningHistory[0].outcome.code).isEqualTo("NFA")
     assertThat(screeningHistory[1].outcome.code).isEqualTo("CUR")
+
+    val decisionHistory = requireNotNull(response.referral.decisionAndActions?.history)
+    assertThat(decisionHistory).hasSize(2)
+    assertThat(decisionHistory[0].outcome?.code).isEqualTo("ACC")
+    assertThat(decisionHistory[1].outcome?.code).isEqualTo("NFA")
   }
 
   fun getCsipRecordResponseSpec(recordUuid: UUID, role: String? = ROLE_CSIP_UI): WebTestClient.ResponseSpec = webTestClient.get()
@@ -128,5 +150,21 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
     reasonForDecision,
     recordedBy,
     recordedByDisplayName,
+  )
+
+  private fun upsertDecisionActionsRequest(
+    outcomeTypeCode: String,
+    outcomeSignedOffByRoleCode: String = "CUSTMAN",
+    actions: Set<DecisionAction> = setOf(),
+  ) = UpsertDecisionAndActionsRequest(
+    conclusion = "a conclusion",
+    outcomeTypeCode = outcomeTypeCode,
+    signedOffByRoleCode = outcomeSignedOffByRoleCode,
+    recordedBy = "outcomeRecordedBy",
+    recordedByDisplayName = "outcomeRecordedByDisplayName",
+    date = LocalDate.now(),
+    nextSteps = "next steps",
+    actionOther = null,
+    actions = actions,
   )
 }

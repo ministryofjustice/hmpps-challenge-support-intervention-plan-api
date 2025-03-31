@@ -72,7 +72,10 @@ class SaferCustodyScreeningOutcome(
     outcome = rdSupplier(ReferenceDataType.SCREENING_OUTCOME_TYPE, request.outcomeTypeCode)
     date = request.date
     recordedBy = request.recordedBy
-    recordedByDisplayName = request.recordedByDisplayName
+    // temporary handling for sync as nomis stores username as uppercase
+    if (!request.recordedByDisplayName.equals(recordedByDisplayName, ignoreCase = true)) {
+      recordedByDisplayName = request.recordedByDisplayName
+    }
     reasonForDecision = request.reasonForDecision
   }
 }

@@ -37,4 +37,11 @@ data class DecisionAndActions(
 ) {
   @JsonIgnore
   var new: Boolean = false
+
+  var history: List<DecisionAndActions> = emptyList()
+    private set
+
+  fun withHistoricalState(previous: List<DecisionAndActions>) {
+    history = previous.filter { it != this }
+  }
 }
