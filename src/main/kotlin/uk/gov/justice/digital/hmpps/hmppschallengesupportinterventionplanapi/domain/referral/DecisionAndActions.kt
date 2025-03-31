@@ -16,6 +16,7 @@ import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import org.springframework.data.repository.history.RevisionRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
@@ -98,7 +99,10 @@ class DecisionAndActions(
     signedOffBy = signedOffByRole
     conclusion = request.conclusion
     recordedBy = request.recordedBy
-    recordedByDisplayName = request.recordedByDisplayName
+    // temporary handling for sync as nomis stores username as uppercase
+    if (!request.recordedByDisplayName.equals(recordedByDisplayName, ignoreCase = true)) {
+      recordedByDisplayName = request.recordedByDisplayName
+    }
     date = request.date
     nextSteps = request.nextSteps
     actions = request.actions
@@ -117,3 +121,5 @@ fun DecisionAndActions.toModel() = DecisionAndActionsModel(
   actions,
   actionOther,
 )
+
+interface DecisionAndActionsRepository : RevisionRepository<DecisionAndActions, UUID, Long>

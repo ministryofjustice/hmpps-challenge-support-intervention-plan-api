@@ -12,6 +12,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import org.springframework.data.repository.history.RevisionRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
@@ -71,7 +72,10 @@ class SaferCustodyScreeningOutcome(
     outcome = rdSupplier(ReferenceDataType.SCREENING_OUTCOME_TYPE, request.outcomeTypeCode)
     date = request.date
     recordedBy = request.recordedBy
-    recordedByDisplayName = request.recordedByDisplayName
+    // temporary handling for sync as nomis stores username as uppercase
+    if (!request.recordedByDisplayName.equals(recordedByDisplayName, ignoreCase = true)) {
+      recordedByDisplayName = request.recordedByDisplayName
+    }
     reasonForDecision = request.reasonForDecision
   }
 }
@@ -83,3 +87,5 @@ fun SaferCustodyScreeningOutcome.toModel() = uk.gov.justice.digital.hmpps.hmppsc
   date = date,
   reasonForDecision = reasonForDecision,
 )
+
+interface SaferCustodyScreeningOutcomeRepository : RevisionRepository<SaferCustodyScreeningOutcome, UUID, Long>

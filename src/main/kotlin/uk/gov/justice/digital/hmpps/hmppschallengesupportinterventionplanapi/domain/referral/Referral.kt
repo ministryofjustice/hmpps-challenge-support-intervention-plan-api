@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CompletableRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateInvestigationRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.CreateSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.DecisionAndActionsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.ReferralDateRequest
@@ -257,12 +256,6 @@ class Referral(
     request: ScreeningOutcomeRequest,
     rdSupplier: (ReferenceDataType, String) -> ReferenceData,
   ): SaferCustodyScreeningOutcome {
-    // maintain existing behaviour until the create endpoint is removed
-    if (request is CreateSaferCustodyScreeningOutcomeRequest) {
-      verifyDoesNotExist(saferCustodyScreeningOutcome) {
-        ResourceAlreadyExistException("Referral already has a Safer Custody Screening Outcome")
-      }
-    }
     val isNew = saferCustodyScreeningOutcome == null
     if (isNew) {
       saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(

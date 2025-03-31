@@ -24,4 +24,11 @@ data class SaferCustodyScreeningOutcome(
 ) {
   @JsonIgnore
   var new: Boolean = false
+
+  var history: List<SaferCustodyScreeningOutcome> = emptyList()
+    private set
+
+  fun withHistoricalState(previous: List<SaferCustodyScreeningOutcome>) {
+    history = previous.filter { it != this }
+  }
 }

@@ -475,7 +475,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val factors = contributoryFactorRepository.findAllById(factorRequests.map { it.id })
     factors.forEach { i -> i.verifyAgainst(requireNotNull(factorRequests.find { it.legacyId == i.legacyId })) }
 
-    val interviewRequests = request.referral!!.investigation!!.interviews
+    val interviewRequests = request.referral.investigation!!.interviews
     val interviews = interviewRepository.findAllById(interviewRequests.map { it.id })
     interviews.forEach { i -> i.verifyAgainst(requireNotNull(interviewRequests.find { it.legacyId == i.legacyId })) }
 
@@ -566,6 +566,70 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     val attendeeRequest = reviewRequest.attendees.first()
     assertThat(response.mappings.single { it.component == ATTENDEE })
       .isEqualTo(ResponseMapping(ATTENDEE, attendeeRequest.legacyId, attendee.id))
+
+    await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
+  }
+
+  @Test
+  fun `200 success - uppercase name does not save or create audit record`() {
+    val initial = dataSetup(generateCsipRecord()) {
+      val referral = requireNotNull(it.withReferral().referral)
+        .withSaferCustodyScreeningOutcome()
+        .withInvestigation()
+        .withDecisionAndActions(
+          signedOffBy = givenReferenceData(ReferenceDataType.DECISION_SIGNER_ROLE, "OTHER"),
+        )
+      requireNotNull(referral.investigation)
+        .withInterview(interviewee = "Initial Interviewee", interviewText = "The initial text of the interview")
+      it
+    }
+
+    val initialReferral = initial.referral!!
+    val initialScreening = initialReferral.saferCustodyScreeningOutcome!!
+    val initialDecision = initialReferral.decisionAndActions!!
+    val request = syncCsipRequest(
+      uuid = initial.id,
+      prisonNumber = initial.prisonNumber,
+      personSummary = null,
+      logCode = initial.logCode,
+      referral = syncReferralRequest(
+        saferCustodyScreeningOutcome = syncScreeningOutcomeRequest(
+          initialScreening.outcome.code,
+          initialScreening.reasonForDecision,
+          initialScreening.date,
+          initialScreening.recordedBy,
+          initialScreening.recordedByDisplayName.uppercase(),
+        ),
+        investigation = syncInvestigationRequest(
+          interviews = listOf(
+            syncInterviewRequest(uuid = initial.referral!!.investigation!!.interviews().first().id),
+          ),
+        ),
+        decisionAndActions = syncDecisionRequest(
+          initialDecision.conclusion,
+          initialDecision.outcome?.code,
+          initialDecision.signedOffBy?.code,
+          initialDecision.date,
+          initialDecision.recordedBy,
+          initialDecision.recordedByDisplayName!!.uppercase(),
+          initialDecision.nextSteps,
+          initialDecision.actionOther,
+          initialDecision.actions,
+        ),
+      ),
+    )
+
+    val response = syncCsipRecord(request)
+    assertThat(response.mappings.size).isEqualTo(0)
+
+    val saved = csipRecordRepository.getCsipRecord(initial.id)
+    assertThat(saved).isNotNull()
+
+    val savedReferral = saved.referral!!
+    val savedScreening = savedReferral.saferCustodyScreeningOutcome!!
+    savedScreening.verifyAgainst(request.referral!!.saferCustodyScreeningOutcome!!.copy(recordedByDisplayName = initialScreening.recordedByDisplayName))
+    val savedDecision = savedReferral.decisionAndActions!!
+    savedDecision.verifyAgainst(request.referral.decisionAndActions!!.copy(recordedByDisplayName = initialDecision.recordedByDisplayName))
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
   }
