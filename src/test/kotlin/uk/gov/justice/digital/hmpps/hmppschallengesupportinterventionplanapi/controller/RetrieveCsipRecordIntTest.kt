@@ -9,9 +9,13 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.LocalDate
@@ -70,10 +74,59 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
     response.verifyAgainst(record)
   }
 
+  @Test
+  fun `screening outcome history correctly returned`() {
+    val referral = dataSetup(generateCsipRecord().withCompletedReferral()) {
+      requireNotNull(it.referral).withSaferCustodyScreeningOutcome(
+        givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "NFA"),
+      )
+    }
+
+    val rdSupplier: (ReferenceDataType, String) -> ReferenceData = { type, code ->
+      requireNotNull(referenceDataRepository.findByKey(ReferenceDataKey(type, code)))
+    }
+
+    val screeningOutcome = requireNotNull(referral.saferCustodyScreeningOutcome)
+    screeningOutcome.update(screeningOutcomeRequest("CUR"), rdSupplier)
+    csipRecordRepository.save(referral.csipRecord)
+
+    val saved = retrieveFullCsip(referral.id)
+    val newScreeningOutcome = requireNotNull(saved.referral!!.saferCustodyScreeningOutcome)
+    newScreeningOutcome.update(screeningOutcomeRequest("OPE"), rdSupplier)
+    csipRecordRepository.save(saved)
+
+    val response = getCsipRecord(referral.id)
+    response.verifyAgainst(saved)
+    val screeningHistory = requireNotNull(response.referral.saferCustodyScreeningOutcome?.history)
+    assertThat(screeningHistory).hasSize(2)
+    assertThat(screeningHistory[0].outcome.code).isEqualTo("NFA")
+    assertThat(screeningHistory[1].outcome.code).isEqualTo("CUR")
+  }
+
   fun getCsipRecordResponseSpec(recordUuid: UUID, role: String? = ROLE_CSIP_UI): WebTestClient.ResponseSpec = webTestClient.get()
     .uri("/csip-records/$recordUuid")
     .headers(setAuthorisation(roles = listOfNotNull(role)))
     .exchange()
 
   fun getCsipRecord(recordUuid: UUID, role: String = ROLE_CSIP_UI): CsipRecord = getCsipRecordResponseSpec(recordUuid, role).successResponse()
+
+  private fun retrieveFullCsip(id: UUID): uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord = transactionTemplate.execute {
+    val csip = csipRecordRepository.findById(id)
+    csip?.referral?.contributoryFactors()
+    csip
+  }!!
+
+  private fun screeningOutcomeRequest(
+    outcomeTypeCode: String,
+    reasonForDecision: String = "Reason for $outcomeTypeCode",
+    recordedBy: String = "recordedBy",
+    recordedByDisplayName: String = "${recordedBy}DisplayName",
+    date: LocalDate = LocalDate.now(),
+  ) = UpsertSaferCustodyScreeningOutcomeRequest(
+    outcomeTypeCode,
+    date,
+    reasonForDecision,
+    recordedBy,
+    recordedByDisplayName,
+  )
 }

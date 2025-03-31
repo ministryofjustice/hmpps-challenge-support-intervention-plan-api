@@ -12,6 +12,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import org.springframework.data.repository.history.RevisionRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
@@ -83,3 +84,5 @@ fun SaferCustodyScreeningOutcome.toModel() = uk.gov.justice.digital.hmpps.hmppsc
   date = date,
   reasonForDecision = reasonForDecision,
 )
+
+interface SaferCustodyScreeningOutcomeRepository : RevisionRepository<SaferCustodyScreeningOutcome, UUID, Long>

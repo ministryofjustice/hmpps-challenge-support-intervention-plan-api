@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.verifyAllReferenceData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.SaferCustodyScreeningOutcomeRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
@@ -41,6 +43,7 @@ class CsipRecordService(
   private val personSearch: PrisonerSearchClient,
   private val csipRecordRepository: CsipRecordRepository,
   private val csipSummaryRepository: CsipSummaryRepository,
+  private val saferCustodyScreeningOutcomeRepository: SaferCustodyScreeningOutcomeRepository,
 ) {
   @PublishCsipEvent(CSIP_CREATED)
   fun createCsipRecord(
@@ -62,7 +65,14 @@ class CsipRecordService(
   }
 
   @Transactional(readOnly = true)
-  fun retrieveCsipRecord(recordUuid: UUID): CsipRecord = csipRecordRepository.getCsipRecord(recordUuid).toModel()
+  fun retrieveCsipRecord(recordUuid: UUID): CsipRecord {
+    val csip = csipRecordRepository.getCsipRecord(recordUuid)
+    val screeningHistory = csip.referral?.saferCustodyScreeningOutcome?.id
+      ?.let { saferCustodyScreeningOutcomeRepository.findRevisions(it).asSequence() }
+      ?.sortedBy { it.requiredRevisionNumber }?.map { it.entity.toModel() }
+      ?.toList() ?: emptyList()
+    return csip.toModel().apply { referral.saferCustodyScreeningOutcome?.withHistoricalState(screeningHistory) }
+  }
 
   @PublishCsipEvent(CSIP_UPDATED)
   fun updateCsipRecord(
