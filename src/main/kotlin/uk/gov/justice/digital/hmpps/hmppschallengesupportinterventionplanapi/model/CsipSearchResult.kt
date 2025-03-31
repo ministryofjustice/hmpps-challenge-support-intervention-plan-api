@@ -12,8 +12,10 @@ data class PageMeta(override val totalElements: Long) : PagedResponse
 
 data class CsipSearchResult(
   val id: UUID,
+  val logCode: String?,
   val prisoner: Prisoner,
   val referralDate: LocalDate,
+  val incidentType: String,
   val nextReviewDate: LocalDate?,
   val caseManager: String?,
   val status: ReferenceData,

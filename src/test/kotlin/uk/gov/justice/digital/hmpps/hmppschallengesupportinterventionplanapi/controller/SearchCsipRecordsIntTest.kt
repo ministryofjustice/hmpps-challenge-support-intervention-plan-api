@@ -39,7 +39,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `403 forbidden - no required role`() {
-    val response = searchCsipRecordsResponseSpec(searchRequest(), "WRONG_ROLE").errorResponse(HttpStatus.FORBIDDEN)
+    val response = searchCsipRecordsResponseSpec(searchReq(), "WRONG_ROLE").errorResponse(HttpStatus.FORBIDDEN)
 
     with(response) {
       assertThat(status).isEqualTo(403)
@@ -62,14 +62,14 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   @Test
   fun `400 bad request - at least one prison code must be provided`() {
-    val request = searchRequest(prisonCode = null, prisonCodes = setOf())
+    val request = searchRequest(prisonCode = emptySet())
     val response = searchCsipRecordsResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
     assertThat(response.userMessage).isEqualTo("Validation failure: At least one prison code must be provided")
   }
 
   @Test
   fun `200 ok - when no csip record exists for filter conditions`() {
-    val response = searchCsipRecords(searchRequest("UNKNOWN"))
+    val response = searchCsipRecords(searchReq("UNKNOWN"))
     assertThat(response.content).isEmpty()
   }
 
@@ -85,11 +85,11 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     }
     val csip2 = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode2).toPersonSummary())) { it.withReferral() }
 
-    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode1))
+    val res1 = searchCsipRecords(searchReq(prisonCode = prisonCode1))
     assertThat(res1.content.size).isEqualTo(1)
     res1.content.first().verifyAgainst(csip1)
 
-    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode2))
+    val res2 = searchCsipRecords(searchReq(prisonCode = prisonCode2))
     assertThat(res2.content.size).isEqualTo(1)
     res2.content.first().verifyAgainst(csip2)
   }
@@ -118,7 +118,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
     dataSetup(generateCsipRecord(prisoner(prisonId = "OTH").toPersonSummary())) { it.withReferral() }
 
-    val res1 = searchCsipRecords(searchRequest(prisonCode = null, prisonCodes = prisonCodes.toSet()))
+    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCodes.toSet()))
     assertThat(res1.content.size).isEqualTo(4)
   }
 
@@ -132,12 +132,12 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       it.withReferral().withPlan()
     }
 
-    val res = searchCsipRecords(searchRequest(prisonCode = SEARCH_PRISON_CODE, query = csip1.prisonNumber))
+    val res = searchCsipRecords(searchReq(prisonCode = SEARCH_PRISON_CODE, query = csip1.prisonNumber))
     assertThat(res.content.size).isEqualTo(1)
     res.content.first().verifyAgainst(csip1)
 
     val res2 = searchCsipRecords(
-      searchRequest(
+      searchReq(
         prisonCode = SEARCH_PRISON_CODE,
         query = decode("${csip1.prisonNumber}%00", UTF_8.name()),
       ),
@@ -158,11 +158,11 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       it.withReferral().withPlan()
     }
 
-    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode))
+    val res1 = searchCsipRecords(searchReq(prisonCode = prisonCode))
     assertThat(res1.content.size).isEqualTo(1)
     res1.content.first().verifyAgainst(csip1)
 
-    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode, includeRestrictedPatients = true))
+    val res2 = searchCsipRecords(searchReq(prisonCode = prisonCode, includeRestrictedPatients = true))
     assertThat(res2.content.size).isEqualTo(2)
   }
 
@@ -244,19 +244,19 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       it
     }
 
-    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = CSIP_CLOSED, size = 100))
+    val res1 = searchCsipRecords(searchReq(prisonCode = prisonCode, status = CSIP_CLOSED, size = 100))
     assertThat(res1.content.size).isEqualTo(1)
     res1.content.first().verifyAgainst(closedCsip)
 
-    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = CSIP_OPEN, size = 100))
+    val res2 = searchCsipRecords(searchReq(prisonCode = prisonCode, status = CSIP_OPEN, size = 100))
     assertThat(res2.content.size).isEqualTo(1)
     res2.content.first().verifyAgainst(openCsip)
 
-    val res3 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = AWAITING_DECISION, size = 100))
+    val res3 = searchCsipRecords(searchReq(prisonCode = prisonCode, status = AWAITING_DECISION, size = 100))
     assertThat(res3.content.size).isEqualTo(1)
     res3.content.first().verifyAgainst(awaitingDecision)
 
-    val res4 = searchCsipRecords(searchRequest(prisonCode = prisonCode, status = NO_FURTHER_ACTION, size = 100))
+    val res4 = searchCsipRecords(searchReq(prisonCode = prisonCode, status = NO_FURTHER_ACTION, size = 100))
     assertThat(res4.content.size).isEqualTo(1)
     res4.content.first().verifyAgainst(noFurtherAction)
   }
@@ -268,7 +268,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
     val csip1 = dataSetup(
       generateCsipRecord(
-        prisoner(
+        // logCode = "S0442",
+        personSummary = prisoner(
           prisonId = prisonCode,
           cellLocation = "$prisonCode-1-123",
           lastName = "Johnson",
@@ -276,13 +277,16 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
         ).toPersonSummary(),
       ),
     ) {
-      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(10))
-        .withPlan(caseManager = "John Doe").plan!!.withReview(nextReviewDate = LocalDate.now().plusWeeks(12))
+      it.withCompletedReferral(
+        referralDate = LocalDate.now().minusDays(10),
+        incidentType = { givenReferenceData(ReferenceDataType.INCIDENT_TYPE, "FTE") },
+      ).withPlan(caseManager = "John Doe").plan!!.withReview(nextReviewDate = LocalDate.now().plusWeeks(12))
       it
     }
     val csip2 = dataSetup(
       generateCsipRecord(
-        prisoner(
+        logCode = "S0242",
+        personSummary = prisoner(
           prisonId = prisonCode,
           cellLocation = "$prisonCode-2-123",
           lastName = "Smith",
@@ -290,14 +294,18 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
         ).toPersonSummary(),
       ),
     ) {
-      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(30))
+      it.withCompletedReferral(
+        referralDate = LocalDate.now().minusDays(30),
+        incidentType = { givenReferenceData(ReferenceDataType.INCIDENT_TYPE, "MDO") },
+      )
       requireNotNull(it.referral).withInvestigation()
       it
     }
 
     val csip3 = dataSetup(
       generateCsipRecord(
-        prisoner(
+        logCode = "S0342",
+        personSummary = prisoner(
           prisonId = prisonCode,
           cellLocation = "$prisonCode-2-456",
           lastName = "Smith",
@@ -305,12 +313,16 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
         ).toPersonSummary(),
       ),
     ) {
-      it.withReferral(referralDate = LocalDate.now().minusDays(90))
+      it.withReferral(
+        referralDate = LocalDate.now().minusDays(90),
+        incidentType = { givenReferenceData(ReferenceDataType.INCIDENT_TYPE, "OTH") },
+      )
     }
 
     val csip4 = dataSetup(
       generateCsipRecord(
-        prisoner(
+        logCode = "S0142",
+        personSummary = prisoner(
           prisonId = prisonCode,
           cellLocation = "$prisonCode-3-123",
           lastName = "James",
@@ -318,8 +330,10 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
         ).toPersonSummary(),
       ),
     ) {
-      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(10))
-        .withPlan(caseManager = "Jane Doe", firstCaseReviewDate = LocalDate.now().plusWeeks(6))
+      it.withCompletedReferral(
+        referralDate = LocalDate.now().minusDays(10),
+        incidentType = { givenReferenceData(ReferenceDataType.INCIDENT_TYPE, "OTH") },
+      ).withPlan(caseManager = "Jane Doe", firstCaseReviewDate = LocalDate.now().plusWeeks(6))
       it
     }
 
@@ -328,6 +342,8 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     verifySort(prisonCode, "nextReviewDate", listOf(csip4, csip1, csip2, csip3), listOf(csip2, csip3, csip1, csip4))
     verifySort(prisonCode, "status", listOf(csip2, csip4, csip1, csip3), listOf(csip3, csip4, csip1, csip2))
     verifySort(prisonCode, "caseManager", listOf(csip4, csip1, csip2, csip3), listOf(csip2, csip3, csip1, csip4))
+    verifySort(prisonCode, "logCode", listOf(csip4, csip2, csip3, csip1))
+    verifySort(prisonCode, "incidentType", listOf(csip1, csip2, csip4, csip3), listOf(csip4, csip3, csip2, csip1))
   }
 
   private fun verifySort(
@@ -337,13 +353,13 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     reverseOrder: List<CsipRecord> = order.reversed(),
     query: String? = null,
   ) {
-    val res1 = searchCsipRecords(searchRequest(prisonCode = prisonCode, query = query, sort = "$sortField,asc"))
+    val res1 = searchCsipRecords(searchReq(prisonCode = prisonCode, query = query, sort = "$sortField,asc"))
     assertThat(res1.content.size).isEqualTo(order.size)
     for (i in order.indices) {
       res1.content[i].verifyAgainst(order[i])
     }
 
-    val res2 = searchCsipRecords(searchRequest(prisonCode = prisonCode, query = query, sort = "$sortField,desc"))
+    val res2 = searchCsipRecords(searchReq(prisonCode = prisonCode, query = query, sort = "$sortField,desc"))
     assertThat(res2.content.size).isEqualTo(order.size)
     for (i in reverseOrder.indices) {
       res2.content[i].verifyAgainst(reverseOrder[i])
@@ -370,44 +386,63 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     private const val BASE_URL = "/search/csip-records"
     private const val SEARCH_PRISON_CODE = "SWI"
 
-    private fun searchRequest(
-      prisonCode: String? = SEARCH_PRISON_CODE,
+    private fun searchReq(
+      prisonCode: String = SEARCH_PRISON_CODE,
       query: String? = null,
       status: CsipStatus? = null,
-      prisonCodes: Set<String> = emptySet(),
       includeRestrictedPatients: Boolean? = null,
       page: Int = 1,
       size: Int = 10,
       sort: String = "referralDate,desc",
-    ) = FindCsipRequest(prisonCode, query, status, prisonCodes, includeRestrictedPatients == true, page, size, sort)
+    ) = searchRequest(
+      setOf(prisonCode),
+      query,
+      status?.let { setOf(it) } ?: emptySet(),
+      includeRestrictedPatients,
+      page,
+      size,
+      sort,
+    )
+
+    private fun searchRequest(
+      prisonCode: Set<String> = setOf(SEARCH_PRISON_CODE),
+      query: String? = null,
+      status: Set<CsipStatus> = setOf(),
+      includeRestrictedPatients: Boolean? = null,
+      page: Int = 1,
+      size: Int = 10,
+      sort: String = "referralDate,desc",
+    ) = FindCsipRequest(prisonCode, query, status, includeRestrictedPatients == true, page, size, sort)
 
     @JvmStatic
     fun parameterValidations() = listOf(
-      Arguments.of(searchRequest(page = 0), "Page number must be at least 1"),
-      Arguments.of(searchRequest(size = 0), "Page size must be at least 1"),
-      Arguments.of(searchRequest(size = 101), "Page size must not be more than 100"),
-      Arguments.of(searchRequest(sort = "logCode"), "sort is invalid"),
+      Arguments.of(searchReq(page = 0), "Page number must be at least 1"),
+      Arguments.of(searchReq(size = 0), "Page size must be at least 1"),
+      Arguments.of(searchReq(size = 101), "Page size must not be more than 100"),
+      Arguments.of(searchReq(sort = "invalidField"), "sort is invalid"),
     )
   }
 
-  private fun FindCsipRequest.asParams() = (
+  private fun FindCsipRequest.asParams() = listOfNotNull(
     listOfNotNull(
-      prisonCode?.let { "prisonCode" to it },
       query?.let { "query" to it },
-      status?.let { "status" to it },
       includeRestrictedPatients.takeIf { it }?.let { "includeRestrictedPatients" to true },
       "page" to page,
       "size" to size,
       "sort" to sort,
-    ) + prisonCodes.map { "prisonCodes" to it }
-    )
+    ),
+    prisonCode.map { "prisonCode" to it },
+    status.map { "status" to it },
+  ).flatten()
 
   private fun CsipSearchResult.verifyAgainst(csip: CsipRecord) {
     assertThat(id).isEqualTo(csip.id)
+    assertThat(logCode).isEqualTo(csip.logCode)
     assertThat(status.code).isEqualTo(csip.status!!.code)
     assertThat(referralDate).isEqualTo(csip.referral!!.referralDate)
     assertThat(nextReviewDate).isEqualTo(csip.plan?.nextReviewDate)
     assertThat(caseManager).isEqualTo(csip.plan?.caseManager)
+    assertThat(incidentType).isEqualTo(csip.referral?.incidentType?.description)
     prisoner.verifyAgainst(csip.personSummary)
   }
 
@@ -420,7 +455,10 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
   private fun matchesPrison(vararg prisonCodes: String) = Specification<CsipRecord> { csip, _, cb ->
     val person = csip.join<CsipRecord, PersonSummary>("personSummary")
-    cb.or(person.get<String>("prisonCode").`in`(prisonCodes.toSet()), person.get<String>("supportingPrisonCode").`in`(prisonCodes.toSet()))
+    cb.or(
+      person.get<String>("prisonCode").`in`(prisonCodes.toSet()),
+      person.get<String>("supportingPrisonCode").`in`(prisonCodes.toSet()),
+    )
   }
 
   private fun clearDown(vararg prisonCodes: String) = transactionTemplate.executeWithoutResult {
