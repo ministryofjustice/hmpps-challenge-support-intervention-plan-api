@@ -10,14 +10,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CurrentCsipAndCounts
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.DecisionAndActionsAuditRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SaferCustodyScreeningOutcomeAuditRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.getActiveReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.verifyAllReferenceData
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.DecisionAndActionsRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.SaferCustodyScreeningOutcomeRepository
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.saveAndRefresh
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
@@ -44,8 +44,8 @@ class CsipRecordService(
   private val personSearch: PrisonerSearchClient,
   private val csipRecordRepository: CsipRecordRepository,
   private val csipSummaryRepository: CsipSummaryRepository,
-  private val saferCustodyScreeningOutcomeRepository: SaferCustodyScreeningOutcomeRepository,
-  private val decisionAndActionsRepository: DecisionAndActionsRepository,
+  private val screeningOutcomeAuditRepository: SaferCustodyScreeningOutcomeAuditRepository,
+  private val decisionAndActionsAuditRepository: DecisionAndActionsAuditRepository,
 ) {
   @PublishCsipEvent(CSIP_CREATED)
   fun createCsipRecord(
@@ -71,13 +71,13 @@ class CsipRecordService(
     val csip = csipRecordRepository.getCsipRecord(recordUuid)
 
     val screeningHistory = csip.referral?.saferCustodyScreeningOutcome?.id
-      ?.let { saferCustodyScreeningOutcomeRepository.findRevisions(it).asSequence() }
-      ?.sortedBy { it.requiredRevisionNumber }?.map { it.entity.toModel() }
+      ?.let { screeningOutcomeAuditRepository.findAllByIdUuid(it).asSequence() }
+      ?.sortedBy { it.id.revisionNumber }?.map { it.toModel() }
       ?.toList() ?: emptyList()
 
     val decisionHistory = csip.referral?.decisionAndActions?.id
-      ?.let { decisionAndActionsRepository.findRevisions(it).asSequence() }
-      ?.sortedBy { it.requiredRevisionNumber }?.map { it.entity.toModel() }
+      ?.let { decisionAndActionsAuditRepository.findAllByIdUuid(it).asSequence() }
+      ?.sortedBy { it.id.revisionNumber }?.map { it.toModel() }
       ?.toList() ?: emptyList()
 
     return csip.toModel().apply {

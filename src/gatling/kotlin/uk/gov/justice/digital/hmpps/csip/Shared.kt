@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.casenotes
+package uk.gov.justice.digital.hmpps.csip
 
 import io.gatling.javaapi.core.CoreDsl.exec
 import io.gatling.javaapi.core.CoreDsl.jsonPath
