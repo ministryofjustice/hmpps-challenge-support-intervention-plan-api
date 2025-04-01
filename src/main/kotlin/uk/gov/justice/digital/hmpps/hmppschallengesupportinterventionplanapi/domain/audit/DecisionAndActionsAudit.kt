@@ -25,7 +25,7 @@ class DecisionAndActionsAudit(
   val date: LocalDate?,
   @ManyToOne
   @JoinColumn(name = "outcome_id")
-  val outcome: ReferenceData,
+  val outcome: ReferenceData?,
   @ManyToOne
   @JoinColumn(name = "signed_off_by_role_id")
   val signedOffBy: ReferenceData?,
@@ -54,7 +54,7 @@ data class DecisionAndActionsAuditKey(
 
 fun DecisionAndActionsAudit.toModel() = DecisionAndActionsModel(
   conclusion,
-  outcome.toReferenceDataModel(),
+  outcome?.toReferenceDataModel(),
   signedOffBy?.toReferenceDataModel(),
   recordedBy,
   recordedByDisplayName,
