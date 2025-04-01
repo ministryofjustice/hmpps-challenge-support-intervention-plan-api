@@ -16,7 +16,6 @@ import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
-import org.springframework.data.repository.history.RevisionRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
@@ -121,5 +120,3 @@ fun DecisionAndActions.toModel() = DecisionAndActionsModel(
   actions,
   actionOther,
 )
-
-interface DecisionAndActionsRepository : RevisionRepository<DecisionAndActions, UUID, Long>

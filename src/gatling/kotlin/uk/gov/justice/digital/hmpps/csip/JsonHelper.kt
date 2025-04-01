@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.casenotes
+package uk.gov.justice.digital.hmpps.csip
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
