@@ -6,6 +6,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.entries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -39,8 +40,8 @@ class ReferenceDataIntTest : IntegrationTestBase() {
     with(response!!) {
       assertThat(status).isEqualTo(404)
       assertThat(errorCode).isNull()
-      assertThat(userMessage).isEqualTo("No resource found failure: Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: area-of-work, contributory-factor-type, decision-outcome-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or screening-outcome-type")
-      assertThat(developerMessage).isEqualTo("Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: area-of-work, contributory-factor-type, decision-outcome-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or screening-outcome-type")
+      assertThat(userMessage).isEqualTo("No resource found failure: Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: ${entries.joinToString(", ") { it.domain }}.")
+      assertThat(developerMessage).isEqualTo("Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: ${entries.joinToString(", ") { it.domain }}.")
       assertThat(moreInfo).isNull()
     }
   }
