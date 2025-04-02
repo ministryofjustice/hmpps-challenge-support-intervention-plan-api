@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
-  kotlin("plugin.spring") version "2.1.10"
-  kotlin("plugin.jpa") version "2.1.10"
-  id("com.google.cloud.tools.jib") version "3.4.4"
-  id("io.gatling.gradle") version "3.13.5"
+  kotlin("plugin.spring") version "2.1.20"
+  kotlin("plugin.jpa") version "2.1.20"
+  id("com.google.cloud.tools.jib") version "3.4.5"
+  id("io.gatling.gradle") version "3.13.5.2"
   jacoco
 }
 
@@ -22,23 +22,23 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.0")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.3.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.2")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.6.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.5")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.9")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
   // AWS
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.3.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.2")
 
   // Test dependencies
   testImplementation("org.testcontainers:postgresql:1.20.6")
@@ -47,7 +47,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.12.1")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.20.6")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
