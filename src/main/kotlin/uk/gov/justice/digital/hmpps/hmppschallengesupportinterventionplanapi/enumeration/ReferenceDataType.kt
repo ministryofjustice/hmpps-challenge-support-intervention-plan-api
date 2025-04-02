@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
     "incident-type",
     "interviewee-role",
     "screening-outcome-type",
+    "status",
   ],
 )
 enum class ReferenceDataType(val domain: String) {
@@ -32,7 +33,7 @@ enum class ReferenceDataType(val domain: String) {
 
   companion object {
     private const val VALIDATION_DESCRIPTION =
-      "Reference Data domain name must be one of: area-of-work, contributory-factor-type, decision-outcome-type, role, incident-involvement, incident-location, incident-type, interviewee-role, or screening-outcome-type"
+      "Reference Data domain name must be one of: area-of-work, contributory-factor-type, decision-outcome-type, role, incident-involvement, incident-location, incident-type, interviewee-role, screening-outcome-type or status"
     private val map = entries.associateBy(ReferenceDataType::domain)
 
     fun fromDomain(domain: String) = map[domain] ?: throw InvalidDomainException("Fail to map $domain to Reference Data Type. $VALIDATION_DESCRIPTION")
