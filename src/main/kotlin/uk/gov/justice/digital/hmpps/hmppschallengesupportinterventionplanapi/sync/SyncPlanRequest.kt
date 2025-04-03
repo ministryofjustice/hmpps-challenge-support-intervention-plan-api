@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.ReviewsRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 
 @ValidPlanDetail
@@ -57,7 +58,7 @@ data class SyncReviewRequest(
   override val nextReviewDate: LocalDate?,
   override val csipClosedDate: LocalDate?,
   override val summary: String?,
-  override val actions: Set<ReviewAction>,
+  override val actions: SortedSet<ReviewAction>,
   override val attendees: List<SyncAttendeeRequest>,
   override val legacyId: Long,
   override val id: UUID?,

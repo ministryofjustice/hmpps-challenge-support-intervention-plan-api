@@ -64,7 +64,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         .withPlan(firstCaseReviewDate = firstReviewDate),
     ) { it }
     dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
-      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      requireNotNull(it.plan).withReview(actions = sortedSetOf(ReviewAction.CLOSE_CSIP))
       it
     }
 
@@ -89,7 +89,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
       it
     }
     dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
-      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      requireNotNull(it.plan).withReview(actions = sortedSetOf(ReviewAction.CLOSE_CSIP))
       it
     }
 
@@ -115,7 +115,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
       it
     }
     dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
-      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      requireNotNull(it.plan).withReview(actions = sortedSetOf(ReviewAction.CLOSE_CSIP))
       it
     }
 
@@ -137,7 +137,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
     val prisoner = prisoner().toPersonSummary()
     val current = dataSetup(generateCsipRecord(prisoner).withCompletedReferral().withPlan()) {
       requireNotNull(it.plan).withReview(
-        actions = setOf(ReviewAction.CLOSE_CSIP),
+        actions = sortedSetOf(ReviewAction.CLOSE_CSIP),
         nextReviewDate = null,
         csipClosedDate = LocalDate.now().minusDays(1),
       )
@@ -191,7 +191,7 @@ class RetrieveLatestCsipRecordIntTest : IntegrationTestBase() {
         .withPlan(firstCaseReviewDate = LocalDate.now().minusDays(30)),
     ) {
       requireNotNull(it.plan).withReview(
-        actions = setOf(ReviewAction.REMAIN_ON_CSIP),
+        actions = sortedSetOf(ReviewAction.REMAIN_ON_CSIP),
         nextReviewDate = overdueReviewDate,
       )
       it

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import java.time.LocalDate
+import java.util.SortedSet
 
 @Schema(description = "The request body to create a Review for a CSIP Plan")
 data class CreateReviewRequest(
@@ -12,7 +13,7 @@ data class CreateReviewRequest(
   override val nextReviewDate: LocalDate?,
   override val csipClosedDate: LocalDate?,
   override val summary: String?,
-  override val actions: Set<ReviewAction> = setOf(),
+  override val actions: SortedSet<ReviewAction> = sortedSetOf(),
   override val attendees: List<CreateAttendeeRequest>,
 ) : ReviewRequest,
   AttendeesRequest
@@ -25,5 +26,5 @@ data class UpdateReviewRequest(
   override val nextReviewDate: LocalDate?,
   override val csipClosedDate: LocalDate?,
   override val summary: String?,
-  override val actions: Set<ReviewAction>,
+  override val actions: SortedSet<ReviewAction>,
 ) : ReviewRequest

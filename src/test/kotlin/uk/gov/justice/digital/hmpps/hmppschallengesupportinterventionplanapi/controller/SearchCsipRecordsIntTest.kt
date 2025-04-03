@@ -224,7 +224,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
 
     val closedCsip = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {
       it.withReferral().withPlan()
-      requireNotNull(it.plan).withReview(actions = setOf(ReviewAction.CLOSE_CSIP))
+      requireNotNull(it.plan).withReview(actions = sortedSetOf(ReviewAction.CLOSE_CSIP))
       it
     }
     val openCsip = dataSetup(generateCsipRecord(prisoner(prisonId = prisonCode).toPersonSummary())) {

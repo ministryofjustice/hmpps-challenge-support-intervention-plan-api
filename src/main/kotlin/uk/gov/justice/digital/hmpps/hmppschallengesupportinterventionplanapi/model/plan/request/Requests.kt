@@ -5,6 +5,7 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import java.time.LocalDate
+import java.util.SortedSet
 
 interface PlanRequest {
   @get:Schema(description = "The case manager assigned to the CSIP plan.")
@@ -80,7 +81,7 @@ interface ReviewRequest {
   val summary: String?
 
   @get:Schema(description = "A list of actions following the review.")
-  val actions: Set<ReviewAction>
+  val actions: SortedSet<ReviewAction>
 }
 
 interface ReviewsRequest {

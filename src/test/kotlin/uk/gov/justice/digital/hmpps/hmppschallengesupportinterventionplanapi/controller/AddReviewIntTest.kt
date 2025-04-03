@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.createAttendeeRequest
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -111,7 +112,7 @@ class AddReviewIntTest : IntegrationTestBase() {
       nextReviewDate = null,
       attendees = listOf(createAttendeeRequest()),
       csipClosedDate = LocalDate.now(),
-      actions = setOf(ReviewAction.CLOSE_CSIP),
+      actions = sortedSetOf(ReviewAction.CLOSE_CSIP),
     )
     val response = addReview(record.id, request)
 
@@ -163,7 +164,7 @@ class AddReviewIntTest : IntegrationTestBase() {
     nextReviewDate: LocalDate? = LocalDate.now().plusWeeks(4),
     csipClosedDate: LocalDate? = null,
     summary: String? = "A brief summary of the review",
-    actions: Set<ReviewAction> = setOf(),
+    actions: SortedSet<ReviewAction> = sortedSetOf(),
     attendees: List<CreateAttendeeRequest> = listOf(),
   ) = CreateReviewRequest(
     reviewDate,

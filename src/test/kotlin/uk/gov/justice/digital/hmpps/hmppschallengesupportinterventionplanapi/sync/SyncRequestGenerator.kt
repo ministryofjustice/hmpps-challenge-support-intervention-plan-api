@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.SortedSet
 import java.util.UUID
 
 object SyncRequestGenerator {
@@ -150,7 +151,7 @@ object SyncRequestGenerator {
     recordedByDisplayName: String? = "recordedByDisplayName",
     nextSteps: String? = null,
     actionOther: String? = null,
-    actions: Set<DecisionAction> = setOf(DecisionAction.OPEN_CSIP_ALERT),
+    actions: SortedSet<DecisionAction> = sortedSetOf(DecisionAction.OPEN_CSIP_ALERT),
   ) = SyncDecisionAndActionsRequest(
     conclusion,
     outcomeCode,
@@ -192,7 +193,7 @@ object SyncRequestGenerator {
     nextReviewDate: LocalDate? = null,
     csipClosedDate: LocalDate? = null,
     summary: String? = "Summary of the review",
-    actions: Set<ReviewAction> = setOf(ReviewAction.CASE_NOTE),
+    actions: SortedSet<ReviewAction> = sortedSetOf(ReviewAction.CASE_NOTE),
     attendees: List<SyncAttendeeRequest> = listOf(),
     id: Long = newId(),
     uuid: UUID? = null,

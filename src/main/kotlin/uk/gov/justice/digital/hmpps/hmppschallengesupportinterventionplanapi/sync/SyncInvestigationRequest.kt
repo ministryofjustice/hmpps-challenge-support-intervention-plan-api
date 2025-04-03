@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.InvestigationRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 
 @ValidInvestigationDetail(message = WITH_INTERVIEW_MESSAGE)
@@ -61,7 +62,7 @@ data class SyncDecisionAndActionsRequest(
   override val nextSteps: String?,
 
   override val actionOther: String?,
-  override val actions: Set<DecisionAction>,
+  override val actions: SortedSet<DecisionAction>,
 ) : DecisionAndActionsRequest {
   fun findRequiredReferenceDataKeys(): Set<ReferenceDataKey> = buildSet {
     outcomeTypeCode?.also {

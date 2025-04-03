@@ -101,7 +101,7 @@ class UpdateContributoryFactorIntTest : IntegrationTestBase() {
         type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "AFL"),
       ).withContributoryFactor(
         type = givenReferenceData(CONTRIBUTORY_FACTOR_TYPE, "BAS"),
-      ).contributoryFactors().last().id
+      ).contributoryFactors().single { it.contributoryFactorType.code == "AFL" }.id
     }
 
     val response = updateContributoryFactorResponseSpec(

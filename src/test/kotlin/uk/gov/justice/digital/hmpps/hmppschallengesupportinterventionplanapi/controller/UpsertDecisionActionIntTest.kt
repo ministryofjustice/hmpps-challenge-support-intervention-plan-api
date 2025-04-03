@@ -27,7 +27,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
+import kotlin.collections.sortedSetOf
 
 class UpsertDecisionActionIntTest : IntegrationTestBase() {
 
@@ -192,7 +194,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val request = upsertDecisionActionsRequest(
       "CUR",
       "CUSTMAN",
-      DecisionAction.entries.toSet(),
+      DecisionAction.entries.toSortedSet(),
     )
 
     val response = upsertDecisionActions(record.id, request, status = HttpStatus.CREATED)
@@ -224,7 +226,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
       requireNotNull(it.referral).withDecisionAndActions(
         outcome = givenRandom(ReferenceDataType.DECISION_OUTCOME_TYPE),
         signedOffBy = givenRandom(ReferenceDataType.DECISION_SIGNER_ROLE),
-        actions = setOf(DecisionAction.OPEN_CSIP_ALERT),
+        actions = sortedSetOf(DecisionAction.OPEN_CSIP_ALERT),
         conclusion = "a conclusion",
         recordedBy = "outcomeRecordedBy",
         recordedByDisplayName = "outcomeRecordedByDisplayName",
@@ -261,7 +263,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
     val request = upsertDecisionActionsRequest(
       decision.outcome!!.code,
       decision.signedOffBy!!.code,
-      setOf(DecisionAction.UNIT_OR_CELL_MOVE),
+      sortedSetOf(DecisionAction.UNIT_OR_CELL_MOVE),
     )
 
     val response = upsertDecisionActions(record.id, request, status = HttpStatus.OK)
@@ -276,7 +278,7 @@ class UpsertDecisionActionIntTest : IntegrationTestBase() {
   private fun upsertDecisionActionsRequest(
     outcomeTypeCode: String = "CUR",
     outcomeSignedOffByRoleCode: String = "CUSTMAN",
-    actions: Set<DecisionAction> = setOf(),
+    actions: SortedSet<DecisionAction> = sortedSetOf(),
   ) = UpsertDecisionAndActionsRequest(
     conclusion = "a conclusion",
     outcomeTypeCode = outcomeTypeCode,

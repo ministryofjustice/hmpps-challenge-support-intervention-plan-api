@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.time.LocalDate
 import java.util.Optional
+import java.util.SortedSet
 import java.util.UUID
 
 @Entity
@@ -51,7 +52,7 @@ class Review(
   nextReviewDate: LocalDate?,
   csipClosedDate: LocalDate?,
   summary: String?,
-  actions: Set<ReviewAction>,
+  actions: SortedSet<ReviewAction>,
 
   legacyId: Long? = null,
 ) : SimpleVersion(),
@@ -84,7 +85,7 @@ class Review(
     private set
 
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
-  var actions: Set<ReviewAction> = actions
+  var actions: SortedSet<ReviewAction> = actions
     private set
 
   @NotAudited
