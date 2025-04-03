@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
 import java.time.LocalDate
+import java.util.SortedSet
 
 @Schema(description = "The Decision and Actions for the CSIP referral")
 data class DecisionAndActions(
@@ -30,7 +31,7 @@ data class DecisionAndActions(
   val nextSteps: String?,
 
   @Schema(description = "A list of recommended actions.")
-  val actions: Set<DecisionAction>,
+  val actions: SortedSet<DecisionAction>,
 
   @Schema(description = "Any other actions that are recommended to be considered.")
   val actionOther: String?,

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 
 @Schema(description = "A regular review of a CSIP Plan")
@@ -38,7 +39,7 @@ data class Review(
   val summary: String?,
 
   @Schema(description = "A list of actions following the review.")
-  val actions: Set<ReviewAction>,
+  val actions: SortedSet<ReviewAction>,
 
   @Schema(description = "The attendees/contributors to the review.")
   val attendees: Collection<Attendee>,

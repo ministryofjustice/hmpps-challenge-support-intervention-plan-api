@@ -24,8 +24,8 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord()) { csip ->
       csip.withCompletedReferral().withPlan()
       val plan = requireNotNull(csip.plan)
-      plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
-        .withReview(actions = setOf(ReviewAction.CLOSE_CSIP), csipClosedDate = LocalDate.now())
+      plan.withReview(actions = sortedSetOf(ReviewAction.CSIP_UPDATED))
+        .withReview(actions = sortedSetOf(ReviewAction.CLOSE_CSIP), csipClosedDate = LocalDate.now())
       csip
     }
 
@@ -40,8 +40,8 @@ class CsipStatusIntTest : IntegrationTestBase() {
     val record = dataSetup(generateCsipRecord()) {
       it.withCompletedReferral().withPlan()
       val plan = requireNotNull(it.plan)
-      plan.withReview(actions = setOf(ReviewAction.CSIP_UPDATED))
-        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP), nextReviewDate = nextReviewDate)
+      plan.withReview(actions = sortedSetOf(ReviewAction.CSIP_UPDATED))
+        .withReview(actions = sortedSetOf(ReviewAction.REMAIN_ON_CSIP), nextReviewDate = nextReviewDate)
       it
     }
 
@@ -322,6 +322,6 @@ class CsipStatusIntTest : IntegrationTestBase() {
 
   private fun CsipRecord.addReview(vararg actions: ReviewAction) = transactionTemplate.execute {
     val csip = csipRecordRepository.getCsipRecord(id)
-    requireNotNull(csip.plan).withReview(actions = buildSet { addAll(actions) })
+    requireNotNull(csip.plan).withReview(actions = buildSet { addAll(actions) }.toSortedSet())
   }
 }

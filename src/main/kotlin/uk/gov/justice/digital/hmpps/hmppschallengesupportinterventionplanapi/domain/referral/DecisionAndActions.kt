@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipChangedListener
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.DecisionAndActionsRequest
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.DecisionAndActions as DecisionAndActionsModel
 
@@ -82,7 +83,7 @@ class DecisionAndActions(
     private set
 
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
-  var actions: Set<DecisionAction> = setOf()
+  var actions: SortedSet<DecisionAction> = sortedSetOf()
     private set
 
   @Column(length = 4000)

@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.uti
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.nomisContext
 import java.time.Duration.ofSeconds
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 import java.util.UUID.randomUUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Review as ReviewEntity
@@ -89,7 +90,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
   fun `400 bad request - close csip without closed date`() {
     val response = updateReviewResponseSpec(
       randomUUID(),
-      updateReviewRequest(actions = setOf(CLOSE_CSIP), csipClosedDate = null),
+      updateReviewRequest(actions = sortedSetOf(CLOSE_CSIP), csipClosedDate = null),
     ).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -105,7 +106,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
   fun `400 bad request - close date without action to close`() {
     val response = updateReviewResponseSpec(
       randomUUID(),
-      updateReviewRequest(actions = setOf(ReviewAction.REMAIN_ON_CSIP), csipClosedDate = LocalDate.now()),
+      updateReviewRequest(actions = sortedSetOf(ReviewAction.REMAIN_ON_CSIP), csipClosedDate = LocalDate.now()),
     ).errorResponse(HttpStatus.BAD_REQUEST)
 
     with(response) {
@@ -141,7 +142,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val request = updateReviewRequest(
       summary = "a summary goes here",
-      actions = setOf(RESPONSIBLE_PEOPLE_INFORMED),
+      actions = sortedSetOf(RESPONSIBLE_PEOPLE_INFORMED),
       reviewDate = LocalDate.now().plusDays(3),
       nextReviewDate = LocalDate.now().plusDays(4),
     )
@@ -165,7 +166,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
     val request = updateReviewRequest(
       summary = "a summary goes here",
-      actions = setOf(CLOSE_CSIP),
+      actions = sortedSetOf(CLOSE_CSIP),
       reviewDate = LocalDate.now().minusDays(10),
       nextReviewDate = LocalDate.now().minusDays(1),
       csipClosedDate = LocalDate.now(),
@@ -195,7 +196,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
         nextReviewDate = LocalDate.now().plusWeeks(4),
         csipClosedDate = null,
         summary = "A brief summary of the review",
-        actions = setOf(),
+        actions = sortedSetOf(),
       )
       plan.reviews().first()
     }
@@ -223,7 +224,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
 
   private fun updateReviewRequest(
     summary: String? = "review summary",
-    actions: Set<ReviewAction> = setOf(),
+    actions: SortedSet<ReviewAction> = sortedSetOf(),
     reviewDate: LocalDate = LocalDate.now(),
     nextReviewDate: LocalDate? = LocalDate.now().plusDays(3),
     csipClosedDate: LocalDate? = null,

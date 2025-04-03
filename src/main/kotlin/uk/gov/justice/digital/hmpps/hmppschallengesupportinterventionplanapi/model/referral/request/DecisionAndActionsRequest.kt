@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import java.time.LocalDate
+import java.util.SortedSet
 
 interface DecisionAndActionsRequest {
   @get:Schema(description = "The conclusion of the referral and reasons for the outcome decision.")
@@ -38,7 +39,7 @@ interface DecisionAndActionsRequest {
   val actionOther: String?
 
   @get:Schema(description = "A list of recommended actions.")
-  val actions: Set<DecisionAction>
+  val actions: SortedSet<DecisionAction>
 }
 
 @Schema(description = "The request body to create a Decision and Actions for a CSIP referral")
@@ -51,5 +52,5 @@ data class UpsertDecisionAndActionsRequest(
   override val date: LocalDate?,
   override val nextSteps: String?,
   override val actionOther: String?,
-  override val actions: Set<DecisionAction> = setOf(),
+  override val actions: SortedSet<DecisionAction> = sortedSetOf(),
 ) : DecisionAndActionsRequest

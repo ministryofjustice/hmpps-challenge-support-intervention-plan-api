@@ -100,6 +100,7 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.sqs.publish
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.SortedSet
 import java.util.UUID
 
 @ExtendWith(HmppsAuthApiExtension::class, ManageUsersExtension::class, PrisonerSearchExtension::class)
@@ -375,7 +376,7 @@ abstract class IntegrationTestBase {
     nextReviewDate: LocalDate? = reviewDate.plusWeeks(4),
     csipClosedDate: LocalDate? = null,
     summary: String? = "A brief summary of the review",
-    actions: Set<ReviewAction> = setOf(),
+    actions: SortedSet<ReviewAction> = sortedSetOf(),
     legacyId: Long? = null,
   ) = apply {
     val review = Review(
@@ -419,7 +420,7 @@ abstract class IntegrationTestBase {
     recordedByDisplayName: String? = "recordedByDisplayName",
     date: LocalDate = LocalDate.now(),
     nextSteps: String? = "some next steps",
-    actions: Set<DecisionAction> = setOf(),
+    actions: SortedSet<DecisionAction> = sortedSetOf(),
     actionOther: String? = null,
   ): Referral = apply {
     val decision = DecisionAndActions(this, outcome, signedOffBy)

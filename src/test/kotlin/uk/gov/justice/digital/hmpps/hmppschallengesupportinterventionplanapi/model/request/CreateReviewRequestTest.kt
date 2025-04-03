@@ -15,7 +15,7 @@ class CreateReviewRequestTest : RequestValidationTest() {
       nextReviewDate = null,
       csipClosedDate = null,
       summary = null,
-      actions = setOf(),
+      actions = sortedSetOf(),
       attendees = listOf(),
     )
     assertThat(validator.validate(request)).isEmpty()
@@ -28,7 +28,7 @@ class CreateReviewRequestTest : RequestValidationTest() {
       recordedBy = "n".repeat(65),
       recordedByDisplayName = "n".repeat(256),
       nextReviewDate = null,
-      actions = setOf(),
+      actions = sortedSetOf(),
       csipClosedDate = null,
       summary = "n".repeat(4001),
       attendees = listOf(),

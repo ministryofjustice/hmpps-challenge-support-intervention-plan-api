@@ -13,7 +13,7 @@ class UpdateReviewRequestTest : RequestValidationTest() {
       recordedBy = "quaerendum",
       recordedByDisplayName = "Julie Nicholson",
       nextReviewDate = null,
-      actions = setOf(),
+      actions = sortedSetOf(),
       csipClosedDate = null,
       summary = null,
     )
@@ -27,7 +27,7 @@ class UpdateReviewRequestTest : RequestValidationTest() {
       recordedBy = "n".repeat(65),
       recordedByDisplayName = "n".repeat(256),
       nextReviewDate = null,
-      actions = setOf(),
+      actions = sortedSetOf(),
       csipClosedDate = null,
       summary = "n".repeat(4001),
     )

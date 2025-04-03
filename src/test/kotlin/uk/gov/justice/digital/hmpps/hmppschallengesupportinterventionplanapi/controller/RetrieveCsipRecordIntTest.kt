@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 
 class RetrieveCsipRecordIntTest : IntegrationTestBase() {
@@ -67,7 +68,7 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
       requireNotNull(referral.investigation).withInterview("A N Other")
       val plan = requireNotNull(it.plan).withNeed("One need").withNeed("Another need")
         .withReview(LocalDate.now().minusDays(1))
-        .withReview(actions = setOf(ReviewAction.REMAIN_ON_CSIP))
+        .withReview(actions = sortedSetOf(ReviewAction.REMAIN_ON_CSIP))
       requireNotNull(plan.reviews().random()).withAttendee()
       it
     }
@@ -155,7 +156,7 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
   private fun upsertDecisionActionsRequest(
     outcomeTypeCode: String,
     outcomeSignedOffByRoleCode: String = "CUSTMAN",
-    actions: Set<DecisionAction> = setOf(),
+    actions: SortedSet<DecisionAction> = sortedSetOf(),
   ) = UpsertDecisionAndActionsRequest(
     conclusion = "a conclusion",
     outcomeTypeCode = outcomeTypeCode,

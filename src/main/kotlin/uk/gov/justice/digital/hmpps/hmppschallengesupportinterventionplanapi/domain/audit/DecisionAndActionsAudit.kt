@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.DecisionAndActions as DecisionAndActionsModel
 
@@ -39,7 +40,7 @@ class DecisionAndActionsAudit(
   @Column(name = "action_other")
   val actionOther: String?,
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
-  val actions: Set<DecisionAction>,
+  val actions: SortedSet<DecisionAction>,
   @EmbeddedId
   val id: DecisionAndActionsAuditKey,
 )

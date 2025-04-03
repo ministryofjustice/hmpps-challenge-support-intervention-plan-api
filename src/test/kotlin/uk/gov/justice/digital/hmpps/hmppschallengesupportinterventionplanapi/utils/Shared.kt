@@ -197,7 +197,7 @@ private fun DecisionModel.verifyAgainst(decision: DecisionAndActions) {
   assertThat(recordedByDisplayName).isEqualTo(decision.recordedByDisplayName)
   assertThat(date).isEqualTo(decision.date)
   assertThat(nextSteps).isEqualTo(decision.nextSteps)
-  assertThat(actions).containsExactlyInAnyOrderElementsOf(decision.actions)
+  assertThat(actions).containsExactlyElementsOf(decision.actions)
   assertThat(actionOther).isEqualTo(decision.actionOther)
 }
 
@@ -248,7 +248,7 @@ private fun ReviewModel.verifyAgainst(review: Review) {
   assertThat(nextReviewDate).isEqualTo(review.nextReviewDate)
   assertThat(csipClosedDate).isEqualTo(review.csipClosedDate)
   assertThat(summary).isEqualTo(review.summary)
-  assertThat(actions).isEqualTo(review.actions)
+  assertThat(actions).containsExactlyElementsOf(review.actions)
   assertThat(attendees.size).isEqualTo(review.attendees().size)
   review.attendees().forEach { a -> attendees.first { it.attendeeUuid == a.id }.verifyAgainst(a) }
 }

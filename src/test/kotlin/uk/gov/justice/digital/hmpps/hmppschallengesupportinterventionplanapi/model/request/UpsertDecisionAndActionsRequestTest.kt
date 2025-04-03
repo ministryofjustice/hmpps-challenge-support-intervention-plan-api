@@ -16,7 +16,7 @@ class UpsertDecisionAndActionsRequestTest : RequestValidationTest() {
       date = null,
       nextSteps = null,
       actionOther = null,
-      actions = setOf(),
+      actions = sortedSetOf(),
     )
     assertThat(validator.validate(request)).isEmpty()
   }
@@ -32,7 +32,7 @@ class UpsertDecisionAndActionsRequestTest : RequestValidationTest() {
       date = null,
       nextSteps = "n".repeat(4001),
       actionOther = "n".repeat(4001),
-      actions = setOf(),
+      actions = sortedSetOf(),
     )
     assertValidationErrors(
       validator.validate(request),

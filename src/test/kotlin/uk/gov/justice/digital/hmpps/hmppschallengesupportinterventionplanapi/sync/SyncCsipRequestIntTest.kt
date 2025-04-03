@@ -245,7 +245,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
           signedOffByRole = null,
           nextSteps = null,
           actionOther = null,
-          actions = setOf(),
+          actions = sortedSetOf(),
         ),
       ),
     )
@@ -290,7 +290,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
         identifiedNeeds = listOf(syncNeedRequest(), syncNeedRequest("Another need")),
         reviews = listOf(
           syncReviewRequest(
-            actions = setOf(ReviewAction.CASE_NOTE),
+            actions = sortedSetOf(ReviewAction.CASE_NOTE),
             attendees = listOf(
               syncAttendeeRequest(),
               syncAttendeeRequest("Another attendee"),
@@ -446,14 +446,14 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
         reviews = listOf(
           syncReviewRequest(
             uuid = initial.plan!!.reviews().first().id,
-            actions = setOf(ReviewAction.CASE_NOTE),
+            actions = sortedSetOf(ReviewAction.CASE_NOTE),
             attendees = listOf(
               syncAttendeeRequest(uuid = initial.plan!!.reviews().first().attendees().first().id),
               syncAttendeeRequest("Another attendee"),
             ),
           ),
           syncReviewRequest(
-            actions = setOf(ReviewAction.CSIP_UPDATED),
+            actions = sortedSetOf(ReviewAction.CSIP_UPDATED),
             attendees = listOf(
               syncAttendeeRequest(),
               syncAttendeeRequest("Another attendee"),
@@ -534,7 +534,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
         reviews = listOf(
           syncReviewRequest(
             id = review.legacyId!!,
-            actions = setOf(ReviewAction.CASE_NOTE),
+            actions = sortedSetOf(ReviewAction.CASE_NOTE),
             attendees = listOf(syncAttendeeRequest(id = attendee.legacyId!!)),
           ),
         ),
@@ -660,7 +660,7 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
           outcomeCode = null,
           signedOffByRole = null,
           conclusion = "A conclusion without outcome",
-          actions = setOf(),
+          actions = sortedSetOf(),
         ),
       ),
     )
