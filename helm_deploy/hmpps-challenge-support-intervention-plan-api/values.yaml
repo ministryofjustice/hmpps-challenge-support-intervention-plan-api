@@ -12,7 +12,7 @@ generic-service:
       memory: 1280Mi
 
   image:
-    repository: quay.io/hmpps/hmpps-challenge-support-intervention-plan-api
+    repository: ghcr.io/ministryofjustice/hmpps-challenge-support-intervention-plan-api
     tag: app_version # override at deployment time
     port: 8080
 
