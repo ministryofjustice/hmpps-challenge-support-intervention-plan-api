@@ -99,10 +99,7 @@ class DecisionAndActions(
     signedOffBy = signedOffByRole
     conclusion = request.conclusion
     recordedBy = request.recordedBy
-    // temporary handling for sync as nomis stores username as uppercase
-    if (!request.recordedByDisplayName.equals(recordedByDisplayName, ignoreCase = true)) {
-      recordedByDisplayName = request.recordedByDisplayName
-    }
+    recordedByDisplayName = request.recordedByDisplayName
     date = request.date
     nextSteps = request.nextSteps
     actions = request.actions
