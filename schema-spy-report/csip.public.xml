@@ -78,7 +78,6 @@
             <child column="legacy_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview_audit"/>
             <child column="rev_id" foreignKey="interview_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="interview_audit"/>
             <child column="rev_id" foreignKey="investigation_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="investigation_audit"/>
-            <child column="rev_id" foreignKey="person_summary_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="person_summary_audit"/>
             <child column="rev_id" foreignKey="plan_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan_audit"/>
             <child column="incident_involvement_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral_audit"/>
             <child column="incident_location_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral_audit"/>
@@ -491,33 +490,6 @@
          <index name="idx_person_summary_prison_person_lower" unique="false"/>
          <index name="idx_person_summary_supporting_prison_code" unique="false">
             <column ascending="true" name="supporting_prison_code"/>
-         </index>
-      </table>
-      <table name="person_summary_audit" remarks="Person summary property changes" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
-            <parent column="id" foreignKey="person_summary_audit_rev_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_revision"/>
-         </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prison_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="first_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="last_name" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="status" nullable="false" remarks="" size="16" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="cell_location" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="first_name_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="last_name_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="status_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="prison_code_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="cell_location_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="false" digits="0" id="13" name="restricted_patient" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="supporting_prison_code" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="false" digits="0" id="15" name="restricted_patient_modified" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="false" digits="0" id="16" name="supporting_prison_code_modified" nullable="false" remarks="" size="16" type="varchar" typeCode="12"/>
-         <primaryKey column="rev_id" sequenceNumberInPK="1"/>
-         <primaryKey column="prison_number" sequenceNumberInPK="2"/>
-         <index name="person_summary_audit_pkey" unique="true">
-            <column ascending="true" name="rev_id"/>
-            <column ascending="true" name="prison_number"/>
          </index>
       </table>
       <table name="plan" remarks="The plan that was developed following a screening outcome or decision to 'Progress to CSIP'. Developing a plan is step 5 of the CSIP process" schema="public" type="TABLE">

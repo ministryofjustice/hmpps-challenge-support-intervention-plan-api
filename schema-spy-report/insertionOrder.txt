@@ -7,7 +7,6 @@ plan
 investigation
 review
 investigation_audit
-person_summary_audit
 plan_audit
 attendee
 identified_need

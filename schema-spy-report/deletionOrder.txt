@@ -14,7 +14,6 @@ safer_custody_screening_outcome
 identified_need
 attendee
 plan_audit
-person_summary_audit
 investigation_audit
 review
 investigation
