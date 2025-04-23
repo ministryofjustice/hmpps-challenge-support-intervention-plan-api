@@ -12,6 +12,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
+import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.Plan
@@ -65,7 +66,7 @@ class CsipRecord(
   override var legacyId: Long? = legacyId
     private set
 
-  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified")
+  @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified", targetAuditMode = NOT_AUDITED)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "prison_number")
   var personSummary: PersonSummary = personSummary

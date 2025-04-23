@@ -4,13 +4,11 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
-import org.hibernate.envers.Audited
 import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 
 @Entity
 @Table
-@Audited(withModifiedFlag = true)
 class PersonSummary(
   @Id
   val prisonNumber: String,
