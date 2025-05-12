@@ -3,8 +3,6 @@
     <suppress>
         <notes><![CDATA[
         This issue only effects the gatling classpath, which is not deployed to production.
-        There is not currently a fix for this issue, but in time the gatling module will
-        be removed as it has been superseded by https://github.com/ministryofjustice/hmpps-load-testing-probation
         ]]></notes>
         <packageUrl regex="true">^.*pebble.*$</packageUrl>
         <vulnerabilityName>CVE-2025-1686</vulnerabilityName>
