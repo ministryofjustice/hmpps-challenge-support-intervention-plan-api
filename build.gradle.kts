@@ -141,3 +141,7 @@ jib {
     }
   }
 }
+
+dependencyCheck {
+  suppressionFile = ".dependency-check-ignore.xml"
+}
