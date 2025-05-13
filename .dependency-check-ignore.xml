@@ -6,6 +6,6 @@
         and is not included in the built docker image, nor deployed on any of dev, pre-prod or prod environment.
         ]]></notes>
         <packageUrl regex="true">^.*pebble.*$</packageUrl>
-        <vulnerabilityName>CVE-2025-1686</vulnerabilityName>
+        <vulnerabilityName regex="true">^(CVE-2025-1686)|(CVE-2022-37767)$</vulnerabilityName>
     </suppress>
 </suppressions>
