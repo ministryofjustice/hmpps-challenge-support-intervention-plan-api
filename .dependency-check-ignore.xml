@@ -12,7 +12,7 @@
         <notes><![CDATA[
         This issue only affects Java Web Start applications and sandboxed Java applets on lower versions of the JVM.
         ]]></notes>
-        <packageUrl regex="true">^.*xercesImpl.*$</packageUrl>
-        <vulnerabilityName>CVE-2017-10355</vulnerabilityName>
+        <packageUrl regex="true">^pkg:maven/xerces/xercesImpl@.*$</packageUrl>
+        <cve>CVE-2017-10355</cve>
     </suppress>
 </suppressions>
