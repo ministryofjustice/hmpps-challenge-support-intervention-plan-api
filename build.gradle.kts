@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
-  kotlin("plugin.spring") version "2.1.20"
-  kotlin("plugin.jpa") version "2.1.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
+  kotlin("plugin.spring") version "2.1.21"
+  kotlin("plugin.jpa") version "2.1.21"
   id("com.google.cloud.tools.jib") version "3.4.5"
-  id("io.gatling.gradle") version "3.13.5.2"
+  id("io.gatling.gradle") version "3.14.1.4"
   jacoco
 }
 
@@ -16,38 +16,38 @@ configurations {
 
 dependencies {
 
-  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
-  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
+  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
+  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
 
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.2")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.6.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.3")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.12.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.9")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.10")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
   // AWS
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.4")
 
   // Test dependencies
-  testImplementation("org.testcontainers:postgresql:1.20.6")
+  testImplementation("org.testcontainers:postgresql:1.21.0")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
-  testImplementation("org.wiremock:wiremock-standalone:3.12.1")
+  testImplementation("org.wiremock:wiremock-standalone:3.13.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
-  testImplementation("org.testcontainers:localstack:1.20.6")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
+  testImplementation("org.testcontainers:localstack:1.21.0")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.12.2")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -140,4 +140,8 @@ jib {
       }
     }
   }
+}
+
+dependencyCheck {
+  suppressionFile = ".dependency-check-ignore.xml"
 }
