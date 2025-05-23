@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.2.0"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
   id("com.google.cloud.tools.jib") version "3.4.5"
-  id("io.gatling.gradle") version "3.14.1.4"
+  id("io.gatling.gradle") version "3.14.3"
   jacoco
 }
 
@@ -22,7 +22,7 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.4")
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.12.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
@@ -38,7 +38,7 @@ dependencies {
   implementation("org.springframework.data:spring-data-envers")
 
   // AWS
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.4")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.5")
 
   // Test dependencies
   testImplementation("org.testcontainers:postgresql:1.21.0")
