@@ -31,12 +31,8 @@ export PRISONER_SEARCH_CLIENT_SECRET="$HMPPS_CSIP_PRISONER_SEARCH_CLIENT_SECRET"
 export API_BASE_URL_HMPPS_AUTH=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
 export API_BASE_URL_MANAGE_USERS=https://manage-users-api-dev.hmpps.service.justice.gov.uk
 export API_BASE_URL_PRISONER_SEARCH=https://prisoner-search-dev.prison.service.justice.gov.uk
-export EVENTS_PUBLISH=true
-export EVENTS_BASE_URL=http://localhost:8080
 
-export SERVICE_ACTIVE_PRISONS=***
-
-# Run the application with stdout and local profiles active
-SPRING_PROFILES_ACTIVE=stdout,local ./gradlew bootRun
+# Run the application with local profiles active
+SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 
 # End
