@@ -1,0 +1,33 @@
+server:
+  shutdown: immediate
+
+management.endpoint:
+  health.cache.time-to-live: 0
+  info.cache.time-to-live: 0
+
+spring:
+  datasource:
+    url: 'jdbc:postgresql://${DB_SERVER}/${DB_NAME}?sslmode=${DB_SSL_MODE}'
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  flyway:
+    locations: classpath:/migration/common,classpath:/migration/test
+  jpa.show-sql: true
+
+hmpps.sqs:
+  provider: localstack
+  localstackUrl: http://localhost:4567
+  queues:
+    hmppsdomaineventsqueue:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      subscribeTopicId: hmppseventtopic
+      subscribeFilter: '{"eventType":["prisoner-offender-search.prisoner.updated", "prison-offender-events.prisoner.merged"]}'
+  topics:
+    hmppseventtopic:
+      arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
+
+service:
+  publish-events: true
+  active-prisons: "***"
+  base-url: "http://localhost:8080"
