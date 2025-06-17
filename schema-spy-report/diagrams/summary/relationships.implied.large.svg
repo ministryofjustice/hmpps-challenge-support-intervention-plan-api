@@ -383,7 +383,7 @@
 <text text-anchor="start" x="31.5" y="-44.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
 <polygon fill="#ffffff" stroke="transparent" points="66.5,-38.2 66.5,-57.2 129.5,-57.2 129.5,-38.2 66.5,-38.2"/>
 <polygon fill="none" stroke="#000000" points="66.5,-38.2 66.5,-57.2 129.5,-57.2 129.5,-38.2 66.5,-38.2"/>
-<text text-anchor="start" x="81.8807" y="-44.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">112 rows</text>
+<text text-anchor="start" x="81.8807" y="-44.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">122 rows</text>
 <polygon fill="#ffffff" stroke="transparent" points="129.5,-38.2 129.5,-57.2 169.5,-57.2 169.5,-38.2 129.5,-38.2"/>
 <polygon fill="none" stroke="#000000" points="129.5,-38.2 129.5,-57.2 169.5,-57.2 169.5,-38.2 129.5,-38.2"/>
 <text text-anchor="start" x="144.7904" y="-44.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">10 &gt;</text>
@@ -1359,72 +1359,10 @@
 <polyline fill="none" stroke="#000000" points="999,-1849.2 995.0005,-1849.1357 "/>
 <ellipse fill="none" stroke="#000000" cx="991.8009" cy="-1849.0843" rx="3.2" ry="3.2"/>
 </g>
-<!-- contributory_factor -->
-<g id="node20" class="node">
-<title>contributory_factor</title>
-<g id="a_node20"><a xlink:href="../../tables/contributory_factor.html" xlink:title="contributory_factor" target="_top">
-<polygon fill="#ffffff" stroke="transparent" points="972,-661.2 972,-835.2 1178,-835.2 1178,-661.2 972,-661.2"/>
-<polygon fill="#f5f5f5" stroke="transparent" points="972,-812.2 972,-835.2 1178,-835.2 1178,-812.2 972,-812.2"/>
-<polygon fill="none" stroke="#000000" points="972,-812.2 972,-835.2 1178,-835.2 1178,-812.2 972,-812.2"/>
-<text text-anchor="start" x="977" y="-820.8" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">contributory_factor</text>
-<text text-anchor="start" x="1143.0437" y="-820.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
-<polygon fill="none" stroke="#000000" points="972,-790.2 972,-812.2 1178,-812.2 1178,-790.2 972,-790.2"/>
-<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-807.2"/>
-<text text-anchor="start" x="992" y="-797.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">contributory_factor_id</text>
-<polygon fill="#ffffff" stroke="transparent" points="972,-768.2 972,-790.2 1178,-790.2 1178,-768.2 972,-768.2"/>
-<polygon fill="none" stroke="#000000" points="972,-768.2 972,-790.2 1178,-790.2 1178,-768.2 972,-768.2"/>
-<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-785.2"/>
-<text text-anchor="start" x="992" y="-775.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">referral_id</text>
-<polygon fill="#ffffff" stroke="transparent" points="972,-746.2 972,-768.2 1178,-768.2 1178,-746.2 972,-746.2"/>
-<polygon fill="none" stroke="#000000" points="972,-746.2 972,-768.2 1178,-768.2 1178,-746.2 972,-746.2"/>
-<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-763.2"/>
-<text text-anchor="start" x="992" y="-753.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">contributory_factor_type_id</text>
-<polygon fill="none" stroke="#000000" points="972,-724.2 972,-746.2 1178,-746.2 1178,-724.2 972,-724.2"/>
-<text text-anchor="start" x="992" y="-731.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">comment</text>
-<polygon fill="none" stroke="#000000" points="972,-702.2 972,-724.2 1178,-724.2 1178,-702.2 972,-702.2"/>
-<text text-anchor="start" x="992" y="-709.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">version</text>
-<polygon fill="#ffffff" stroke="transparent" points="972,-680.2 972,-702.2 1178,-702.2 1178,-680.2 972,-680.2"/>
-<polygon fill="none" stroke="#000000" points="972,-680.2 972,-702.2 1178,-702.2 1178,-680.2 972,-680.2"/>
-<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-697.2"/>
-<text text-anchor="start" x="992" y="-687.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">legacy_id</text>
-<polygon fill="#ffffff" stroke="transparent" points="972,-661.2 972,-680.2 1073,-680.2 1073,-661.2 972,-661.2"/>
-<polygon fill="none" stroke="#000000" points="972,-661.2 972,-680.2 1073,-680.2 1073,-661.2 972,-661.2"/>
-<text text-anchor="start" x="975" y="-667.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 2</text>
-<polygon fill="#ffffff" stroke="transparent" points="1073,-661.2 1073,-680.2 1125,-680.2 1125,-661.2 1073,-661.2"/>
-<polygon fill="none" stroke="#000000" points="1073,-661.2 1073,-680.2 1125,-680.2 1125,-661.2 1073,-661.2"/>
-<text text-anchor="start" x="1115.8862" y="-667.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-<polygon fill="#ffffff" stroke="transparent" points="1125,-661.2 1125,-680.2 1178,-680.2 1178,-661.2 1125,-661.2"/>
-<polygon fill="none" stroke="#000000" points="1125,-661.2 1125,-680.2 1178,-680.2 1178,-661.2 1125,-661.2"/>
-<text text-anchor="start" x="1168.8862" y="-667.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-</a>
-</g>
-</g>
-<!-- contributory_factor&#45;&gt;referral -->
-<g id="edge8" class="edge">
-<title>contributory_factor:w&#45;&gt;referral:e</title>
-<path fill="none" stroke="#000000" d="M957.5772,-778.5448C932.8186,-776.1767 922.2501,-768.2 891.5,-768.2"/>
-<polygon fill="#000000" stroke="#000000" points="964.0082,-778.8369 971.8366,-782.7963 968.0041,-779.0185 972,-779.2 972,-779.2 972,-779.2 968.0041,-779.0185 972.1634,-775.6037 964.0082,-778.8369 964.0082,-778.8369"/>
-<ellipse fill="none" stroke="#000000" cx="960.8115" cy="-778.6917" rx="3.2" ry="3.2"/>
-</g>
-<!-- contributory_factor&#45;&gt;audit_revision -->
-<g id="edge7" class="edge">
-<title>contributory_factor:w&#45;&gt;audit_revision:e</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M961.5078,-691.9286C911.8157,-699.3703 930.5408,-762.3337 899,-812.2 762.2062,-1028.4723 800.8985,-1161.315 581,-1292.2 513.7133,-1332.2495 284.5016,-1266.9769 230,-1323.2 164.157,-1391.1227 276.0981,-2173.2 181.5,-2173.2"/>
-<polygon fill="#000000" stroke="#000000" points="970.9248,-687.265 971.4791,-695.2458 969.8829,-695.3567 969.3286,-687.3759 970.9248,-687.265"/>
-<polyline fill="none" stroke="#000000" points="972,-691.2 968.0096,-691.4771 "/>
-<ellipse fill="none" stroke="#000000" cx="964.8173" cy="-691.6988" rx="3.2" ry="3.2"/>
-</g>
-<!-- contributory_factor&#45;&gt;reference_data -->
-<g id="edge6" class="edge">
-<title>contributory_factor:w&#45;&gt;reference_data:e</title>
-<path fill="none" stroke="#000000" d="M957.5183,-754.2114C877.0532,-717.5608 972.979,-354.9723 899,-287.2 846.8929,-239.4645 651.6669,-286.3111 581,-286.2 425.0002,-285.9547 385.9787,-283.6225 230,-286.2 203.1001,-286.6445 196.4036,-288.2 169.5,-288.2"/>
-<polygon fill="#000000" stroke="#000000" points="964.1651,-755.583 971.2724,-760.7257 968.0826,-756.3915 972,-757.2 972,-757.2 972,-757.2 968.0826,-756.3915 972.7276,-753.6743 964.1651,-755.583 964.1651,-755.583"/>
-<ellipse fill="none" stroke="#000000" cx="961.0311" cy="-754.9363" rx="3.2" ry="3.2"/>
-</g>
 <!-- csip_record_audit -->
-<g id="node21" class="node">
+<g id="node20" class="node">
 <title>csip_record_audit</title>
-<g id="a_node21"><a xlink:href="../../tables/csip_record_audit.html" xlink:title="csip_record_audit" target="_top">
+<g id="a_node20"><a xlink:href="../../tables/csip_record_audit.html" xlink:title="csip_record_audit" target="_top">
 <polygon fill="#ffffff" stroke="transparent" points="300.5,-1042.2 300.5,-1282.2 510.5,-1282.2 510.5,-1042.2 300.5,-1042.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="300.5,-1259.2 300.5,-1282.2 510.5,-1282.2 510.5,-1259.2 300.5,-1259.2"/>
 <polygon fill="none" stroke="#000000" points="300.5,-1259.2 300.5,-1282.2 510.5,-1282.2 510.5,-1259.2 300.5,-1259.2"/>
@@ -1484,6 +1422,68 @@
 <path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M289.2622,-1173.1521C259.8813,-1132.0832 213.25,-965.2 189.5,-965.2"/>
 <polygon fill="#000000" stroke="#000000" points="294.2687,-1177.1829 298.2423,-1185.0041 297.3843,-1179.6915 300.5,-1182.2 300.5,-1182.2 300.5,-1182.2 297.3843,-1179.6915 302.7577,-1179.3959 294.2687,-1177.1829 294.2687,-1177.1829"/>
 <ellipse fill="none" stroke="#000000" cx="291.7762" cy="-1175.1761" rx="3.2" ry="3.2"/>
+</g>
+<!-- contributory_factor -->
+<g id="node21" class="node">
+<title>contributory_factor</title>
+<g id="a_node21"><a xlink:href="../../tables/contributory_factor.html" xlink:title="contributory_factor" target="_top">
+<polygon fill="#ffffff" stroke="transparent" points="972,-661.2 972,-835.2 1178,-835.2 1178,-661.2 972,-661.2"/>
+<polygon fill="#f5f5f5" stroke="transparent" points="972,-812.2 972,-835.2 1178,-835.2 1178,-812.2 972,-812.2"/>
+<polygon fill="none" stroke="#000000" points="972,-812.2 972,-835.2 1178,-835.2 1178,-812.2 972,-812.2"/>
+<text text-anchor="start" x="977" y="-820.8" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">contributory_factor</text>
+<text text-anchor="start" x="1143.0437" y="-820.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
+<polygon fill="none" stroke="#000000" points="972,-790.2 972,-812.2 1178,-812.2 1178,-790.2 972,-790.2"/>
+<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-807.2"/>
+<text text-anchor="start" x="992" y="-797.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">contributory_factor_id</text>
+<polygon fill="#ffffff" stroke="transparent" points="972,-768.2 972,-790.2 1178,-790.2 1178,-768.2 972,-768.2"/>
+<polygon fill="none" stroke="#000000" points="972,-768.2 972,-790.2 1178,-790.2 1178,-768.2 972,-768.2"/>
+<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-785.2"/>
+<text text-anchor="start" x="992" y="-775.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">referral_id</text>
+<polygon fill="#ffffff" stroke="transparent" points="972,-746.2 972,-768.2 1178,-768.2 1178,-746.2 972,-746.2"/>
+<polygon fill="none" stroke="#000000" points="972,-746.2 972,-768.2 1178,-768.2 1178,-746.2 972,-746.2"/>
+<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-763.2"/>
+<text text-anchor="start" x="992" y="-753.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">contributory_factor_type_id</text>
+<polygon fill="none" stroke="#000000" points="972,-724.2 972,-746.2 1178,-746.2 1178,-724.2 972,-724.2"/>
+<text text-anchor="start" x="992" y="-731.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">comment</text>
+<polygon fill="none" stroke="#000000" points="972,-702.2 972,-724.2 1178,-724.2 1178,-702.2 972,-702.2"/>
+<text text-anchor="start" x="992" y="-709.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">version</text>
+<polygon fill="#ffffff" stroke="transparent" points="972,-680.2 972,-702.2 1178,-702.2 1178,-680.2 972,-680.2"/>
+<polygon fill="none" stroke="#000000" points="972,-680.2 972,-702.2 1178,-702.2 1178,-680.2 972,-680.2"/>
+<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="977" y="-697.2"/>
+<text text-anchor="start" x="992" y="-687.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">legacy_id</text>
+<polygon fill="#ffffff" stroke="transparent" points="972,-661.2 972,-680.2 1073,-680.2 1073,-661.2 972,-661.2"/>
+<polygon fill="none" stroke="#000000" points="972,-661.2 972,-680.2 1073,-680.2 1073,-661.2 972,-661.2"/>
+<text text-anchor="start" x="975" y="-667.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 2</text>
+<polygon fill="#ffffff" stroke="transparent" points="1073,-661.2 1073,-680.2 1125,-680.2 1125,-661.2 1073,-661.2"/>
+<polygon fill="none" stroke="#000000" points="1073,-661.2 1073,-680.2 1125,-680.2 1125,-661.2 1073,-661.2"/>
+<text text-anchor="start" x="1115.8862" y="-667.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+<polygon fill="#ffffff" stroke="transparent" points="1125,-661.2 1125,-680.2 1178,-680.2 1178,-661.2 1125,-661.2"/>
+<polygon fill="none" stroke="#000000" points="1125,-661.2 1125,-680.2 1178,-680.2 1178,-661.2 1125,-661.2"/>
+<text text-anchor="start" x="1168.8862" y="-667.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+</a>
+</g>
+</g>
+<!-- contributory_factor&#45;&gt;referral -->
+<g id="edge8" class="edge">
+<title>contributory_factor:w&#45;&gt;referral:e</title>
+<path fill="none" stroke="#000000" d="M957.5772,-778.5448C932.8186,-776.1767 922.2501,-768.2 891.5,-768.2"/>
+<polygon fill="#000000" stroke="#000000" points="964.0082,-778.8369 971.8366,-782.7963 968.0041,-779.0185 972,-779.2 972,-779.2 972,-779.2 968.0041,-779.0185 972.1634,-775.6037 964.0082,-778.8369 964.0082,-778.8369"/>
+<ellipse fill="none" stroke="#000000" cx="960.8115" cy="-778.6917" rx="3.2" ry="3.2"/>
+</g>
+<!-- contributory_factor&#45;&gt;audit_revision -->
+<g id="edge7" class="edge">
+<title>contributory_factor:w&#45;&gt;audit_revision:e</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M961.5078,-691.9286C911.8157,-699.3703 930.5408,-762.3337 899,-812.2 762.2062,-1028.4723 800.8985,-1161.315 581,-1292.2 513.7133,-1332.2495 284.5016,-1266.9769 230,-1323.2 164.157,-1391.1227 276.0981,-2173.2 181.5,-2173.2"/>
+<polygon fill="#000000" stroke="#000000" points="970.9248,-687.265 971.4791,-695.2458 969.8829,-695.3567 969.3286,-687.3759 970.9248,-687.265"/>
+<polyline fill="none" stroke="#000000" points="972,-691.2 968.0096,-691.4771 "/>
+<ellipse fill="none" stroke="#000000" cx="964.8173" cy="-691.6988" rx="3.2" ry="3.2"/>
+</g>
+<!-- contributory_factor&#45;&gt;reference_data -->
+<g id="edge6" class="edge">
+<title>contributory_factor:w&#45;&gt;reference_data:e</title>
+<path fill="none" stroke="#000000" d="M957.5183,-754.2114C877.0532,-717.5608 972.979,-354.9723 899,-287.2 846.8929,-239.4645 651.6669,-286.3111 581,-286.2 425.0002,-285.9547 385.9787,-283.6225 230,-286.2 203.1001,-286.6445 196.4036,-288.2 169.5,-288.2"/>
+<polygon fill="#000000" stroke="#000000" points="964.1651,-755.583 971.2724,-760.7257 968.0826,-756.3915 972,-757.2 972,-757.2 972,-757.2 968.0826,-756.3915 972.7276,-753.6743 964.1651,-755.583 964.1651,-755.583"/>
+<ellipse fill="none" stroke="#000000" cx="961.0311" cy="-754.9363" rx="3.2" ry="3.2"/>
 </g>
 <!-- interview -->
 <g id="node22" class="node">
