@@ -16,8 +16,8 @@ configurations {
 
 dependencies {
 
-  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
-  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
+  gatling("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.1")
+  gatling("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.1")
 
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -33,7 +33,7 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.0")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.1")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
