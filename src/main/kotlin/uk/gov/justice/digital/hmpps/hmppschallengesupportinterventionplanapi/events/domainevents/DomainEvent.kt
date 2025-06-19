@@ -46,3 +46,9 @@ data class MergeInformation(
   val nomsNumber: String,
   val removedNomsNumber: String,
 ) : AdditionalInformation
+
+data class BookingMovedInformation(
+  val movedFromNomsNumber: String,
+  val movedToNomsNumber: String,
+  val bookingStartDateTime: ZonedDateTime,
+) : AdditionalInformation
