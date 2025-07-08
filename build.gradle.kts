@@ -6,7 +6,7 @@ plugins {
   kotlin("plugin.spring") version "2.2.0"
   kotlin("plugin.jpa") version "2.2.0"
   id("com.google.cloud.tools.jib") version "3.4.5"
-  id("io.gatling.gradle") version "3.14.3"
+  id("io.gatling.gradle") version "3.14.3.1"
   jacoco
 }
 
@@ -23,7 +23,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.7")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.16.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.17.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
   // OpenAPI
@@ -33,7 +33,7 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.1")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.2")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
@@ -47,7 +47,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.21.3")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.13.2")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.13.3")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
