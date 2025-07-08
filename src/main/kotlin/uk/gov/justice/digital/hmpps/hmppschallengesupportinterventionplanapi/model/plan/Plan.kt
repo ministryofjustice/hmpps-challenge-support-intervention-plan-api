@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Schema(description = "The CSIP Plan of a CSIP record")
 data class Plan(
@@ -22,4 +23,6 @@ data class Plan(
 
   @Schema(description = "Regular reviews of the CSIP Plan")
   val reviews: Collection<Review>,
-)
+) {
+  var createdAt: LocalDateTime? = null
+}

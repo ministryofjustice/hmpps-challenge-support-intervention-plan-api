@@ -20,7 +20,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.UpsertSaferCustodyScreeningOutcomeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.verifyAgainst
+import java.time.Duration.between
+import java.time.Duration.ofSeconds
 import java.time.LocalDate
+import java.time.LocalDateTime.now
 import java.util.SortedSet
 import java.util.UUID
 
@@ -75,6 +78,7 @@ class RetrieveCsipRecordIntTest : IntegrationTestBase() {
 
     val response = getCsipRecord(record.id, role)
     response.verifyAgainst(record)
+    assertThat(between(response.plan!!.createdAt, now())).isLessThan(ofSeconds(2))
   }
 
   @Test
