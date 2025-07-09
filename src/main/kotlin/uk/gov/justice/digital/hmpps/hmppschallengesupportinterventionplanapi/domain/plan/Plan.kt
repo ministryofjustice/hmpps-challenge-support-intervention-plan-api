@@ -13,6 +13,8 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.ReviewRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
@@ -156,3 +159,11 @@ fun Plan.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportintervent
   identifiedNeeds().map { it.toModel() },
   reviews().map { it.toModel() },
 )
+
+interface PlanRepository : JpaRepository<Plan, UUID> {
+  @Query(
+    "select timestamp from audit_revision ar join plan_audit pa on pa.rev_id = ar.id and pa.rev_type = 0 and pa.plan_id = :planId",
+    nativeQuery = true,
+  )
+  fun findPlanCreatedDate(planId: UUID): LocalDateTime
+}

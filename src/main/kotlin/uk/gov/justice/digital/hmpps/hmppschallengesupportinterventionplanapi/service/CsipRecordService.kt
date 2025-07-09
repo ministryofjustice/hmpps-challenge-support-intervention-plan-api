@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SaferCustodyScreeningOutcomeAuditRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.toModel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.getCsipRecord
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.plan.PlanRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.getActiveReferenceData
@@ -46,6 +47,7 @@ class CsipRecordService(
   private val csipSummaryRepository: CsipSummaryRepository,
   private val screeningOutcomeAuditRepository: SaferCustodyScreeningOutcomeAuditRepository,
   private val decisionAndActionsAuditRepository: DecisionAndActionsAuditRepository,
+  private val planRepository: PlanRepository,
 ) {
   @PublishCsipEvent(CSIP_CREATED)
   fun createCsipRecord(
@@ -83,6 +85,7 @@ class CsipRecordService(
     return csip.toModel().apply {
       referral.saferCustodyScreeningOutcome?.withHistoricalState(screeningHistory)
       referral.decisionAndActions?.withHistoricalState(decisionHistory)
+      plan?.also { it.createdAt = planRepository.findPlanCreatedDate(recordUuid) }
     }
   }
 
