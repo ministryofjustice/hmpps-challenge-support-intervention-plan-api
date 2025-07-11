@@ -33,7 +33,7 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.2")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
