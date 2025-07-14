@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.in
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
@@ -137,6 +139,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var entityManager: EntityManager
+
+  @MockitoBean
+  lateinit var telemetryClient: TelemetryClient
 
   internal val hmppsEventsTestQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
@@ -258,6 +263,10 @@ abstract class IntegrationTestBase {
 
   fun givenValidPrisonNumber(prisonNumber: String): String = prisonNumber.also {
     givenPrisoner(prisoner(prisonerNumber = prisonNumber))
+  }
+
+  fun givenPrisoners(details: List<PrisonerDetails>) {
+    prisonerSearch.stubGetPrisoners(details)
   }
 
   fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = transactionTemplate.execute {

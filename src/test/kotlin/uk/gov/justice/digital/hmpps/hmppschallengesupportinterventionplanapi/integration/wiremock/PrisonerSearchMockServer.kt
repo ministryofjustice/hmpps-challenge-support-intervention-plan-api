@@ -6,6 +6,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -19,6 +21,16 @@ internal const val PRISON_NUMBER_THROW_EXCEPTION = "THROW"
 
 class PrisonerSearchServer : WireMockServer(8112) {
   private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+
+  fun stubGetPrisoners(details: List<PrisonerDetails>): StubMapping = stubFor(
+    post(urlPathEqualTo("/prisoner-search/prisoner-numbers"))
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(mapper.writeValueAsString(details))
+          .withStatus(200),
+      ),
+  )
 
   fun stubGetPrisoner(prisonerDetails: PrisonerDetails): StubMapping = stubFor(
     get("/prisoner/${prisonerDetails.prisonerNumber}")
