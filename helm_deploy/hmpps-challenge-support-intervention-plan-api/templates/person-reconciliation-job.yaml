@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: csip-person-reconciliation
+spec:
+  schedule: {{ .Values.reconciliation.person.schedule }}
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            cron-job-name: person-reconciliation-cronjob
+        spec:
+          containers:
+            - name: person-reconciliation
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPOST http://hmpps-challenge-support-intervention-plan-api/reconciliation/person
+          restartPolicy: Never

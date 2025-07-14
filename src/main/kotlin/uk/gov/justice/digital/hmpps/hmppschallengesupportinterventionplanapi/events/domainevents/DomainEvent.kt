@@ -52,3 +52,5 @@ data class BookingMovedInformation(
   val movedToNomsNumber: String,
   val bookingStartDateTime: ZonedDateTime,
 ) : AdditionalInformation
+
+data class PersonReconciliationInformation(val prisonNumbers: Set<String>) : AdditionalInformation
