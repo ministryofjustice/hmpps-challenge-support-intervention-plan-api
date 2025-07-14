@@ -89,4 +89,4 @@ generic-data-analytics-extractor:
 
 reconciliation:
   person:
-    schedule: "0 3 * * 7"
+    schedule: "0 3 * * 0"
