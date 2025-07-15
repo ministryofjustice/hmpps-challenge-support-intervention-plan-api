@@ -4,6 +4,7 @@ import io.sentry.SentryOptions
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerNumbers
 import java.util.regex.Pattern.matches
 
 @Configuration
@@ -18,7 +19,7 @@ class SentryConfig {
     context.customSamplingContext?.let {
       val request = it["request"] as HttpServletRequest
       when (request.method) {
-        "GET" if (matches("/prisoners/[A-Z][0-9]{4}[A-Z]{2}/csip-records/current", request.requestURI)) -> {
+        "GET" if (matches("/prisoners/${PrisonerNumbers.PATTERN}/csip-records/current", request.requestURI)) -> {
           0.0025
         }
 
