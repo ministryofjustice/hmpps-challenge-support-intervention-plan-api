@@ -27,6 +27,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /reconciliation/person {
+          deny all;
+          return 401;
+        }
 
   # Used to access resources like S3 buckets, SQS queues and SNS topics
   serviceAccountName: hmpps-challenge-support-intervention-plan-api
