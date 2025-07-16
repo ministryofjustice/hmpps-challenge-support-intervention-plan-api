@@ -61,10 +61,30 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `400 bad request - at least one prison code must be provided`() {
+  fun `400 bad request - at least one prison code or a person identifier must be provided`() {
     val request = searchRequest(prisonCode = emptySet())
     val response = searchCsipRecordsResponseSpec(request).errorResponse(HttpStatus.BAD_REQUEST)
-    assertThat(response.userMessage).isEqualTo("Validation failure: At least one prison code must be provided")
+    assertThat(response.userMessage).isEqualTo("Validation failure: At least one prison code or a prison number must be provided")
+  }
+
+  @Test
+  fun `200 ok - can find all csip records for a person regardless of prison`() {
+    val personSummary = prisoner(prisonId = "OUT", status = "INACTIVE OUT", cellLocation = null).toPersonSummary()
+    val csip1 = dataSetup(generateCsipRecord(personSummary)) {
+      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(7)).withPlan()
+      requireNotNull(it.plan).withReview(actions = sortedSetOf(ReviewAction.CLOSE_CSIP))
+      it
+    }
+    val csip2 = dataSetup(generateCsipRecord(personSummary)) {
+      it.withCompletedReferral(referralDate = LocalDate.now().minusDays(2))
+    }
+
+    val csips = csipRecordRepository.findAll()
+
+    val response = searchCsipRecords(searchReq(prisonCode = null, query = personSummary.prisonNumber))
+    assertThat(response.content.map { it.id }).containsExactly(csip2.id, csip1.id)
+    response.content.first().verifyAgainst(csip2)
+    response.content.last().verifyAgainst(csip1)
   }
 
   @Test
@@ -387,7 +407,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
     private const val SEARCH_PRISON_CODE = "SWI"
 
     private fun searchReq(
-      prisonCode: String = SEARCH_PRISON_CODE,
+      prisonCode: String? = SEARCH_PRISON_CODE,
       query: String? = null,
       status: CsipStatus? = null,
       includeRestrictedPatients: Boolean? = null,
@@ -395,7 +415,7 @@ class SearchCsipRecordsIntTest : IntegrationTestBase() {
       size: Int = 10,
       sort: String = "referralDate,desc",
     ) = searchRequest(
-      setOf(prisonCode),
+      prisonCode?.let { setOf(it) } ?: emptySet(),
       query,
       status?.let { setOf(it) } ?: emptySet(),
       includeRestrictedPatients,

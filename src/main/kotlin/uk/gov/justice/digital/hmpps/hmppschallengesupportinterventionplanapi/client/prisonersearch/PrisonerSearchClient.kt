@@ -44,7 +44,12 @@ class PrisonerSearchClient(@Qualifier("prisonerSearchWebClient") private val web
 
 data class PrisonerNumbers(
   val prisonerNumbers: Set<String>,
-)
+) {
+  companion object {
+    const val PATTERN: String = "\\w\\d{4}\\w{2}"
+    val regex: Regex = $$"^$$PATTERN$".toRegex()
+  }
+}
 
 data class PrisonerDetails(
   val prisonerNumber: String,

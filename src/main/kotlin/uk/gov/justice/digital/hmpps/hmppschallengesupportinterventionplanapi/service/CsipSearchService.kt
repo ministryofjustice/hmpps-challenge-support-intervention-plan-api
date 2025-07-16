@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerNumbers
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.status
@@ -26,14 +27,14 @@ class CsipSearchService(
   private val csipSummaryRepository: CsipSummaryRepository,
 ) {
   fun findMatchingCsipRecords(request: FindCsipRequest): CsipSearchResults = with(request) {
-    require(prisonCode.isNotEmpty()) { "At least one prison code must be provided" }
+    require(prisonCode.isNotEmpty() || query?.matches(PrisonerNumbers.regex) == true) { "At least one prison code or a prison number must be provided" }
     csipSummaryRepository.findAll(asSpecification(), pageable()).map { it.toSearchResult() }.asCsipSearchResults()
   }
 
   fun getOverviewForPrison(prisonCode: String): CsipOverview = CsipOverview(csipSummaryRepository.getOverviewCounts(prisonCode) ?: CsipCounts.NONE)
 
   private fun FindCsipRequest.asSpecification(): Specification<CsipSummary> = listOfNotNull(
-    summaryPrisonInvolvement(prisonCode.toSet()),
+    if (prisonCode.isNotEmpty()) summaryPrisonInvolvement(prisonCode.toSet()) else null,
     queryString()?.let {
       if (it.isPrisonNumber()) {
         summaryMatchesPrisonNumber(it)
@@ -55,4 +56,4 @@ private fun CsipSummary.toSearchResult() = CsipSearchResult(id, logCode, prisone
 
 private fun CsipSummary.prisoner() = Prisoner(prisonNumber, firstName, lastName, cellLocation)
 
-private fun String.isPrisonNumber() = matches(Regex("^\\w\\d{4}\\w{2}$"))
+private fun String.isPrisonNumber() = matches(PrisonerNumbers.regex)
