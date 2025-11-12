@@ -23,7 +23,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.1")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.25.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.26.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.1.1")
 
   // OpenAPI
@@ -33,7 +33,7 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.12.0")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
