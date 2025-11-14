@@ -5,7 +5,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
   kotlin("plugin.spring") version "2.2.21"
   kotlin("plugin.jpa") version "2.2.21"
-  id("com.google.cloud.tools.jib") version "3.4.5"
+  id("com.google.cloud.tools.jib") version "3.5.0"
   id("io.gatling.gradle") version "3.14.9"
   jacoco
 }
@@ -44,7 +44,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.21.3")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
-  testImplementation("org.wiremock:wiremock-standalone:3.13.1")
+  testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.21.3")
   testImplementation("org.junit.jupiter:junit-jupiter:6.0.1")
