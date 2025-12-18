@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 16.10 (Debian 16.10-1.pgdg13+1)">
+<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 16.11 (Debian 16.11-1.pgdg13+1)">
    <sequences>
       <sequence increment="1" name="audit_revision_id_seq" startValue="1"/>
       <sequence increment="1" name="reference_data_reference_data_id_seq" startValue="1"/>
@@ -533,7 +533,7 @@
             <column ascending="true" name="plan_id"/>
          </index>
       </table>
-      <table name="reference_data" numRows="122" remarks="Reference data used to populate properties that have fixed lists of valid options e.g. categories, decisions and statuses" schema="public" type="TABLE">
+      <table name="reference_data" numRows="112" remarks="Reference data used to populate properties that have fixed lists of valid options e.g. categories, decisions and statuses" schema="public" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('reference_data_reference_data_id_seq'::regclass)" digits="0" id="0" name="reference_data_id" nullable="false" remarks="Internal primary key. Not returned by API" size="19" type="bigserial" typeCode="-5">
             <child column="contributory_factor_type_id" foreignKey="contributory_factor_contributory_factor_type_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
             <child column="status_id" foreignKey="csip_record_status_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
