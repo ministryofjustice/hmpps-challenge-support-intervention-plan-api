@@ -27,7 +27,7 @@ dependencies {
   implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-core")
