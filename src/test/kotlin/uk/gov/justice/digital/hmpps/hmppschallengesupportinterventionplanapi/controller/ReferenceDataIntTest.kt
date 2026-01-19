@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.co
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
@@ -9,7 +10,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.entries
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referencedata.ReferenceData
-import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.Optional
 
@@ -35,9 +35,9 @@ class ReferenceDataIntTest : IntegrationTestBase() {
   fun `404 not found - invalid domain in url`() {
     val response =
       webTestClient.get().uri("/reference-data/wrong-domain").headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI)))
-        .exchange().expectStatus().isNotFound.expectBody(ErrorResponse::class.java).returnResult().responseBody
+        .exchange().errorResponse(HttpStatus.NOT_FOUND)
 
-    with(response!!) {
+    with(response) {
       assertThat(status).isEqualTo(404)
       assertThat(errorCode).isNull()
       assertThat(userMessage).isEqualTo("No resource found failure: Fail to map wrong-domain to Reference Data Type. Reference Data domain name must be one of: ${entries.joinToString(", ") { it.domain }}.")

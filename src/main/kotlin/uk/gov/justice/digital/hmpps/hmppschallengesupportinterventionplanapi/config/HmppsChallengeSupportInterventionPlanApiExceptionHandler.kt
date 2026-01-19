@@ -54,10 +54,10 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
     }
 
     val type = e.requiredType
-    val message = if (type.isEnum) {
+    val message = if (type?.isEnum == true) {
       "Parameter ${e.name} must be one of the following ${StringUtils.join(type.enumConstants, ", ")}"
     } else {
-      "Parameter ${e.name} must be of type ${type.typeName}"
+      "Parameter ${e.name} must be of type ${type?.typeName}"
     }
 
     return ResponseEntity.status(BAD_REQUEST).body(
@@ -168,7 +168,7 @@ class HmppsChallengeSupportInterventionPlanApiExceptionHandler {
     ),
   )
 
-  private fun List<MessageSourceResolvable>.mapErrors() = map { it.defaultMessage }.distinct().sorted().let {
+  private fun List<MessageSourceResolvable>.mapErrors() = map { it.defaultMessage }.distinct().sortedBy { it }.let {
     val validationFailure = "Validation failure"
     val message = if (it.size > 1) {
       """

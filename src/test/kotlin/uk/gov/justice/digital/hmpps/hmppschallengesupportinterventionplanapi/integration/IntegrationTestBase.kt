@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.in
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -17,14 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
@@ -68,8 +65,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.INTERVIEWEE_ROLE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source.DPS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipBaseInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipMovedInformation
@@ -101,10 +96,13 @@ import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.MissingTopicException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.sqs.publish
+import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.SortedSet
 import java.util.UUID
+
+internal const val CLIENT_ID = "csip-api-client"
 
 @ExtendWith(HmppsAuthApiExtension::class, ManageUsersExtension::class, PrisonerSearchExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -116,12 +114,12 @@ abstract class IntegrationTestBase {
   lateinit var webTestClient: WebTestClient
 
   @Autowired
-  lateinit var jwtAuthHelper: JwtAuthHelper
+  lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
   @Autowired
   lateinit var objectMapper: ObjectMapper
 
-  @MockitoSpyBean
+  @Autowired
   lateinit var hmppsQueueService: HmppsQueueService
 
   @Autowired
@@ -141,9 +139,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var entityManager: EntityManager
-
-  @MockitoBean
-  lateinit var telemetryClient: TelemetryClient
 
   internal val hmppsEventsTestQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
@@ -198,15 +193,13 @@ abstract class IntegrationTestBase {
     recordUuid: UUID,
     eventType: DomainEventType,
     expectedCount: Int = 1,
-    source: Source = DPS,
-  ) = verifyDomainEvents(prisonNumber, setOf(recordUuid), eventType, expectedCount, source)
+  ) = verifyDomainEvents(prisonNumber, setOf(recordUuid), eventType, expectedCount)
 
   internal fun verifyDomainEvents(
     prisonNumber: String,
     recordUuids: Set<UUID>,
     eventType: DomainEventType,
     expectedCount: Int = 1,
-    source: Source = DPS,
     previousPrisonNumber: String? = null,
   ) {
     await untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == expectedCount }
@@ -525,14 +518,13 @@ abstract class IntegrationTestBase {
     user: String? = TEST_USER,
     client: String = CLIENT_ID,
     roles: List<String> = listOf(ROLE_CSIP_UI),
-    isUserToken: Boolean = false,
-  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, client, roles, isUserToken = isUserToken)
+  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(client, user, roles = roles)
 
   internal fun WebTestClient.ResponseSpec.errorResponse(status: HttpStatus) = expectStatus().isEqualTo(status)
     .expectBody<ErrorResponse>()
     .returnResult().responseBody!!
 
-  internal final inline fun <reified T> WebTestClient.ResponseSpec.successResponse(status: HttpStatus = HttpStatus.OK): T = expectStatus().isEqualTo(status)
-    .expectBody(T::class.java)
+  internal final inline fun <reified T : Any> WebTestClient.ResponseSpec.successResponse(status: HttpStatus = HttpStatus.OK): T = expectStatus().isEqualTo(status)
+    .expectBody<T>()
     .returnResult().responseBody!!
 }

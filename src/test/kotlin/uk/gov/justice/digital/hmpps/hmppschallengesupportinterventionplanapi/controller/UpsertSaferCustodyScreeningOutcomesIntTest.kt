@@ -161,7 +161,7 @@ class UpsertSaferCustodyScreeningOutcomesIntTest : IntegrationTestBase() {
     username: String = TEST_USER,
   ) = webTestClient.put().uri(urlToTest(recordUuid))
     .bodyValue(request)
-    .headers(setAuthorisation(user = username, roles = listOf(ROLE_CSIP_UI), isUserToken = true))
+    .headers(setAuthorisation(user = username, roles = listOf(ROLE_CSIP_UI)))
     .exchange()
 
   private fun upsertScreeningOutcome(

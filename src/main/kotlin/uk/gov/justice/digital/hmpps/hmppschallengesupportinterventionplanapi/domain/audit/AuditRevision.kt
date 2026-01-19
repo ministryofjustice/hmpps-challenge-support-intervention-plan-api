@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit
 
-import io.hypersistence.utils.hibernate.type.array.EnumArrayType
-import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -9,13 +7,13 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.hibernate.annotations.Parameter
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.envers.EntityTrackingRevisionListener
 import org.hibernate.envers.RevisionEntity
 import org.hibernate.envers.RevisionNumber
 import org.hibernate.envers.RevisionTimestamp
 import org.hibernate.envers.RevisionType
+import org.hibernate.type.SqlTypes
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.csipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent.Companion.fromClass
@@ -41,7 +39,8 @@ class AuditRevision {
   @Enumerated(EnumType.STRING)
   var source: Source? = null
 
-  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
+  @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.ARRAY)
   var affectedComponents: MutableSet<CsipComponent> = mutableSetOf()
 }
 

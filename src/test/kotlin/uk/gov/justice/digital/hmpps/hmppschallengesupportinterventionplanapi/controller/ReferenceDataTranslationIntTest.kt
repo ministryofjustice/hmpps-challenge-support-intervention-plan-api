@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_CSIP_UI
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
@@ -34,5 +35,5 @@ class ReferenceDataTranslationIntTest : IntegrationTestBase() {
     builder.path("/reference-data/${referenceType.domain}")
       .queryParamIfPresent("includeInactive", Optional.ofNullable(includeInactive)).build()
   }.headers(setAuthorisation(roles = listOf(ROLE_CSIP_UI))).exchange().expectStatus().isOk.expectHeader()
-    .contentType(MediaType.APPLICATION_JSON).expectBodyList(ReferenceData::class.java).returnResult().responseBody!!
+    .contentType(MediaType.APPLICATION_JSON).expectBodyList<ReferenceData>().returnResult().responseBody!!
 }
