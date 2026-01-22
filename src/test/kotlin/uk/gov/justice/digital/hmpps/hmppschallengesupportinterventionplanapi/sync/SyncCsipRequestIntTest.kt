@@ -472,23 +472,23 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     saved.verifyAgainst(request)
 
     val factorRequests = request.referral!!.contributoryFactors
-    val factors = contributoryFactorRepository.findAllById(factorRequests.map { it.id })
+    val factors = contributoryFactorRepository.findAllById(factorRequests.mapNotNull { it.id }.toMutableSet())
     factors.forEach { i -> i.verifyAgainst(requireNotNull(factorRequests.find { it.legacyId == i.legacyId })) }
 
     val interviewRequests = request.referral.investigation!!.interviews
-    val interviews = interviewRepository.findAllById(interviewRequests.map { it.id })
+    val interviews = interviewRepository.findAllById(interviewRequests.mapNotNull { it.id }.toMutableSet())
     interviews.forEach { i -> i.verifyAgainst(requireNotNull(interviewRequests.find { it.legacyId == i.legacyId })) }
 
     val needRequests = request.plan!!.identifiedNeeds
-    val needs = identifiedNeedRepository.findAllById(needRequests.map { it.id })
+    val needs = identifiedNeedRepository.findAllById(needRequests.mapNotNull { it.id }.toMutableSet())
     needs.forEach { i -> i.verifyAgainst(requireNotNull(needRequests.find { it.legacyId == i.legacyId })) }
 
     val reviewRequests = request.plan.reviews
-    val reviews = reviewRepository.findAllById(reviewRequests.map { it.id })
+    val reviews = reviewRepository.findAllById(reviewRequests.mapNotNull { it.id }.toMutableSet())
     reviews.forEach { i -> i.verifyAgainst(requireNotNull(reviewRequests.find { it.legacyId == i.legacyId })) }
 
     val attendeeRequests = request.plan.reviews.flatMap { it.attendees }
-    val attendees = attendeeRepository.findAllById(attendeeRequests.map { it.id })
+    val attendees = attendeeRepository.findAllById(attendeeRequests.mapNotNull { it.id }.toMutableSet())
     attendees.forEach { i -> i.verifyAgainst(requireNotNull(attendeeRequests.find { it.legacyId == i.legacyId })) }
 
     await withPollDelay ofSeconds(1) untilCallTo { hmppsEventsTestQueue.countAllMessagesOnQueue() } matches { it == 0 }
@@ -896,16 +896,16 @@ class SyncCsipRequestIntTest : IntegrationTestBase() {
     request: SyncCsipRequest,
   ) = webTestClient.put().uri(URL)
     .bodyValue(request)
-    .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
+    .headers(setAuthorisation(roles = listOf(ROLE_NOMIS))).exchange()
 
   private fun deleteCsip(uuid: UUID, legacyActioned: LegacyActioned) = webTestClient.method(HttpMethod.DELETE)
     .uri("$URL/$uuid")
     .bodyValue(legacyActioned)
-    .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS)))
+    .headers(setAuthorisation(roles = listOf(ROLE_NOMIS)))
     .exchange().expectStatus().isNoContent
 
   private fun getCsipRecords(prisonNumber: String): List<CsipRecord> = webTestClient.get().uri("$URL/$prisonNumber")
-    .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
+    .headers(setAuthorisation(roles = listOf(ROLE_NOMIS))).exchange()
     .expectStatus().isOk.expectBodyList<CsipRecord>().returnResult().responseBody!!
 
   private fun syncCsipRecord(request: SyncCsipRequest) = syncCsipResponseSpec(request).successResponse<SyncResponse>()

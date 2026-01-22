@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_MOVED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.DomainEventsListener.Companion.PRISONER_MERGED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.MergeInformation
@@ -83,7 +82,7 @@ class MergeEventIntTest : IntegrationTestBase() {
     assertThat(csipRecordRepository.countByPrisonNumber(newNoms)).isEqualTo(3)
     assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
 
-    verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, Source.NOMIS, oldNoms)
+    verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, oldNoms)
   }
 
   @Test
@@ -103,7 +102,7 @@ class MergeEventIntTest : IntegrationTestBase() {
     assertThat(csipRecordRepository.countByPrisonNumber(newNoms)).isEqualTo(2)
     assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
 
-    verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, Source.NOMIS, oldNoms)
+    verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, oldNoms)
   }
 
   private fun mergeEvent(previousNomsNumber: String, newNomsNumber: String): HmppsDomainEvent<MergeInformation> = HmppsDomainEvent(

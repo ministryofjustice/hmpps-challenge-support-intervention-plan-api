@@ -17,13 +17,12 @@ object PostgresContainer {
 
     val logConsumer = Slf4jLogConsumer(log).withPrefix("postgresql")
 
-    return PostgreSQLContainer<Nothing>("postgres:16").apply {
+    return PostgreSQLContainer<Nothing>("postgres:18").apply {
       withEnv("HOSTNAME_EXTERNAL", "localhost")
       withDatabaseName("csip")
       withUsername("csip")
       withPassword("csip")
       setWaitStrategy(Wait.forListeningPort())
-      withReuse(false)
       start()
       followOutput(logConsumer)
     }

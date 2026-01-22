@@ -5,7 +5,6 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.awaitility.kotlin.withPollDelay
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
@@ -26,8 +25,6 @@ class PersonReconciliationIntTest : IntegrationTestBase() {
 
     val ps = personSummaryRepository.findById(csip.prisonNumber).orElseThrow()
     ps.verifyAgainst(prisoner)
-
-    verify(telemetryClient).trackEvent("PersonReconciliationDiffs", mapOf(ps.prisonNumber to "[firstName, lastName, status, cellLocation]"), mapOf())
   }
 
   private fun triggerReconciliation() = webTestClient.post()

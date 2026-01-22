@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_NOMIS
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_MOVED
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.Source
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
@@ -64,7 +63,7 @@ class MoveCsipRequestIntTest : IntegrationTestBase() {
     assertThat(csipRecordRepository.countByPrisonNumber(newNoms)).isEqualTo(3)
     assertThat(personSummaryRepository.findByIdOrNull(oldNoms)).isNull()
 
-    verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, Source.NOMIS, oldNoms)
+    verifyDomainEvents(newNoms, setOf(csip1.id, csip2.id), CSIP_MOVED, 2, oldNoms)
   }
 
   @Test
@@ -84,7 +83,7 @@ class MoveCsipRequestIntTest : IntegrationTestBase() {
 
     assertThat(csipRecordRepository.countByPrisonNumber(newNoms)).isEqualTo(1)
 
-    verifyDomainEvents(newNoms, setOf(csip1.id), CSIP_MOVED, 1, Source.NOMIS, oldNoms)
+    verifyDomainEvents(newNoms, setOf(csip1.id), CSIP_MOVED, previousPrisonNumber = oldNoms)
   }
 
   companion object {
@@ -97,7 +96,7 @@ class MoveCsipRequestIntTest : IntegrationTestBase() {
     request: MoveCsipRequest,
   ) = webTestClient.put().uri(URL)
     .bodyValue(request)
-    .headers(setAuthorisation(isUserToken = false, roles = listOf(ROLE_NOMIS))).exchange()
+    .headers(setAuthorisation(roles = listOf(ROLE_NOMIS))).exchange()
 
   private fun moveCsipRecord(request: MoveCsipRequest) = syncCsipResponseSpec(request).expectStatus().isOk
 }

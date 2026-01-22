@@ -1,16 +1,16 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit
 
-import io.hypersistence.utils.hibernate.type.array.EnumArrayType
-import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.Parameter
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.jpa.repository.JpaRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.toReferenceDataModel
@@ -39,7 +39,8 @@ class DecisionAndActionsAudit(
   val nextSteps: String?,
   @Column(name = "action_other")
   val actionOther: String?,
-  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
+  @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.ARRAY)
   val actions: SortedSet<DecisionAction>,
   @EmbeddedId
   val id: DecisionAndActionsAuditKey,

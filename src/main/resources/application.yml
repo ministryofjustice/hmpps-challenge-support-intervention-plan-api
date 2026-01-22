@@ -10,8 +10,6 @@ spring:
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
-    serialization:
-      WRITE_DATES_AS_TIMESTAMPS: false
 
   security:
     oauth2:
@@ -64,6 +62,8 @@ spring:
     placeholders:
       dpr_user: ${DPR_USER}
       dpr_password: ${DPR_PASSWORD}
+
+  threads.virtual.enabled: true
 
 springdoc:
   swagger-ui:
