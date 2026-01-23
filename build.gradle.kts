@@ -50,20 +50,19 @@ tasks {
   withType<KotlinCompile> {
     compilerOptions {
       jvmTarget = JVM_25
-      freeCompilerArgs.add("-Xwhen-guards")
+      freeCompilerArgs.addAll(
+        "-Xwhen-guards",
+        "-Xannotation-default-target=param-property",
+      )
     }
   }
 
-  register("initialiseDatabase", Test::class) {
-    include("**/InitialiseDatabase.class")
-  }
-
   test {
-    exclude("**/InitialiseDatabase.class")
-  }
-
-  getByName("initialiseDatabase") {
-    onlyIf { gradle.startParameter.taskNames.contains("initialiseDatabase") }
+    if (project.hasProperty("init-db")) {
+      include("**/InitialiseDatabase.class")
+    } else {
+      exclude("**/InitialiseDatabase.class")
+    }
   }
 }
 

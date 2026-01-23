@@ -341,5 +341,5 @@ class MergeReferralIntTest : IntegrationTestBase() {
     val csip = csipRecordRepository.getCsipRecord(id)
     csip.referral!!.contributoryFactors()
     csip
-  }!!
+  }
 }
