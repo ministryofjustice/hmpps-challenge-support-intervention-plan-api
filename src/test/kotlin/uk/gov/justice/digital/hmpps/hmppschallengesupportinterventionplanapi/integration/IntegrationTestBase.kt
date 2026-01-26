@@ -213,7 +213,7 @@ abstract class IntegrationTestBase {
           assertThat(detailUrl).isEqualTo("http://localhost:8080/csip-records/${this.recordUuid}")
         }
         if (additionalInformation is CsipMovedInformation) {
-          assertThat((additionalInformation as CsipMovedInformation).previousNomsNumber).isEqualTo(previousPrisonNumber)
+          assertThat((additionalInformation).previousNomsNumber).isEqualTo(previousPrisonNumber)
         }
         assertThat(description).isEqualTo(domainEventType.description)
         assertThat(personReference).isEqualTo(PersonReference.withPrisonNumber(prisonNumber))
@@ -267,7 +267,7 @@ abstract class IntegrationTestBase {
   fun givenCsipRecord(csipRecord: CsipRecord): CsipRecord = transactionTemplate.execute {
     personSummaryRepository.saveAndFlush(csipRecord.personSummary)
     csipRecordRepository.save(csipRecord)
-  }!!
+  }
 
   fun CsipRecord.withCompletedReferral(
     incidentType: () -> ReferenceData = { givenRandom(INCIDENT_TYPE) },

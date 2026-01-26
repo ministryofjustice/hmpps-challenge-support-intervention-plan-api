@@ -158,5 +158,5 @@ class CreatePlanIntTest : IntegrationTestBase() {
     val plan = csipRecordRepository.findById(recordUuid)!!.plan
     plan!!.identifiedNeeds()
     plan
-  }!!
+  }
 }

@@ -259,7 +259,7 @@ class UpdateReviewIntTest : IntegrationTestBase() {
     val review = reviewRepository.getReview(uuid)
     review.plan.identifiedNeeds()
     review
-  }!!
+  }
 
   private fun ReviewEntity.verifyAgainst(request: ReviewRequest) {
     assertThat(reviewDate).isEqualTo(request.reviewDate)

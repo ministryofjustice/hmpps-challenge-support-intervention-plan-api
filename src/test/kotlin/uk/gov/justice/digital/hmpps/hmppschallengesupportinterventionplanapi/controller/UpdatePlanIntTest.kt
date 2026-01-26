@@ -197,5 +197,5 @@ class UpdatePlanIntTest : IntegrationTestBase() {
     val plan = requireNotNull(csipRecordRepository.getCsipRecord(id).plan)
     plan.reviews()
     plan
-  }!!
+  }
 }

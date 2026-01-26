@@ -192,5 +192,5 @@ class AddReviewIntTest : IntegrationTestBase() {
     val review = reviewRepository.getReview(uuid)
     review.plan.identifiedNeeds()
     review
-  }!!
+  }
 }
