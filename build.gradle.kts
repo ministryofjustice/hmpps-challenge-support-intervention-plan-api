@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.1"
   kotlin("plugin.spring") version "2.3.0"
   kotlin("plugin.jpa") version "2.3.0"
   jacoco
@@ -18,7 +18,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0")
-  implementation("io.sentry:sentry-spring-boot-4:8.26.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.31.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
   implementation("org.springframework.data:spring-data-envers")
 
