@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 16.11 (Debian 16.11-1.pgdg13+1)">
+<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 18.1 (Debian 18.1-1.pgdg13+2)">
    <sequences>
       <sequence increment="1" name="audit_revision_id_seq" startValue="1"/>
       <sequence increment="1" name="reference_data_reference_data_id_seq" startValue="1"/>
@@ -99,8 +99,8 @@
          <index name="audit_revision_pkey" unique="true">
             <column ascending="true" name="id"/>
          </index>
-         <checkConstraint constraint="((affected_components &lt;@ ARRAY['RECORD'::character varying, 'REFERRAL'::character varying, 'CONTRIBUTORY_FACTOR'::character varying, 'SAFER_CUSTODY_SCREENING_OUTCOME'::character varying, 'INVESTIGATION'::character varying, 'INTERVIEW'::character varying, 'DECISION_AND_ACTIONS'::character varying, 'PLAN'::character varying, 'IDENTIFIED_NEED'::character varying, 'REVIEW'::character varying, 'ATTENDEE'::character varying]))" name="affected_components_enum_check"/>
-         <checkConstraint constraint="(((source)::text = ANY ((ARRAY['DPS'::character varying, 'NOMIS'::character varying])::text[])))" name="check_source"/>
+         <checkConstraint constraint="(affected_components &lt;@ ARRAY['RECORD'::character varying, 'REFERRAL'::character varying, 'CONTRIBUTORY_FACTOR'::character varying, 'SAFER_CUSTODY_SCREENING_OUTCOME'::character varying, 'INVESTIGATION'::character varying, 'INTERVIEW'::character varying, 'DECISION_AND_ACTIONS'::character varying, 'PLAN'::character varying, 'IDENTIFIED_NEED'::character varying, 'REVIEW'::character varying, 'ATTENDEE'::character varying])" name="affected_components_enum_check"/>
+         <checkConstraint constraint="((source)::text = ANY ((ARRAY['DPS'::character varying, 'NOMIS'::character varying])::text[]))" name="check_source"/>
       </table>
       <table name="contributory_factor" remarks="The contributory factors the referrer has identified as part of the referral" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="contributory_factor_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
@@ -258,7 +258,7 @@
          <index name="idx_decision_and_actions_signed_off_role_id" unique="false">
             <column ascending="true" name="signed_off_by_role_id"/>
          </index>
-         <checkConstraint constraint="((actions &lt;@ ARRAY['OPEN_CSIP_ALERT'::character varying, 'NON_ASSOCIATIONS_UPDATED'::character varying, 'OBSERVATION_BOOK'::character varying, 'UNIT_OR_CELL_MOVE'::character varying, 'CSRA_OR_RSRA_REVIEW'::character varying, 'SERVICE_REFERRAL'::character varying, 'SIM_REFERRAL'::character varying]))" name="actions_enum_check"/>
+         <checkConstraint constraint="(actions &lt;@ ARRAY['OPEN_CSIP_ALERT'::character varying, 'NON_ASSOCIATIONS_UPDATED'::character varying, 'OBSERVATION_BOOK'::character varying, 'UNIT_OR_CELL_MOVE'::character varying, 'CSRA_OR_RSRA_REVIEW'::character varying, 'SERVICE_REFERRAL'::character varying, 'SIM_REFERRAL'::character varying])" name="actions_enum_check"/>
       </table>
       <table name="decision_and_actions_audit" remarks="Decision and actions property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
@@ -569,7 +569,7 @@
             <column ascending="true" name="list_sequence"/>
             <column ascending="true" name="code"/>
          </index>
-         <checkConstraint constraint="(((domain)::text = ANY ((ARRAY['AREA_OF_WORK'::character varying, 'CONTRIBUTORY_FACTOR_TYPE'::character varying, 'DECISION_OUTCOME_TYPE'::character varying, 'DECISION_SIGNER_ROLE'::character varying, 'INCIDENT_INVOLVEMENT'::character varying, 'INCIDENT_LOCATION'::character varying, 'INCIDENT_TYPE'::character varying, 'INTERVIEWEE_ROLE'::character varying, 'SCREENING_OUTCOME_TYPE'::character varying, 'STATUS'::character varying])::text[])))" name="reference_data_domain_enum_check"/>
+         <checkConstraint constraint="((domain)::text = ANY ((ARRAY['AREA_OF_WORK'::character varying, 'CONTRIBUTORY_FACTOR_TYPE'::character varying, 'DECISION_OUTCOME_TYPE'::character varying, 'DECISION_SIGNER_ROLE'::character varying, 'INCIDENT_INVOLVEMENT'::character varying, 'INCIDENT_LOCATION'::character varying, 'INCIDENT_TYPE'::character varying, 'INTERVIEWEE_ROLE'::character varying, 'SCREENING_OUTCOME_TYPE'::character varying, 'STATUS'::character varying])::text[]))" name="reference_data_domain_enum_check"/>
       </table>
       <table name="referral" remarks="The referral that caused the CSIP record to be created. Referrals are step 1 of the CSIP process" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="referral_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
@@ -627,7 +627,7 @@
          <index name="idx_referral_referral_date" unique="false">
             <column ascending="true" name="referral_date"/>
          </index>
-         <checkConstraint constraint="(((safer_custody_team_informed)::text = ANY ((ARRAY['YES'::character varying, 'NO'::character varying, 'DO_NOT_KNOW'::character varying])::text[])))" name="safer_custody_team_informed_enum_check"/>
+         <checkConstraint constraint="((safer_custody_team_informed)::text = ANY ((ARRAY['YES'::character varying, 'NO'::character varying, 'DO_NOT_KNOW'::character varying])::text[]))" name="safer_custody_team_informed_enum_check"/>
       </table>
       <table name="referral_audit" remarks="Referral property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
@@ -722,7 +722,7 @@
          <index name="review_legacy_id_key" unique="true">
             <column ascending="true" name="legacy_id"/>
          </index>
-         <checkConstraint constraint="((actions &lt;@ ARRAY['RESPONSIBLE_PEOPLE_INFORMED'::character varying, 'CSIP_UPDATED'::character varying, 'REMAIN_ON_CSIP'::character varying, 'CASE_NOTE'::character varying, 'CLOSE_CSIP'::character varying]))" name="review_actions_enum_check"/>
+         <checkConstraint constraint="(actions &lt;@ ARRAY['RESPONSIBLE_PEOPLE_INFORMED'::character varying, 'CSIP_UPDATED'::character varying, 'REMAIN_ON_CSIP'::character varying, 'CASE_NOTE'::character varying, 'CLOSE_CSIP'::character varying])" name="review_actions_enum_check"/>
       </table>
       <table name="review_audit" remarks="Review property changes" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="rev_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
@@ -803,6 +803,7 @@
             <column ascending="true" name="rev_id"/>
             <column ascending="true" name="safer_custody_screening_outcome_id"/>
          </index>
+         <checkConstraint constraint="safer_custody_screening_outcome_id IS NOT NULL" name="safer_custody_screening_ou_safer_custody_screening_ou_not_null1"/>
       </table>
    </tables>
 </database>

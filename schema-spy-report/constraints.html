@@ -711,32 +711,37 @@
                                     <tr>
                                         <td><a href='tables/referral.html'>referral</a></td>
                                         <td>safer_custody_team_informed_enum_check</td>
-                                        <td>(((safer_custody_team_informed)::text &#61; ANY ((ARRAY[&#39;YES&#39;::character varying, &#39;NO&#39;::character varying, &#39;DO_NOT_KNOW&#39;::character varying])::text[])))</td>
+                                        <td>((safer_custody_team_informed)::text &#61; ANY ((ARRAY[&#39;YES&#39;::character varying, &#39;NO&#39;::character varying, &#39;DO_NOT_KNOW&#39;::character varying])::text[]))</td>
                                     </tr>
                                     <tr>
                                         <td><a href='tables/audit_revision.html'>audit_revision</a></td>
                                         <td>affected_components_enum_check</td>
-                                        <td>((affected_components &lt;@ ARRAY[&#39;RECORD&#39;::character varying, &#39;REFERRAL&#39;::character varying, &#39;CONTRIBUTORY_FACTOR&#39;::character varying, &#39;SAFER_CUSTODY_SCREENING_OUTCOME&#39;::character varying, &#39;INVESTIGATION&#39;::character varying, &#39;INTERVIEW&#39;::character varying, &#39;DECISION_AND_ACTIONS&#39;::character varying, &#39;PLAN&#39;::character varying, &#39;IDENTIFIED_NEED&#39;::character varying, &#39;REVIEW&#39;::character varying, &#39;ATTENDEE&#39;::character varying]))</td>
+                                        <td>(affected_components &lt;@ ARRAY[&#39;RECORD&#39;::character varying, &#39;REFERRAL&#39;::character varying, &#39;CONTRIBUTORY_FACTOR&#39;::character varying, &#39;SAFER_CUSTODY_SCREENING_OUTCOME&#39;::character varying, &#39;INVESTIGATION&#39;::character varying, &#39;INTERVIEW&#39;::character varying, &#39;DECISION_AND_ACTIONS&#39;::character varying, &#39;PLAN&#39;::character varying, &#39;IDENTIFIED_NEED&#39;::character varying, &#39;REVIEW&#39;::character varying, &#39;ATTENDEE&#39;::character varying])</td>
                                     </tr>
                                     <tr>
                                         <td><a href='tables/audit_revision.html'>audit_revision</a></td>
                                         <td>check_source</td>
-                                        <td>(((source)::text &#61; ANY ((ARRAY[&#39;DPS&#39;::character varying, &#39;NOMIS&#39;::character varying])::text[])))</td>
+                                        <td>((source)::text &#61; ANY ((ARRAY[&#39;DPS&#39;::character varying, &#39;NOMIS&#39;::character varying])::text[]))</td>
                                     </tr>
                                     <tr>
                                         <td><a href='tables/decision_and_actions.html'>decision_and_actions</a></td>
                                         <td>actions_enum_check</td>
-                                        <td>((actions &lt;@ ARRAY[&#39;OPEN_CSIP_ALERT&#39;::character varying, &#39;NON_ASSOCIATIONS_UPDATED&#39;::character varying, &#39;OBSERVATION_BOOK&#39;::character varying, &#39;UNIT_OR_CELL_MOVE&#39;::character varying, &#39;CSRA_OR_RSRA_REVIEW&#39;::character varying, &#39;SERVICE_REFERRAL&#39;::character varying, &#39;SIM_REFERRAL&#39;::character varying]))</td>
+                                        <td>(actions &lt;@ ARRAY[&#39;OPEN_CSIP_ALERT&#39;::character varying, &#39;NON_ASSOCIATIONS_UPDATED&#39;::character varying, &#39;OBSERVATION_BOOK&#39;::character varying, &#39;UNIT_OR_CELL_MOVE&#39;::character varying, &#39;CSRA_OR_RSRA_REVIEW&#39;::character varying, &#39;SERVICE_REFERRAL&#39;::character varying, &#39;SIM_REFERRAL&#39;::character varying])</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/safer_custody_screening_outcome_audit.html'>safer_custody_screening_outcome_audit</a></td>
+                                        <td>safer_custody_screening_ou_safer_custody_screening_ou_not_null1</td>
+                                        <td>safer_custody_screening_outcome_id IS NOT NULL</td>
                                     </tr>
                                     <tr>
                                         <td><a href='tables/review.html'>review</a></td>
                                         <td>review_actions_enum_check</td>
-                                        <td>((actions &lt;@ ARRAY[&#39;RESPONSIBLE_PEOPLE_INFORMED&#39;::character varying, &#39;CSIP_UPDATED&#39;::character varying, &#39;REMAIN_ON_CSIP&#39;::character varying, &#39;CASE_NOTE&#39;::character varying, &#39;CLOSE_CSIP&#39;::character varying]))</td>
+                                        <td>(actions &lt;@ ARRAY[&#39;RESPONSIBLE_PEOPLE_INFORMED&#39;::character varying, &#39;CSIP_UPDATED&#39;::character varying, &#39;REMAIN_ON_CSIP&#39;::character varying, &#39;CASE_NOTE&#39;::character varying, &#39;CLOSE_CSIP&#39;::character varying])</td>
                                     </tr>
                                     <tr>
                                         <td><a href='tables/reference_data.html'>reference_data</a></td>
                                         <td>reference_data_domain_enum_check</td>
-                                        <td>(((domain)::text &#61; ANY ((ARRAY[&#39;AREA_OF_WORK&#39;::character varying, &#39;CONTRIBUTORY_FACTOR_TYPE&#39;::character varying, &#39;DECISION_OUTCOME_TYPE&#39;::character varying, &#39;DECISION_SIGNER_ROLE&#39;::character varying, &#39;INCIDENT_INVOLVEMENT&#39;::character varying, &#39;INCIDENT_LOCATION&#39;::character varying, &#39;INCIDENT_TYPE&#39;::character varying, &#39;INTERVIEWEE_ROLE&#39;::character varying, &#39;SCREENING_OUTCOME_TYPE&#39;::character varying, &#39;STATUS&#39;::character varying])::text[])))</td>
+                                        <td>((domain)::text &#61; ANY ((ARRAY[&#39;AREA_OF_WORK&#39;::character varying, &#39;CONTRIBUTORY_FACTOR_TYPE&#39;::character varying, &#39;DECISION_OUTCOME_TYPE&#39;::character varying, &#39;DECISION_SIGNER_ROLE&#39;::character varying, &#39;INCIDENT_INVOLVEMENT&#39;::character varying, &#39;INCIDENT_LOCATION&#39;::character varying, &#39;INCIDENT_TYPE&#39;::character varying, &#39;INTERVIEWEE_ROLE&#39;::character varying, &#39;SCREENING_OUTCOME_TYPE&#39;::character varying, &#39;STATUS&#39;::character varying])::text[]))</td>
                                     </tr>
                                 </tbody>
                             </table>
