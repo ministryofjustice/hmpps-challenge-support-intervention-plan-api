@@ -30,7 +30,7 @@ on:
       init_db_cli:
         description: Command line to initialise database
         type: string
-        default: './gradlew -Pinit-db=true test --tests uk.gov.justice.digital.hmpps.externalmovementsapi.integration.InitialiseDatabase'
+        default: './gradlew -Pinit-db=true test --tests uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.InitialiseDatabase'
       database_name:
         description: Database name
         type: string
