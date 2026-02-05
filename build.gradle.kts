@@ -31,7 +31,7 @@ dependencies {
   // Database dependencies
   runtimeOnly("org.springframework.boot:spring-boot-starter-flyway")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql")
+  runtimeOnly("org.postgresql:postgresql:42.7.8")
 
   // Test dependencies
   testImplementation("org.testcontainers:postgresql:1.21.4")
