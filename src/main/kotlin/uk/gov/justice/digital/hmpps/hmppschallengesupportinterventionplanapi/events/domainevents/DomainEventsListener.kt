@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 
 @Service
 class DomainEventsListener(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val personUpdatedHandler: PersonUpdatedHandler,
   private val moveEventHandler: MoveEventHandler,
   private val reconciliationHandler: PersonReconciliationHandler,
@@ -15,10 +15,10 @@ class DomainEventsListener(
   @SqsListener("hmppsdomaineventsqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun receive(notification: Notification) {
     when (notification.eventType) {
-      PRISONER_UPDATED -> personUpdatedHandler.handle(objectMapper.readValue(notification.message))
-      PRISONER_MERGED -> moveEventHandler.handleMerge(objectMapper.readValue(notification.message))
-      BOOKING_MOVED -> moveEventHandler.handleBookingMoved(objectMapper.readValue(notification.message))
-      PERSON_RECONCILIATION -> reconciliationHandler.handle(objectMapper.readValue(notification.message))
+      PRISONER_UPDATED -> personUpdatedHandler.handle(jsonMapper.readValue(notification.message))
+      PRISONER_MERGED -> moveEventHandler.handleMerge(jsonMapper.readValue(notification.message))
+      BOOKING_MOVED -> moveEventHandler.handleBookingMoved(jsonMapper.readValue(notification.message))
+      PERSON_RECONCILIATION -> reconciliationHandler.handle(jsonMapper.readValue(notification.message))
     }
   }
 

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.event
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -13,6 +11,7 @@ import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sns.model.PublishResponse
+import tools.jackson.module.kotlin.jsonMapper
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DomainEventType.CSIP_CREATED
@@ -32,7 +31,7 @@ class CsipEventTypePublisherTest {
   private val domainEventsTopic = mock<HmppsTopic>()
   private val domainEventsSnsClient = mock<SnsAsyncClient>()
   private val publisherResponse = mock<PublishResponse>()
-  private val objectMapper = jacksonMapperBuilder().addModule(JavaTimeModule()).build()
+  private val jsonMapper = jsonMapper()
 
   private val domainEventsTopicArn = "arn:aws:sns:eu-west-2:000000000000:${UUID.randomUUID()}"
   private val baseUrl = "http://localhost:8080"
@@ -40,7 +39,7 @@ class CsipEventTypePublisherTest {
   @Test
   fun `throws IllegalStateException when topic not found`() {
     whenever(hmppsQueueService.findByTopicId("hmppseventtopic")).thenReturn(null)
-    val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
+    val domainEventPublisher = DomainEventPublisher(hmppsQueueService, jsonMapper)
     val exception = assertThrows<IllegalStateException> { domainEventPublisher.publish(mock<DomainEvent>()) }
     assertThat(exception.message).isEqualTo("hmppseventtopic not found")
   }
@@ -52,7 +51,7 @@ class CsipEventTypePublisherTest {
     whenever(domainEventsTopic.arn).thenReturn(domainEventsTopicArn)
     whenever(domainEventsSnsClient.publish(any<PublishRequest>())).thenReturn(completedFuture(publisherResponse))
 
-    val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
+    val domainEventPublisher = DomainEventPublisher(hmppsQueueService, jsonMapper)
     val recordUuid = UUID.randomUUID()
     val occurredAt = LocalDateTime.now()
     val domainEvent = HmppsDomainEvent(
@@ -71,7 +70,7 @@ class CsipEventTypePublisherTest {
     verify(domainEventsSnsClient).publish(
       PublishRequest.builder()
         .topicArn(domainEventsTopic.arn)
-        .message(objectMapper.writeValueAsString(domainEvent))
+        .message(jsonMapper.writeValueAsString(domainEvent))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(domainEvent.eventType)
@@ -87,7 +86,7 @@ class CsipEventTypePublisherTest {
     whenever(hmppsQueueService.findByTopicId("hmppseventtopic")).thenReturn(domainEventsTopic)
     whenever(domainEventsTopic.snsClient).thenReturn(domainEventsSnsClient)
     whenever(domainEventsTopic.arn).thenReturn(domainEventsTopicArn)
-    val domainEventPublisher = DomainEventPublisher(hmppsQueueService, objectMapper)
+    val domainEventPublisher = DomainEventPublisher(hmppsQueueService, jsonMapper)
     val domainEvent = mock<HmppsDomainEvent<CsipInformation>>()
     whenever(domainEvent.eventType).thenReturn("some.event.type")
 

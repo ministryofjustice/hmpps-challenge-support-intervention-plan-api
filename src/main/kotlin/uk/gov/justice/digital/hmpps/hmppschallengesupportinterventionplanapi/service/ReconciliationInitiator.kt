@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.retry.RetryPolicy
 import org.springframework.retry.backoff.BackOffPolicy
 import org.springframework.retry.support.RetryTemplate
@@ -9,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.PersonSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.DomainEventsListener.Companion.PERSON_RECONCILIATION
@@ -28,7 +28,7 @@ import kotlin.streams.asSequence
 @Service
 class ReconciliationInitiator(
   private val psr: PersonSummaryRepository,
-  private val om: ObjectMapper,
+  private val jm: JsonMapper,
   private val queueService: HmppsQueueService,
 ) {
   private val eventQueue: HmppsQueue by lazy {
@@ -70,11 +70,11 @@ class ReconciliationInitiator(
         .entries(
           events.map {
             val notification =
-              Notification(om.writeValueAsString(it), attributes = MessageAttributes(it.eventType))
+              Notification(jm.writeValueAsString(it), attributes = MessageAttributes(it.eventType))
             SendMessageBatchRequestEntry
               .builder()
               .id(UUID.randomUUID().toString())
-              .messageBody(om.writeValueAsString(notification))
+              .messageBody(jm.writeValueAsString(notification))
               .build()
           },
         ).build()

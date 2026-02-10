@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -11,6 +8,8 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.jsonMapper
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.UserDetails
 import java.util.UUID
 
@@ -23,7 +22,7 @@ internal const val NOMIS_SYS_USER_DISPLAY_NAME = "Sys"
 internal const val PRISON_CODE_LEEDS = "LEI"
 
 class ManageUsersServer : WireMockServer(8111) {
-  private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+  private val mapper: JsonMapper = jsonMapper()
 
   fun stubGetUserDetails(username: String = TEST_USER, name: String = TEST_USER_NAME): StubMapping = stubFor(
     get("/users/$username")
