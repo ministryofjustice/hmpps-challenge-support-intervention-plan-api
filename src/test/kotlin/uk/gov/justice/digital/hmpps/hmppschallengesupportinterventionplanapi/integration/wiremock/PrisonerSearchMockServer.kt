@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -13,6 +10,8 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.jsonMapper
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 
 internal const val PRISON_NUMBER = "A1234AA"
@@ -20,7 +19,7 @@ internal const val PRISON_NUMBER_NOT_FOUND = "NOT_FOUND"
 internal const val PRISON_NUMBER_THROW_EXCEPTION = "THROW"
 
 class PrisonerSearchServer : WireMockServer(8112) {
-  private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+  private val mapper: JsonMapper = jsonMapper()
 
   fun stubGetPrisoners(details: List<PrisonerDetails>): StubMapping = stubFor(
     post(urlPathEqualTo("/prisoner-search/prisoner-numbers"))

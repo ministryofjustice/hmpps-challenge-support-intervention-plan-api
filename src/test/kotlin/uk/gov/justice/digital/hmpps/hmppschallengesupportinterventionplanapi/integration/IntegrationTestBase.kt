@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -27,6 +25,8 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipRequestContext
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.ServiceConfig
@@ -117,7 +117,7 @@ abstract class IntegrationTestBase {
   lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
   @Autowired
-  lateinit var objectMapper: ObjectMapper
+  lateinit var jsonMapper: JsonMapper
 
   @Autowired
   lateinit var hmppsQueueService: HmppsQueueService
@@ -155,7 +155,7 @@ abstract class IntegrationTestBase {
   }
 
   internal fun sendDomainEvent(event: HmppsDomainEvent<*>) {
-    domainEventsTopic.publish(event.eventType, objectMapper.writeValueAsString(event))
+    domainEventsTopic.publish(event.eventType, jsonMapper.writeValueAsString(event))
   }
 
   internal fun HmppsQueue.countAllMessagesOnQueue() = sqsClient.countAllMessagesOnQueue(queueUrl).get()
@@ -163,11 +163,11 @@ abstract class IntegrationTestBase {
   fun HmppsQueue.receiveDomainEventsOnQueue(maxMessages: Int = 10): List<HmppsDomainEvent<*>> = sqsClient.receiveMessage(
     ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(maxMessages).build(),
   ).get().messages()
-    .map { objectMapper.readValue<Notification>(it.body()) }
+    .map { jsonMapper.readValue<Notification>(it.body()) }
     .map {
       when (it.eventType) {
-        CSIP_MOVED.eventType -> objectMapper.readValue<HmppsDomainEvent<CsipMovedInformation>>(it.message)
-        else -> objectMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
+        CSIP_MOVED.eventType -> jsonMapper.readValue<HmppsDomainEvent<CsipMovedInformation>>(it.message)
+        else -> jsonMapper.readValue<HmppsDomainEvent<CsipInformation>>(it.message)
       }
     }
 
