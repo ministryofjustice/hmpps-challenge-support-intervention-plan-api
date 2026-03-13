@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.5"
   kotlin("plugin.spring") version "2.3.10"
   kotlin("plugin.jpa") version "2.3.10"
   jacoco
@@ -21,7 +21,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.2")
-  implementation("io.sentry:sentry-spring-boot-4:8.31.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.35.0")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
   implementation("org.springframework.data:spring-data-envers")
 
@@ -34,12 +34,12 @@ dependencies {
   // Database dependencies
   runtimeOnly("org.springframework.boot:spring-boot-starter-flyway")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.8")
+  runtimeOnly("org.postgresql:postgresql:42.7.10")
 
   // Test dependencies
   testImplementation("org.testcontainers:postgresql:1.21.4")
   testImplementation("org.testcontainers:localstack:1.21.4")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.2")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
