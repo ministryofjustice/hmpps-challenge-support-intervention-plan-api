@@ -54,21 +54,21 @@ class Plan(
   val id: UUID = csipRecord.id
 
   var caseManager: String? = caseManager
-    private set
+    protected set
 
   var reasonForPlan: String? = reasonForPlan
-    private set
+    protected set
 
   var firstCaseReviewDate: LocalDate? = firstCaseReviewDate
-    private set
+    protected set
 
   @NotAudited
   var nextReviewDate: LocalDate? = null
-    private set
+    protected set
 
   @NotAudited
   var closedDate: LocalDate? = null
-    private set
+    protected set
 
   @NotAudited
   @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL])

@@ -45,22 +45,22 @@ class SaferCustodyScreeningOutcome(
   @ManyToOne
   @JoinColumn(name = "outcome_id")
   var outcome: ReferenceData = outcome
-    private set
+    protected set
 
   @Column(nullable = false)
   var date: LocalDate = date
-    private set
+    protected set
 
   @Column(nullable = false, length = 100)
   var recordedBy: String = recordedBy
-    private set
+    protected set
 
   @Column(nullable = false, length = 255)
   var recordedByDisplayName: String = recordedByDisplayName
-    private set
+    protected set
 
   var reasonForDecision: String? = reasonForDecision
-    private set
+    protected set
 
   @Audited(withModifiedFlag = false)
   @Id

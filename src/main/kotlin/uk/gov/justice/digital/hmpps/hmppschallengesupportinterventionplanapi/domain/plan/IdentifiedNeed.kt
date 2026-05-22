@@ -55,22 +55,22 @@ class IdentifiedNeed(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
-    private set
+    protected set
 
   var identifiedNeed: String = identifiedNeed
-    private set
+    protected set
   var responsiblePerson: String = responsiblePerson
-    private set
+    protected set
   var createdDate: LocalDate = createdDate
-    private set
+    protected set
   var targetDate: LocalDate = targetDate
-    private set
+    protected set
   var closedDate: LocalDate? = closedDate
-    private set
+    protected set
   var intervention: String = intervention
-    private set
+    protected set
   var progression: String? = progression
-    private set
+    protected set
 
   fun update(request: IdentifiedNeedRequest): IdentifiedNeed = apply {
     identifiedNeed = request.identifiedNeed

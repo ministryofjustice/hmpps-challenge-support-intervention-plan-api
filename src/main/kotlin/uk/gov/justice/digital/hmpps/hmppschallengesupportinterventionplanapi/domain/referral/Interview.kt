@@ -56,23 +56,23 @@ class Interview(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
-    private set
+    protected set
 
   @Column(length = 100)
   var interviewee: String = interviewee
-    private set
+    protected set
 
   var interviewDate: LocalDate = interviewDate
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "interviewee_role_id")
   var intervieweeRole: ReferenceData = intervieweeRole
-    private set
+    protected set
 
   var interviewText: String? = interviewText
-    private set
+    protected set
 
   fun update(request: InterviewRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
     interviewee = request.interviewee

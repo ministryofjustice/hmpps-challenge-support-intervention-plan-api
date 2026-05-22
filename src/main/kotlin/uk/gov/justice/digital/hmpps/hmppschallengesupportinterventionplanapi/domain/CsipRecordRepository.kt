@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain
 
 import org.springframework.data.jpa.domain.Specification
+import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.LOAD
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
@@ -17,6 +19,7 @@ interface CsipRecordRepository :
   JpaSpecificationExecutor<CsipRecord>,
   RevisionRepository<CsipRecord, Long, Long>,
   RefreshRepository<CsipRecord, Long> {
+  @EntityGraph(attributePaths = ["personSummary"], type = LOAD)
   fun findById(recordId: UUID): CsipRecord?
 
   fun findByLegacyId(legacyId: Long): CsipRecord?

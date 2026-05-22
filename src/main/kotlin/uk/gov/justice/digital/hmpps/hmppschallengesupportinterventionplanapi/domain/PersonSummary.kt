@@ -36,49 +36,49 @@ class PersonSummary(
   }
 
   var firstName: String = firstName
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::firstName)
       }
       field = value
     }
   var lastName: String = lastName
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::lastName)
       }
       field = value
     }
   var status: String = status
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::status)
       }
       field = value
     }
   var restrictedPatient: Boolean = restrictedPatient
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::restrictedPatient)
       }
       field = value
     }
   var prisonCode: String? = prisonCode
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::prisonCode)
       }
       field = value
     }
   var cellLocation: String? = cellLocation
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::cellLocation)
       }
       field = value
     }
   var supportingPrisonCode: String? = supportingPrisonCode
-    private set(value) {
+    protected set(value) {
       if (value != field) {
         addChange(::supportingPrisonCode)
       }
