@@ -10,8 +10,9 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.BatchSize
 import org.hibernate.envers.Audited
+import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.LOAD
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.request.AttendeeRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
+import java.util.Optional
 import java.util.UUID
 
 @Entity
@@ -51,16 +53,16 @@ class Attendee(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
-    private set
+    protected set
 
   var name: String? = name
-    private set
+    protected set
   var role: String? = role
-    private set
+    protected set
   var attended: Boolean? = attended
-    private set
+    protected set
   var contribution: String? = contribution
-    private set
+    protected set
 
   fun update(request: AttendeeRequest): Attendee = apply {
     name = request.name
@@ -73,9 +75,12 @@ class Attendee(
   }
 }
 
-interface AttendeeRepository : JpaRepository<Attendee, UUID>
+interface AttendeeRepository : JpaRepository<Attendee, UUID> {
+  @EntityGraph(attributePaths = ["review", "review.plan", "review.plan.csipRecord"], type = LOAD)
+  override fun findById(id: UUID): Optional<Attendee>
+}
 
-fun AttendeeRepository.getAttendee(id: UUID) = findByIdOrNull(id) ?: throw NotFoundException("Attendee", id.toString())
+fun AttendeeRepository.getAttendee(id: UUID) = findById(id).orElseThrow { NotFoundException("Attendee", id.toString()) }
 
 fun Attendee.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.plan.Attendee(
   id,

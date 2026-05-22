@@ -54,42 +54,42 @@ class DecisionAndActions(
   @ManyToOne
   @JoinColumn(name = "outcome_id", nullable = false)
   var outcome: ReferenceData? = outcome
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "signed_off_by_role_id")
   var signedOffBy: ReferenceData? = signedOffBy
-    private set
+    protected set
 
   @Column(length = 4000)
   var conclusion: String? = null
-    private set
+    protected set
 
   @Column(length = 100)
   var recordedBy: String? = null
-    private set
+    protected set
 
   @Column(length = 255)
   var recordedByDisplayName: String? = null
-    private set
+    protected set
 
   @Column
   var date: LocalDate? = null
-    private set
+    protected set
 
   @Column(length = 4000)
   var nextSteps: String? = null
-    private set
+    protected set
 
   @Enumerated(EnumType.STRING)
   @JdbcTypeCode(SqlTypes.ARRAY)
   var actions: SortedSet<DecisionAction> = sortedSetOf()
-    private set
+    protected set
 
   @Column(length = 4000)
   var actionOther: String? = null
-    private set
+    protected set
 
   fun upsert(
     request: DecisionAndActionsRequest,

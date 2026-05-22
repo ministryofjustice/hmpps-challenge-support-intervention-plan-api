@@ -11,8 +11,9 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.BatchSize
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED
+import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.LOAD
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipAware
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.Identifiable
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.audit.SimpleVersion
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.NotFoundException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.request.ContributoryFactorRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.LegacyIdAware
+import java.util.Optional
 import java.util.UUID
 
 @Entity
@@ -54,16 +56,16 @@ class ContributoryFactor(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "contributory_factor_type_id", updatable = true)
   var contributoryFactorType: ReferenceData = contributoryFactorType
-    private set
+    protected set
 
   var comment: String? = comment
-    private set
+    protected set
 
   fun update(request: ContributoryFactorRequest, rdSupplier: (ReferenceDataType, String) -> ReferenceData) = apply {
     comment = request.comment
@@ -74,9 +76,12 @@ class ContributoryFactor(
   }
 }
 
-interface ContributoryFactorRepository : JpaRepository<ContributoryFactor, UUID>
+interface ContributoryFactorRepository : JpaRepository<ContributoryFactor, UUID> {
+  @EntityGraph(attributePaths = ["referral", "referral.csipRecord", "referral.csipRecord.status"], type = LOAD)
+  override fun findById(id: UUID): Optional<ContributoryFactor>
+}
 
-fun ContributoryFactorRepository.getContributoryFactor(id: UUID) = findByIdOrNull(id) ?: throw NotFoundException("Contributory Factor", id.toString())
+fun ContributoryFactorRepository.getContributoryFactor(id: UUID) = findById(id).orElseThrow { NotFoundException("Contributory Factor", id.toString()) }
 
 fun ContributoryFactor.toModel() = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.referral.ContributoryFactor(
   factorUuid = id,

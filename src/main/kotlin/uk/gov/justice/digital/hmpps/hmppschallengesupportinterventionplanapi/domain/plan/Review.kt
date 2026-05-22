@@ -67,27 +67,27 @@ class Review(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
-    private set
+    protected set
 
   var reviewSequence: Int = reviewSequence
-    private set
+    protected set
   var reviewDate: LocalDate = reviewDate
-    private set
+    protected set
   var recordedBy: String = recordedBy
-    private set
+    protected set
   var recordedByDisplayName: String = recordedByDisplayName
-    private set
+    protected set
   var nextReviewDate: LocalDate? = nextReviewDate
-    private set
+    protected set
   var csipClosedDate: LocalDate? = csipClosedDate
-    private set
+    protected set
   var summary: String? = summary
-    private set
+    protected set
 
   @Enumerated(EnumType.STRING)
   @JdbcTypeCode(SqlTypes.ARRAY)
   var actions: SortedSet<ReviewAction> = actions
-    private set
+    protected set
 
   @NotAudited
   @OneToMany(mappedBy = "review", cascade = [CascadeType.ALL])

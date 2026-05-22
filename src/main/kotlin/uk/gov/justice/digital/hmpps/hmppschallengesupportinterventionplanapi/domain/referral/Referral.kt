@@ -99,93 +99,93 @@ class Referral(
   @NotAudited
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var saferCustodyScreeningOutcome: SaferCustodyScreeningOutcome? = null
-    private set
+    protected set
 
   @NotAudited
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var investigation: Investigation? = null
-    private set
+    protected set
 
   @NotAudited
   @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL])
   var decisionAndActions: DecisionAndActions? = null
-    private set
+    protected set
 
   fun contributoryFactors() = contributoryFactors.toList().sortedByDescending { it.id }
 
   @Column(nullable = false)
   var referralDate: LocalDate = referralDate
-    private set
+    protected set
 
   var incidentDate: LocalDate = incidentDate
-    private set
+    protected set
 
   var incidentTime: LocalTime? = incidentTime
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_type_id")
   var incidentType: ReferenceData = incidentType
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_location_id")
   var incidentLocation: ReferenceData = incidentLocation
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "referer_area_of_work_id")
   var refererAreaOfWork: ReferenceData = refererAreaOfWork
-    private set
+    protected set
 
   @Audited(targetAuditMode = NOT_AUDITED, withModifiedFlag = true)
   @ManyToOne
   @JoinColumn(name = "incident_involvement_id")
   var incidentInvolvement: ReferenceData? = incidentInvolvement
-    private set
+    protected set
 
   @Column(nullable = false, length = 240)
   var referredBy: String = referredBy
-    private set
+    protected set
 
   var proactiveReferral: Boolean? = proactiveReferral
-    private set
+    protected set
 
   var staffAssaulted: Boolean? = staffAssaulted
-    private set
+    protected set
 
   var assaultedStaffName: String? = assaultedStaffName
-    private set
+    protected set
 
   var descriptionOfConcern: String? = descriptionOfConcern
-    private set
+    protected set
 
   var knownReasons: String? = knownReasons
-    private set
+    protected set
 
   var otherInformation: String? = otherInformation
-    private set
+    protected set
 
   @Enumerated(EnumType.STRING)
   var saferCustodyTeamInformed: OptionalYesNoAnswer = saferCustodyTeamInformed
-    private set
+    protected set
 
   var referralComplete: Boolean? = null
-    private set
+    protected set
 
   var referralCompletedDate: LocalDate? = null
-    private set
+    protected set
 
   @Column(length = 32)
   var referralCompletedBy: String? = null
-    private set
+    protected set
 
   @Column(length = 255)
   var referralCompletedByDisplayName: String? = null
-    private set
+    protected set
 
   fun update(
     update: ReferralRequest,

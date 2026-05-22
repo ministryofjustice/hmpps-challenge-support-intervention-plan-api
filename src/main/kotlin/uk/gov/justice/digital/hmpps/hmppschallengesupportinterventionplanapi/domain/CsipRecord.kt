@@ -64,38 +64,38 @@ class CsipRecord(
 
   @Audited(withModifiedFlag = false)
   override var legacyId: Long? = legacyId
-    private set
+    protected set
 
   @Audited(withModifiedFlag = true, modifiedColumnName = "prison_number_modified", targetAuditMode = NOT_AUDITED)
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "prison_number")
   var personSummary: PersonSummary = personSummary
-    private set
+    protected set
 
   @NotAudited
   @Column(name = "prison_number", insertable = false, updatable = false)
   var prisonNumber: String = personSummary.prisonNumber
-    private set
+    protected set
 
   @Column(length = 10)
   var logCode: String? = logCode
-    private set
+    protected set
 
   @NotAudited
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
   var referral: Referral? = null
-    private set
+    protected set
 
   @NotAudited
   @OneToOne(mappedBy = "csipRecord", cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
   var plan: Plan? = null
-    private set
+    protected set
 
   @NotAudited
   @OneToOne
   @JoinColumn(name = "status_id", insertable = false, updatable = false)
   var status: ReferenceData? = null
-    private set
+    protected set
 
   fun createReferral(
     request: ReferralRequest,

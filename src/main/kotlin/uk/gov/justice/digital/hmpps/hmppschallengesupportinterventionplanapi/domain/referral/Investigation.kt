@@ -45,22 +45,22 @@ class Investigation(
   val id: UUID = referral.id
 
   var staffInvolved: String? = null
-    private set
+    protected set
 
   var evidenceSecured: String? = null
-    private set
+    protected set
 
   var occurrenceReason: String? = null
-    private set
+    protected set
 
   var personsUsualBehaviour: String? = null
-    private set
+    protected set
 
   var personsTrigger: String? = null
-    private set
+    protected set
 
   var protectiveFactors: String? = null
-    private set
+    protected set
 
   @NotAudited
   @OneToMany(mappedBy = "investigation", cascade = [CascadeType.ALL])
