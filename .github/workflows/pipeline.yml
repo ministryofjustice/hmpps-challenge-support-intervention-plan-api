@@ -59,6 +59,15 @@ jobs:
       java-version: "25"
     needs:
       - app_version
+  kotlin_validate_required_check:
+    name: Validate the kotlin / validate the Kotlin app
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - gradle_verify
+    steps:
+      - name: Check gradle verification result
+        run: test "${{ needs.gradle_verify.result }}" = "success"
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
