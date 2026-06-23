@@ -2,14 +2,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
-  kotlin("plugin.spring") version "2.3.21"
-  kotlin("plugin.jpa") version "2.3.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.1"
+  kotlin("plugin.spring") version "2.4.0"
+  kotlin("plugin.jpa") version "2.4.0"
   jacoco
 }
 
-ext["jackson-bom.version"] = "3.1.3"
-ext["jackson-2-bom.version"] = "2.21.3"
+ext["jackson-bom.version"] = "3.2.0"
+ext["jackson-2-bom.version"] = "2.22.0"
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
@@ -21,7 +21,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
-  implementation("io.sentry:sentry-spring-boot-4:8.42.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.44.1")
   implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
   implementation("org.springframework.data:spring-data-envers")
 
@@ -29,7 +29,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 
   // AWS
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")
 
   // Database dependencies
   runtimeOnly("org.springframework.boot:spring-boot-starter-flyway")
@@ -53,9 +53,6 @@ tasks {
   withType<KotlinCompile> {
     compilerOptions {
       jvmTarget = JVM_25
-      freeCompilerArgs.addAll(
-        "-Xannotation-default-target=param-property",
-      )
     }
   }
 
