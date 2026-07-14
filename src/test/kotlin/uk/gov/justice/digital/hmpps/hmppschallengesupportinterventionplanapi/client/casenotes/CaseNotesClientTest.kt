@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_THROW_EXCEPTION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.CaseNotesRequestBuilder
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.TypeSubTypeJson
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -36,24 +38,22 @@ class CaseNotesClientTest {
     size = 1,
     sort = "string",
   )
-  private val requestJson = """
-    {
-      "includeSensitive": true,
-      "typeSubTypes": [
-        {
-          "type": "string",
-          "subTypes": [
-            "string"
-          ]
-        }
-      ],
-      "occurredFrom": "2026-07-13T08:43:27.935",
-      "occurredTo": "2026-07-13T08:43:27.935",
-      "page": 1,
-      "size": 1,
-      "sort": "string"
-    }
-  """.trimIndent()
+  private val requestJson = CaseNotesRequestBuilder()
+    .withIncludeSensitive(request.includeSensitive)
+    .withTypeSubTypes(
+      request.typeSubTypes.orEmpty().map {
+        TypeSubTypeJson(
+          type = it.type,
+          subTypes = it.subTypes,
+        )
+      },
+    )
+    .withOccurredFrom(request.occurredFrom)
+    .withOccurredTo(request.occurredTo)
+    .withPage(request.page)
+    .withSize(request.size)
+    .withSort(request.sort)
+    .build()
 
   @BeforeEach
   fun resetMocks() {
