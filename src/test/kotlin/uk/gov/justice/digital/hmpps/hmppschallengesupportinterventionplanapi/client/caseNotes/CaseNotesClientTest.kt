@@ -99,6 +99,11 @@ class CaseNotesClientTest {
           ),
         ),
         hasCaseNotes = true,
+        metadata = CaseNotesMetadata(
+          totalElements = 1,
+          page = 1,
+          size = 10,
+        ),
       ),
     )
   }

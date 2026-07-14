@@ -53,6 +53,13 @@ data class CaseNotesTypeSubType(
 data class CaseNotesResponse(
   val content: List<CaseNote>,
   val hasCaseNotes: Boolean,
+  val metadata: CaseNotesMetadata,
+)
+
+data class CaseNotesMetadata(
+  val totalElements: Int,
+  val page: Int,
+  val size: Int,
 )
 
 data class CaseNote(

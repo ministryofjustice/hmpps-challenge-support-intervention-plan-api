@@ -46,7 +46,12 @@ class CaseNotesServer : WireMockServer(8113) {
                   ]
                 }
               ],
-              "hasCaseNotes": true
+              "hasCaseNotes": true,
+              "metadata": {
+                "totalElements": 1,
+                "page": 1,
+                "size": 10
+              }
             }
             """.trimIndent(),
           )
