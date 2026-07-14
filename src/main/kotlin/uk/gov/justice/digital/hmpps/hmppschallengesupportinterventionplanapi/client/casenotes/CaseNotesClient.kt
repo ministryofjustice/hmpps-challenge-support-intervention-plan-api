@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -37,8 +38,10 @@ class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: We
 
 data class CaseNotesRequest(
   val includeSensitive: Boolean,
-  val typeSubTypes: List<CaseNotesTypeSubType>,
+  val typeSubTypes: List<CaseNotesTypeSubType>?,
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val occurredFrom: LocalDateTime,
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val occurredTo: LocalDateTime,
   val page: Int,
   val size: Int,
