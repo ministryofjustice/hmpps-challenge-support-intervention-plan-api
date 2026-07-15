@@ -25,6 +25,20 @@ import java.util.UUID
 class CaseNotesClientTest {
   private lateinit var client: CaseNotesClient
   private val requestBuilder = CaseNotesRequestBuilder()
+    .withIncludeSensitive(true)
+    .withTypeSubTypes(
+      listOf(
+        TypeSubTypeJson(
+          type = "string",
+          subTypes = listOf("string"),
+        ),
+      ),
+    )
+    .withOccurredFrom(LocalDateTime.parse("2026-07-13T08:43:27"))
+    .withOccurredTo(LocalDateTime.parse("2026-07-13T08:43:27"))
+    .withPage(1)
+    .withSize(1)
+    .withSort("string")
   private val request = requestBuilder.buildRequest()
   private val requestJson = requestBuilder.build()
 
