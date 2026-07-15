@@ -20,6 +20,7 @@ api:
       hmpps-auth: http://localhost:8090/auth
       manage-users: http://localhost:8111
       prisoner-search: http://localhost:8112
+      casenotes: http://localhost:8113
 
 manage-users:
   client:
@@ -27,6 +28,11 @@ manage-users:
     secret: clientsecret
 
 prisoner-search:
+  client:
+    id: alerts-api
+    secret: clientsecret
+
+casenotes:
   client:
     id: alerts-api
     secret: clientsecret
