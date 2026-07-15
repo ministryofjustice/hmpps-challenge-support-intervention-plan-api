@@ -2,14 +2,18 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.7"
   kotlin("plugin.spring") version "2.4.0"
   kotlin("plugin.jpa") version "2.4.0"
   jacoco
 }
 
 ext["jackson-bom.version"] = "3.2.0"
-ext["jackson-2-bom.version"] = "2.22.0"
+ext["jackson-2-bom.version"] = "2.22.1"
+ext["logback.version"] = "1.5.36"
+ext["tomcat.version"] = "11.0.23"
+ext["postgresql.version"] = "42.7.12"
+ext["httpcore5.version"] = "5.4.3"
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
@@ -43,6 +47,12 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
+
+  constraints {
+    implementation("io.opentelemetry:opentelemetry-api:1.62.0") {
+      because("CVE-2026-45292 - remove when transitive dependency is updated")
+    }
+  }
 }
 
 kotlin {
