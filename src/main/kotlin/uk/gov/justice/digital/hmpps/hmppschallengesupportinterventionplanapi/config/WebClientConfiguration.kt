@@ -34,5 +34,5 @@ class WebClientConfiguration(
   fun prisonerSearchWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder) = builder.authorisedWebClient(authorizedClientManager, "prisoner-search-api", prisonerSearchBaseUri, timeout)
 
   @Bean
-  fun caseNotesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder) = builder.authorisedWebClient(authorizedClientManager, "casenotes-api", casenotesBaseUri, timeout)
+  fun caseNotesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder) = builder.authorisedWebClient(authorizedClientManager, "manage-users-api", casenotesBaseUri, timeout)
 }

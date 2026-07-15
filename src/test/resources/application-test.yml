@@ -32,11 +32,6 @@ prisoner-search:
     id: alerts-api
     secret: clientsecret
 
-casenotes:
-  client:
-    id: alerts-api
-    secret: clientsecret
-
 hmpps.sqs:
   provider: localstack
   queues:
