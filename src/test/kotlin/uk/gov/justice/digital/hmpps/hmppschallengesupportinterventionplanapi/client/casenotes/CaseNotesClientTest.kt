@@ -12,35 +12,32 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import tools.jackson.module.kotlin.jsonMapper
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CaseNotesServer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_THROW_EXCEPTION
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.CaseNotesRequestBuilder
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.TypeSubTypeJson
 import java.time.LocalDateTime
 import java.util.UUID
 
 class CaseNotesClientTest {
   private lateinit var client: CaseNotesClient
-  private val requestBuilder = CaseNotesRequestBuilder()
-    .withIncludeSensitive(true)
-    .withTypeSubTypes(
-      listOf(
-        TypeSubTypeJson(
-          type = "string",
-          subTypes = listOf("string"),
-        ),
+  private val jsonMapper = jsonMapper()
+  private val request = CaseNotesRequest(
+    includeSensitive = true,
+    typeSubTypes = listOf(
+      CaseNotesTypeSubType(
+        type = "string",
+        subTypes = listOf("string"),
       ),
-    )
-    .withOccurredFrom(LocalDateTime.parse("2026-07-13T08:43:27"))
-    .withOccurredTo(LocalDateTime.parse("2026-07-13T08:43:27"))
-    .withPage(1)
-    .withSize(1)
-    .withSort("string")
-  private val request = requestBuilder.buildRequest()
-  private val requestJson = requestBuilder.build()
+    ),
+    occurredFrom = LocalDateTime.parse("2026-07-13T08:43:27.935"),
+    occurredTo = LocalDateTime.parse("2026-07-13T08:43:27.935"),
+    page = 1,
+    size = 1,
+    sort = "string",
+  )
 
   @BeforeEach
   fun resetMocks() {
@@ -104,7 +101,7 @@ class CaseNotesClientTest {
     server.verify(
       exactly(1),
       postRequestedFor(urlEqualTo("/search/case-notes/$OFFENDER_IDENTIFIER"))
-        .withRequestBody(equalToJson(requestJson)),
+        .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
     )
   }
 
@@ -116,7 +113,7 @@ class CaseNotesClientTest {
     server.verify(
       exactly(1),
       postRequestedFor(urlEqualTo("/search/case-notes/$OFFENDER_IDENTIFIER_NOT_FOUND"))
-        .withRequestBody(equalToJson(requestJson)),
+        .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
     )
   }
 
@@ -133,7 +130,7 @@ class CaseNotesClientTest {
     server.verify(
       exactly(4),
       postRequestedFor(urlEqualTo("/search/case-notes/$OFFENDER_IDENTIFIER_THROW_EXCEPTION"))
-        .withRequestBody(equalToJson(requestJson)),
+        .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
     )
   }
 
