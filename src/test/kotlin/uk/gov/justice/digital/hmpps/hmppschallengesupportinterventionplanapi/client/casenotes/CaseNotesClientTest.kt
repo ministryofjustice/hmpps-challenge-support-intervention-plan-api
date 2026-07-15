@@ -24,36 +24,9 @@ import java.util.UUID
 
 class CaseNotesClientTest {
   private lateinit var client: CaseNotesClient
-  private val request = CaseNotesRequest(
-    includeSensitive = true,
-    typeSubTypes = listOf(
-      CaseNotesTypeSubType(
-        type = "string",
-        subTypes = listOf("string"),
-      ),
-    ),
-    occurredFrom = LocalDateTime.parse("2026-07-13T08:43:27.935"),
-    occurredTo = LocalDateTime.parse("2026-07-13T08:43:27.935"),
-    page = 1,
-    size = 1,
-    sort = "string",
-  )
-  private val requestJson = CaseNotesRequestBuilder()
-    .withIncludeSensitive(request.includeSensitive)
-    .withTypeSubTypes(
-      request.typeSubTypes.orEmpty().map {
-        TypeSubTypeJson(
-          type = it.type,
-          subTypes = it.subTypes,
-        )
-      },
-    )
-    .withOccurredFrom(request.occurredFrom)
-    .withOccurredTo(request.occurredTo)
-    .withPage(request.page)
-    .withSize(request.size)
-    .withSort(request.sort)
-    .build()
+  private val requestBuilder = CaseNotesRequestBuilder()
+  private val request = requestBuilder.buildRequest()
+  private val requestJson = requestBuilder.build()
 
   @BeforeEach
   fun resetMocks() {

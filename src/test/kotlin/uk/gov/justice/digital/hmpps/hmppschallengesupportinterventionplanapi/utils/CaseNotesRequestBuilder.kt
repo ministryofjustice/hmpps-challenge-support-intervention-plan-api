@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils
 
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesTypeSubType
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -30,6 +32,18 @@ class CaseNotesRequestBuilder {
   fun withSize(value: Int) = apply { size = value }
 
   fun withSort(value: String) = apply { sort = value }
+
+  fun buildRequest(): CaseNotesRequest {
+    return CaseNotesRequest(
+      includeSensitive = includeSensitive,
+      typeSubTypes = typeSubTypes.map { CaseNotesTypeSubType(type = it.type, subTypes = it.subTypes) },
+      occurredFrom = occurredFrom,
+      occurredTo = occurredTo,
+      page = page,
+      size = size,
+      sort = sort,
+    )
+  }
 
   fun build(): String {
     val requestDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
