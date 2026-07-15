@@ -117,3 +117,6 @@ service:
   active-prisons: LEI
   retry-attempts: 4
   backoff-interval: 200
+
+feature-flag:
+  enabled-for-jda: true

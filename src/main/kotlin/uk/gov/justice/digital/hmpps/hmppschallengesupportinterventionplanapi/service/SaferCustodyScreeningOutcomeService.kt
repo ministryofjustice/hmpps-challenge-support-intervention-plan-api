@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
@@ -20,6 +21,8 @@ import java.util.UUID
 class SaferCustodyScreeningOutcomeService(
   private val csipRecordRepository: CsipRecordRepository,
   private val referenceDataRepository: ReferenceDataRepository,
+  @Value("\${feature-flag.enabled-for-jda}")
+  private val featureFlagEnabledForJda: Boolean,
 ) {
 
   @PublishCsipEvent(CSIP_UPDATED)
@@ -27,6 +30,11 @@ class SaferCustodyScreeningOutcomeService(
     recordUuid: UUID,
     request: UpsertSaferCustodyScreeningOutcomeRequest,
   ): SaferCustodyScreeningOutcome {
+    if (featureFlagEnabledForJda) {
+      val isInvestigationRequired = request.outcomeTypeCode == "OPE"
+      // make call to service
+    }
+
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
     return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
       val screening = this.saferCustodyScreeningOutcome

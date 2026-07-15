@@ -31,3 +31,6 @@ service:
   publish-events: true
   active-prisons: "***"
   base-url: "http://localhost:8080"
+
+feature-flag:
+  enabled-for-jda: true
