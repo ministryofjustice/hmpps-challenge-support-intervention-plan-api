@@ -3,9 +3,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.ServiceConfig
 
-@EnableConfigurationProperties(ServiceConfig::class)
+@EnableConfigurationProperties(ServiceConfig::class, CsipAssistConfig::class)
 @SpringBootApplication
 class HmppsChallengeSupportInterventionPlanApi
 

@@ -31,3 +31,10 @@ service:
   publish-events: true
   active-prisons: "***"
   base-url: "http://localhost:8080"
+
+feature:
+  csip-assist: true
+
+csip:
+  assist:
+    active-prisons: "***"
