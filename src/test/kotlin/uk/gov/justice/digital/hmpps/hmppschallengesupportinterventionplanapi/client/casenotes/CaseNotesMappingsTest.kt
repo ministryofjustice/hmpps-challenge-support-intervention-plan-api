@@ -1,13 +1,14 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.jsonMapper
 import java.time.LocalDateTime
 import java.util.UUID
 
 class CaseNotesMappingsTest {
+
+  private val jsonMapper = jsonMapper()
 
   @Test
   fun `should map case note to analysis item`() {
@@ -53,34 +54,39 @@ class CaseNotesMappingsTest {
 
   @Test
   fun `should serialize jda request using documented contract`() {
-    val response = testCaseNotesResponse()
+    val caseNote = testCaseNote()
+
+    val response = testCaseNotesResponse(caseNote)
 
     val result = response.toJdaRequest("referral-id")
 
-    val json = ObjectMapper()
-      .registerKotlinModule()
-      .writeValueAsString(result)
+    val jsonNode = jsonMapper.readTree(
+      jsonMapper.writeValueAsString(result),
+    )
 
-    assertThat(json)
-      .contains("\"correlationId\":\"referral-id\"")
+    assertThat(jsonNode["correlationId"].asText())
+      .isEqualTo("referral-id")
 
-    assertThat(json)
-      .contains("\"key\":\"case-note-analysis\"")
+    assertThat(jsonNode["prompt"]["key"].asText())
+      .isEqualTo("case-note-analysis")
 
-    assertThat(json)
-      .contains("\"version\":3")
+    assertThat(jsonNode["prompt"]["version"].asInt())
+      .isEqualTo(3)
 
-    assertThat(json)
-      .contains("\"requestData\":[")
+    assertThat(jsonNode["requestData"].isArray)
+      .isTrue()
 
-    assertThat(json)
-      .contains("\"item_id\"")
+    assertThat(jsonNode["requestData"].size())
+      .isEqualTo(1)
 
-    assertThat(json)
-      .contains("\"case_note_text\"")
+    assertThat(jsonNode["requestData"][0]["item_id"].asText())
+      .isEqualTo(caseNote.caseNoteId.toString())
 
-    assertThat(json)
-      .doesNotContain("\"caseNotes\"")
+    assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
+      .isEqualTo(caseNote.text)
+
+    assertThat(jsonNode["requestData"][0].has("caseNotes"))
+      .isFalse()
   }
 
   private fun testCaseNotesResponse(
