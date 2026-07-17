@@ -3,5 +3,5 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 data class JdaRequest(
   val correlationId: String,
   val prompt: JdaPrompt,
-  val requestData: JdaRequestData,
+  val requestData: Any,
 )
