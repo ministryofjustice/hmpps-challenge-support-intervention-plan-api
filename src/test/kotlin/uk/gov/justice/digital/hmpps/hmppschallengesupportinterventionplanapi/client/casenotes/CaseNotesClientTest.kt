@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_THROW_EXCEPTION
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_ZERO_CASE_NOTES
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -106,14 +107,29 @@ class CaseNotesClientTest {
   }
 
   @Test
-  fun `getCaseNotes - case notes not found`() {
-    val result = client.getCaseNotes(OFFENDER_IDENTIFIER_NOT_FOUND, request)
+  fun `getCaseNotes - case notes not found returns 404`() {
+    val exception = assertThrows<DownstreamServiceException> { client.getCaseNotes(OFFENDER_IDENTIFIER_NOT_FOUND, request) }
 
-    assertThat(result).isNull()
-    server.verify(
-      exactly(1),
-      postRequestedFor(urlEqualTo("/search/case-notes/$OFFENDER_IDENTIFIER_NOT_FOUND"))
-        .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+    assertThat(exception.message).isEqualTo("Get case notes request failed")
+    assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
+  }
+
+  @Test
+  fun `getCaseNotes - zero case notes`() {
+    server.stubGetCaseNotesZero()
+
+    val result = client.getCaseNotes(OFFENDER_IDENTIFIER_ZERO_CASE_NOTES, request)
+
+    assertThat(result).isEqualTo(
+      CaseNotesResponse(
+        content = emptyList(),
+        hasCaseNotes = false,
+        metadata = CaseNotesMetadata(
+          totalElements = 0,
+          page = 0,
+          size = 0,
+        ),
+      ),
     )
   }
 
