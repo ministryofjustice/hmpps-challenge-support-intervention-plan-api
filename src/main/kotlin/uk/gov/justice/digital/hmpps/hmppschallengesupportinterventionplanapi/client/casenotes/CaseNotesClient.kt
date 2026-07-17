@@ -102,7 +102,7 @@ fun CaseNote.toCaseNoteAnalysisItem() = CaseNoteAnalysisItem(
 
 fun CaseNotesResponse.toJdaRequest(
   correlationId: String,
-) : JdaRequest<List<CaseNoteAnalysisItem>> = JdaRequest(
+): JdaRequest<List<CaseNoteAnalysisItem>> = JdaRequest(
   correlationId = correlationId,
   prompt = JdaPrompt.caseNoteAnalysis(),
   requestData = content.map {
