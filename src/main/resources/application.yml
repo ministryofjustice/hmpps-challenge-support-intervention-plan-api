@@ -117,3 +117,10 @@ service:
   active-prisons: LEI
   retry-attempts: 4
   backoff-interval: 200
+
+feature:
+  csip-assist: true
+
+csip:
+  assist:
+    active-prisons: "***"
