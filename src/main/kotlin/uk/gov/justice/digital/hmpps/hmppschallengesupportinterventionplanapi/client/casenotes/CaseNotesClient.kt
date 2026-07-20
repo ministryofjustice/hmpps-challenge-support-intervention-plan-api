@@ -10,6 +10,9 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.retryIdempotentRequestOnTransientException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -90,4 +93,19 @@ data class CaseNoteAmendment(
   val authorUserId: String?,
   val additionalNoteText: String,
   val id: UUID,
+)
+
+fun CaseNote.toCaseNoteAnalysisItem() = CaseNoteAnalysisItem(
+  itemId = caseNoteId.toString(),
+  caseNoteText = text,
+)
+
+fun CaseNotesResponse.toJdaRequest(
+  correlationId: String,
+): JdaRequest<List<CaseNoteAnalysisItem>> = JdaRequest(
+  correlationId = correlationId,
+  prompt = JdaPrompt.caseNoteAnalysis(),
+  requestData = content.map {
+    it.toCaseNoteAnalysisItem()
+  },
 )
