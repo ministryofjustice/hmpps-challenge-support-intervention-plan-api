@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -13,53 +14,61 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.INVESTIGATION_REQUIRED
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class CaseNotesServiceTest {
   private val caseNotesClient = mock<CaseNotesClient>()
   private val csipAssistConfig = mock<CsipAssistConfig>()
-  private val service = CaseNotesService(caseNotesClient, csipAssistConfig, true)
-  private val serviceWithFeatureFalse = CaseNotesService(caseNotesClient, csipAssistConfig, false)
+  private val fixedClock = Clock.fixed(Instant.parse("2026-07-21T07:00:00Z"), ZoneOffset.UTC)
+  private val service = CaseNotesService(caseNotesClient, csipAssistConfig, true, fixedClock)
+  private val serviceWithFeatureFalse = CaseNotesService(caseNotesClient, csipAssistConfig, false, fixedClock)
 
   private lateinit var offenderIdentifier: String
-  private lateinit var request: Request
+  private lateinit var request: CaseNotesLookupRequest
   private val params = CaseNotesFilterParams()
 
   @BeforeEach
   fun setUp() {
     offenderIdentifier = "A1234AA"
-    request = Request(
+    request = CaseNotesLookupRequest(
       offenderIdentifier = offenderIdentifier,
-      outcomeTypeCode = "OPE",
+      outcomeTypeCode = INVESTIGATION_REQUIRED,
       includeSensitive = false,
       caseload = "NMI",
     )
   }
 
   @Test
-  fun `getCaseNotes calls to case notes client when feature flag is enabled outcome is OPE and prison is active`() {
+  @DisplayName("getCaseNotes calls to case notes client when feature flag is enabled outcome is $INVESTIGATION_REQUIRED and prison is active")
+  fun `getCaseNotes calls to case notes client when feature flag is enabled and prison is active`() {
     whenever(csipAssistConfig.isActivePrison(request.caseload)).thenReturn(true)
 
-    val before = LocalDateTime.now()
     service.getCaseNotes(request, params)
-    val after = LocalDateTime.now()
     val caseNotesRequestCaptor = argumentCaptor<CaseNotesRequest>()
 
     verify(csipAssistConfig).isActivePrison(request.caseload)
     verify(caseNotesClient).getCaseNotes(eq(offenderIdentifier), caseNotesRequestCaptor.capture())
 
     val sentRequest = caseNotesRequestCaptor.firstValue
+    val expectedNow = LocalDateTime.ofInstant(fixedClock.instant(), ZoneOffset.UTC)
     assertThat(sentRequest.includeSensitive).isFalse()
     assertThat(sentRequest.typeSubTypes).isEmpty()
     assertThat(sentRequest.page).isEqualTo(1)
     assertThat(sentRequest.size).isEqualTo(100)
     assertThat(sentRequest.sort).isEqualTo("occurredAt,desc")
-    assertThat(sentRequest.occurredTo).isBetween(before, after)
-    assertThat(sentRequest.occurredFrom).isBetween(before.minusDays(90), after.minusDays(90))
+    assertThat(sentRequest.occurredTo).isEqualTo(expectedNow)
+    assertThat(sentRequest.occurredFrom).isEqualTo(expectedNow.minusDays(90))
   }
 
   @Test
-  fun `getCaseNotes does not call case notes client when outcomeTypeCode is not OPE`() {
+  @DisplayName("getCaseNotes does not call case notes client when outcomeTypeCode is not $INVESTIGATION_REQUIRED")
+  fun `getCaseNotes does not call case notes client when outcomeTypeCode is not required outcome`() {
     val nonOpeRequest = request.copy(outcomeTypeCode = "ACC")
 
     service.getCaseNotes(nonOpeRequest, params)
