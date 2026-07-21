@@ -48,9 +48,9 @@ class CaseNotesController(
   @PreAuthorize("hasAnyRole('$ROLE_CSIP_UI')")
   fun getCaseNotes(
     params: CaseNotesFilterParams,
-    @Valid @RequestBody requestBody: CaseNotesLookupRequest,
+    @Valid @RequestBody caseNotesLookupRequest: CaseNotesLookupRequest,
   ): ResponseEntity<Unit> {
-    caseNotesService.getCaseNotes(requestBody, params)
+    caseNotesService.getCaseNotes(caseNotesLookupRequest, params)
     return ResponseEntity.accepted().build()
   }
 }
