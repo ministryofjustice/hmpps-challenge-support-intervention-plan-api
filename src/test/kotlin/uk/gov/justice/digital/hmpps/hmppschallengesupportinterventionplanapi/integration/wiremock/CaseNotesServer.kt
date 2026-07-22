@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 internal const val OFFENDER_IDENTIFIER = "A1234AA"
 internal const val OFFENDER_IDENTIFIER_NOT_FOUND = "NOT_FOUND"
 internal const val OFFENDER_IDENTIFIER_THROW_EXCEPTION = "THROW"
+internal const val OFFENDER_IDENTIFIER_ZERO_CASE_NOTES = "ZERO"
 
 class CaseNotesServer : WireMockServer(8113) {
   fun stubGetCaseNotes(offenderIdentifier: String = OFFENDER_IDENTIFIER): StubMapping = stubFor(
@@ -62,5 +63,27 @@ class CaseNotesServer : WireMockServer(8113) {
   fun stubGetCaseNotesException(offenderIdentifier: String = OFFENDER_IDENTIFIER_THROW_EXCEPTION): StubMapping = stubFor(
     post("/search/case-notes/$offenderIdentifier")
       .willReturn(aResponse().withStatus(500)),
+  )
+
+  fun stubGetCaseNotesZero(offenderIdentifier: String = OFFENDER_IDENTIFIER_ZERO_CASE_NOTES): StubMapping = stubFor(
+    post("/search/case-notes/$offenderIdentifier")
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+              "content": [],
+              "hasCaseNotes": false,
+              "metadata": {
+                "totalElements": 0,
+                "page": 0,
+                "size": 0
+              }
+            }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
   )
 }
