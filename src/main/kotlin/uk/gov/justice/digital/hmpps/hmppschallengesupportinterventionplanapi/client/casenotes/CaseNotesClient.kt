@@ -7,7 +7,6 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
-import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.retryIdempotentRequestOnTransientException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
@@ -18,7 +17,7 @@ import java.util.UUID
 
 @Component
 class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: WebClient) {
-  fun getCaseNotes(offenderIdentifier: String, request: CaseNotesRequest): CaseNotesResponse? = try {
+  fun getCaseNotes(offenderIdentifier: String, request: CaseNotesRequest): CaseNotesResponse = try {
     webClient
       .post()
       .uri("/search/case-notes/{offenderIdentifier}", offenderIdentifier)
@@ -27,13 +26,12 @@ class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: We
       .bodyValue(request)
       .exchangeToMono { res ->
         when (res.statusCode()) {
-          HttpStatus.NOT_FOUND -> Mono.empty()
           HttpStatus.OK -> res.bodyToMono<CaseNotesResponse>()
           else -> res.createError()
         }
       }
       .retryIdempotentRequestOnTransientException()
-      .block()
+      .block()!!
   } catch (e: Exception) {
     throw DownstreamServiceException("Get case notes request failed", e)
   }

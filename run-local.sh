@@ -31,6 +31,7 @@ export PRISONER_SEARCH_CLIENT_SECRET="$HMPPS_CSIP_PRISONER_SEARCH_CLIENT_SECRET"
 export API_BASE_URL_HMPPS_AUTH=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
 export API_BASE_URL_MANAGE_USERS=https://manage-users-api-dev.hmpps.service.justice.gov.uk
 export API_BASE_URL_CASENOTES=https://dev.offender-case-notes.service.justice.gov.uk
+export API_BASE_URL_JDA=https://justice-data-agent-client-api-dev.hmpps.service.justice.gov.uk
 export API_BASE_URL_PRISONER_SEARCH=https://prisoner-search-dev.prison.service.justice.gov.uk
 
 # Run the application with local profiles active

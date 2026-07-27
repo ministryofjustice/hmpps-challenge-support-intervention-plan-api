@@ -21,6 +21,7 @@ api:
       manage-users: http://localhost:8111
       prisoner-search: http://localhost:8112
       casenotes: http://localhost:8113
+      jda: http://localhost:8114
 
 manage-users:
   client:
