@@ -21,15 +21,12 @@ class JdaService(
     prisonCode: String,
     correlationId: String,
   ) {
-    if (!featureFlag) return
-
-    if (!csipAssistConfig.isActivePrison(prisonCode)) return
+    if (!featureFlag || !csipAssistConfig.isActivePrison(prisonCode)) return
 
     val caseNotes =
       caseNotesService.getCaseNotes(
         CaseNotesLookupRequest(
           offenderIdentifier = offenderIdentifier,
-          includeSensitive = true,
         ),
       )
 
