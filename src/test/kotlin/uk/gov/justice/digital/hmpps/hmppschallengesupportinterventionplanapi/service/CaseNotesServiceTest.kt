@@ -41,7 +41,7 @@ class CaseNotesServiceTest {
     request =
       CaseNotesLookupRequest(
         offenderIdentifier = "A1234AA",
-        includeSensitive = false,
+        includeSensitive = true,
       )
   }
 
@@ -66,7 +66,7 @@ class CaseNotesServiceTest {
       )
 
     assertThat(sentRequest.includeSensitive)
-      .isFalse()
+      .isTrue()
 
     assertThat(sentRequest.typeSubTypes)
       .isEmpty()
