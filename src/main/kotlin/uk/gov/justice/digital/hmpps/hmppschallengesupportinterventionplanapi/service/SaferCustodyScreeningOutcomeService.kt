@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.INVESTIGATION_REQUIRED
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CsipRecordRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referencedata.getActiveReferenceData
@@ -20,6 +21,7 @@ import java.util.UUID
 class SaferCustodyScreeningOutcomeService(
   private val csipRecordRepository: CsipRecordRepository,
   private val referenceDataRepository: ReferenceDataRepository,
+  private val jdaService: JdaService,
 ) {
 
   @PublishCsipEvent(CSIP_UPDATED)
@@ -28,10 +30,32 @@ class SaferCustodyScreeningOutcomeService(
     request: UpsertSaferCustodyScreeningOutcomeRequest,
   ): SaferCustodyScreeningOutcome {
     val record = verifyCsipRecordExists(csipRecordRepository, recordUuid)
-    return with(verifyExists(record.referral) { MissingReferralException(recordUuid) }) {
-      val screening = this.saferCustodyScreeningOutcome
-      upsertSaferCustodyScreeningOutcome(request = request, referenceDataRepository::getActiveReferenceData).toModel()
-        .apply { new = screening == null }
+
+    val referral = verifyExists(record.referral) {
+      MissingReferralException(recordUuid)
     }
+
+    val result =
+      with(referral) {
+        val screening = saferCustodyScreeningOutcome
+
+        upsertSaferCustodyScreeningOutcome(
+          request = request,
+          referenceDataRepository::getActiveReferenceData,
+        ).toModel()
+          .apply { new = screening == null }
+      }
+
+    if (request.outcomeTypeCode == INVESTIGATION_REQUIRED) {
+      record.prisonCodeWhenRecorded?.let { prisonCode ->
+        jdaService.submitCaseNotesForAnalysis(
+          offenderIdentifier = record.prisonNumber,
+          prisonCode = prisonCode,
+          correlationId = referral.id.toString(),
+        )
+      }
+    }
+
+    return result
   }
 }
