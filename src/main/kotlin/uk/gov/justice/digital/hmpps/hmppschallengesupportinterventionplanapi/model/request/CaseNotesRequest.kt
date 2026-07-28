@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(description = "The request body for getting a case notes")
 data class CaseNotesLookupRequest(
   val offenderIdentifier: String,
-  val includeSensitive: Boolean = false,
-  val outcomeTypeCode: String,
-  val caseload: String,
+  val includeSensitive: Boolean = true,
 )
 
 @Schema(description = "The query parameters for filtering case notes")
