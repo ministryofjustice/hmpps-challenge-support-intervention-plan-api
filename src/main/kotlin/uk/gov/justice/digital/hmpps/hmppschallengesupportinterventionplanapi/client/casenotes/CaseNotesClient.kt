@@ -94,7 +94,7 @@ data class CaseNoteAmendment(
 )
 
 fun CaseNote.toCaseNoteAnalysisItem() = CaseNoteAnalysisItem(
-  itemId = caseNoteId.toString(),
+  caseNoteId = caseNoteId.toString(),
   caseNoteText = text,
 )
 
