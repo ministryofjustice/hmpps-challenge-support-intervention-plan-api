@@ -21,13 +21,13 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
-@Tag(name = "9. Suggested Case Notes Controller", description = "Endpoints for suggested case notes")
+@Tag(name = "10. Suggested Case Notes Controller", description = "Endpoints for suggested case notes")
 class SuggestedCaseNotesController(
   private val caseNotesService: CaseNotesService,
 ) {
   @Operation(
     summary = "Retrieve suggested case notes for a prisoner",
-    description = "Returns static suggested case notes for the given prisoner and behaviour type. JDA integration will replace static data in a future story.",
+    description = "Returns suggested case notes for the given prisoner and behaviour type.",
   )
   @ApiResponses(
     value = [

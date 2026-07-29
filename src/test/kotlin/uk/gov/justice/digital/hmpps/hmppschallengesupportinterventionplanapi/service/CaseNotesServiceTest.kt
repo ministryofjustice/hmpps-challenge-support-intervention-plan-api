@@ -90,7 +90,7 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `buildSuggestedCaseNotes returns response with prisoner id and request fields echoed`() {
+  fun `buildSuggestedCaseNotes returns response with prisoner number and request fields echoed`() {
     val suggestedRequest = SuggestedCaseNotesRequest(
       referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
