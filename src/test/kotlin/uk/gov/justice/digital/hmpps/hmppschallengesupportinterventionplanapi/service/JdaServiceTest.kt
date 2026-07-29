@@ -97,7 +97,7 @@ class JdaServiceTest {
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteText)
       .isEqualTo("Prisoner became agitated")
 
-    assertThat(requestCaptor.firstValue.requestData.first().itemId)
+    assertThat(requestCaptor.firstValue.requestData.first().caseNoteId)
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
   }
 
