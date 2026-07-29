@@ -7,7 +7,7 @@ import java.util.UUID
 
 @Schema(description = "Suggested case notes response")
 data class SuggestedCaseNotesResponse(
-  val prisonerId: String,
+  val prisonerNumber: String,
   val referralId: String,
   val behaviourType: BehaviourType,
   val sortField: String,

@@ -9,8 +9,10 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
@@ -85,5 +87,46 @@ class CaseNotesServiceTest {
 
     assertThat(sentRequest.occurredFrom)
       .isEqualTo(expectedNow.minusDays(90))
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes returns response with prisoner id and request fields echoed`() {
+    val suggestedRequest = SuggestedCaseNotesRequest(
+      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+      sortField = "relevance",
+      sortOrder = "desc",
+    )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest)
+
+    assertThat(response.prisonerNumber).isEqualTo("A1234AA")
+    assertThat(response.referralId).isEqualTo("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    assertThat(response.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
+    assertThat(response.sortField).isEqualTo("relevance")
+    assertThat(response.sortOrder).isEqualTo("desc")
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes returns static suggested case notes for each behaviour type`() {
+    BehaviourType.entries.forEach { behaviourType ->
+      val suggestedRequest = SuggestedCaseNotesRequest(
+        referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        behaviourType = behaviourType,
+        sortField = "relevance",
+        sortOrder = "desc",
+      )
+
+      val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest)
+
+      assertThat(response.suggestedCaseNotes)
+        .`as`("Expected non-empty suggested case notes for behaviourType $behaviourType")
+        .isNotEmpty
+      response.suggestedCaseNotes.forEach { note ->
+        assertThat(note.relevance).isIn("high", "medium", "low")
+        assertThat(note.caseNoteId).isNotNull()
+        assertThat(note.annotatedCaseNote).isNotBlank()
+      }
+    }
   }
 }

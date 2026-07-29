@@ -40,8 +40,8 @@ class CaseNotesService(
   }
 
   // TODO: Replace static test data with JDA-generated suggested case notes when JDA retrieval is available.
-  fun buildSuggestedCaseNotes(prisonerId: String, request: SuggestedCaseNotesRequest): SuggestedCaseNotesResponse = SuggestedCaseNotesResponse(
-    prisonerId = prisonerId,
+  fun buildSuggestedCaseNotes(prisonerNumber: String, request: SuggestedCaseNotesRequest): SuggestedCaseNotesResponse = SuggestedCaseNotesResponse(
+    prisonerNumber = prisonerNumber,
     referralId = request.referralId,
     behaviourType = request.behaviourType,
     sortField = request.sortField,
