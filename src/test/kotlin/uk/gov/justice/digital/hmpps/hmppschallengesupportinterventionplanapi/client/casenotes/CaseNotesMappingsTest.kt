@@ -16,7 +16,7 @@ class CaseNotesMappingsTest {
 
     val result = caseNote.toCaseNoteAnalysisItem()
 
-    assertThat(result.itemId)
+    assertThat(result.caseNoteId)
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(result.caseNoteText)
@@ -45,7 +45,7 @@ class CaseNotesMappingsTest {
     assertThat(requestData)
       .hasSize(1)
 
-    assertThat(requestData.first().itemId)
+    assertThat(requestData.first().caseNoteId)
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(requestData.first().caseNoteText)
@@ -79,7 +79,7 @@ class CaseNotesMappingsTest {
     assertThat(jsonNode["requestData"].size())
       .isEqualTo(1)
 
-    assertThat(jsonNode["requestData"][0]["item_id"].asText())
+    assertThat(jsonNode["requestData"][0]["case_note_id"].asText())
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
