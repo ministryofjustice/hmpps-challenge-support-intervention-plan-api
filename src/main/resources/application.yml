@@ -120,6 +120,7 @@ service:
 
 feature:
   csip-assist: true
+  suggested-case-notes: true
 
 csip:
   assist:

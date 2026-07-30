@@ -2,9 +2,13 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.co
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
@@ -15,7 +19,8 @@ import java.util.UUID
 class SuggestedCaseNotesControllerTest {
 
   private val caseNotesService = mock<CaseNotesService>()
-  private val controller = SuggestedCaseNotesController(caseNotesService)
+  private val enabledController = SuggestedCaseNotesController(caseNotesService, true)
+  private val disabledController = SuggestedCaseNotesController(caseNotesService, false)
 
   private val prisonerNumber = "A1234AA"
 
@@ -27,7 +32,7 @@ class SuggestedCaseNotesControllerTest {
   )
 
   @Test
-  fun `suggestedCaseNotes delegates to service and returns response`() {
+  fun `feature enabled - suggestedCaseNotes delegates to service and returns response`() {
     val expected = SuggestedCaseNotesResponse(
       prisonerNumber = prisonerNumber,
       referralId = request.referralId,
@@ -45,10 +50,20 @@ class SuggestedCaseNotesControllerTest {
 
     whenever(caseNotesService.buildSuggestedCaseNotes(prisonerNumber, request)).thenReturn(expected)
 
-    val response = controller.suggestedCaseNotes(prisonerNumber, request)
+    val response = enabledController.suggestedCaseNotes(prisonerNumber, request)
 
     verify(caseNotesService).buildSuggestedCaseNotes(prisonerNumber, request)
     assertThat(response).isEqualTo(expected)
+  }
+
+  @Test
+  fun `feature disabled - suggestedCaseNotes returns method not allowed and does not call service`() {
+    val exception = assertThrows<ResponseStatusException> {
+      disabledController.suggestedCaseNotes(prisonerNumber, request)
+    }
+
+    assertThat(exception.statusCode).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+    verifyNoInteractions(caseNotesService)
   }
 
   @Test
@@ -67,7 +82,7 @@ class SuggestedCaseNotesControllerTest {
 
   @Test
   fun `BehaviourType from throws for unknown value`() {
-    org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+    assertThrows<IllegalArgumentException> {
       BehaviourType.from("unknown")
     }
   }
