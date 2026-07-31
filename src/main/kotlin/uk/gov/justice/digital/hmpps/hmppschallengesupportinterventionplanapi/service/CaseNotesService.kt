@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
@@ -17,6 +18,7 @@ import java.util.UUID
 @Service
 class CaseNotesService(
   private val caseNotesClient: CaseNotesClient,
+  private val prisonerSearch: PrisonerSearchClient,
   private val clock: Clock,
 ) {
   fun getCaseNotes(
@@ -37,6 +39,10 @@ class CaseNotesService(
         sort = "occurredAt,desc",
       ),
     )
+  }
+
+  fun validatePrisonerExists(prisonerNumber: String) {
+    requireNotNull(prisonerSearch.getPrisoner(prisonerNumber)) { "Prisoner number invalid" }
   }
 
   // TODO: Replace static test data with JDA-generated suggested case notes when JDA retrieval is available.

@@ -4,8 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -52,8 +54,23 @@ class SuggestedCaseNotesControllerTest {
 
     val response = enabledController.suggestedCaseNotes(prisonerNumber, request)
 
+    verify(caseNotesService).validatePrisonerExists(prisonerNumber)
     verify(caseNotesService).buildSuggestedCaseNotes(prisonerNumber, request)
+    verifyNoMoreInteractions(caseNotesService)
     assertThat(response).isEqualTo(expected)
+  }
+
+  @Test
+  fun `feature enabled - invalid prisoner throws and does not call buildSuggestedCaseNotes`() {
+    whenever(caseNotesService.validatePrisonerExists(prisonerNumber)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
+
+    val exception = assertThrows<IllegalArgumentException> {
+      enabledController.suggestedCaseNotes(prisonerNumber, request)
+    }
+
+    assertThat(exception.message).isEqualTo("Prisoner number invalid")
+    verify(caseNotesService).validatePrisonerExists(prisonerNumber)
+    verify(caseNotesService, never()).buildSuggestedCaseNotes(prisonerNumber, request)
   }
 
   @Test
