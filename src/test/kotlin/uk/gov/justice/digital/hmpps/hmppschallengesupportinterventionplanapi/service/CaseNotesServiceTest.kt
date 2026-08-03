@@ -3,12 +3,17 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
@@ -21,6 +26,7 @@ import java.time.ZoneOffset
 class CaseNotesServiceTest {
 
   private val caseNotesClient = mock<CaseNotesClient>()
+  private val prisonerSearchClient = mock<PrisonerSearchClient>()
 
   private val fixedClock =
     Clock.fixed(
@@ -31,6 +37,7 @@ class CaseNotesServiceTest {
   private val service =
     CaseNotesService(
       caseNotesClient,
+      prisonerSearchClient,
       fixedClock,
     )
 
@@ -91,6 +98,8 @@ class CaseNotesServiceTest {
 
   @Test
   fun `buildSuggestedCaseNotes returns response with prisoner number and request fields echoed`() {
+    whenever(prisonerSearchClient.getPrisoner(any())).thenReturn(prisonerDetails())
+
     val suggestedRequest = SuggestedCaseNotesRequest(
       referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
@@ -109,6 +118,8 @@ class CaseNotesServiceTest {
 
   @Test
   fun `buildSuggestedCaseNotes returns static suggested case notes for each behaviour type`() {
+    whenever(prisonerSearchClient.getPrisoner(any())).thenReturn(prisonerDetails())
+
     BehaviourType.entries.forEach { behaviourType ->
       val suggestedRequest = SuggestedCaseNotesRequest(
         referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -129,4 +140,36 @@ class CaseNotesServiceTest {
       }
     }
   }
+
+  @Test
+  fun `validatePrisonerExists passes when prisoner exists`() {
+    whenever(prisonerSearchClient.getPrisoner("A1234AA")).thenReturn(prisonerDetails())
+
+    service.validatePrisonerExists("A1234AA")
+
+    verify(prisonerSearchClient).getPrisoner("A1234AA")
+  }
+
+  @Test
+  fun `validatePrisonerExists throws IllegalArgumentException when prisoner does not exist`() {
+    whenever(prisonerSearchClient.getPrisoner("NOT_FOUND")).thenReturn(null)
+
+    val exception = assertThrows<IllegalArgumentException> {
+      service.validatePrisonerExists("NOT_FOUND")
+    }
+
+    assertThat(exception.message).isEqualTo("Prisoner number invalid")
+    verify(prisonerSearchClient).getPrisoner("NOT_FOUND")
+  }
+
+  private fun prisonerDetails() = PrisonerDetails(
+    prisonerNumber = "A1234AA",
+    firstName = "First",
+    lastName = "Last",
+    prisonId = "MDI",
+    status = "ACTIVE IN",
+    restrictedPatient = false,
+    cellLocation = "A-1-001",
+    supportingPrisonId = null,
+  )
 }
