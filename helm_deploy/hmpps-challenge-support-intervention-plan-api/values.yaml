@@ -100,5 +100,5 @@ reconciliation:
     schedule: "0 7 * * 0"
 
 caseNoteAnnotations:
-  # Kubernetes CronJob supports minute granularity; run twice per minute in the job script.
+  # Kubernetes CronJob runs this job every minute.
   schedule: "*/1 * * * *"

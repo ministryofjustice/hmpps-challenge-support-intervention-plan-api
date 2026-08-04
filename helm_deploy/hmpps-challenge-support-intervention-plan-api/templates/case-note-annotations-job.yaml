@@ -21,8 +21,5 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - |
-                  curl --retry 2 -XPOST http://hmpps-challenge-support-intervention-plan-api/queue/case-note-annotations
-                  sleep 30
-                  curl --retry 2 -XPOST http://hmpps-challenge-support-intervention-plan-api/queue/case-note-annotations
+                - curl --retry 2 -XPOST http://hmpps-challenge-support-intervention-plan-api/queue/case-note-annotations
           restartPolicy: Never
