@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.in
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 class JdaMockServer : WireMockServer(8114) {
   private companion object {
