@@ -24,7 +24,7 @@ class CaseNoteAnnotationsService(
         count++
       } catch (e: Exception) {
         log.error("Failed to persist case note annotation for request ${response.requestId}", e)
-        // TODO need to save the failed annotation persistence somewhere so it isn't just lost - DLQ, or a staging table etc
+        // TODO may need to save the failed annotation persistence but this is not in current scope
       }
       response = jdaClient.getCaseNoteAnnotationsFromQueue()
     }
