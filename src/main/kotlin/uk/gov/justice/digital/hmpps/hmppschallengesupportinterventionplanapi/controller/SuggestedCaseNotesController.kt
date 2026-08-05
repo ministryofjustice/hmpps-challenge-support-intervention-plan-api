@@ -27,7 +27,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @Tag(name = "10. Suggested Case Notes Controller", description = "Endpoints for suggested case notes")
 class SuggestedCaseNotesController(
   private val caseNotesService: CaseNotesService,
-  @Value($$"${feature.suggested-case-notes}")
+  @Value("\${feature.suggested-case-notes}")
   private val suggestedCaseNotesEnabled: Boolean,
 ) {
   @Operation(
@@ -63,6 +63,8 @@ class SuggestedCaseNotesController(
     if (!suggestedCaseNotesEnabled) {
       throw ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "suggestedCaseNotes feature is not enabled")
     }
+
+    caseNotesService.validatePrisonerExists(prisonerNumber)
 
     return caseNotesService.buildSuggestedCaseNotes(prisonerNumber, request)
   }
