@@ -6,5 +6,6 @@ data class JdaRequestResponse(
   val requestId: UUID,
   val correlationId: String,
   val prompt: JdaPrompt,
+  val status: JdaRequestStatus,
   val metadata: JdaRequestMetadata,
 )

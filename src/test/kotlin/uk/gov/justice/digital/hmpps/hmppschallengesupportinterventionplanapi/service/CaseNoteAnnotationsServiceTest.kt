@@ -2,7 +2,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -14,15 +17,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
-import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class CaseNoteAnnotationsServiceTest {
   private val jdaClient = mock<JdaClient>()
-  private val service = CaseNoteAnnotationsService(jdaClient)
+  private val caseNoteAnnotationsPersistenceService = mock<CaseNoteAnnotationsPersistenceService>()
+  private val service = CaseNoteAnnotationsService(jdaClient, caseNoteAnnotationsPersistenceService)
 
   @Test
-  fun `getCaseNoteAnnotationsFromQueue polls when dequeue returns null`() {
+  fun `getCaseNoteAnnotationsFromQueue polls until dequeue returns null`() {
     whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
       .thenReturn(testResponse())
       .thenReturn(testResponse())
@@ -31,10 +35,11 @@ class CaseNoteAnnotationsServiceTest {
     service.getCaseNoteAnnotationsFromQueue()
 
     verify(jdaClient, times(3)).getCaseNoteAnnotationsFromQueue()
+    verify(caseNoteAnnotationsPersistenceService, times(2)).persistCaseNoteAnnotations(any())
   }
 
   @Test
-  fun `getCaseNoteAnnotationsFromQueue rethrows downstream failures`() {
+  fun `getCaseNoteAnnotationsFromQueue propagates downstream failures`() {
     whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
       .thenThrow(
         DownstreamServiceException(
@@ -47,7 +52,30 @@ class CaseNoteAnnotationsServiceTest {
       service.getCaseNoteAnnotationsFromQueue()
     }
 
-    verify(jdaClient).getCaseNoteAnnotationsFromQueue()
+    verify(caseNoteAnnotationsPersistenceService, never()).persistCaseNoteAnnotations(any())
+  }
+
+  @Test
+  fun `getCaseNoteAnnotationsFromQueue continues draining when persisting an item fails`() {
+    val firstResponse = testResponse()
+    val secondResponse = testResponse()
+    val thirdResponse = testResponse()
+
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(firstResponse)
+      .thenReturn(secondResponse)
+      .thenReturn(thirdResponse)
+      .thenReturn(null)
+
+    doThrow(RuntimeException("Something went wrong"))
+      .whenever(caseNoteAnnotationsPersistenceService).persistCaseNoteAnnotations(secondResponse)
+
+    service.getCaseNoteAnnotationsFromQueue()
+
+    verify(jdaClient, times(4)).getCaseNoteAnnotationsFromQueue()
+    verify(caseNoteAnnotationsPersistenceService).persistCaseNoteAnnotations(firstResponse)
+    verify(caseNoteAnnotationsPersistenceService).persistCaseNoteAnnotations(secondResponse)
+    verify(caseNoteAnnotationsPersistenceService).persistCaseNoteAnnotations(thirdResponse)
   }
 
   private fun testResponse() = JdaDequeueResponse(
@@ -60,7 +88,7 @@ class CaseNoteAnnotationsServiceTest {
     ),
     metadata = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
-      completedAt = Instant.now(),
+      completedAt = OffsetDateTime.now(),
       completionMs = 1200,
     ),
   )

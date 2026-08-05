@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 @Service
 class CaseNoteAnnotationsService(
   private val jdaClient: JdaClient,
+  private val caseNoteAnnotationsPersistenceService: CaseNoteAnnotationsPersistenceService,
 ) {
 
   private companion object {
@@ -16,19 +17,21 @@ class CaseNoteAnnotationsService(
   }
 
   fun getCaseNoteAnnotationsFromQueue() {
-    log.info("Fetching case note annotations from queue")
     var response = jdaClient.getCaseNoteAnnotationsFromQueue()
-
+    var count = 0
     while (response != null) {
-      log.debug("Fetched case note annotations for requestId=${response.requestId}")
-      persistCaseNoteAnnotations(response)
+      try {
+        caseNoteAnnotationsPersistenceService.persistCaseNoteAnnotations(response)
+        count++
+      } catch (e: Exception) {
+        log.error("Failed to persist case note annotation for request ${response.requestId}", e)
+        // TODO need to save the failed annotation persistence somewhere so it isn't just lost - DLQ, or a staging table etc
+      }
       response = jdaClient.getCaseNoteAnnotationsFromQueue()
     }
 
-    log.info("No more case note annotations available in queue")
-  }
-
-  private fun persistCaseNoteAnnotations(dequeuedResponse: JdaDequeueResponse) {
-    // TODO
+    if (count > 0) {
+      log.info("Processed $count case note annotations")
+    }
   }
 }

@@ -100,5 +100,5 @@ reconciliation:
     schedule: "0 7 * * 0"
 
 caseNoteAnnotations:
-  # Kubernetes CronJob runs this job every minute.
+  enabled: false
   schedule: "*/1 * * * *"

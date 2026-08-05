@@ -1,15 +1,15 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.time.Instant
-import java.util.*
+import java.time.OffsetDateTime
+import java.util.UUID
 
 data class JdaDequeueResponse(
   val requestId: UUID,
   val correlationId: String,
   val prompt: JdaPrompt,
   val status: JdaDequeueResponseStatus,
-  val responseData: Any,
+  val responseData: JdaDequeueResponseData?,
   val metadata: JdaDequeueResponseMetadata,
 )
 
@@ -31,6 +31,6 @@ data class JdaDequeueResponseData(
 
 data class JdaDequeueResponseMetadata(
   val requestType: JdaRequestType,
-  val completedAt: Instant,
+  val completedAt: OffsetDateTime,
   val completionMs: Long,
 )

@@ -1,3 +1,4 @@
+{{- if .Values.caseNoteAnnotations.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -21,5 +22,6 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPOST http://hmpps-challenge-support-intervention-plan-api/queue/case-note-annotations
+                - curl --fail --retry 2 --max-time 55 --retry-max-time 55 -X POST http://hmpps-challenge-support-intervention-plan-api/queue/case-note-annotations
           restartPolicy: Never
+{{- end }}
