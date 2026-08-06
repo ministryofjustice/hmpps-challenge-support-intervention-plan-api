@@ -12,6 +12,10 @@ class JdaService(
   private val caseNotesService: CaseNotesService,
   private val jdaClient: JdaClient,
   private val csipAssistConfig: CsipAssistConfig,
+  @Value("\${jda.prompt-key}")
+  private val promptKey: String,
+  @Value("\${jda.prompt-version:0}")
+  private val promptVersion: Int,
   @Value("\${feature.csip-assist}")
   private val featureFlag: Boolean,
 ) {
@@ -31,7 +35,7 @@ class JdaService(
       )
 
     jdaClient.submitRequest(
-      caseNotes.toJdaRequest(correlationId),
+      caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
     )
   }
 }
