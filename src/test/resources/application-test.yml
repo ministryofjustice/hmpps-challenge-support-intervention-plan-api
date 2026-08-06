@@ -52,3 +52,7 @@ hmpps.sqs:
 
 service:
   publish-events: true
+
+jda:
+  prompt-key: case-note-analysis
+  prompt-version: 0
