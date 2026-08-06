@@ -81,7 +81,10 @@ class CaseNoteAnnotationsServiceTest {
   private fun testResponse() = JdaDequeueResponse(
     requestId = UUID.randomUUID(),
     correlationId = UUID.randomUUID().toString(),
-    prompt = JdaPrompt.caseNoteAnalysis(),
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 3,
+    ),
     status = JdaDequeueResponseStatus.SUCCEEDED,
     responseData = JdaDequeueResponseData(
       todo = "todo",

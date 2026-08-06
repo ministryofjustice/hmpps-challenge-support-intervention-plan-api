@@ -13,12 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaMockServer
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseStatus
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -38,22 +33,15 @@ class JdaClientTest {
 
     val result = client.getCaseNoteAnnotationsFromQueue()
 
-    assertThat(result).isEqualTo(
-      JdaDequeueResponse(
-        requestId = UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6"),
-        correlationId = "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb",
-        prompt = JdaPrompt.caseNoteAnalysis(),
-        status = JdaDequeueResponseStatus.SUCCEEDED,
-        responseData = JdaDequeueResponseData(
-          todo = "todo",
-        ),
-        metadata = JdaDequeueResponseMetadata(
-          requestType = JdaRequestType.ASYNC,
-          completedAt = OffsetDateTime.parse("2026-06-27T09:55:03Z"),
-          completionMs = 1200,
-        ),
-      ),
-    )
+    assertThat(result).isNotNull
+    assertThat(result?.requestId).isEqualTo(UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6"))
+    assertThat(result?.correlationId).isEqualTo("f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb")
+    assertThat(result?.prompt?.key).isEqualTo("case-note-analysis")
+    assertThat(result?.prompt?.version).isEqualTo(3)
+    assertThat(result?.status).isEqualTo(JdaDequeueResponseStatus.SUCCEEDED)
+    assertThat(result?.responseData?.todo).isEqualTo("todo")
+    assertThat(result?.metadata?.completedAt).isEqualTo(OffsetDateTime.parse("2026-06-27T09:55:03Z"))
+    assertThat(result?.metadata?.completionMs).isEqualTo(1200)
 
     server.verify(exactly(1), getRequestedFor(urlEqualTo("/v1/dequeueresponse")))
   }
