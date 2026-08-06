@@ -148,18 +148,10 @@ class CaseNotesMappingsTest {
     val jsonVersion0 = jsonMapper.writerWithDefaultPrettyPrinter()
       .writeValueAsString(resultVersion0)
 
-    println("\n========== ACTUAL JSON WITH prompt-version = 0 ==========")
-    println(jsonVersion0)
-    println("========== END VERSION 0 ==========\n")
-
     // Version 3 - should include version field
     val resultVersion3 = response.toJdaRequest("referral-id", "case-note-analysis", 3)
     val jsonVersion3 = jsonMapper.writerWithDefaultPrettyPrinter()
       .writeValueAsString(resultVersion3)
-
-    println("========== ACTUAL JSON WITH prompt-version = 3 ==========")
-    println(jsonVersion3)
-    println("========== END VERSION 3 ==========\n")
 
     // Verify the assertions
     assertThat(jsonMapper.readTree(jsonVersion0)["prompt"].has("version")).isFalse()
