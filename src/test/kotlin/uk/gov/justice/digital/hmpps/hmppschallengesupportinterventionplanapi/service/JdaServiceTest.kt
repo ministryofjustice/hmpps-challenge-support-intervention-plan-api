@@ -31,6 +31,8 @@ class JdaServiceTest {
       caseNotesService,
       jdaClient,
       csipAssistConfig,
+      "case-note-analysis",
+      0,
       true,
     )
 
@@ -39,6 +41,8 @@ class JdaServiceTest {
       caseNotesService,
       jdaClient,
       csipAssistConfig,
+      "case-note-analysis",
+      0,
       false,
     )
 
@@ -89,7 +93,7 @@ class JdaServiceTest {
       .isEqualTo("case-note-analysis")
 
     assertThat(requestCaptor.firstValue.prompt.version)
-      .isEqualTo(3)
+      .isEqualTo(0)
 
     assertThat(requestCaptor.firstValue.requestData)
       .hasSize(1)

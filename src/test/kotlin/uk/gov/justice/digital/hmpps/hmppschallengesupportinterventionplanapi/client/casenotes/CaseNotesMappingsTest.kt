@@ -24,12 +24,12 @@ class CaseNotesMappingsTest {
   }
 
   @Test
-  fun `should create jda request`() {
+  fun `should create jda request with version 0`() {
     val caseNote = testCaseNote()
 
     val response = testCaseNotesResponse(caseNote)
 
-    val result = response.toJdaRequest("referral-id")
+    val result = response.toJdaRequest("referral-id", "case-note-analysis", 0)
 
     assertThat(result.correlationId)
       .isEqualTo("referral-id")
@@ -38,7 +38,7 @@ class CaseNotesMappingsTest {
       .isEqualTo("case-note-analysis")
 
     assertThat(result.prompt.version)
-      .isEqualTo(3)
+      .isEqualTo(0)
 
     val requestData = result.requestData
 
@@ -53,12 +53,24 @@ class CaseNotesMappingsTest {
   }
 
   @Test
-  fun `should serialize jda request using documented contract`() {
+  fun `should create jda request with version greater than 0`() {
     val caseNote = testCaseNote()
 
     val response = testCaseNotesResponse(caseNote)
 
-    val result = response.toJdaRequest("referral-id")
+    val result = response.toJdaRequest("referral-id", "case-note-analysis", 3)
+
+    assertThat(result.prompt.version)
+      .isEqualTo(3)
+  }
+
+  @Test
+  fun `should serialize jda request omitting version when 0`() {
+    val caseNote = testCaseNote()
+
+    val response = testCaseNotesResponse(caseNote)
+
+    val result = response.toJdaRequest("referral-id", "case-note-analysis", 0)
 
     val jsonNode = jsonMapper.readTree(
       jsonMapper.writeValueAsString(result),
@@ -70,8 +82,8 @@ class CaseNotesMappingsTest {
     assertThat(jsonNode["prompt"]["key"].asText())
       .isEqualTo("case-note-analysis")
 
-    assertThat(jsonNode["prompt"]["version"].asInt())
-      .isEqualTo(3)
+    assertThat(jsonNode["prompt"].has("version"))
+      .isFalse()
 
     assertThat(jsonNode["requestData"].isArray)
       .isTrue()
@@ -87,6 +99,63 @@ class CaseNotesMappingsTest {
 
     assertThat(jsonNode["requestData"][0].has("caseNotes"))
       .isFalse()
+  }
+
+  @Test
+  fun `should serialize jda request including version when greater than 0`() {
+    val caseNote = testCaseNote()
+
+    val response = testCaseNotesResponse(caseNote)
+
+    val result = response.toJdaRequest("referral-id", "case-note-analysis", 3)
+
+    val jsonNode = jsonMapper.readTree(
+      jsonMapper.writeValueAsString(result),
+    )
+
+    assertThat(jsonNode["correlationId"].asText())
+      .isEqualTo("referral-id")
+
+    assertThat(jsonNode["prompt"]["key"].asText())
+      .isEqualTo("case-note-analysis")
+
+    assertThat(jsonNode["prompt"].has("version"))
+      .isTrue()
+
+    assertThat(jsonNode["prompt"]["version"].asInt())
+      .isEqualTo(3)
+
+    assertThat(jsonNode["requestData"].isArray)
+      .isTrue()
+
+    assertThat(jsonNode["requestData"].size())
+      .isEqualTo(1)
+
+    assertThat(jsonNode["requestData"][0]["case_note_id"].asText())
+      .isEqualTo(caseNote.caseNoteId.toString())
+
+    assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
+      .isEqualTo(caseNote.text)
+  }
+
+  @Test
+  fun `print actual json serialization for version 0 and version 3`() {
+    val caseNote = testCaseNote()
+    val response = testCaseNotesResponse(caseNote)
+
+    // Version 0 - should omit version field
+    val resultVersion0 = response.toJdaRequest("referral-id", "case-note-analysis", 0)
+    val jsonVersion0 = jsonMapper.writerWithDefaultPrettyPrinter()
+      .writeValueAsString(resultVersion0)
+
+    // Version 3 - should include version field
+    val resultVersion3 = response.toJdaRequest("referral-id", "case-note-analysis", 3)
+    val jsonVersion3 = jsonMapper.writerWithDefaultPrettyPrinter()
+      .writeValueAsString(resultVersion3)
+
+    // Verify the assertions
+    assertThat(jsonMapper.readTree(jsonVersion0)["prompt"].has("version")).isFalse()
+    assertThat(jsonMapper.readTree(jsonVersion3)["prompt"]["version"].asInt()).isEqualTo(3)
   }
 
   private fun testCaseNotesResponse(
