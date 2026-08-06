@@ -1,0 +1,36 @@
+package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
+
+@Service
+class CaseNoteAnnotationsService(
+  private val jdaClient: JdaClient,
+  private val caseNoteAnnotationsPersistenceService: CaseNoteAnnotationsPersistenceService,
+) {
+
+  private companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
+  fun getCaseNoteAnnotationsFromQueue() {
+    var response = jdaClient.getCaseNoteAnnotationsFromQueue()
+    var count = 0
+    while (response != null) {
+      try {
+        caseNoteAnnotationsPersistenceService.persistCaseNoteAnnotations(response)
+        count++
+      } catch (e: Exception) {
+        log.error("Failed to persist case note annotation for request ${response.requestId}", e)
+        // TODO may need to save the failed annotation persistence but this is not in current scope
+      }
+      response = jdaClient.getCaseNoteAnnotationsFromQueue()
+    }
+
+    if (count > 0) {
+      log.info("Processed $count case note annotations")
+    }
+  }
+}

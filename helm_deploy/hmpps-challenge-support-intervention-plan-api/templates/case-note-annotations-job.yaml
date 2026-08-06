@@ -1,0 +1,27 @@
+{{- if .Values.caseNoteAnnotations.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: csip-case-note-annotations
+spec:
+  schedule: "{{ .Values.caseNoteAnnotations.schedule }}"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            cron-job-name: case-note-annotations-cronjob
+        spec:
+          containers:
+            - name: case-note-annotations
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --fail --retry 2 --max-time 55 --retry-max-time 55 -X POST http://hmpps-challenge-support-intervention-plan-api/queue/case-note-annotations
+          restartPolicy: Never
+{{- end }}
