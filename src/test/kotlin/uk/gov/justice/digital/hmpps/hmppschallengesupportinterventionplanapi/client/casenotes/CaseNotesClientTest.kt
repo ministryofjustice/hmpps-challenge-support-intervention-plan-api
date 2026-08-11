@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cl
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
@@ -14,6 +15,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import tools.jackson.module.kotlin.jsonMapper
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CASE_NOTE_ID
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CASE_NOTE_ID_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CaseNotesServer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_NOT_FOUND
@@ -147,6 +150,49 @@ class CaseNotesClientTest {
       exactly(4),
       postRequestedFor(urlEqualTo("/search/case-notes/$OFFENDER_IDENTIFIER_THROW_EXCEPTION"))
         .withRequestBody(equalToJson(jsonMapper.writeValueAsString(request))),
+    )
+  }
+
+  @Test
+  fun `getCaseNote - success`() {
+    server.stubGetCaseNoteById()
+
+    val result = client.getCaseNote(OFFENDER_IDENTIFIER, CASE_NOTE_ID)
+
+    assertThat(result.caseNoteId).isEqualTo(CASE_NOTE_ID)
+    assertThat(result.offenderIdentifier).isEqualTo(OFFENDER_IDENTIFIER)
+    assertThat(result.text).isEqualTo("Some case note text")
+    server.verify(
+      exactly(1),
+      getRequestedFor(urlEqualTo("/case-notes/$OFFENDER_IDENTIFIER/$CASE_NOTE_ID")),
+    )
+  }
+
+  @Test
+  fun `getCaseNote - not found returns downstream exception`() {
+    server.stubGetCaseNoteByIdNotFound()
+
+    val exception = assertThrows<DownstreamServiceException> { client.getCaseNote(OFFENDER_IDENTIFIER, CASE_NOTE_ID_NOT_FOUND) }
+
+    assertThat(exception.message).isEqualTo("Get case note request failed")
+    assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
+    server.verify(
+      exactly(1),
+      getRequestedFor(urlEqualTo("/case-notes/$OFFENDER_IDENTIFIER/$CASE_NOTE_ID_NOT_FOUND")),
+    )
+  }
+
+  @Test
+  fun `getCaseNote - downstream service exception`() {
+    server.stubGetCaseNoteByIdException()
+
+    val exception = assertThrows<DownstreamServiceException> { client.getCaseNote(OFFENDER_IDENTIFIER, CASE_NOTE_ID) }
+
+    assertThat(exception.message).isEqualTo("Get case note request failed")
+    assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
+    server.verify(
+      exactly(4),
+      getRequestedFor(urlEqualTo("/case-notes/$OFFENDER_IDENTIFIER/$CASE_NOTE_ID")),
     )
   }
 

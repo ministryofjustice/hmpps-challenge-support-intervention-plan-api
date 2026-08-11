@@ -8,12 +8,16 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
@@ -22,11 +26,13 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 class CaseNotesServiceTest {
 
   private val caseNotesClient = mock<CaseNotesClient>()
   private val prisonerSearchClient = mock<PrisonerSearchClient>()
+  private val caseNoteAnnotationRepository = mock<CaseNoteAnnotationRepository>()
 
   private val fixedClock =
     Clock.fixed(
@@ -39,6 +45,7 @@ class CaseNotesServiceTest {
       caseNotesClient,
       prisonerSearchClient,
       fixedClock,
+      caseNoteAnnotationRepository,
     )
 
   private lateinit var request: CaseNotesLookupRequest
@@ -161,6 +168,106 @@ class CaseNotesServiceTest {
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
     verify(prisonerSearchClient).getPrisoner("NOT_FOUND")
   }
+
+  @Test
+  fun `getCaseNotesWithAnnotations returns empty list when no matching annotations`() {
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value))
+      .thenReturn(emptyList())
+
+    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
+
+    assertThat(result).isEmpty()
+    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value)
+  }
+
+  @Test
+  fun `getCaseNotesWithAnnotations groups multiple annotations under one case note and fetches case note once`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val annotationOne = annotation(caseNoteId = caseNoteId, annotatedText = "text 1")
+    val annotationTwo = annotation(caseNoteId = caseNoteId, annotatedText = "text 2")
+
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value))
+      .thenReturn(listOf(annotationOne, annotationTwo))
+
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
+
+    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
+
+    assertThat(result).hasSize(1)
+    assertThat(result.first().caseNote.caseNoteId).isEqualTo(caseNoteId)
+    assertThat(result.first().annotations).hasSize(2)
+    assertThat(result.first().annotations.map { it.annotatedText }).containsExactlyInAnyOrder("text 1", "text 2")
+
+    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value)
+    verify(caseNotesClient, times(1)).getCaseNote("A1234AA", caseNoteId)
+  }
+
+  @Test
+  fun `getCaseNotesWithAnnotations retrieves one case note per unique case note id`() {
+    val caseNoteIdOne = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val caseNoteIdTwo = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
+
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.PROTECTIVE_FACTORS.value))
+      .thenReturn(
+        listOf(
+          annotation(
+            caseNoteId = caseNoteIdOne,
+            annotatedText = "one",
+            behaviourType = BehaviourType.PROTECTIVE_FACTORS,
+          ),
+          annotation(
+            caseNoteId = caseNoteIdTwo,
+            annotatedText = "two",
+            behaviourType = BehaviourType.PROTECTIVE_FACTORS,
+          ),
+        ),
+      )
+
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdOne)).thenReturn(caseNote(caseNoteIdOne))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdTwo)).thenReturn(caseNote(caseNoteIdTwo))
+
+    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.PROTECTIVE_FACTORS)
+
+    assertThat(result).hasSize(2)
+    assertThat(result.map { it.caseNote.caseNoteId }).containsExactlyInAnyOrder(caseNoteIdOne, caseNoteIdTwo)
+    verify(caseNotesClient, times(1)).getCaseNote("A1234AA", caseNoteIdOne)
+    verify(caseNotesClient, times(1)).getCaseNote("A1234AA", caseNoteIdTwo)
+  }
+
+  private fun annotation(
+    caseNoteId: UUID?,
+    annotatedText: String,
+    behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+  ) = CaseNoteAnnotation(
+    id = UUID.randomUUID(),
+    requestId = UUID.randomUUID(),
+    prisonerNumber = "A1234AA",
+    caseNoteId = caseNoteId,
+    promptKey = "case-note-analysis",
+    promptVersion = 3,
+    behaviourType = behaviourType.value,
+    confidenceLevel = "high",
+    annotatedText = annotatedText,
+    createdDate = LocalDateTime.now(),
+  )
+
+  private fun caseNote(caseNoteId: UUID) = CaseNote(
+    caseNoteId = caseNoteId,
+    offenderIdentifier = "A1234AA",
+    type = "GEN",
+    typeDescription = "General",
+    subType = "OBS",
+    subTypeDescription = "Observation",
+    creationDateTime = LocalDateTime.now(),
+    occurrenceDateTime = LocalDateTime.now(),
+    authorName = "Test User",
+    authorUserId = "USER1",
+    authorUsername = "testuser",
+    text = "Case note text",
+    locationId = "MDI",
+    sensitive = false,
+    amendments = emptyList(),
+  )
 
   private fun prisonerDetails() = PrisonerDetails(
     prisonerNumber = "A1234AA",
