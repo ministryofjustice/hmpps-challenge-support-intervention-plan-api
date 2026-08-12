@@ -151,7 +151,7 @@ class CaseNotesService(
       }
   }
 
-  fun renderAnnotatedCaseNote(caseNoteWithAnnotations: CaseNoteWithAnnotations): String {
+  fun composeAnnotationCaseNote(caseNoteWithAnnotations: CaseNoteWithAnnotations): String {
     val originalText = caseNoteWithAnnotations.caseNote.text
     if (caseNoteWithAnnotations.annotations.isEmpty()) return originalText
 

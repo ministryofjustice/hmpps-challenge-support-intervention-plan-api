@@ -238,14 +238,14 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `renderAnnotatedCaseNote renders a single annotation`() {
+  fun `composeAnnotationCaseNote renders a single annotation`() {
     val originalText = "Prisoner became agitated and later raised his voice."
     val caseNoteWithAnnotations = caseNoteWithAnnotations(
       text = originalText,
       annotationTexts = listOf("became agitated"),
     )
 
-    val result = service.renderAnnotatedCaseNote(caseNoteWithAnnotations)
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner <span class=\"annotation-type\">became agitated</span> and later raised his voice.",
@@ -253,14 +253,14 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `renderAnnotatedCaseNote renders multiple annotations`() {
+  fun `composeAnnotationCaseNote renders multiple annotations`() {
     val originalText = "Prisoner became agitated and later raised his voice."
     val caseNoteWithAnnotations = caseNoteWithAnnotations(
       text = originalText,
       annotationTexts = listOf("became agitated", "raised his voice"),
     )
 
-    val result = service.renderAnnotatedCaseNote(caseNoteWithAnnotations)
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner <span class=\"annotation-type\">became agitated</span> and later <span class=\"annotation-type\">raised his voice</span>.",
@@ -268,27 +268,27 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `renderAnnotatedCaseNote returns original text when no annotations`() {
+  fun `composeAnnotationCaseNote returns original text when no annotations`() {
     val originalText = "Prisoner became agitated and later raised his voice."
     val caseNoteWithAnnotations = caseNoteWithAnnotations(
       text = originalText,
       annotationTexts = emptyList(),
     )
 
-    val result = service.renderAnnotatedCaseNote(caseNoteWithAnnotations)
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(originalText)
   }
 
   @Test
-  fun `renderAnnotatedCaseNote ignores null annotation text`() {
+  fun `composeAnnotationCaseNote ignores null annotation text`() {
     val originalText = "Prisoner became agitated and later raised his voice."
     val caseNoteWithAnnotations = caseNoteWithAnnotations(
       text = originalText,
       annotationTexts = listOf(null, "raised his voice"),
     )
 
-    val result = service.renderAnnotatedCaseNote(caseNoteWithAnnotations)
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner became agitated and later <span class=\"annotation-type\">raised his voice</span>.",
@@ -296,14 +296,14 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `renderAnnotatedCaseNote ignores blank annotation text`() {
+  fun `composeAnnotationCaseNote ignores blank annotation text`() {
     val originalText = "Prisoner became agitated and later raised his voice."
     val caseNoteWithAnnotations = caseNoteWithAnnotations(
       text = originalText,
       annotationTexts = listOf("   ", "raised his voice"),
     )
 
-    val result = service.renderAnnotatedCaseNote(caseNoteWithAnnotations)
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner became agitated and later <span class=\"annotation-type\">raised his voice</span>.",
@@ -311,14 +311,14 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `renderAnnotatedCaseNote preserves original content outside annotations`() {
+  fun `composeAnnotationCaseNote preserves original content outside annotations`() {
     val originalText = "On review, prisoner became agitated, then settled down after staff support."
     val caseNoteWithAnnotations = caseNoteWithAnnotations(
       text = originalText,
       annotationTexts = listOf("became agitated"),
     )
 
-    val result = service.renderAnnotatedCaseNote(caseNoteWithAnnotations)
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
 
     assertThat(result).startsWith("On review, prisoner ")
     assertThat(result).contains("<span class=\"annotation-type\">became agitated</span>")
