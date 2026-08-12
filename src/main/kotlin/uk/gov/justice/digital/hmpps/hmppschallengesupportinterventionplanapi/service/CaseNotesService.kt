@@ -5,7 +5,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteAnnotationSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteWithAnnotations
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
@@ -20,6 +24,7 @@ class CaseNotesService(
   private val caseNotesClient: CaseNotesClient,
   private val prisonerSearch: PrisonerSearchClient,
   private val clock: Clock,
+  private val caseNoteAnnotationRepository: CaseNoteAnnotationRepository,
 ) {
   fun getCaseNotes(
     request: CaseNotesLookupRequest,
@@ -130,4 +135,32 @@ class CaseNotesService(
         ),
       )
   }
+
+  fun getCaseNotesWithAnnotations(prisonerNumber: String, behaviourType: BehaviourType): List<CaseNoteWithAnnotations> {
+    val annotations = caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(prisonerNumber, behaviourType)
+    if (annotations.isEmpty()) return emptyList()
+
+    return annotations
+      .filter { it.caseNoteId != null }
+      .groupBy { it.caseNoteId!! }
+      .map { (caseNoteId, caseNoteAnnotations) ->
+        CaseNoteWithAnnotations(
+          caseNote = caseNotesClient.getCaseNote(prisonerNumber, caseNoteId),
+          annotations = caseNoteAnnotations.map { it.toSummary() },
+        )
+      }
+  }
+
+  private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
+    id = id,
+    requestId = requestId,
+    prisonerNumber = prisonerNumber,
+    caseNoteId = caseNoteId,
+    promptKey = promptKey,
+    promptVersion = promptVersion,
+    behaviourType = behaviourType,
+    confidenceLevel = confidenceLevel,
+    annotatedText = annotatedText,
+    createdDate = createdDate,
+  )
 }

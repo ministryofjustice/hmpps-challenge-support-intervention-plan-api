@@ -35,6 +35,23 @@ class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: We
   } catch (e: Exception) {
     throw DownstreamServiceException("Get case notes request failed", e)
   }
+
+  fun getCaseNote(personIdentifier: String, caseNoteIdentifier: UUID): CaseNote = try {
+    webClient
+      .get()
+      .uri("/case-notes/{personIdentifier}/{caseNoteIdentifier}", personIdentifier, caseNoteIdentifier)
+      .accept(MediaType.APPLICATION_JSON)
+      .exchangeToMono { res ->
+        when (res.statusCode()) {
+          HttpStatus.OK -> res.bodyToMono<CaseNote>()
+          else -> res.createError()
+        }
+      }
+      .retryIdempotentRequestOnTransientException()
+      .block()!!
+  } catch (e: Exception) {
+    throw DownstreamServiceException("Get case note request failed", e)
+  }
 }
 
 data class CaseNotesRequest(
