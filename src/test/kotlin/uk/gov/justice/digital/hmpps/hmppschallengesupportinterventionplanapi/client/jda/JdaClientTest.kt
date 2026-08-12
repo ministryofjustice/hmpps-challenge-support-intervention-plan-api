@@ -11,9 +11,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaMockServer
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -35,11 +38,19 @@ class JdaClientTest {
 
     assertThat(result).isNotNull
     assertThat(result?.requestId).isEqualTo(UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6"))
-    assertThat(result?.correlationId).isEqualTo("f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb")
+    assertThat(result?.correlationId).isEqualTo(UUID.fromString("f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"))
     assertThat(result?.prompt?.key).isEqualTo("case-note-analysis")
     assertThat(result?.prompt?.version).isEqualTo(3)
     assertThat(result?.status).isEqualTo(JdaDequeueResponseStatus.SUCCEEDED)
-    assertThat(result?.responseData?.todo).isEqualTo("todo")
+    assertThat(result?.responseData).hasSize(1)
+    assertThat(result?.responseData?.first()?.caseNoteId).isEqualTo(UUID.fromString("11111111-1111-1111-1111-111111111111"))
+    assertThat(result?.responseData?.first()?.confidenceLevel).isEqualTo(ConfidenceLevel.HIGH)
+    assertThat(result?.responseData?.first()?.justifyingSpans).containsExactly(
+      JustifyingSpan(
+        text = "annotated text",
+        justifies = BehaviourType.PROTECTIVE_FACTORS,
+      ),
+    )
     assertThat(result?.metadata?.completedAt).isEqualTo(OffsetDateTime.parse("2026-06-27T09:55:03Z"))
     assertThat(result?.metadata?.completionMs).isEqualTo(1200)
 
