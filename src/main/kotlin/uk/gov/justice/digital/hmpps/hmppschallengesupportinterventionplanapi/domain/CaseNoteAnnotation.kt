@@ -26,7 +26,6 @@ class CaseNoteAnnotation(
   @Enumerated(EnumType.STRING)
   val behaviourType: BehaviourType?,
   @Enumerated(EnumType.STRING)
-  @Column(length = 10)
   val confidenceLevel: ConfidenceLevel?,
   @Column(columnDefinition = "TEXT")
   val annotatedText: String?,
