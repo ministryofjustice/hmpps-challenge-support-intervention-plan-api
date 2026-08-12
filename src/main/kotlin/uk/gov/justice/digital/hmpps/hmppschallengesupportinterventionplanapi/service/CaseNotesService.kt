@@ -137,7 +137,7 @@ class CaseNotesService(
   }
 
   fun getCaseNotesWithAnnotations(prisonerNumber: String, behaviourType: BehaviourType): List<CaseNoteWithAnnotations> {
-    val annotations = caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(prisonerNumber, behaviourType.value)
+    val annotations = caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(prisonerNumber, behaviourType)
     if (annotations.isEmpty()) return emptyList()
 
     return annotations

@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
@@ -171,13 +172,13 @@ class CaseNotesServiceTest {
 
   @Test
   fun `getCaseNotesWithAnnotations returns empty list when no matching annotations`() {
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value))
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
       .thenReturn(emptyList())
 
     val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
 
     assertThat(result).isEmpty()
-    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value)
+    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
   }
 
   @Test
@@ -186,7 +187,7 @@ class CaseNotesServiceTest {
     val annotationOne = annotation(caseNoteId = caseNoteId, annotatedText = "text 1")
     val annotationTwo = annotation(caseNoteId = caseNoteId, annotatedText = "text 2")
 
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value))
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
       .thenReturn(listOf(annotationOne, annotationTwo))
 
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
@@ -198,7 +199,7 @@ class CaseNotesServiceTest {
     assertThat(result.first().annotations).hasSize(2)
     assertThat(result.first().annotations.map { it.annotatedText }).containsExactlyInAnyOrder("text 1", "text 2")
 
-    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS.value)
+    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
     verify(caseNotesClient, times(1)).getCaseNote("A1234AA", caseNoteId)
   }
 
@@ -207,7 +208,7 @@ class CaseNotesServiceTest {
     val caseNoteIdOne = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val caseNoteIdTwo = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
 
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.PROTECTIVE_FACTORS.value))
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.PROTECTIVE_FACTORS))
       .thenReturn(
         listOf(
           annotation(
@@ -245,8 +246,8 @@ class CaseNotesServiceTest {
     caseNoteId = caseNoteId,
     promptKey = "case-note-analysis",
     promptVersion = 3,
-    behaviourType = behaviourType.value,
-    confidenceLevel = "high",
+    behaviourType = behaviourType,
+    confidenceLevel = ConfidenceLevel.HIGH,
     annotatedText = annotatedText,
     createdDate = LocalDateTime.now(),
   )
