@@ -96,7 +96,7 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
 
   @Test
   fun `persists case note annotation rows and their content to the database`() {
-    val record = givenCsipRecord(generateCsipRecord())
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
     val requestId = UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6")
     val response = createCaseNoteDequeueResponse(correlationId = record.id, requestId = requestId)
 
