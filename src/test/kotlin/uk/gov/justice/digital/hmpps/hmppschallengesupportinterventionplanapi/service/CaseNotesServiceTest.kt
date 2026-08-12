@@ -20,6 +20,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteAnnotationSummary
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteWithAnnotations
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
@@ -235,6 +237,94 @@ class CaseNotesServiceTest {
     verify(caseNotesClient, times(1)).getCaseNote("A1234AA", caseNoteIdTwo)
   }
 
+  @Test
+  fun `composeAnnotationCaseNote renders a single annotation`() {
+    val originalText = "Prisoner became agitated and later raised his voice."
+    val caseNoteWithAnnotations = caseNoteWithAnnotations(
+      text = originalText,
+      annotationTexts = listOf("became agitated"),
+    )
+
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+
+    assertThat(result).isEqualTo(
+      "Prisoner <span class=\"annotation-type\">became agitated</span> and later raised his voice.",
+    )
+  }
+
+  @Test
+  fun `composeAnnotationCaseNote renders multiple annotations`() {
+    val originalText = "Prisoner became agitated and later raised his voice."
+    val caseNoteWithAnnotations = caseNoteWithAnnotations(
+      text = originalText,
+      annotationTexts = listOf("became agitated", "raised his voice"),
+    )
+
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+
+    assertThat(result).isEqualTo(
+      "Prisoner <span class=\"annotation-type\">became agitated</span> and later <span class=\"annotation-type\">raised his voice</span>.",
+    )
+  }
+
+  @Test
+  fun `composeAnnotationCaseNote returns original text when no annotations`() {
+    val originalText = "Prisoner became agitated and later raised his voice."
+    val caseNoteWithAnnotations = caseNoteWithAnnotations(
+      text = originalText,
+      annotationTexts = emptyList(),
+    )
+
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+
+    assertThat(result).isEqualTo(originalText)
+  }
+
+  @Test
+  fun `composeAnnotationCaseNote ignores null annotation text`() {
+    val originalText = "Prisoner became agitated and later raised his voice."
+    val caseNoteWithAnnotations = caseNoteWithAnnotations(
+      text = originalText,
+      annotationTexts = listOf(null, "raised his voice"),
+    )
+
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+
+    assertThat(result).isEqualTo(
+      "Prisoner became agitated and later <span class=\"annotation-type\">raised his voice</span>.",
+    )
+  }
+
+  @Test
+  fun `composeAnnotationCaseNote ignores blank annotation text`() {
+    val originalText = "Prisoner became agitated and later raised his voice."
+    val caseNoteWithAnnotations = caseNoteWithAnnotations(
+      text = originalText,
+      annotationTexts = listOf("   ", "raised his voice"),
+    )
+
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+
+    assertThat(result).isEqualTo(
+      "Prisoner became agitated and later <span class=\"annotation-type\">raised his voice</span>.",
+    )
+  }
+
+  @Test
+  fun `composeAnnotationCaseNote preserves original content outside annotations`() {
+    val originalText = "On review, prisoner became agitated, then settled down after staff support."
+    val caseNoteWithAnnotations = caseNoteWithAnnotations(
+      text = originalText,
+      annotationTexts = listOf("became agitated"),
+    )
+
+    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+
+    assertThat(result).startsWith("On review, prisoner ")
+    assertThat(result).contains("<span class=\"annotation-type\">became agitated</span>")
+    assertThat(result).endsWith(", then settled down after staff support.")
+  }
+
   private fun annotation(
     caseNoteId: UUID?,
     annotatedText: String,
@@ -252,7 +342,7 @@ class CaseNotesServiceTest {
     createdDate = LocalDateTime.now(),
   )
 
-  private fun caseNote(caseNoteId: UUID) = CaseNote(
+  private fun caseNote(caseNoteId: UUID, text: String = "Case note text") = CaseNote(
     caseNoteId = caseNoteId,
     offenderIdentifier = "A1234AA",
     type = "GEN",
@@ -264,10 +354,35 @@ class CaseNotesServiceTest {
     authorName = "Test User",
     authorUserId = "USER1",
     authorUsername = "testuser",
-    text = "Case note text",
+    text = text,
     locationId = "MDI",
     sensitive = false,
     amendments = emptyList(),
+  )
+
+  private fun caseNoteWithAnnotations(
+    text: String,
+    annotationTexts: List<String?>,
+  ): CaseNoteWithAnnotations {
+    val caseNoteId = UUID.fromString("323e4567-e89b-12d3-a456-426614174000")
+
+    return CaseNoteWithAnnotations(
+      caseNote = caseNote(caseNoteId = caseNoteId, text = text),
+      annotations = annotationTexts.map { annotatedText -> annotationSummary(caseNoteId, annotatedText) },
+    )
+  }
+
+  private fun annotationSummary(caseNoteId: UUID, annotatedText: String?) = CaseNoteAnnotationSummary(
+    id = UUID.randomUUID(),
+    requestId = UUID.randomUUID(),
+    prisonerNumber = "A1234AA",
+    caseNoteId = caseNoteId,
+    promptKey = "case-note-analysis",
+    promptVersion = 3,
+    behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+    confidenceLevel = ConfidenceLevel.HIGH,
+    annotatedText = annotatedText,
+    createdDate = LocalDateTime.now(),
   )
 
   private fun prisonerDetails() = PrisonerDetails(
