@@ -20,7 +20,6 @@ class CaseNoteAnnotation(
   @Column(nullable = false, length = 10)
   val prisonerNumber: String,
   val caseNoteId: UUID?,
-  @Column(length = 255)
   val promptKey: String?,
   val promptVersion: Int?,
   @Enumerated(EnumType.STRING)
