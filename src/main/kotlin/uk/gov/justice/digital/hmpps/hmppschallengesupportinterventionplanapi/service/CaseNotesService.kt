@@ -151,6 +151,55 @@ class CaseNotesService(
       }
   }
 
+  fun composeAnnotationCaseNote(caseNoteWithAnnotations: CaseNoteWithAnnotations): String {
+    val originalText = caseNoteWithAnnotations.caseNote.text
+    if (caseNoteWithAnnotations.annotations.isEmpty()) return originalText
+
+    val matches = caseNoteWithAnnotations.annotations
+      .mapNotNull { it.annotatedText }
+      .filter { it.isNotBlank() }
+      .mapNotNull { annotationText ->
+        val startIndex = originalText.indexOf(annotationText)
+        if (startIndex < 0) return@mapNotNull null
+        TextMatch(start = startIndex, end = startIndex + annotationText.length, text = annotationText)
+      }
+      .sortedBy { it.start }
+
+    if (matches.isEmpty()) return originalText
+
+    val nonOverlappingMatches = mutableListOf<TextMatch>()
+    var currentEnd = -1
+
+    matches.forEach { match ->
+      if (match.start >= currentEnd) {
+        nonOverlappingMatches += match
+        currentEnd = match.end
+      }
+    }
+
+    if (nonOverlappingMatches.isEmpty()) return originalText
+
+    val renderedText = StringBuilder()
+    var cursor = 0
+
+    nonOverlappingMatches.forEach { match ->
+      renderedText.append(originalText.substring(cursor, match.start))
+      renderedText.append("<span class=\"annotation-type\">")
+      renderedText.append(match.text)
+      renderedText.append("</span>")
+      cursor = match.end
+    }
+
+    renderedText.append(originalText.substring(cursor))
+    return renderedText.toString()
+  }
+
+  private data class TextMatch(
+    val start: Int,
+    val end: Int,
+    val text: String,
+  )
+
   private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
     id = id,
     requestId = requestId,
