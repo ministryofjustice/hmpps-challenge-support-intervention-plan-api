@@ -22,7 +22,7 @@ class CaseNoteAnnotation(
   @Column(nullable = false, length = 10)
   val prisonerNumber: String,
 
-  val caseNoteId: UUID?,
+  val caseNoteId: UUID,
 
   val promptKey: String?,
 

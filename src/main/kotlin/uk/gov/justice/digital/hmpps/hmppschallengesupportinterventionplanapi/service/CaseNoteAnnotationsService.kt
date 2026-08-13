@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 class CaseNoteAnnotationsService(
@@ -59,7 +60,7 @@ class CaseNoteAnnotationsService(
         behaviourType = span.justifies,
         confidenceLevel = item.confidenceLevel,
         annotatedText = span.text,
-        createdDate = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(ZoneOffset.UTC),
       )
     }
   }
