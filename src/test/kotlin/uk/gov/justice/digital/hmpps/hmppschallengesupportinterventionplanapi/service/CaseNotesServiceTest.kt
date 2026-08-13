@@ -326,7 +326,7 @@ class CaseNotesServiceTest {
   }
 
   private fun annotation(
-    caseNoteId: UUID?,
+    caseNoteId: UUID,
     annotatedText: String,
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
   ) = CaseNoteAnnotation(
