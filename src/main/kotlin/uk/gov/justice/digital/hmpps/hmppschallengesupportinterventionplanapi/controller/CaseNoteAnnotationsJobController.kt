@@ -13,6 +13,6 @@ class CaseNoteAnnotationsJobController(private val caseNoteAnnotationsService: C
   @Operation(hidden = true)
   @PostMapping("/queue/case-note-annotations")
   fun processQueuedCaseNoteAnnotations() {
-    caseNoteAnnotationsService.getCaseNoteAnnotationsFromQueue()
+    caseNoteAnnotationsService.processQueuedCaseNoteAnnotations()
   }
 }
