@@ -49,7 +49,7 @@ dependencies {
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
 
   constraints {
-    implementation("io.opentelemetry:opentelemetry-api:1.64.0") {
+    implementation("io.opentelemetry:opentelemetry-api:1.65.0") {
       because("CVE-2026-45292 - remove when transitive dependency is updated")
     }
   }
