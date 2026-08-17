@@ -12,6 +12,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
@@ -65,7 +67,22 @@ class CaseNotesServiceTest {
 
   @Test
   fun `getCaseNotes calls case notes client with expected request`() {
-    service.getCaseNotes(request, params)
+    val caseNotesResponse = CaseNotesResponse(
+      content = listOf(
+        caseNote(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"), text = "General note").copy(type = "ACCEPTABLE_TYPE"),
+        caseNote(UUID.fromString("223e4567-e89b-12d3-a456-426614174000")).copy(type = "ALERT"),
+      ),
+      hasCaseNotes = true,
+      metadata = CaseNotesMetadata(
+        totalElements = 2,
+        page = 1,
+        size = 100,
+      ),
+    )
+
+    whenever(caseNotesClient.getCaseNotes(eq("A1234AA"), any())).thenReturn(caseNotesResponse)
+
+    val result = service.getCaseNotes(request, params)
 
     val requestCaptor =
       argumentCaptor<CaseNotesRequest>()
@@ -103,6 +120,9 @@ class CaseNotesServiceTest {
 
     assertThat(sentRequest.occurredFrom)
       .isEqualTo(expectedNow.minusDays(90))
+
+    assertThat(result.content.map { it.type })
+      .containsExactly("ACCEPTABLE_TYPE")
   }
 
   @Test

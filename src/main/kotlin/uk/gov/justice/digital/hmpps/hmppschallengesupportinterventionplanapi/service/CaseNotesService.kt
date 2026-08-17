@@ -32,7 +32,7 @@ class CaseNotesService(
   ): CaseNotesResponse {
     val now = LocalDateTime.now(clock)
 
-    return caseNotesClient.getCaseNotes(
+    val caseNotes = caseNotesClient.getCaseNotes(
       request.offenderIdentifier,
       CaseNotesRequest(
         includeSensitive = request.includeSensitive,
@@ -44,6 +44,7 @@ class CaseNotesService(
         sort = "occurredAt,desc",
       ),
     )
+    return caseNotes.copy(content = caseNotes.content.filter { it.type != "ALERT" })
   }
 
   fun validatePrisonerExists(prisonerNumber: String) {
