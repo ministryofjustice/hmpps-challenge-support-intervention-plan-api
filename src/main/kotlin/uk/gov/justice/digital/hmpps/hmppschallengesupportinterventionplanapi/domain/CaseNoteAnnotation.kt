@@ -16,17 +16,26 @@ import java.util.UUID
 class CaseNoteAnnotation(
   @Id
   val id: UUID = newUuid(),
+
   val requestId: UUID?,
+
   @Column(nullable = false, length = 10)
   val prisonerNumber: String,
-  val caseNoteId: UUID?,
+
+  val caseNoteId: UUID,
+
   val promptKey: String?,
+
   val promptVersion: Int?,
+
   @Enumerated(EnumType.STRING)
   val behaviourType: BehaviourType?,
+
   @Enumerated(EnumType.STRING)
   val confidenceLevel: ConfidenceLevel?,
+
   @Column(columnDefinition = "TEXT")
   val annotatedText: String?,
+
   val createdDate: LocalDateTime?,
 )
