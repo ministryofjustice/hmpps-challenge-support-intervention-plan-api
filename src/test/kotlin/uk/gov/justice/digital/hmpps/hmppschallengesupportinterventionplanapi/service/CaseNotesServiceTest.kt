@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -107,48 +106,135 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `buildSuggestedCaseNotes returns response with prisoner number and request fields echoed`() {
-    whenever(prisonerSearchClient.getPrisoner(any())).thenReturn(prisonerDetails())
+  fun `buildSuggestedCaseNotes returns response header fields from request`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "became agitated")))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
 
-    val suggestedRequest = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      sortField = "relevance",
-      sortOrder = "desc",
-    )
-
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest)
+    val request = suggestedRequest()
+    val response = service.buildSuggestedCaseNotes("A1234AA", request)
 
     assertThat(response.prisonerNumber).isEqualTo("A1234AA")
-    assertThat(response.referralId).isEqualTo("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    assertThat(response.referralId).isEqualTo(request.referralId)
     assertThat(response.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
     assertThat(response.sortField).isEqualTo("relevance")
     assertThat(response.sortOrder).isEqualTo("desc")
   }
 
   @Test
-  fun `buildSuggestedCaseNotes returns static suggested case notes for each behaviour type`() {
-    whenever(prisonerSearchClient.getPrisoner(any())).thenReturn(prisonerDetails())
+  fun `buildSuggestedCaseNotes returns single suggested case note for one case note with one annotation`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.HIGH)))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated during the session."))
 
-    BehaviourType.entries.forEach { behaviourType ->
-      val suggestedRequest = SuggestedCaseNotesRequest(
-        referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        behaviourType = behaviourType,
-        sortField = "relevance",
-        sortOrder = "desc",
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+    val note = response.suggestedCaseNotes.first()
+    assertThat(note.caseNoteId).isEqualTo(caseNoteId)
+    assertThat(note.relevance).isEqualTo("high")
+    assertThat(note.annotatedCaseNote).contains("<span class=\"annotation-type\">became agitated</span>")
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes returns one suggested case note per case note`() {
+    val caseNoteIdOne = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val caseNoteIdTwo = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = caseNoteIdOne, annotatedText = "agitated"),
+          annotation(caseNoteId = caseNoteIdTwo, annotatedText = "raised his voice"),
+        ),
       )
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdOne))
+      .thenReturn(caseNote(caseNoteIdOne, text = "Prisoner was agitated."))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdTwo))
+      .thenReturn(caseNote(caseNoteIdTwo, text = "Prisoner raised his voice."))
 
-      val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest)
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
 
-      assertThat(response.suggestedCaseNotes)
-        .`as`("Expected non-empty suggested case notes for behaviourType $behaviourType")
-        .isNotEmpty
-      response.suggestedCaseNotes.forEach { note ->
-        assertThat(note.relevance).isIn("high", "medium", "low")
-        assertThat(note.caseNoteId).isNotNull()
-        assertThat(note.annotatedCaseNote).isNotBlank()
-      }
-    }
+    assertThat(response.suggestedCaseNotes).hasSize(2)
+    assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactlyInAnyOrder(caseNoteIdOne, caseNoteIdTwo)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes uses highest confidence level across annotations for a case note`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.LOW),
+          annotation(caseNoteId = caseNoteId, annotatedText = "raised his voice", confidenceLevel = ConfidenceLevel.HIGH),
+        ),
+      )
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated and raised his voice."))
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+    assertThat(response.suggestedCaseNotes.first().relevance).isEqualTo("high")
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes orders suggested case notes by occurrenceDateTime descending`() {
+    val olderCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val newerCaseNoteId = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = olderCaseNoteId, annotatedText = "agitated"),
+          annotation(caseNoteId = newerCaseNoteId, annotatedText = "raised his voice"),
+        ),
+      )
+    val older = LocalDateTime.of(2025, 1, 1, 9, 0)
+    val newer = LocalDateTime.of(2025, 6, 1, 9, 0)
+    whenever(caseNotesClient.getCaseNote("A1234AA", olderCaseNoteId))
+      .thenReturn(caseNote(olderCaseNoteId, text = "Prisoner was agitated.", occurrenceDateTime = older))
+    whenever(caseNotesClient.getCaseNote("A1234AA", newerCaseNoteId))
+      .thenReturn(caseNote(newerCaseNoteId, text = "Prisoner raised his voice.", occurrenceDateTime = newer))
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(2)
+    assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(newerCaseNoteId)
+    assertThat(response.suggestedCaseNotes[1].caseNoteId).isEqualTo(olderCaseNoteId)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes returns empty list when no annotations exist`() {
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(emptyList())
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).isEmpty()
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes renders annotation content in annotatedCaseNote field`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.MEDIUM),
+          annotation(caseNoteId = caseNoteId, annotatedText = "raised his voice", confidenceLevel = ConfidenceLevel.MEDIUM),
+        ),
+      )
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated and raised his voice."))
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+    val annotatedContent = response.suggestedCaseNotes.first().annotatedCaseNote
+    assertThat(annotatedContent).isEqualTo(
+      "Prisoner <span class=\"annotation-type\">became agitated</span> and <span class=\"annotation-type\">raised his voice</span>.",
+    )
   }
 
   @Test
@@ -329,6 +415,7 @@ class CaseNotesServiceTest {
     caseNoteId: UUID,
     annotatedText: String,
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+    confidenceLevel: ConfidenceLevel = ConfidenceLevel.HIGH,
   ) = CaseNoteAnnotation(
     id = UUID.randomUUID(),
     requestId = UUID.randomUUID(),
@@ -337,12 +424,16 @@ class CaseNotesServiceTest {
     promptKey = "case-note-analysis",
     promptVersion = 3,
     behaviourType = behaviourType,
-    confidenceLevel = ConfidenceLevel.HIGH,
+    confidenceLevel = confidenceLevel,
     annotatedText = annotatedText,
     createdDate = LocalDateTime.now(),
   )
 
-  private fun caseNote(caseNoteId: UUID, text: String = "Case note text") = CaseNote(
+  private fun caseNote(
+    caseNoteId: UUID,
+    text: String = "Case note text",
+    occurrenceDateTime: LocalDateTime = LocalDateTime.now(),
+  ) = CaseNote(
     caseNoteId = caseNoteId,
     offenderIdentifier = "A1234AA",
     type = "GEN",
@@ -350,7 +441,7 @@ class CaseNotesServiceTest {
     subType = "OBS",
     subTypeDescription = "Observation",
     creationDateTime = LocalDateTime.now(),
-    occurrenceDateTime = LocalDateTime.now(),
+    occurrenceDateTime = occurrenceDateTime,
     authorName = "Test User",
     authorUserId = "USER1",
     authorUsername = "testuser",
@@ -358,6 +449,13 @@ class CaseNotesServiceTest {
     locationId = "MDI",
     sensitive = false,
     amendments = emptyList(),
+  )
+
+  private fun suggestedRequest() = SuggestedCaseNotesRequest(
+    referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+    sortField = "relevance",
+    sortOrder = "desc",
   )
 
   private fun caseNoteWithAnnotations(
