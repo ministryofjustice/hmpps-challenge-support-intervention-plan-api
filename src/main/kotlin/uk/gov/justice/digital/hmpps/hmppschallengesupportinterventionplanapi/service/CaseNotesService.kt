@@ -52,8 +52,17 @@ class CaseNotesService(
   }
 
   fun buildSuggestedCaseNotes(prisonerNumber: String, request: SuggestedCaseNotesRequest): SuggestedCaseNotesResponse {
+    val sortOrder = request.sortOrder.trim().lowercase()
+    val appliedSortOrder = if (sortOrder == "asc") "asc" else "desc"
+
     val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType)
-      .sortedByDescending { it.caseNote.occurrenceDateTime }
+      .sortedWith(
+        if (appliedSortOrder == "asc") {
+          compareBy { it.caseNote.creationDateTime }
+        } else {
+          compareByDescending { it.caseNote.creationDateTime }
+        },
+      )
       .map { caseNoteWithAnnotations ->
         val highestConfidence = caseNoteWithAnnotations.annotations
           .mapNotNull { it.confidenceLevel }
@@ -72,7 +81,7 @@ class CaseNotesService(
       referralId = request.referralId,
       behaviourType = request.behaviourType,
       sortField = request.sortField,
-      sortOrder = request.sortOrder,
+      sortOrder = appliedSortOrder,
       suggestedCaseNotes = suggestedCaseNotes,
     )
   }

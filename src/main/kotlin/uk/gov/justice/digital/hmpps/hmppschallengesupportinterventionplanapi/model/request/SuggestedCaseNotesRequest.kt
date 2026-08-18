@@ -5,6 +5,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 data class SuggestedCaseNotesRequest(
   val referralId: String,
   val behaviourType: BehaviourType,
-  val sortField: String,
-  val sortOrder: String,
-)
+  var sortField: String = "createdDate",
+  val sortOrder: String = "desc",
+) {
+  init {
+    if (sortField == "createdDate" || sortField.isBlank()) {
+      sortField = "creationDateTime"
+    }
+  }
+}
