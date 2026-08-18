@@ -227,6 +227,65 @@ class CaseNotesServiceTest {
   }
 
   @Test
+  fun `buildSuggestedCaseNotes applies default sortField and sortOrder when omitted from request`() {
+    val setup = setupThreeCaseNotesForSorting()
+
+    val request = SuggestedCaseNotesRequest(
+      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+    )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+
+    assertThat(response.sortField).isEqualTo("creationDateTime")
+    assertThat(response.sortOrder).isEqualTo("desc")
+    assertThat(response.suggestedCaseNotes).hasSize(3)
+    assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(setup.newerCaseNoteId)
+    assertThat(response.suggestedCaseNotes[1].caseNoteId).isEqualTo(setup.middleCaseNoteId)
+    assertThat(response.suggestedCaseNotes[2].caseNoteId).isEqualTo(setup.olderCaseNoteId)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes orders suggested case notes by creationDateTime ascending`() {
+    val setup = setupThreeCaseNotesForSorting()
+
+    val request = SuggestedCaseNotesRequest(
+      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+      sortField = "createdDate",
+      sortOrder = "asc",
+    )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+
+    assertThat(response.sortOrder).isEqualTo("asc")
+    assertThat(response.suggestedCaseNotes).hasSize(3)
+    assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(setup.olderCaseNoteId)
+    assertThat(response.suggestedCaseNotes[1].caseNoteId).isEqualTo(setup.middleCaseNoteId)
+    assertThat(response.suggestedCaseNotes[2].caseNoteId).isEqualTo(setup.newerCaseNoteId)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes orders suggested case notes by creationDateTime descending when sortOrder is desc`() {
+    val setup = setupThreeCaseNotesForSorting()
+
+    val request = SuggestedCaseNotesRequest(
+      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+      sortField = "createdDate",
+      sortOrder = "desc",
+    )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+
+    assertThat(response.sortOrder).isEqualTo("desc")
+    assertThat(response.suggestedCaseNotes).hasSize(3)
+    assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(setup.newerCaseNoteId)
+    assertThat(response.suggestedCaseNotes[1].caseNoteId).isEqualTo(setup.middleCaseNoteId)
+    assertThat(response.suggestedCaseNotes[2].caseNoteId).isEqualTo(setup.olderCaseNoteId)
+  }
+
+  @Test
   fun `buildSuggestedCaseNotes returns empty list when no annotations exist`() {
     whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
       .thenReturn(emptyList())
@@ -477,6 +536,42 @@ class CaseNotesServiceTest {
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
+  )
+
+  private fun setupThreeCaseNotesForSorting(): SortingCaseNotesSetup {
+    val olderCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val middleCaseNoteId = UUID.fromString("173e4567-e89b-12d3-a456-426614174000")
+    val newerCaseNoteId = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
+    val older = LocalDateTime.of(2025, 1, 1, 9, 0)
+    val middle = LocalDateTime.of(2025, 3, 1, 9, 0)
+    val newer = LocalDateTime.of(2025, 6, 1, 9, 0)
+
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = olderCaseNoteId, annotatedText = "older"),
+          annotation(caseNoteId = middleCaseNoteId, annotatedText = "middle"),
+          annotation(caseNoteId = newerCaseNoteId, annotatedText = "newer"),
+        ),
+      )
+    whenever(caseNotesClient.getCaseNote("A1234AA", olderCaseNoteId))
+      .thenReturn(caseNote(olderCaseNoteId, text = "older", occurrenceDateTime = older))
+    whenever(caseNotesClient.getCaseNote("A1234AA", middleCaseNoteId))
+      .thenReturn(caseNote(middleCaseNoteId, text = "middle", occurrenceDateTime = middle))
+    whenever(caseNotesClient.getCaseNote("A1234AA", newerCaseNoteId))
+      .thenReturn(caseNote(newerCaseNoteId, text = "newer", occurrenceDateTime = newer))
+
+    return SortingCaseNotesSetup(
+      olderCaseNoteId = olderCaseNoteId,
+      middleCaseNoteId = middleCaseNoteId,
+      newerCaseNoteId = newerCaseNoteId,
+    )
+  }
+
+  private data class SortingCaseNotesSetup(
+    val olderCaseNoteId: UUID,
+    val middleCaseNoteId: UUID,
+    val newerCaseNoteId: UUID,
   )
 
   private fun caseNoteWithAnnotations(
