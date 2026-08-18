@@ -239,7 +239,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `orders suggestions by occurrence desc`() {
+  fun `orders suggestions by creation date desc`() {
     val prisonerNumber = givenValidPrisonNumber("A8888AA")
     val olderCaseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111118")
     val newerCaseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111119")
@@ -262,13 +262,13 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     caseNotesServer.stubGetCaseNoteById(
       offenderIdentifier = prisonerNumber,
       caseNoteId = olderCaseNoteId,
-      occurrenceDateTime = "2026-07-09T10:00:00",
+      creationDateTime = "2026-07-09T10:00:00",
       text = "The prisoner stood by cell door during free flow.",
     )
     caseNotesServer.stubGetCaseNoteById(
       offenderIdentifier = prisonerNumber,
       caseNoteId = newerCaseNoteId,
-      occurrenceDateTime = "2026-07-10T10:00:00",
+      creationDateTime = "2026-07-10T10:00:00",
       text = "The prisoner accepted support from staff.",
     )
 
@@ -329,7 +329,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
   ) = SuggestedCaseNotesRequest(
     referralId = referralId,
     behaviourType = behaviourType,
-    sortField = "occurrenceDateTime",
+    sortField = "creationDateTime",
     sortOrder = "desc",
   )
 
