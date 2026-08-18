@@ -202,7 +202,7 @@ class CaseNotesServiceTest {
   }
 
   @Test
-  fun `buildSuggestedCaseNotes orders suggested case notes by occurrenceDateTime descending`() {
+  fun `buildSuggestedCaseNotes orders suggested case notes by creationDateTime descending`() {
     val olderCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val newerCaseNoteId = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
     whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
@@ -215,9 +215,9 @@ class CaseNotesServiceTest {
     val older = LocalDateTime.of(2025, 1, 1, 9, 0)
     val newer = LocalDateTime.of(2025, 6, 1, 9, 0)
     whenever(caseNotesClient.getCaseNote("A1234AA", olderCaseNoteId))
-      .thenReturn(caseNote(olderCaseNoteId, text = "Prisoner was agitated.", occurrenceDateTime = older))
+      .thenReturn(caseNote(olderCaseNoteId, text = "Prisoner was agitated.", creationDateTime = older))
     whenever(caseNotesClient.getCaseNote("A1234AA", newerCaseNoteId))
-      .thenReturn(caseNote(newerCaseNoteId, text = "Prisoner raised his voice.", occurrenceDateTime = newer))
+      .thenReturn(caseNote(newerCaseNoteId, text = "Prisoner raised his voice.", creationDateTime = newer))
 
     val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
 
@@ -512,7 +512,7 @@ class CaseNotesServiceTest {
   private fun caseNote(
     caseNoteId: UUID,
     text: String = "Case note text",
-    occurrenceDateTime: LocalDateTime = LocalDateTime.now(),
+    creationDateTime: LocalDateTime = LocalDateTime.now(),
   ) = CaseNote(
     caseNoteId = caseNoteId,
     offenderIdentifier = "A1234AA",
@@ -520,8 +520,8 @@ class CaseNotesServiceTest {
     typeDescription = "General",
     subType = "OBS",
     subTypeDescription = "Observation",
-    creationDateTime = LocalDateTime.now(),
-    occurrenceDateTime = occurrenceDateTime,
+    creationDateTime = creationDateTime,
+    occurrenceDateTime = creationDateTime,
     authorName = "Test User",
     authorUserId = "USER1",
     authorUsername = "testuser",
@@ -555,11 +555,11 @@ class CaseNotesServiceTest {
         ),
       )
     whenever(caseNotesClient.getCaseNote("A1234AA", olderCaseNoteId))
-      .thenReturn(caseNote(olderCaseNoteId, text = "older", occurrenceDateTime = older))
+      .thenReturn(caseNote(olderCaseNoteId, text = "older", creationDateTime = older))
     whenever(caseNotesClient.getCaseNote("A1234AA", middleCaseNoteId))
-      .thenReturn(caseNote(middleCaseNoteId, text = "middle", occurrenceDateTime = middle))
+      .thenReturn(caseNote(middleCaseNoteId, text = "middle", creationDateTime = middle))
     whenever(caseNotesClient.getCaseNote("A1234AA", newerCaseNoteId))
-      .thenReturn(caseNote(newerCaseNoteId, text = "newer", occurrenceDateTime = newer))
+      .thenReturn(caseNote(newerCaseNoteId, text = "newer", creationDateTime = newer))
 
     return SortingCaseNotesSetup(
       olderCaseNoteId = olderCaseNoteId,

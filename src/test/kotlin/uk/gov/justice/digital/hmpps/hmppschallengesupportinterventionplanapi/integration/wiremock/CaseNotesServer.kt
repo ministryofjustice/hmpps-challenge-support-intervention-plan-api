@@ -18,6 +18,9 @@ class CaseNotesServer : WireMockServer(8113) {
   fun stubGetCaseNoteById(
     offenderIdentifier: String = OFFENDER_IDENTIFIER,
     caseNoteId: UUID = CASE_NOTE_ID,
+    occurrenceDateTime: String = "2026-07-09T11:30:00",
+    text: String = "Some case note text",
+    creationDateTime: String = "2026-07-09T12:00:00",
   ): StubMapping = stubFor(
     get("/case-notes/$offenderIdentifier/$caseNoteId")
       .willReturn(
@@ -32,12 +35,12 @@ class CaseNotesServer : WireMockServer(8113) {
               "typeDescription": "Type description",
               "subType": "SUB_TYPE",
               "subTypeDescription": "Subtype description",
-              "creationDateTime": "2026-07-09T12:00:00",
-              "occurrenceDateTime": "2026-07-09T11:30:00",
+              "creationDateTime": "$creationDateTime",
+              "occurrenceDateTime": "$occurrenceDateTime",
               "authorName": "Author Name",
               "authorUserId": "USER123",
               "authorUsername": "author.username",
-              "text": "Some case note text",
+              "text": "$text",
               "locationId": "LEI",
               "sensitive": false,
               "amendments": []
