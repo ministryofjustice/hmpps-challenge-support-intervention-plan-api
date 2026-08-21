@@ -18,9 +18,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
@@ -46,7 +46,7 @@ class JdaServiceTest {
       csipRecordService,
       csipAssistConfig,
       "case-note-analysis",
-      0,
+      1,
       true,
     )
 
@@ -58,7 +58,7 @@ class JdaServiceTest {
       csipRecordService,
       csipAssistConfig,
       "case-note-analysis",
-      0,
+      1,
       false,
     )
 
@@ -117,7 +117,7 @@ class JdaServiceTest {
       .isEqualTo("case-note-analysis")
 
     assertThat(requestCaptor.firstValue.prompt.version)
-      .isEqualTo(0)
+      .isEqualTo(1)
 
     assertThat(requestCaptor.firstValue.requestData)
       .hasSize(1)
@@ -261,7 +261,7 @@ class JdaServiceTest {
           ),
         ),
       ),
-      metadata = JdaRequestMetadata(
+      metadata = JdaMetadata(
         requestType = JdaRequestType.SYNC,
         submittedAt = OffsetDateTime.now(),
       ),

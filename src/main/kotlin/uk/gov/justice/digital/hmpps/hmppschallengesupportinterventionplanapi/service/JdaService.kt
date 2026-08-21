@@ -19,7 +19,7 @@ class JdaService(
   private val csipAssistConfig: CsipAssistConfig,
   @Value("\${jda.prompt-key}")
   private val promptKey: String,
-  @Value("\${jda.prompt-version:0}")
+  @Value("\${jda.prompt-version:1}")
   private val promptVersion: Int,
   @Value("\${feature.csip-assist}")
   private val featureFlag: Boolean,

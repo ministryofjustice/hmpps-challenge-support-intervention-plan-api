@@ -8,5 +8,5 @@ data class JdaRequestResponse(
   val prompt: JdaPrompt,
   val status: JdaRequestStatus,
   val responseData: List<JdaDequeueResponseData>?,
-  val metadata: JdaRequestMetadata,
+  val metadata: JdaMetadata,
 )

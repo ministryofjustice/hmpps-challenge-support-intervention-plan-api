@@ -18,6 +18,7 @@ class WebClientConfiguration(
   @Value("\${api.base.url.jda}") private val jdaBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:2s}") val timeout: Duration,
+  @Value("\${api.jda.timeout:90s}") val jdaTimeout: Duration,
 ) {
   @Bean
   fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthBaseUri, healthTimeout)
@@ -38,5 +39,5 @@ class WebClientConfiguration(
   fun caseNotesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder) = builder.authorisedWebClient(authorizedClientManager, "manage-users-api", casenotesBaseUri, timeout)
 
   @Bean
-  fun jdaWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder) = builder.authorisedWebClient(authorizedClientManager, "manage-users-api", jdaBaseUri, timeout)
+  fun jdaWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder) = builder.authorisedWebClient(authorizedClientManager, "manage-users-api", jdaBaseUri, jdaTimeout)
 }
