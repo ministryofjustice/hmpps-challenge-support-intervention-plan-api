@@ -7,8 +7,12 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 @Service
 class CaseNoteAnnotationsService(
@@ -23,16 +27,42 @@ class CaseNoteAnnotationsService(
 
   fun processQueuedCaseNoteAnnotations() {
     val response = jdaClient.getCaseNoteAnnotationsFromQueue()
-    persistAnnotations(response)
+    persistAnnotationsFromDequeue(response)
   }
 
-  internal fun persistAnnotations(initialResponse: JdaDequeueResponse?) {
+  fun persistAnnotationsFromSubmitRequest(
+    response: JdaRequestResponse,
+    prisonerNumber: String,
+  ) {
+    try {
+      val caseNoteAnnotations = responseDataToAnnotations(
+        responseData = response.responseData.orEmpty(),
+        requestId = response.requestId,
+        prompt = response.prompt,
+        prisonerNumber = prisonerNumber,
+      )
+      caseNoteAnnotations.forEach { caseNoteAnnotation ->
+        caseNoteAnnotationRepository.save(caseNoteAnnotation)
+      }
+      log.debug("Persisted ${caseNoteAnnotations.size} case note annotations from submitRequest")
+    } catch (e: Exception) {
+      log.error("Failed to persist case note annotations from submitRequest ${response.requestId}", e)
+      throw e
+    }
+  }
+
+  internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
     var response = initialResponse
     var count = 0
     while (response != null) {
       try {
         val prisonerNumber = csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
-        val caseNoteAnnotations = response.toAnnotations(prisonerNumber)
+        val caseNoteAnnotations = responseDataToAnnotations(
+          responseData = response.responseData.orEmpty(),
+          requestId = response.requestId,
+          prompt = response.prompt,
+          prisonerNumber = prisonerNumber,
+        )
         caseNoteAnnotations.forEach { caseNoteAnnotation ->
           caseNoteAnnotationRepository.save(caseNoteAnnotation)
         }
@@ -49,7 +79,12 @@ class CaseNoteAnnotationsService(
     }
   }
 
-  private fun JdaDequeueResponse.toAnnotations(prisonerNumber: String): List<CaseNoteAnnotation> = responseData.orEmpty().flatMap { item ->
+  private fun responseDataToAnnotations(
+    responseData: List<JdaDequeueResponseData>,
+    requestId: UUID,
+    prompt: JdaPrompt,
+    prisonerNumber: String,
+  ): List<CaseNoteAnnotation> = responseData.flatMap { item ->
     item.justifyingSpans.map { span ->
       CaseNoteAnnotation(
         requestId = requestId,

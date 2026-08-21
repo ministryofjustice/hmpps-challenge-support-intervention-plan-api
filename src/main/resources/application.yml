@@ -122,10 +122,14 @@ feature:
   csip-assist: true
   suggested-case-notes: true
 
+api:
+  jda:
+    timeout: 90s
+
 csip:
   assist:
     active-prisons: "***"
 
 jda:
   prompt-key: case-note-analysis
-  prompt-version: 0
+  prompt-version: 1

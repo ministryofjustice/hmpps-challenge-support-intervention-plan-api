@@ -20,7 +20,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import java.time.OffsetDateTime
@@ -168,6 +171,61 @@ class CaseNoteAnnotationsServiceTest {
     assert(annotationCaptor.allValues.size == 10)
   }
 
+  @Test
+  fun `persistAnnotationsFromSubmitRequest persists annotations from synchronous response`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId)
+
+    service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+
+    val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
+    verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
+
+    val savedAnnotations = annotationCaptor.allValues
+    assert(savedAnnotations.all { it.prisonerNumber == prisonerNumber })
+    assert(savedAnnotations.all { it.requestId == requestId })
+    assert(savedAnnotations.all { it.promptKey == "case-note-analysis" })
+    assert(savedAnnotations.all { it.promptVersion == 0 })
+    assert(savedAnnotations.mapNotNull { it.behaviourType }.toSet().size == 3)
+  }
+
+  @Test
+  fun `persistAnnotationsFromSubmitRequest handles response with no data gracefully`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId).copy(responseData = null)
+
+    service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+
+    verify(caseNoteAnnotationRepository, never()).save(any())
+  }
+
+  @Test
+  fun `persistAnnotationsFromSubmitRequest handles response with empty data gracefully`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId).copy(responseData = emptyList())
+
+    service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+
+    verify(caseNoteAnnotationRepository, never()).save(any())
+  }
+
+  @Test
+  fun `persistAnnotationsFromSubmitRequest propagates exceptions`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId)
+
+    whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
+      .thenThrow(RuntimeException("Database error"))
+
+    assertThrows<RuntimeException> {
+      service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+    }
+  }
+
   private fun stubCsipRecordLookup(prisonNumber: String = "A1234BC") {
     val csipRecord = mock<CsipRecord>()
     whenever(csipRecord.prisonNumber).thenReturn(prisonNumber)
@@ -210,6 +268,44 @@ class CaseNoteAnnotationsServiceTest {
       requestType = JdaRequestType.ASYNC,
       completedAt = OffsetDateTime.now(),
       completionMs = 1200,
+    ),
+  )
+
+  private fun testJdaRequestResponse(requestId: UUID = UUID.randomUUID()): JdaRequestResponse = JdaRequestResponse(
+    requestId = requestId,
+    correlationId = UUID.randomUUID(),
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 0,
+    ),
+    status = JdaRequestStatus.SUCCEEDED,
+    responseData = listOf(
+      JdaDequeueResponseData(
+        caseNoteId = UUID.randomUUID(),
+        confidenceLevel = ConfidenceLevel.HIGH,
+        justifyingSpans = listOf(
+          JustifyingSpan(
+            text = "annotated text 1",
+            justifies = BehaviourType.PROTECTIVE_FACTORS,
+          ),
+          JustifyingSpan(
+            text = "annotated text 2",
+            justifies = BehaviourType.RISKS_AND_TRIGGERS,
+          ),
+          JustifyingSpan(
+            text = "annotated text 3",
+            justifies = BehaviourType.USUAL_BEHAVIOUR_PRESENTATION,
+          ),
+          JustifyingSpan(
+            text = "annotated text 4",
+            justifies = BehaviourType.PROTECTIVE_FACTORS,
+          ),
+        ),
+      ),
+    ),
+    metadata = JdaMetadata(
+      requestType = JdaRequestType.SYNC,
+      submittedAt = OffsetDateTime.now(),
     ),
   )
 }
