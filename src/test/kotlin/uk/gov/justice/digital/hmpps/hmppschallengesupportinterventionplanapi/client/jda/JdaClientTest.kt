@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cl
 
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -16,6 +17,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaMockServer
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -76,6 +80,61 @@ class JdaClientTest {
     assertThat(exception.message).isEqualTo("Get case note annotations from queue failed")
     assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
     server.verify(exactly(4), getRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `submitRequest - success returns response with annotations`() {
+    val correlationId = "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"
+    server.stubSubmitRequest()
+
+    val request = JdaRequest(
+      correlationId = correlationId,
+      prompt = JdaPrompt(key = "case-note-analysis", version = 0),
+      requestData = emptyList<String>(),
+    )
+
+    val result = client.submitRequest(request)
+
+    assertThat(result.requestId).isNotNull()
+    assertThat(result.correlationId.toString()).isEqualTo(correlationId)
+    assertThat(result.prompt.key).isEqualTo("case-note-analysis")
+    assertThat(result.status).isEqualTo(JdaRequestStatus.SUCCEEDED)
+    assertThat(result.responseData).hasSize(1)
+
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/submitrequest")))
+  }
+
+  @Test
+  fun `submitRequest - posts exactly once on success`() {
+    val correlationId = "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"
+    server.stubSubmitRequest()
+
+    val request = JdaRequest(
+      correlationId = correlationId,
+      prompt = JdaPrompt(key = "case-note-analysis", version = 0),
+      requestData = listOf("case note"),
+    )
+
+    client.submitRequest(request)
+
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/submitrequest")))
+  }
+
+  @Test
+  fun `submitRequest - downstream service exception`() {
+    val correlationId = "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"
+    server.stubSubmitRequestException()
+
+    val request = JdaRequest(
+      correlationId = correlationId,
+      prompt = JdaPrompt(key = "case-note-analysis", version = 0),
+      requestData = emptyList<String>(),
+    )
+
+    val exception = assertThrows<DownstreamServiceException> { client.submitRequest(request) }
+
+    assertThat(exception.message).isEqualTo("Submit case notes request failed")
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/submitrequest")))
   }
 
   companion object {
