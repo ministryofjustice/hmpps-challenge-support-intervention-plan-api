@@ -14,25 +14,39 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class JdaServiceTest {
 
   private val caseNotesService = mock<CaseNotesService>()
   private val jdaClient = mock<JdaClient>()
+  private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
+  private val csipRecordService = mock<CsipRecordService>()
   private val csipAssistConfig = mock<CsipAssistConfig>()
 
   private val service =
     JdaService(
       caseNotesService,
       jdaClient,
+      caseNoteAnnotationsService,
+      csipRecordService,
       csipAssistConfig,
       "case-note-analysis",
-      0,
+      1,
       true,
     )
 
@@ -40,18 +54,20 @@ class JdaServiceTest {
     JdaService(
       caseNotesService,
       jdaClient,
+      caseNoteAnnotationsService,
+      csipRecordService,
       csipAssistConfig,
       "case-note-analysis",
-      0,
+      1,
       false,
     )
 
   private val offenderIdentifier = "A1234AA"
   private val prisonCode = "NMI"
-  private val correlationId = "referral-id"
+  private val correlationId = UUID.randomUUID().toString()
 
   @Test
-  fun `submitCaseNotesForAnalysis submits request when feature enabled and prison active`() {
+  fun `submitCaseNotesForAnalysis submits request and persists annotations when feature enabled and prison active`() {
     whenever(
       csipAssistConfig.isActivePrison(prisonCode),
     ).thenReturn(true)
@@ -61,6 +77,14 @@ class JdaServiceTest {
     whenever(
       caseNotesService.getCaseNotes(any(), any()),
     ).thenReturn(response)
+
+    val correlationUuid = UUID.fromString(correlationId)
+    val jdaResponse = testJdaRequestResponse()
+    whenever(jdaClient.submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())).thenReturn(jdaResponse)
+
+    val csipRecord = mock<CsipRecord>()
+    whenever(csipRecord.prisonNumber).thenReturn("A1234BC")
+    whenever(csipRecordService.retrieveCsipRecord(correlationUuid)).thenReturn(csipRecord)
 
     service.submitCaseNotesForAnalysis(
       offenderIdentifier = offenderIdentifier,
@@ -93,7 +117,7 @@ class JdaServiceTest {
       .isEqualTo("case-note-analysis")
 
     assertThat(requestCaptor.firstValue.prompt.version)
-      .isEqualTo(0)
+      .isEqualTo(1)
 
     assertThat(requestCaptor.firstValue.requestData)
       .hasSize(1)
@@ -103,6 +127,10 @@ class JdaServiceTest {
 
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteId)
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
+
+    // Verify annotations were persisted
+    verify(caseNoteAnnotationsService)
+      .persistSynchronousAnnotations(jdaResponse, "A1234BC")
   }
 
   @Test
@@ -119,6 +147,8 @@ class JdaServiceTest {
     verifyNoInteractions(caseNotesService)
 
     verifyNoInteractions(jdaClient)
+
+    verifyNoInteractions(caseNoteAnnotationsService)
   }
 
   @Test
@@ -139,6 +169,43 @@ class JdaServiceTest {
     verifyNoInteractions(caseNotesService)
 
     verifyNoInteractions(jdaClient)
+
+    verifyNoInteractions(caseNoteAnnotationsService)
+  }
+
+  @Test
+  fun `submitCaseNotesForAnalysis continues when annotation persistence fails`() {
+    whenever(
+      csipAssistConfig.isActivePrison(prisonCode),
+    ).thenReturn(true)
+
+    val response = testCaseNotesResponse()
+
+    whenever(
+      caseNotesService.getCaseNotes(any(), any()),
+    ).thenReturn(response)
+
+    val correlationUuid = UUID.fromString(correlationId)
+    val jdaResponse = testJdaRequestResponse()
+    whenever(jdaClient.submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())).thenReturn(jdaResponse)
+
+    val csipRecord = mock<CsipRecord>()
+    whenever(csipRecord.prisonNumber).thenReturn("A1234BC")
+    whenever(csipRecordService.retrieveCsipRecord(correlationUuid)).thenReturn(csipRecord)
+
+    // Make annotation persistence fail
+    whenever(caseNoteAnnotationsService.persistSynchronousAnnotations(any(), any()))
+      .thenThrow(RuntimeException("Persistence failed"))
+
+    // Should not throw, should continue
+    service.submitCaseNotesForAnalysis(
+      offenderIdentifier = offenderIdentifier,
+      prisonCode = prisonCode,
+      correlationId = correlationId,
+    )
+
+    verify(caseNoteAnnotationsService)
+      .persistSynchronousAnnotations(jdaResponse, "A1234BC")
   }
 
   private fun testCaseNotesResponse(
@@ -170,4 +237,34 @@ class JdaServiceTest {
     sensitive = false,
     amendments = emptyList(),
   )
+
+  private fun testJdaRequestResponse(): JdaRequestResponse {
+    val requestId = UUID.randomUUID()
+    val correlationUuid = UUID.fromString(correlationId)
+    return JdaRequestResponse(
+      requestId = requestId,
+      correlationId = correlationUuid,
+      prompt = JdaPrompt(
+        key = "case-note-analysis",
+        version = 0,
+      ),
+      status = JdaRequestStatus.SUCCEEDED,
+      responseData = listOf(
+        JdaDequeueResponseData(
+          caseNoteId = UUID.fromString("f4ee95d0-49a4-46a2-a485-b8f26f089170"),
+          confidenceLevel = ConfidenceLevel.HIGH,
+          justifyingSpans = listOf(
+            JustifyingSpan(
+              text = "agitated",
+              justifies = uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType.RISKS_AND_TRIGGERS,
+            ),
+          ),
+        ),
+      ),
+      metadata = JdaMetadata(
+        requestType = JdaRequestType.SYNC,
+        submittedAt = OffsetDateTime.now(),
+      ),
+    )
+  }
 }
