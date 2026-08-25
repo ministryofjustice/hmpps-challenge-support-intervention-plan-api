@@ -41,7 +41,24 @@ class JdaClient(
 
   fun <T> queueRequest(
     request: JdaRequest<T>,
-  ): JdaRequestResponse = TODO("Future asynchronous JDA integration")
+  ) {
+    try {
+      webClient
+        .post()
+        .uri("/v1/queuerequest")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(request)
+        .exchangeToMono { res ->
+          when (res.statusCode()) {
+            HttpStatus.ACCEPTED -> Mono.empty()
+            else -> res.createError()
+          }
+        }
+        .block()
+    } catch (e: Exception) {
+      throw DownstreamServiceException("Queue JDA request failed", e)
+    }
+  }
 
   fun getCaseNoteAnnotationsFromQueue(): JdaDequeueResponse? = try {
     webClient

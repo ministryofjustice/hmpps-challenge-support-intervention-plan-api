@@ -8,14 +8,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
-import java.util.UUID
 
 @Service
 class JdaService(
   private val caseNotesService: CaseNotesService,
   private val jdaClient: JdaClient,
-  private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
-  private val csipRecordService: CsipRecordService,
   private val csipAssistConfig: CsipAssistConfig,
   @Value("\${jda.prompt-key}")
   private val promptKey: String,
@@ -34,7 +31,12 @@ class JdaService(
     prisonCode: String,
     correlationId: String,
   ) {
-    if (!featureFlag || !csipAssistConfig.isActivePrison(prisonCode)) return
+    if (!featureFlag || !csipAssistConfig.isActivePrison(prisonCode)) {
+      log.debug("Skipping JDA enqueue for correlationId={}, prisonCode={} (feature disabled or prison not active)", correlationId, prisonCode)
+      return
+    }
+
+    log.info("Queueing case notes for JDA analysis for correlationId={}, offenderIdentifier={}, prisonCode={}", correlationId, offenderIdentifier, prisonCode)
 
     val caseNotes =
       caseNotesService.getCaseNotes(
@@ -43,19 +45,10 @@ class JdaService(
         ),
       )
 
-    val response = jdaClient.submitRequest(
+    jdaClient.queueRequest(
       caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
     )
 
-    // Persist annotations immediately from the synchronous response
-    try {
-      val correlationUuid = UUID.fromString(correlationId)
-      val prisonerNumber = csipRecordService.retrieveCsipRecord(correlationUuid).prisonNumber
-      caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonerNumber)
-    } catch (e: Exception) {
-      log.error("Failed to persist annotations from submitRequest response for correlation ID $correlationId", e)
-      // Continue without throwing - annotation persistence should not block the main flow
-      // but log the error for operational awareness
-    }
+    log.info("Queued case notes for JDA analysis for correlationId={}", correlationId)
   }
 }
