@@ -153,11 +153,10 @@ class CaseNotesService(
     }
   }
 
-  private fun latestTimelineDate(creationDateTime: LocalDateTime, amendmentDateTimes: List<LocalDateTime>): LocalDateTime =
-    amendmentDateTimes
-      .maxOrNull()
-      ?.takeIf { it.isAfter(creationDateTime) }
-      ?: creationDateTime
+  private fun latestTimelineDate(creationDateTime: LocalDateTime, amendmentDateTimes: List<LocalDateTime>): LocalDateTime = amendmentDateTimes
+    .maxOrNull()
+    ?.takeIf { it.isAfter(creationDateTime) }
+    ?: creationDateTime
 
   private data class TextMatch(
     val start: Int,
