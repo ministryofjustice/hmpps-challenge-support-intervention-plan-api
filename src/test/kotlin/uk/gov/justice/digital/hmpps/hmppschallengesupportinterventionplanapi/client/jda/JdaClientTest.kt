@@ -137,6 +137,40 @@ class JdaClientTest {
     server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/submitrequest")))
   }
 
+  @Test
+  fun `queueRequest - successful accepted response`() {
+    val correlationId = "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"
+    server.stubQueueRequestAccepted()
+
+    val request = JdaRequest(
+      correlationId = correlationId,
+      prompt = JdaPrompt(key = "case-note-analysis", version = 0),
+      requestData = listOf("case note"),
+    )
+
+    client.queueRequest(request)
+
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/queuerequest")))
+  }
+
+  @Test
+  fun `queueRequest - downstream failure`() {
+    val correlationId = "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"
+    server.stubQueueRequestException()
+
+    val request = JdaRequest(
+      correlationId = correlationId,
+      prompt = JdaPrompt(key = "case-note-analysis", version = 0),
+      requestData = emptyList<String>(),
+    )
+
+    val exception = assertThrows<DownstreamServiceException> { client.queueRequest(request) }
+
+    assertThat(exception.message).isEqualTo("Queue JDA request failed")
+    assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/queuerequest")))
+  }
+
   companion object {
     @JvmField
     internal val server = JdaMockServer()
