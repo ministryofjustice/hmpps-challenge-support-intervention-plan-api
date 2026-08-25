@@ -122,7 +122,6 @@ class JdaServiceTest {
     verifyNoInteractions(caseNotesService)
 
     verifyNoInteractions(jdaClient)
-
   }
 
   @Test
@@ -174,5 +173,4 @@ class JdaServiceTest {
     sensitive = false,
     amendments = emptyList(),
   )
-
 }
