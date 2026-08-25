@@ -51,7 +51,7 @@ class JdaService(
     try {
       val correlationUuid = UUID.fromString(correlationId)
       val prisonerNumber = csipRecordService.retrieveCsipRecord(correlationUuid).prisonNumber
-      caseNoteAnnotationsService.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+      caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonerNumber)
     } catch (e: Exception) {
       log.error("Failed to persist annotations from submitRequest response for correlation ID $correlationId", e)
       // Continue without throwing - annotation persistence should not block the main flow

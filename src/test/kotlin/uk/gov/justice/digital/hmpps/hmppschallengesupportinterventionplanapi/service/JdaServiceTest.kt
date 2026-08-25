@@ -130,7 +130,7 @@ class JdaServiceTest {
 
     // Verify annotations were persisted
     verify(caseNoteAnnotationsService)
-      .persistAnnotationsFromSubmitRequest(jdaResponse, "A1234BC")
+      .persistSynchronousAnnotations(jdaResponse, "A1234BC")
   }
 
   @Test
@@ -194,7 +194,7 @@ class JdaServiceTest {
     whenever(csipRecordService.retrieveCsipRecord(correlationUuid)).thenReturn(csipRecord)
 
     // Make annotation persistence fail
-    whenever(caseNoteAnnotationsService.persistAnnotationsFromSubmitRequest(any(), any()))
+    whenever(caseNoteAnnotationsService.persistSynchronousAnnotations(any(), any()))
       .thenThrow(RuntimeException("Persistence failed"))
 
     // Should not throw, should continue
@@ -205,7 +205,7 @@ class JdaServiceTest {
     )
 
     verify(caseNoteAnnotationsService)
-      .persistAnnotationsFromSubmitRequest(jdaResponse, "A1234BC")
+      .persistSynchronousAnnotations(jdaResponse, "A1234BC")
   }
 
   private fun testCaseNotesResponse(

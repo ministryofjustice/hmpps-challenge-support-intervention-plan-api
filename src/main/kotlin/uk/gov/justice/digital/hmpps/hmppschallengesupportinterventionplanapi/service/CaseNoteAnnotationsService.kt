@@ -30,7 +30,7 @@ class CaseNoteAnnotationsService(
     persistAnnotationsFromDequeue(response)
   }
 
-  fun persistAnnotationsFromSubmitRequest(
+  fun persistSynchronousAnnotations(
     response: JdaRequestResponse,
     prisonerNumber: String,
   ) {
@@ -42,11 +42,18 @@ class CaseNoteAnnotationsService(
         prisonerNumber = prisonerNumber,
       )
       caseNoteAnnotations.forEach { caseNoteAnnotation ->
-        caseNoteAnnotationRepository.save(caseNoteAnnotation)
+        try {
+          caseNoteAnnotationRepository.save(caseNoteAnnotation)
+        } catch (e: Exception) {
+          log.error(
+            "Failed to persist case note annotation for case note ${caseNoteAnnotation.caseNoteId}",
+            e,
+          )
+        }
       }
-      log.debug("Persisted ${caseNoteAnnotations.size} case note annotations from submitRequest")
+      log.debug("Persisted ${caseNoteAnnotations.size} case note annotations from synchronous JDA response")
     } catch (e: Exception) {
-      log.error("Failed to persist case note annotations from submitRequest ${response.requestId}", e)
+      log.error("Failed to persist case note annotations from synchronous JDA response ${response.requestId}", e)
       throw e
     }
   }
@@ -64,7 +71,14 @@ class CaseNoteAnnotationsService(
           prisonerNumber = prisonerNumber,
         )
         caseNoteAnnotations.forEach { caseNoteAnnotation ->
-          caseNoteAnnotationRepository.save(caseNoteAnnotation)
+          try {
+            caseNoteAnnotationRepository.save(caseNoteAnnotation)
+          } catch (e: Exception) {
+            log.error(
+              "Failed to persist case note annotation for case note ${caseNoteAnnotation.caseNoteId}",
+              e,
+            )
+          }
         }
         count++
       } catch (e: Exception) {

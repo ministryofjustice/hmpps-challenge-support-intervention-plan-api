@@ -167,17 +167,17 @@ class CaseNoteAnnotationsServiceTest {
 
     verify(jdaClient, times(4)).getCaseNoteAnnotationsFromQueue()
     val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
-    verify(caseNoteAnnotationRepository, times(10)).save(annotationCaptor.capture())
-    assert(annotationCaptor.allValues.size == 10)
+    verify(caseNoteAnnotationRepository, times(12)).save(annotationCaptor.capture())
+    assert(annotationCaptor.allValues.size == 12)
   }
 
   @Test
-  fun `persistAnnotationsFromSubmitRequest persists annotations from synchronous response`() {
+  fun `persistSynchronousAnnotations persists annotations from synchronous response`() {
     val requestId = UUID.randomUUID()
     val prisonerNumber = "A1234BC"
     val response = testJdaRequestResponse(requestId)
 
-    service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+    service.persistSynchronousAnnotations(response, prisonerNumber)
 
     val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
     verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
@@ -191,39 +191,72 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
-  fun `persistAnnotationsFromSubmitRequest handles response with no data gracefully`() {
+  fun `persistSynchronousAnnotations handles response with no data gracefully`() {
     val requestId = UUID.randomUUID()
     val prisonerNumber = "A1234BC"
     val response = testJdaRequestResponse(requestId).copy(responseData = null)
 
-    service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+    service.persistSynchronousAnnotations(response, prisonerNumber)
 
     verify(caseNoteAnnotationRepository, never()).save(any())
   }
 
   @Test
-  fun `persistAnnotationsFromSubmitRequest handles response with empty data gracefully`() {
+  fun `persistSynchronousAnnotations handles response with empty data gracefully`() {
     val requestId = UUID.randomUUID()
     val prisonerNumber = "A1234BC"
     val response = testJdaRequestResponse(requestId).copy(responseData = emptyList())
 
-    service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
+    service.persistSynchronousAnnotations(response, prisonerNumber)
 
     verify(caseNoteAnnotationRepository, never()).save(any())
   }
 
   @Test
-  fun `persistAnnotationsFromSubmitRequest propagates exceptions`() {
+  fun `persistSynchronousAnnotations continues when saving an annotation fails`() {
     val requestId = UUID.randomUUID()
     val prisonerNumber = "A1234BC"
     val response = testJdaRequestResponse(requestId)
 
+    var saveAttempts = 0
     whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
-      .thenThrow(RuntimeException("Database error"))
+      .thenAnswer {
+        saveAttempts++
+        if (saveAttempts == 3) {
+          throw RuntimeException("Database error")
+        }
+        it.getArgument<CaseNoteAnnotation>(0)
+      }
 
-    assertThrows<RuntimeException> {
-      service.persistAnnotationsFromSubmitRequest(response, prisonerNumber)
-    }
+    service.persistSynchronousAnnotations(response, prisonerNumber)
+
+    val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
+    verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
+  }
+
+  @Test
+  fun `persistAnnotationsFromDequeue continues when saving an annotation fails`() {
+    stubCsipRecordLookup()
+
+    val response = testResponse()
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(response)
+      .thenReturn(null)
+
+    var saveAttempts = 0
+    whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
+      .thenAnswer {
+        saveAttempts++
+        if (saveAttempts == 3) {
+          throw RuntimeException("Database error")
+        }
+        it.getArgument<CaseNoteAnnotation>(0)
+      }
+
+    service.processQueuedCaseNoteAnnotations()
+
+    val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
+    verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
   }
 
   private fun stubCsipRecordLookup(prisonNumber: String = "A1234BC") {
