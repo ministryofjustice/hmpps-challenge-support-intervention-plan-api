@@ -158,4 +158,14 @@ class JdaMockServer : WireMockServer(8114) {
     post("/v1/submitrequest")
       .willReturn(aResponse().withStatus(500)),
   )
+
+  fun stubQueueRequestAccepted(): StubMapping = stubFor(
+    post("/v1/queuerequest")
+      .willReturn(aResponse().withStatus(202)),
+  )
+
+  fun stubQueueRequestException(): StubMapping = stubFor(
+    post("/v1/queuerequest")
+      .willReturn(aResponse().withStatus(500)),
+  )
 }
