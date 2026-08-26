@@ -325,7 +325,6 @@ class CaseNotesServiceTest {
       .thenReturn(caseNote(newerCaseNoteId, text = "newer", creationDateTime = newer))
 
     val request = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "lastAmendedDate",
       sortOrder = "desc",
