@@ -12,6 +12,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
@@ -138,7 +139,7 @@ class CaseNotesServiceTest {
 
     assertThat(response.prisonerNumber).isEqualTo("A1234AA")
     assertThat(response.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
-    assertThat(response.sortField).isEqualTo("relevance")
+    assertThat(response.sortField).isEqualTo("createdDate")
     assertThat(response.sortOrder).isEqualTo("desc")
   }
 
@@ -235,7 +236,7 @@ class CaseNotesServiceTest {
 
     val response = service.buildSuggestedCaseNotes("A1234AA", request)
 
-    assertThat(response.sortField).isEqualTo("creationDateTime")
+    assertThat(response.sortField).isEqualTo("createdDate")
     assertThat(response.sortOrder).isEqualTo("desc")
     assertThat(response.suggestedCaseNotes).hasSize(3)
     assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(setup.newerCaseNoteId)
@@ -266,19 +267,75 @@ class CaseNotesServiceTest {
   fun `buildSuggestedCaseNotes orders suggested case notes by creationDateTime descending when sortOrder is desc`() {
     val setup = setupThreeCaseNotesForSorting()
 
-    val request = SuggestedCaseNotesRequest(
+    val ascRequest = SuggestedCaseNotesRequest(
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "createdDate",
       sortOrder = "desc",
     )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+    val response = service.buildSuggestedCaseNotes("A1234AA", ascRequest)
 
     assertThat(response.sortOrder).isEqualTo("desc")
     assertThat(response.suggestedCaseNotes).hasSize(3)
     assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(setup.newerCaseNoteId)
     assertThat(response.suggestedCaseNotes[1].caseNoteId).isEqualTo(setup.middleCaseNoteId)
     assertThat(response.suggestedCaseNotes[2].caseNoteId).isEqualTo(setup.olderCaseNoteId)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes orders by lastAmendedDate descending when amendment is newer than creation date`() {
+    val olderCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val middleCaseNoteId = UUID.fromString("173e4567-e89b-12d3-a456-426614174000")
+    val newerCaseNoteId = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
+
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = olderCaseNoteId, annotatedText = "older"),
+          annotation(caseNoteId = middleCaseNoteId, annotatedText = "middle"),
+          annotation(caseNoteId = newerCaseNoteId, annotatedText = "newer"),
+        ),
+      )
+
+    val older = LocalDateTime.of(2025, 1, 1, 9, 0)
+    val middle = LocalDateTime.of(2025, 3, 1, 9, 0)
+    val newer = LocalDateTime.of(2025, 6, 1, 9, 0)
+    val oldestAmendment = LocalDateTime.of(2024, 12, 1, 9, 0)
+    val amendedLatest = LocalDateTime.of(2025, 7, 1, 9, 0)
+
+    whenever(caseNotesClient.getCaseNote("A1234AA", olderCaseNoteId))
+      .thenReturn(
+        caseNote(
+          olderCaseNoteId,
+          text = "older",
+          creationDateTime = older,
+          amendments = listOf(amendment(amendedLatest)),
+        ),
+      )
+    whenever(caseNotesClient.getCaseNote("A1234AA", middleCaseNoteId))
+      .thenReturn(
+        caseNote(
+          middleCaseNoteId,
+          text = "middle",
+          creationDateTime = middle,
+          amendments = listOf(amendment(oldestAmendment)),
+        ),
+      )
+    whenever(caseNotesClient.getCaseNote("A1234AA", newerCaseNoteId))
+      .thenReturn(caseNote(newerCaseNoteId, text = "newer", creationDateTime = newer))
+
+    val request = SuggestedCaseNotesRequest(
+      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
+      sortField = "lastAmendedDate",
+      sortOrder = "desc",
+    )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+
+    assertThat(response.sortField).isEqualTo("lastAmendedDate")
+    assertThat(response.sortOrder).isEqualTo("desc")
+    assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactly(olderCaseNoteId, newerCaseNoteId, middleCaseNoteId)
   }
 
   @Test
@@ -509,6 +566,7 @@ class CaseNotesServiceTest {
     caseNoteId: UUID,
     text: String = "Case note text",
     creationDateTime: LocalDateTime = LocalDateTime.now(),
+    amendments: List<CaseNoteAmendment> = emptyList(),
   ) = CaseNote(
     caseNoteId = caseNoteId,
     offenderIdentifier = "A1234AA",
@@ -524,7 +582,16 @@ class CaseNotesServiceTest {
     text = text,
     locationId = "MDI",
     sensitive = false,
-    amendments = emptyList(),
+    amendments = amendments,
+  )
+
+  private fun amendment(creationDateTime: LocalDateTime) = CaseNoteAmendment(
+    creationDateTime = creationDateTime,
+    authorUserName = "amender.username",
+    authorName = "Amender Name",
+    authorUserId = "USER2",
+    additionalNoteText = "extra detail",
+    id = UUID.randomUUID(),
   )
 
   private fun suggestedRequest() = SuggestedCaseNotesRequest(
