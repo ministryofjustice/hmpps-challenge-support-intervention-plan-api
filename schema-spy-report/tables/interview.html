@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Public primary key</p></td>
+                                    <td><p>Public primary key <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="investigation_id">investigation_id</span></td>
@@ -158,7 +158,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Parent investigation foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id</p></td>
+                                    <td><p>Parent investigation foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="interviewee">interviewee</span></td>
@@ -175,7 +175,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Name of the person being interviewed. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE which has a 100 character limit</p></td>
+                                    <td><p>Name of the person being interviewed. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_INTVW.CSIP_INTERVIEWEE which has a 100 character limit <a href="./../null">Sensitivity: PERSONAL</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="interview_date">interview_date</span></td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE</p></td>
+                                    <td><p>The date the interview took place. Maps to OFFENDER_CSIP_INTVW.INTVW_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="interviewee_role_id">interviewee_role_id</span></td>
@@ -214,7 +214,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Foreign key to reference data using the &lsquo;INTERVIEWEE_ROLE&rsquo; domain for the role the interviewee played in the incident or behaviour. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE</p></td>
+                                    <td><p>Foreign key to reference data using the &lsquo;INTERVIEWEE_ROLE&rsquo; domain for the role the interviewee played in the incident or behaviour. Maps to OFFENDER_CSIP_INTVW.INTVW_ROLE <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="interview_text">interview_text</span></td>
@@ -231,7 +231,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Information provided in interview. Maps to OFFENDER_CSIP_INTVW.COMMENTS which has a 4000 character limit</p></td>
+                                    <td><p>Information provided in interview. Maps to OFFENDER_CSIP_INTVW.COMMENTS which has a 4000 character limit <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="version">version</span></td>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities</p></td>
+                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="legacy_id">legacy_id</span></td>
@@ -270,7 +270,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>The NOMIS OFFENDER_CSIP_INTVW.CSIP_INTVW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API</p></td>
+                                    <td><p>The NOMIS OFFENDER_CSIP_INTVW.CSIP_INTVW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 </tbody>
                             </table>

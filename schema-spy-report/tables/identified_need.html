@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Public primary key</p></td>
+                                    <td><p>Public primary key <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="plan_id">plan_id</span></td>
@@ -158,7 +158,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id</p></td>
+                                    <td><p>Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="identified_need">identified_need</span></td>
@@ -175,7 +175,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED which has a 1000 character limit</p></td>
+                                    <td><p>Details of the need identified in the CSIP plan. Maps to OFFENDER_CSIP_PLANS.IDENTIFIED_NEED which has a 1000 character limit <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="responsible_person">responsible_person</span></td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The name of the person who is responsible for taking action on the intervention. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_PLANS.BY_WHOM which has a 100 character limit</p></td>
+                                    <td><p>The name of the person who is responsible for taking action on the intervention. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_PLANS.BY_WHOM which has a 100 character limit <a href="./../null">Sensitivity: STAFF</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_date">created_date</span></td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date the need was identified. Maps to OFFENDER_CSIP_PLANS.CREATE_DATE</p></td>
+                                    <td><p>The date the need was identified. Maps to OFFENDER_CSIP_PLANS.CREATE_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="target_date">target_date</span></td>
@@ -226,7 +226,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The target date the need should be progressed or resolved. Maps to OFFENDER_CSIP_PLANS.TARGET_DATE</p></td>
+                                    <td><p>The target date the need should be progressed or resolved. Maps to OFFENDER_CSIP_PLANS.TARGET_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="closed_date">closed_date</span></td>
@@ -243,7 +243,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date the identified need was resolved and closed. Maps to OFFENDER_CSIP_PLANS.CLOSED_DATE</p></td>
+                                    <td><p>The date the identified need was resolved and closed. Maps to OFFENDER_CSIP_PLANS.CLOSED_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="intervention">intervention</span></td>
@@ -260,7 +260,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The planned intervention for the identified need. Maps to OFFENDER_CSIP_PLANS.INTERVENTION which has a 4000 character limit</p></td>
+                                    <td><p>The planned intervention for the identified need. Maps to OFFENDER_CSIP_PLANS.INTERVENTION which has a 4000 character limit <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="progression">progression</span></td>
@@ -277,7 +277,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>How the plan to address the identified need is progressing. Maps to OFFENDER_CSIP_PLANS.PROGRESSION which has a 4000 character limit</p></td>
+                                    <td><p>How the plan to address the identified need is progressing. Maps to OFFENDER_CSIP_PLANS.PROGRESSION which has a 4000 character limit <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="version">version</span></td>
@@ -294,7 +294,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities</p></td>
+                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="legacy_id">legacy_id</span></td>
@@ -316,7 +316,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>The NOMIS OFFENDER_CSIP_PLANS.PLAN_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API</p></td>
+                                    <td><p>The NOMIS OFFENDER_CSIP_PLANS.PLAN_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 </tbody>
                             </table>

@@ -141,7 +141,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Public primary key</p></td>
+                                    <td><p>Public primary key <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="plan_id">plan_id</span></td>
@@ -163,7 +163,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id</p></td>
+                                    <td><p>Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="review_sequence">review_sequence</span></td>
@@ -180,7 +180,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The review sequence which starts at 1 and increments for each new review. Used to order the reviews. Maps to OFFENDER_CSIP_REVIEWS.REVIEW_SEQ</p></td>
+                                    <td><p>The review sequence which starts at 1 and increments for each new review. Used to order the reviews. Maps to OFFENDER_CSIP_REVIEWS.REVIEW_SEQ <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="review_date">review_date</span></td>
@@ -197,7 +197,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date of the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATE</p></td>
+                                    <td><p>The date of the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="recorded_by">recorded_by</span></td>
@@ -214,7 +214,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The username of the person who recorded the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_USER</p></td>
+                                    <td><p>The username of the person who recorded the review. Maps to OFFENDER_CSIP_REVIEWS.CREATE_USER <a href="./../null">Sensitivity: STAFF</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="recorded_by_display_name">recorded_by_display_name</span></td>
@@ -231,7 +231,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The first and last name of the user who recorded the review. Does not update if their name changes</p></td>
+                                    <td><p>The first and last name of the user who recorded the review. Does not update if their name changes <a href="./../null">Sensitivity: STAFF</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="next_review_date">next_review_date</span></td>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date of the next review. Maps to OFFENDER_CSIP_REVIEWS.NEXT_REVIEW_DATE</p></td>
+                                    <td><p>The date of the next review. Maps to OFFENDER_CSIP_REVIEWS.NEXT_REVIEW_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="actions">actions</span></td>
@@ -265,7 +265,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>An enumeration of actions that should be taken following the review one of which is to close the CSIP. CSIP to NOMIS mappings: &lsquo;CLOSE_CSIP&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.CLOSE_CSIP, &lsquo;REMAIN_ON_CSIP&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.REMAIN_ON_CSIP, &lsquo;RESPONSIBLE_PEOPLE_INFORMED&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.PEOPLE_INFORMED, &lsquo;CSIP_UPDATED&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.CSIP_UPDATED, &lsquo;CASE_NOTE&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.CASE_NOTE. Only CLOSE_CSIP is populated via DPS. The rest are populated via NOMIS only and retained for sync and reporting</p></td>
+                                    <td><p>An enumeration of actions that should be taken following the review one of which is to close the CSIP. CSIP to NOMIS mappings: &lsquo;CLOSE_CSIP&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.CLOSE_CSIP, &lsquo;REMAIN_ON_CSIP&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.REMAIN_ON_CSIP, &lsquo;RESPONSIBLE_PEOPLE_INFORMED&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.PEOPLE_INFORMED, &lsquo;CSIP_UPDATED&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.CSIP_UPDATED, &lsquo;CASE_NOTE&rsquo; -&gt; OFFENDER_CSIP_REVIEWS.CASE_NOTE. Only CLOSE_CSIP is populated via DPS. The rest are populated via NOMIS only and retained for sync and reporting <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="csip_closed_date">csip_closed_date</span></td>
@@ -282,7 +282,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date the CSIP plan was closed following a review outcome decision to close it. Maps to OFFENDER_CSIP_REVIEWS.CLOSE_DATE</p></td>
+                                    <td><p>The date the CSIP plan was closed following a review outcome decision to close it. Maps to OFFENDER_CSIP_REVIEWS.CLOSE_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="summary">summary</span></td>
@@ -299,7 +299,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Additional information about the review. Maps to OFFENDER_CSIP_REVIEWS.SUMMARY which has a 4000 character limit</p></td>
+                                    <td><p>Additional information about the review. Maps to OFFENDER_CSIP_REVIEWS.SUMMARY which has a 4000 character limit <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="version">version</span></td>
@@ -316,7 +316,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities</p></td>
+                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="legacy_id">legacy_id</span></td>
@@ -338,7 +338,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>The NOMIS OFFENDER_CSIP_REVIEWS.REVIEW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API</p></td>
+                                    <td><p>The NOMIS OFFENDER_CSIP_REVIEWS.REVIEW_ID primary key value. Stored to guarantee uniqueness via sync. Not returned by API <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 </tbody>
                             </table>

@@ -141,7 +141,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Shared primary key with csip_record. Uses the same value as csip_record.record_id</p></td>
+                                    <td><p>Shared primary key with csip_record. Uses the same value as csip_record.record_id <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="outcome_id">outcome_id</span></td>
@@ -163,7 +163,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Foreign key to reference data using the &lsquo;SCREENING_OUTCOME_TYPE&rsquo; domain for the selected screening outcome. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME</p></td>
+                                    <td><p>Foreign key to reference data using the &lsquo;SCREENING_OUTCOME_TYPE&rsquo; domain for the selected screening outcome. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="recorded_by">recorded_by</span></td>
@@ -180,7 +180,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY</p></td>
+                                    <td><p>The username of the user who recorded the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_RECORDED_BY <a href="./../null">Sensitivity: STAFF</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="recorded_by_display_name">recorded_by_display_name</span></td>
@@ -197,7 +197,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The first and last name of the user who recorded the safer custody screening outcome. Does not update if their name changes</p></td>
+                                    <td><p>The first and last name of the user who recorded the safer custody screening outcome. Does not update if their name changes <a href="./../null">Sensitivity: STAFF</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="date">date</span></td>
@@ -214,7 +214,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE</p></td>
+                                    <td><p>The date of the safer custody screening outcome. Maps to OFFENDER_CSIP_REPORTS.CDR_OUTCOME_DATE <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="reason_for_decision">reason_for_decision</span></td>
@@ -231,7 +231,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The reasons for the safer custody screening outcome decision. Maps to OFFENDER_CSIP_REPORTS.CDR_DECISION_REASON which has a 4000 character limit</p></td>
+                                    <td><p>The reasons for the safer custody screening outcome decision. Maps to OFFENDER_CSIP_REPORTS.CDR_DECISION_REASON which has a 4000 character limit <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="version">version</span></td>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities</p></td>
+                                    <td><p>Supports optimistic locking preventing unnecessary select queries for new entities <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 </tbody>
                             </table>
