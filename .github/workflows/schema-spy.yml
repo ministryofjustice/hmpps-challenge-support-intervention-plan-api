@@ -18,7 +18,7 @@ on:
       init_db_cli:
         description: Command line to initialise database
         type: string
-        default: './gradlew -Pinit-db=true test --tests uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.InitialiseDatabase'
+        default: './gradlew -Pinit-db=true -PreferenceDataOutput="${PWD}/reference-data.csv" test --tests uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.InitialiseDatabase --tests uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.ExportReferenceData'
       database_name:
         description: Database name
         type: string
@@ -77,6 +77,19 @@ jobs:
           schema: ${{ inputs.database_schema }}
           user: ${{ inputs.database_user }}
           password: ${{ inputs.database_password }}
+
+      # The shared action leaves its output in /tmp/schemaspy, so writing the CSVs into the same
+      # directory gets them published by the step below without any change to the shared action.
+      - name: Generate CSV data dictionary
+        shell: bash
+        env:
+          DB_NAME: ${{ inputs.database_name }}
+          DB_USER: ${{ inputs.database_user }}
+          DB_PASSWORD: ${{ inputs.database_password }}
+          DB_SCHEMA: ${{ inputs.database_schema }}
+        run: |
+          scripts/generate-data-dictionary.sh /tmp/schemaspy/data-dictionary.csv
+          cp reference-data.csv /tmp/schemaspy/reference-data.csv
 
       # The shared action above runs SchemaSpy into /tmp/schemaspy and uploads it as a build artifact.
       # It does not publish. Without this step the report is generated and thrown away, which is what
