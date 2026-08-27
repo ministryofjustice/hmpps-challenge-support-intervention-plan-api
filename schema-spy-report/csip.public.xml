@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 18.4 (Debian 18.4-1.pgdg13+1)">
+<?xml version="1.0" encoding="UTF-8"?><database name="csip" schema="public" type="PostgreSQL - 18.6 (Debian 18.6-1.pgdg13+2)">
    <sequences>
       <sequence increment="1" name="audit_revision_id_seq" startValue="1"/>
       <sequence increment="1" name="reference_data_reference_data_id_seq" startValue="1"/>
@@ -34,9 +34,7 @@
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="attendee_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="review_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review"/>
-         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="role" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="attended" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
@@ -102,6 +100,33 @@
          <checkConstraint constraint="(affected_components &lt;@ ARRAY['RECORD'::character varying, 'REFERRAL'::character varying, 'CONTRIBUTORY_FACTOR'::character varying, 'SAFER_CUSTODY_SCREENING_OUTCOME'::character varying, 'INVESTIGATION'::character varying, 'INTERVIEW'::character varying, 'DECISION_AND_ACTIONS'::character varying, 'PLAN'::character varying, 'IDENTIFIED_NEED'::character varying, 'REVIEW'::character varying, 'ATTENDEE'::character varying])" name="affected_components_enum_check"/>
          <checkConstraint constraint="((source)::text = ANY ((ARRAY['DPS'::character varying, 'NOMIS'::character varying])::text[]))" name="check_source"/>
       </table>
+      <table name="case_note_annotations" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="csip_summary"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="request_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="prisoner_number" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="case_note_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="prompt_key" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="prompt_version" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="behaviour_type" nullable="true" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="confidence_level" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="annotated_text" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="9" name="created_date" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="case_note_annotations_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_case_note_annotations_case_note_id" unique="false">
+            <column ascending="true" name="case_note_id"/>
+         </index>
+         <index name="idx_case_note_annotations_prisoner_number" unique="false">
+            <column ascending="true" name="prisoner_number"/>
+         </index>
+         <index name="idx_case_note_annotations_request_id" unique="false">
+            <column ascending="true" name="request_id"/>
+         </index>
+      </table>
       <table name="contributory_factor" remarks="The contributory factors the referrer has identified as part of the referral" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="contributory_factor_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="referral_id" nullable="false" remarks="Parent referral foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
@@ -135,9 +160,7 @@
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="contributory_factor_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="referral_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="referral"/>
-         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="referral_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="contributory_factor_type_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
             <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="audit_revision"/>
          </column>
@@ -223,7 +246,9 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="incident_type" nullable="true" remarks="" size="40" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="next_review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="case_manager" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="case_note_annotations"/>
+         </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="log_code" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="closed_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="priority" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
@@ -295,6 +320,25 @@
             <column ascending="true" name="decision_and_actions_id"/>
          </index>
       </table>
+      <table name="flyway_schema_history" numRows="70" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="installed_rank" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="version" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="type" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="script" nullable="false" remarks="" size="1000" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="checksum" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="installed_by" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="installed_on" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="execution_time" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="success" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="installed_rank" sequenceNumberInPK="1"/>
+         <index name="flyway_schema_history_pk" unique="true">
+            <column ascending="true" name="installed_rank"/>
+         </index>
+         <index name="flyway_schema_history_s_idx" unique="false">
+            <column ascending="true" name="success"/>
+         </index>
+      </table>
       <table name="identified_need" remarks="The needs identified in the plan or at subsequent reviews. Includes the plan to resolve the identified need and the progression of that plan" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="identified_need_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
@@ -328,9 +372,7 @@
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="identified_need_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="plan"/>
-         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="identified_need" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="responsible_person" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
@@ -390,9 +432,7 @@
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="interview_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="investigation_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="investigation"/>
-         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="investigation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="interviewee" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="interview_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="interviewee_role_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
@@ -416,7 +456,6 @@
       <table name="investigation" remarks="The investigation that took place following a 'Progress to investigation' screening outcome. Investigations are an optional step 3 of the CSIP process" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="investigation_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <child column="investigation_id" foreignKey="interview_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="interview"/>
-            <child column="investigation_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="interview_audit"/>
             <parent column="referral_id" foreignKey="investigation_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="referral"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="staff_involved" nullable="true" remarks="The names of the staff involved in the investigation. Maps to OFFENDER_CSIP_REPORTS.INV_STAFF_INVOLVED which has a 4000 character limit" size="2147483647" type="text" typeCode="12"/>
@@ -495,9 +534,7 @@
       <table name="plan" remarks="The plan that was developed following a screening outcome or decision to 'Progress to CSIP'. Developing a plan is step 5 of the CSIP process" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="plan_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <child column="plan_id" foreignKey="identified_need_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="identified_need"/>
-            <child column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="identified_need_audit"/>
             <child column="plan_id" foreignKey="review_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="review"/>
-            <child column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="review_audit"/>
             <parent column="record_id" foreignKey="plan_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="csip_record"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="case_manager" nullable="true" remarks="The case manager assigned to the CSIP plan. Free text so not guaranteed to match any user information. Maps to OFFENDER_CSIP_REPORTS.CASE_MANAGER which has a 100 character limit" size="100" type="varchar" typeCode="12"/>
@@ -574,7 +611,6 @@
       <table name="referral" remarks="The referral that caused the CSIP record to be created. Referrals are step 1 of the CSIP process" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="referral_id" nullable="false" remarks="Shared primary key with csip_record. Uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <child column="referral_id" foreignKey="contributory_factor_referral_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="contributory_factor"/>
-            <child column="referral_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="contributory_factor_audit"/>
             <child column="decision_and_actions_id" foreignKey="decision_and_actions_decision_and_actions_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="decision_and_actions"/>
             <child column="investigation_id" foreignKey="investigation_investigation_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="investigation"/>
             <child column="safer_custody_screening_outcome_id" foreignKey="safer_custody_screening_outco_safer_custody_screening_outc_fkey" implied="false" onDeleteCascade="false" schema="public" table="safer_custody_screening_outcome"/>
@@ -691,7 +727,6 @@
       <table name="review" remarks="The reviews of the plan. Plans are reviewed regularly as step 6 of the CSIP process. Plans can close the CSIP completing the CSIP process" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="review_id" nullable="false" remarks="Public primary key" size="2147483647" type="uuid" typeCode="1111">
             <child column="review_id" foreignKey="attendee_review_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="attendee"/>
-            <child column="review_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="attendee_audit"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="plan_id" nullable="false" remarks="Parent plan foreign key which is the shared primary key with csip_record and therefore uses the same value as csip_record.record_id" size="2147483647" type="uuid" typeCode="1111">
             <parent column="plan_id" foreignKey="review_plan_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="plan"/>
@@ -730,9 +765,7 @@
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="rev_type" nullable="false" remarks="Type of change; 0 -&gt; entity was created, 1 -&gt; entity was updated, 2 -&gt; entity was deleted" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="review_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="plan_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="plan"/>
-         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="plan_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="review_sequence" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="review_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="recorded_by" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>

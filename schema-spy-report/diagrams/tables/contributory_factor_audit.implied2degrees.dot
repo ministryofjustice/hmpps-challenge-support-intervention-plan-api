@@ -4,42 +4,25 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
   "attendee":"elipses":w -> "review":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "attendee_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "attendee_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "attendee_audit":"elipses":w -> "review":"elipses":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
-  "contributory_factor":"elipses":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "contributory_factor":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=teeodot style=dashed];
-  "contributory_factor":"elipses":w -> "referral":"referral_id":e [arrowhead=none dir=back arrowtail=crowodot];
   "contributory_factor_audit":"contributory_factor_type_id":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "contributory_factor_audit":"legacy_id":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
-  "contributory_factor_audit":"referral_id":w -> "referral":"referral_id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "contributory_factor_audit":"rev_id":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "csip_record":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=teeodot style=dashed];
-  "csip_record":"elipses":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "csip_record_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "csip_record_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "decision_and_actions":"elipses":w -> "referral":"referral_id":e [arrowhead=none dir=back arrowtail=teeodot];
-  "decision_and_actions":"elipses":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "decision_and_actions":"elipses":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "decision_and_actions_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "decision_and_actions_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "decision_and_actions_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "identified_need":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=teeodot style=dashed];
   "identified_need_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "identified_need_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "interview":"elipses":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "interview":"elipses":w -> "investigation":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "interview":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=teeodot style=dashed];
   "interview_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
-  "interview_audit":"elipses":w -> "investigation":"elipses":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "interview_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "interview_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "investigation":"elipses":w -> "referral":"referral_id":e [arrowhead=none dir=back arrowtail=teeodot];
   "investigation_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "plan_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "referral":"incident_involvement_id":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "referral":"incident_location_id":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "referral":"incident_type_id":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "referral":"referer_area_of_work_id":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "referral":"referral_id":w -> "csip_record":"elipses":e [arrowhead=none dir=back arrowtail=teeodot];
   "referral_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "referral_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "referral_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
@@ -48,8 +31,6 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
   "review":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=teeodot style=dashed];
   "review_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "review_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "safer_custody_screening_outcome":"elipses":w -> "reference_data":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
-  "safer_custody_screening_outcome":"elipses":w -> "referral":"referral_id":e [arrowhead=none dir=back arrowtail=teeodot];
   "safer_custody_screening_outcome_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot style=dashed];
   "safer_custody_screening_outcome_audit":"elipses":w -> "audit_revision":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "attendee" [
@@ -68,7 +49,7 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="102" HEIGHT="16"><B>attendee_audit</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
       <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
     </TABLE>>
     URL="../../tables/attendee_audit.html"
     target="_top"
@@ -104,13 +85,13 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
       <TR><TD PORT="rev_id" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/primaryKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">rev_id</TD></TR></TABLE></TD><TD PORT="rev_id.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="rev_type" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">rev_type</TD></TR></TABLE></TD><TD PORT="rev_type.type" ALIGN="LEFT">int2[5]</TD></TR>
       <TR><TD PORT="contributory_factor_id" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/primaryKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">contributory_factor_id</TD></TR></TABLE></TD><TD PORT="contributory_factor_id.type" ALIGN="LEFT">uuid[2147483647]</TD></TR>
-      <TR><TD PORT="referral_id" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">referral_id</TD></TR></TABLE></TD><TD PORT="referral_id.type" ALIGN="LEFT">uuid[2147483647]</TD></TR>
+      <TR><TD PORT="referral_id" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">referral_id</TD></TR></TABLE></TD><TD PORT="referral_id.type" ALIGN="LEFT">uuid[2147483647]</TD></TR>
       <TR><TD PORT="contributory_factor_type_id" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">contributory_factor_type_id</TD></TR></TABLE></TD><TD PORT="contributory_factor_type_id.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="comment" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">comment</TD></TR></TABLE></TD><TD PORT="comment.type" ALIGN="LEFT">text[2147483647]</TD></TR>
       <TR><TD PORT="contributory_factor_type_modified" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">contributory_factor_type_modified</TD></TR></TABLE></TD><TD PORT="contributory_factor_type_modified.type" ALIGN="LEFT">bool[1]</TD></TR>
       <TR><TD PORT="comment_modified" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">comment_modified</TD></TR></TABLE></TD><TD PORT="comment_modified.type" ALIGN="LEFT">bool[1]</TD></TR>
       <TR><TD PORT="legacy_id" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="232" HEIGHT="16">legacy_id</TD></TR></TABLE></TD><TD PORT="legacy_id.type" ALIGN="LEFT">int8[19]</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 4</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">0 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">0 &gt;</TD></TR>
     </TABLE>>
     URL="../../tables/contributory_factor_audit.html"
     target="_top"
@@ -137,17 +118,6 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     URL="../../tables/csip_record_audit.html"
     target="_top"
     tooltip="csip_record_audit"
-  ];
-  "decision_and_actions" [
-   label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="142" HEIGHT="16"><B>decision_and_actions</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
-    </TABLE>>
-    URL="../../tables/decision_and_actions.html"
-    target="_top"
-    tooltip="decision_and_actions"
   ];
   "decision_and_actions_audit" [
    label=<
@@ -176,7 +146,7 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="145" HEIGHT="16"><B>identified_need_audit</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
       <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
     </TABLE>>
     URL="../../tables/identified_need_audit.html"
     target="_top"
@@ -198,22 +168,11 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="104" HEIGHT="16"><B>interview_audit</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
       <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 4</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
     </TABLE>>
     URL="../../tables/interview_audit.html"
     target="_top"
     tooltip="interview_audit"
-  ];
-  "investigation" [
-   label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="88" HEIGHT="16"><B>investigation</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">2 &gt;</TD></TR>
-    </TABLE>>
-    URL="../../tables/investigation.html"
-    target="_top"
-    tooltip="investigation"
   ];
   "investigation_audit" [
    label=<
@@ -237,34 +196,6 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     target="_top"
     tooltip="plan_audit"
   ];
-  "reference_data" [
-   label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="101" HEIGHT="16"><B>reference_data</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">122 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">10 &gt;</TD></TR>
-    </TABLE>>
-    URL="../../tables/reference_data.html"
-    target="_top"
-    tooltip="reference_data"
-  ];
-  "referral" [
-   label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="51" HEIGHT="16"><B>referral</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="referral_id" COLSPAN="3" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/primaryKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="248" HEIGHT="16">referral_id</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="incident_type_id" COLSPAN="3" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="248" HEIGHT="16">incident_type_id</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="incident_location_id" COLSPAN="3" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="248" HEIGHT="16">incident_location_id</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="referer_area_of_work_id" COLSPAN="3" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="248" HEIGHT="16">referer_area_of_work_id</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="referral_date" COLSPAN="3" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="248" HEIGHT="16">referral_date</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="incident_involvement_id" COLSPAN="3" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="248" HEIGHT="16">incident_involvement_id</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 5</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">5 &gt;</TD></TR>
-    </TABLE>>
-    URL="../../tables/referral.html"
-    target="_top"
-    tooltip="referral"
-  ];
   "referral_audit" [
    label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
@@ -281,7 +212,7 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="45" HEIGHT="16"><B>review</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
       <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">2 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">1 &gt;</TD></TR>
     </TABLE>>
     URL="../../tables/review.html"
     target="_top"
@@ -292,22 +223,11 @@ digraph "twoDegreesRelationshipsDiagramImplied" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="86" HEIGHT="16"><B>review_audit</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
       <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
     </TABLE>>
     URL="../../tables/review_audit.html"
     target="_top"
     tooltip="review_audit"
-  ];
-  "safer_custody_screening_outcome" [
-   label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="230" HEIGHT="16"><B>safer_custody_screening_outcome</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
-      <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD></TR>
-    </TABLE>>
-    URL="../../tables/safer_custody_screening_outcome.html"
-    target="_top"
-    tooltip="safer_custody_screening_outcome"
   ];
   "safer_custody_screening_outcome_audit" [
    label=<
