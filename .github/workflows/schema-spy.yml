@@ -35,6 +35,10 @@ on:
         description: Database schema name
         type: string
         required: true
+      publish:
+        description: Publish the report to GitHub Pages
+        type: boolean
+        default: true
 
 jobs:
   schema-spy:
@@ -42,6 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 240
     environment: test
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -71,3 +77,17 @@ jobs:
           schema: ${{ inputs.database_schema }}
           user: ${{ inputs.database_user }}
           password: ${{ inputs.database_password }}
+
+      # The shared action above runs SchemaSpy into /tmp/schemaspy and uploads it as a build artifact.
+      # It does not publish. Without this step the report is generated and thrown away, which is what
+      # happened between May and August 2026 - the job passed on every merge and gh-pages never moved.
+      #
+      # target-folder clears schema-spy-report/ on each deploy, so stale pages cannot accumulate, and
+      # anything at the gh-pages root is left alone.
+      - name: Publish to GitHub Pages
+        if: ${{ inputs.publish }}
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        with:
+          branch: gh-pages
+          folder: /tmp/schemaspy
+          target-folder: schema-spy-report
