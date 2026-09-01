@@ -27,7 +27,6 @@ class SuggestedCaseNotesControllerTest {
   private val prisonerNumber = "A1234AA"
 
   private val request = SuggestedCaseNotesRequest(
-    referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
@@ -37,7 +36,6 @@ class SuggestedCaseNotesControllerTest {
   fun `feature enabled - suggestedCaseNotes delegates to service and returns response`() {
     val expected = SuggestedCaseNotesResponse(
       prisonerNumber = prisonerNumber,
-      referralId = request.referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",
@@ -107,13 +105,11 @@ class SuggestedCaseNotesControllerTest {
   @Test
   fun `can construct request with all fields`() {
     val testRequest = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",
     )
 
-    assertThat(testRequest.referralId).isEqualTo("3fa85f64-5717-4562-b3fc-2c963f66afa6")
     assertThat(testRequest.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
     assertThat(testRequest.sortField).isEqualTo("relevance")
     assertThat(testRequest.sortOrder).isEqualTo("desc")

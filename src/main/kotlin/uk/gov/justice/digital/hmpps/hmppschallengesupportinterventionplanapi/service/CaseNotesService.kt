@@ -73,7 +73,6 @@ class CaseNotesService(
 
     return SuggestedCaseNotesResponse(
       prisonerNumber = prisonerNumber,
-      referralId = request.referralId,
       behaviourType = request.behaviourType,
       sortField = sortField,
       sortOrder = appliedSortOrder,
@@ -86,8 +85,7 @@ class CaseNotesService(
     if (annotations.isEmpty()) return emptyList()
 
     return annotations
-      .filter { it.caseNoteId != null }
-      .groupBy { it.caseNoteId!! }
+      .groupBy { it.caseNoteId }
       .map { (caseNoteId, caseNoteAnnotations) ->
         CaseNoteWithAnnotations(
           caseNote = caseNotesClient.getCaseNote(prisonerNumber, caseNoteId),

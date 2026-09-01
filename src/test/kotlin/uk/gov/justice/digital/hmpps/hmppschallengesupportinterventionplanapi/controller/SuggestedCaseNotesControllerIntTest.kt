@@ -188,7 +188,6 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
   @Test
   fun `response includes required fields`() {
     val prisonerNumber = givenValidPrisonNumber("A6666AA")
-    val referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
     val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111117")
 
     saveAnnotation(
@@ -208,11 +207,10 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
 
     webTestClient.postSuggestedCaseNotes(
       prisonerNumber = prisonerNumber,
-      request = suggestedCaseNotesRequest(referralId = referralId),
+      request = suggestedCaseNotesRequest(),
     )
       .expectBody()
       .jsonPath("$.prisonerNumber").isEqualTo(prisonerNumber)
-      .jsonPath("$.referralId").isEqualTo(referralId)
       .jsonPath("$.behaviourType").isEqualTo("risks_and_triggers")
       .jsonPath("$.suggestedCaseNotes[0].case_note_id").isEqualTo(caseNoteId.toString())
       .jsonPath("$.suggestedCaseNotes[0].relevance").isEqualTo("high")
@@ -324,10 +322,8 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
   }
 
   private fun suggestedCaseNotesRequest(
-    referralId: String = UUID.randomUUID().toString(),
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
   ) = SuggestedCaseNotesRequest(
-    referralId = referralId,
     behaviourType = behaviourType,
     sortField = "creationDateTime",
     sortOrder = "desc",

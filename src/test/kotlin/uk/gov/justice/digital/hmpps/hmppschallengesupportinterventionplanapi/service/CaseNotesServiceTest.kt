@@ -138,7 +138,6 @@ class CaseNotesServiceTest {
     val response = service.buildSuggestedCaseNotes("A1234AA", request)
 
     assertThat(response.prisonerNumber).isEqualTo("A1234AA")
-    assertThat(response.referralId).isEqualTo(request.referralId)
     assertThat(response.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
     assertThat(response.sortField).isEqualTo("createdDate")
     assertThat(response.sortOrder).isEqualTo("desc")
@@ -232,7 +231,6 @@ class CaseNotesServiceTest {
     val setup = setupThreeCaseNotesForSorting()
 
     val request = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     )
 
@@ -251,7 +249,6 @@ class CaseNotesServiceTest {
     val setup = setupThreeCaseNotesForSorting()
 
     val request = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "createdDate",
       sortOrder = "asc",
@@ -271,7 +268,6 @@ class CaseNotesServiceTest {
     val setup = setupThreeCaseNotesForSorting()
 
     val ascRequest = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "createdDate",
       sortOrder = "desc",
@@ -329,7 +325,6 @@ class CaseNotesServiceTest {
       .thenReturn(caseNote(newerCaseNoteId, text = "newer", creationDateTime = newer))
 
     val request = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "lastAmendedDate",
       sortOrder = "desc",
@@ -599,7 +594,6 @@ class CaseNotesServiceTest {
   )
 
   private fun suggestedRequest() = SuggestedCaseNotesRequest(
-    referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
