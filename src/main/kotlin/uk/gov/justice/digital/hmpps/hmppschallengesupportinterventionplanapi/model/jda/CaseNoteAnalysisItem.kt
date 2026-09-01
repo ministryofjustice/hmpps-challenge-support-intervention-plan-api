@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class CaseNoteAnalysisItem(
-  @JsonProperty("case_note_id")
+  @JsonProperty("item_id")
   val caseNoteId: String,
 
   @JsonProperty("case_note_text")
