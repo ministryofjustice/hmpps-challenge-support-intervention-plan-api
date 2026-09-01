@@ -88,6 +88,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs:
       - gradle_verify
+    # The top-level permissions above grant contents: read. A called workflow cannot elevate beyond
+    # its caller, so without this override the whole pipeline fails validation before any job starts -
+    # schema-spy.yml needs contents: write to push the report to gh-pages.
+    permissions:
+      contents: write
     uses: ./.github/workflows/schema-spy.yml
     with:
       docker_compose_file: 'docker-compose-schema-spy.yml'
