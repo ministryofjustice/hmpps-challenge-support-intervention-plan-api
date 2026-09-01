@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
@@ -16,8 +17,11 @@ data class JdaDequeueResponse(
 )
 
 data class JdaDequeueResponseData(
+  @JsonProperty("item_id")
   val caseNoteId: UUID,
+  @JsonProperty("confidence_level")
   val confidenceLevel: ConfidenceLevel?,
+  @JsonProperty("justifying_spans")
   val justifyingSpans: List<JustifyingSpan>,
 )
 

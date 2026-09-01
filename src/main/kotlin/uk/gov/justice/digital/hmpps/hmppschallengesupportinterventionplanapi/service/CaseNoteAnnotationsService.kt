@@ -27,6 +27,7 @@ class CaseNoteAnnotationsService(
 
   fun processQueuedCaseNoteAnnotations() {
     val response = jdaClient.getCaseNoteAnnotationsFromQueue()
+    log.info("Dequeued case note annotations for request ${response?.requestId} is ${response}")
     persistAnnotationsFromDequeue(response)
   }
 
