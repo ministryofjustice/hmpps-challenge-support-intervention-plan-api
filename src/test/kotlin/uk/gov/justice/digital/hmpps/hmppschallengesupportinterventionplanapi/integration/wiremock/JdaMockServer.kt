@@ -30,9 +30,9 @@ class JdaMockServer : WireMockServer(8114) {
               "status": "succeeded",
               "responseData": [
                 {
-                  "caseNoteId": "11111111-1111-1111-1111-111111111111",
-                  "confidenceLevel": "high",
-                  "justifyingSpans": [
+                  "item_id": "11111111-1111-1111-1111-111111111111",
+                  "confidence_level": "high",
+                  "justifying_spans": [
                     {
                       "text": "annotated text",
                       "justifies": "protective_factors"
@@ -83,9 +83,9 @@ class JdaMockServer : WireMockServer(8114) {
           "status": "succeeded",
           "responseData": [
             {
-              "caseNoteId": "11111111-1111-1111-1111-111111111111",
-              "confidenceLevel": "high",
-              "justifyingSpans": [
+              "item_id": "11111111-1111-1111-1111-111111111111",
+              "confidence_level": "high",
+              "justifying_spans": [
                 {
                   "text": "annotated text",
                   "justifies": "protective_factors"
@@ -133,9 +133,9 @@ class JdaMockServer : WireMockServer(8114) {
               "status": "succeeded",
               "responseData": [
                 {
-                  "caseNoteId": "11111111-1111-1111-1111-111111111111",
-                  "confidenceLevel": "high",
-                  "justifyingSpans": [
+                  "item_id": "11111111-1111-1111-1111-111111111111",
+                  "confidence_level": "high",
+                  "justifying_spans": [
                     {
                       "text": "annotated text",
                       "justifies": "protective_factors"
