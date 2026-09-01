@@ -91,7 +91,7 @@ class CaseNotesMappingsTest {
     assertThat(jsonNode["requestData"].size())
       .isEqualTo(1)
 
-    assertThat(jsonNode["requestData"][0]["case_note_id"].asText())
+    assertThat(jsonNode["requestData"][0]["item_id"].asText())
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
@@ -131,7 +131,7 @@ class CaseNotesMappingsTest {
     assertThat(jsonNode["requestData"].size())
       .isEqualTo(1)
 
-    assertThat(jsonNode["requestData"][0]["case_note_id"].asText())
+    assertThat(jsonNode["requestData"][0]["item_id"].asText())
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
