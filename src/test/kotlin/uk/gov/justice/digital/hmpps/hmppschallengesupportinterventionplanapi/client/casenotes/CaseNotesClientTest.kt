@@ -87,7 +87,7 @@ class CaseNotesClientTest {
           ),
         ),
         hasCaseNotes = true,
-        metadata = CaseNotesMetadata(
+        metaData = CaseNotesMetaData(
           totalElements = 1,
           page = 1,
           size = 10,
@@ -127,7 +127,7 @@ class CaseNotesClientTest {
       CaseNotesResponse(
         content = emptyList(),
         hasCaseNotes = false,
-        metadata = CaseNotesMetadata(
+        metaData = CaseNotesMetaData(
           totalElements = 0,
           page = 0,
           size = 0,

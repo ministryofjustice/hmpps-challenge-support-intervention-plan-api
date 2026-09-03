@@ -74,10 +74,10 @@ data class CaseNotesTypeSubType(
 data class CaseNotesResponse(
   val content: List<CaseNote>,
   val hasCaseNotes: Boolean,
-  val metadata: CaseNotesMetadata,
+  val metaData: CaseNotesMetaData,
 )
 
-data class CaseNotesMetadata(
+data class CaseNotesMetaData(
   val totalElements: Int,
   val page: Int,
   val size: Int,

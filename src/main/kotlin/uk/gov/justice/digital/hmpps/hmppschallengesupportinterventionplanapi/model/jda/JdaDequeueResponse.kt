@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
@@ -14,11 +15,12 @@ data class JdaDequeueResponse(
   val prompt: JdaPrompt,
   val status: JdaDequeueResponseStatus,
   val responseData: List<JdaDequeueResponseData>?,
-  val metadata: JdaDequeueResponseMetadata,
+  @JsonAlias("metaData")
+  val metaData: JdaDequeueResponseMetadata,
 )
 
 data class JdaDequeueResponseData(
-  @JsonProperty("item_id")
+  @JsonProperty("case_note_id")
   val caseNoteId: UUID,
   @JsonProperty("confidence_level")
   val confidenceLevel: ConfidenceLevel?,

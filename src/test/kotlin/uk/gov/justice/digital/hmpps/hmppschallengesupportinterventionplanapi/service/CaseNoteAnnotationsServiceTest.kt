@@ -91,7 +91,7 @@ class CaseNoteAnnotationsServiceTest {
       ),
       status = JdaDequeueResponseStatus.SUCCEEDED,
       responseData = null,
-      metadata = JdaDequeueResponseMetadata(
+      metaData = JdaDequeueResponseMetadata(
         requestType = JdaRequestType.ASYNC,
         completedAt = LocalDateTime.now(),
         completionMs = 1200,
@@ -297,7 +297,7 @@ class CaseNoteAnnotationsServiceTest {
         ),
       ),
     ),
-    metadata = JdaDequeueResponseMetadata(
+    metaData = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
       completedAt = LocalDateTime.now(),
       completionMs = 1200,

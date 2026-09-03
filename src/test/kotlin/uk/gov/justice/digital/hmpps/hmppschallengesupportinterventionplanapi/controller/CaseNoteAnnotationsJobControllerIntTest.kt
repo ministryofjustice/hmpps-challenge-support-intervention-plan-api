@@ -202,7 +202,7 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
         ),
       ),
     ),
-    metadata = JdaDequeueResponseMetadata(
+    metaData = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
       completedAt = LocalDateTime.parse("2026-06-27T09:55:03"),
       completionMs = 1200,

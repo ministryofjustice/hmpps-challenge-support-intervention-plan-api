@@ -104,7 +104,7 @@ class CaseNotesServer : WireMockServer(8113) {
                 }
               ],
               "hasCaseNotes": true,
-              "metadata": {
+              "metaData": {
                 "totalElements": 1,
                 "page": 1,
                 "size": 10
@@ -131,7 +131,7 @@ class CaseNotesServer : WireMockServer(8113) {
             {
               "content": [],
               "hasCaseNotes": false,
-              "metadata": {
+              "metaData": {
                 "totalElements": 0,
                 "page": 0,
                 "size": 0
