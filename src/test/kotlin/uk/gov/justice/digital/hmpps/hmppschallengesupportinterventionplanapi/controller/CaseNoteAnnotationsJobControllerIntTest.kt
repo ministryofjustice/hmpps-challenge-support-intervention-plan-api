@@ -29,7 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import java.time.Duration.ofSeconds
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
@@ -204,7 +204,7 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
     ),
     metadata = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
-      completedAt = OffsetDateTime.parse("2026-06-27T09:55:03Z"),
+      completedAt = LocalDateTime.parse("2026-06-27T09:55:03"),
       completionMs = 1200,
     ),
   )
