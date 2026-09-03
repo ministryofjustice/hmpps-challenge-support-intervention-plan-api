@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 class CaseNoteAnnotationsServiceTest {
@@ -93,7 +93,7 @@ class CaseNoteAnnotationsServiceTest {
       responseData = null,
       metadata = JdaDequeueResponseMetadata(
         requestType = JdaRequestType.ASYNC,
-        completedAt = OffsetDateTime.now(),
+        completedAt = LocalDateTime.now(),
         completionMs = 1200,
       ),
     )
@@ -299,7 +299,7 @@ class CaseNoteAnnotationsServiceTest {
     ),
     metadata = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
-      completedAt = OffsetDateTime.now(),
+      completedAt = LocalDateTime.now(),
       completionMs = 1200,
     ),
   )
@@ -338,7 +338,7 @@ class CaseNoteAnnotationsServiceTest {
     ),
     metadata = JdaMetadata(
       requestType = JdaRequestType.SYNC,
-      submittedAt = OffsetDateTime.now(),
+      submittedAt = java.time.OffsetDateTime.now(),
     ),
   )
 }

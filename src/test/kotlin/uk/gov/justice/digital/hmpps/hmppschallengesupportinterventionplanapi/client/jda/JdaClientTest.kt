@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 class JdaClientTest {
@@ -55,7 +55,7 @@ class JdaClientTest {
         justifies = BehaviourType.PROTECTIVE_FACTORS,
       ),
     )
-    assertThat(result?.metadata?.completedAt).isEqualTo(OffsetDateTime.parse("2026-06-27T09:55:03Z"))
+    assertThat(result?.metadata?.completedAt).isEqualTo(LocalDateTime.parse("2026-06-27T09:55:03"))
     assertThat(result?.metadata?.completionMs).isEqualTo(1200)
 
     server.verify(exactly(1), getRequestedFor(urlEqualTo("/v1/dequeueresponse")))
