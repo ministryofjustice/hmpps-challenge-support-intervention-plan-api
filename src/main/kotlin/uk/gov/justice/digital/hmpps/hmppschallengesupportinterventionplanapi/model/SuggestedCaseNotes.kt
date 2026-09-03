@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Schema(description = "Suggested case notes response")
@@ -19,6 +20,8 @@ data class SuggestedCaseNote(
   val relevance: String,
   @JsonProperty("case_note_id")
   val caseNoteId: UUID,
+  @JsonProperty("created_at")
+  val createdAt: LocalDateTime,
   @JsonProperty("annotated_case_note")
   val annotatedCaseNote: String,
 )

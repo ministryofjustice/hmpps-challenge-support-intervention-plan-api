@@ -67,6 +67,7 @@ class CaseNotesService(
         SuggestedCaseNote(
           relevance = highestConfidence.value,
           caseNoteId = caseNoteWithAnnotations.caseNote.caseNoteId,
+          createdAt = caseNoteWithAnnotations.caseNote.creationDateTime,
           annotatedCaseNote = composeAnnotationCaseNote(caseNoteWithAnnotations),
         )
       }
