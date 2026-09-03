@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
@@ -14,11 +16,14 @@ data class JdaDequeueResponse(
   val prompt: JdaPrompt,
   val status: JdaDequeueResponseStatus,
   val responseData: List<JdaDequeueResponseData>?,
+  @JsonAlias("metaData")
   val metadata: JdaDequeueResponseMetadata,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JdaDequeueResponseData(
   @JsonProperty("item_id")
+  @JsonAlias("case_note_id")
   val caseNoteId: UUID,
   @JsonProperty("confidence_level")
   val confidenceLevel: ConfidenceLevel?,
@@ -26,6 +31,7 @@ data class JdaDequeueResponseData(
   val justifyingSpans: List<JustifyingSpan>,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JdaDequeueResponseMetadata(
   val requestType: JdaRequestType,
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
