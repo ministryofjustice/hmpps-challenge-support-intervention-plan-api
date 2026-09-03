@@ -201,6 +201,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     caseNotesServer.stubGetCaseNoteById(
       offenderIdentifier = prisonerNumber,
       caseNoteId = caseNoteId,
+      creationDateTime = "2026-07-09T15:30:00",
       occurrenceDateTime = "2026-07-09T15:30:00",
       text = "Prisoner became agitated before evening unlock.",
     )
