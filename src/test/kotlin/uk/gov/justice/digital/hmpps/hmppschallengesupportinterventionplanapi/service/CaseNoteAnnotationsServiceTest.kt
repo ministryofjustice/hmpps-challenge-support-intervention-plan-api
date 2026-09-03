@@ -259,6 +259,30 @@ class CaseNoteAnnotationsServiceTest {
     verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
   }
 
+  @Test
+  fun `processQueuedCaseNoteAnnotations stops fetching new messages after 15 seconds but finishes the current message`() {
+    stubCsipRecordLookup()
+
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(testResponse())
+      .thenReturn(testResponse())
+
+    var saveAttempts = 0
+    whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
+      .thenAnswer {
+        saveAttempts++
+        if (saveAttempts == 1) {
+          Thread.sleep(15100)
+        }
+        it.getArgument<CaseNoteAnnotation>(0)
+      }
+
+    service.processQueuedCaseNoteAnnotations()
+
+    verify(jdaClient, times(1)).getCaseNoteAnnotationsFromQueue()
+    verify(caseNoteAnnotationRepository, times(4)).save(any())
+  }
+
   private fun stubCsipRecordLookup(prisonNumber: String = "A1234BC") {
     val csipRecord = mock<CsipRecord>()
     whenever(csipRecord.prisonNumber).thenReturn(prisonNumber)
