@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -60,6 +62,7 @@ class CaseNoteAnnotationsService(
   }
 
   internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
+    val start = Instant.now()
     var response = initialResponse
     var count = 0
     while (response != null) {
@@ -86,6 +89,11 @@ class CaseNoteAnnotationsService(
         log.error("Failed to persist case note annotation for request ${response.requestId}", e)
         // TODO may need to save the failed annotation persistence but this is not in current scope
       }
+
+      if (Duration.between(start, Instant.now()) >= Duration.ofSeconds(15)) {
+        break
+      }
+
       response = jdaClient.getCaseNoteAnnotationsFromQueue()
     }
 
