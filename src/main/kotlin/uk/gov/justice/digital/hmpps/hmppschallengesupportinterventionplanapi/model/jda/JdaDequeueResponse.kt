@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.util.UUID
 
 data class JdaDequeueResponse(
