@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonFormat
 
-enum class JdaRequestType {
-  @JsonProperty("sync")
-  SYNC,
+@JsonFormat(shape = JsonFormat.Shape.STRING)
+enum class JdaRequestType(private val value: String) {
+  SYNC("sync"),
+  ASYNC("async"),
+  ;
 
-  @JsonProperty("async")
-  ASYNC,
+  fun getValue(): String = value
+  override fun toString(): String = value
 }

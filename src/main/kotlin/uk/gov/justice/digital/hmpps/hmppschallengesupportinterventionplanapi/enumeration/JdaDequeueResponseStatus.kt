@@ -1,14 +1,15 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonFormat
 
-enum class JdaDequeueResponseStatus {
-  @JsonProperty("succeeded")
-  SUCCEEDED,
+@JsonFormat(shape = JsonFormat.Shape.STRING)
+enum class JdaDequeueResponseStatus(private val value: String) {
+  SUCCEEDED("succeeded"),
+  FAILED("failed"),
+  REJECTED("rejected"),
+  ;
 
-  @JsonProperty("failed")
-  FAILED,
+  fun getValue(): String = value
 
-  @JsonProperty("rejected")
-  REJECTED,
+  override fun toString(): String = value
 }
