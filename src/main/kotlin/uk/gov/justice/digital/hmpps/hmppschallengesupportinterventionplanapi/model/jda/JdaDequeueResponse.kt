@@ -14,11 +14,11 @@ data class JdaDequeueResponse(
   val prompt: JdaPrompt,
   val status: JdaDequeueResponseStatus,
   val responseData: List<JdaDequeueResponseData>?,
-  val metadata: JdaDequeueResponseMetadata,
+  val metaData: JdaDequeueResponseMetadata,
 )
 
 data class JdaDequeueResponseData(
-  @JsonProperty("item_id")
+  @JsonProperty("case_note_id")
   val caseNoteId: UUID,
   @JsonProperty("confidence_level")
   val confidenceLevel: ConfidenceLevel?,
