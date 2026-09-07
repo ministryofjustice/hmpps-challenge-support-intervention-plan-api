@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
-import com.fasterxml.jackson.annotation.JsonAlias
 import java.util.*
 
 data class JdaRequestResponse(
