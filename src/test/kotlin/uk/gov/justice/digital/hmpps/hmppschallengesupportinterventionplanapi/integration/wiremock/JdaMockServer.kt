@@ -144,7 +144,7 @@ class JdaMockServer : WireMockServer(8114) {
                 }
               ],
               "metaData": {
-                "requestType": "sync",
+                "requestType": "async",
                 "submittedAt": "2026-06-27T09:55:03Z"
               }
             }
