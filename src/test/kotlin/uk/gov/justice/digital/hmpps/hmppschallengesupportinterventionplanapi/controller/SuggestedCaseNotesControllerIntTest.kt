@@ -213,10 +213,10 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("$.prisonerNumber").isEqualTo(prisonerNumber)
       .jsonPath("$.behaviourType").isEqualTo("risks_and_triggers")
-      .jsonPath("$.suggestedCaseNotes[0].case_note_id").isEqualTo(caseNoteId.toString())
-      .jsonPath("$.suggestedCaseNotes[0].created_at").isEqualTo("2026-07-09T15:30:00")
+      .jsonPath("$.suggestedCaseNotes[0].caseNoteId").isEqualTo(caseNoteId.toString())
+      .jsonPath("$.suggestedCaseNotes[0].createdAt").isEqualTo("2026-07-09T15:30:00")
       .jsonPath("$.suggestedCaseNotes[0].relevance").isEqualTo("high")
-      .jsonPath("$.suggestedCaseNotes[0].annotated_case_note").value<String> {
+      .jsonPath("$.suggestedCaseNotes[0].annotatedCaseNote").value<String> {
         assertThat(it).contains("<span class=\"annotation-type\">became agitated</span>")
       }
   }
