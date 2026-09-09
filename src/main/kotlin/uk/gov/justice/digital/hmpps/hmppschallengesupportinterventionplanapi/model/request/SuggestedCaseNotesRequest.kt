@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 
 data class SuggestedCaseNotesRequest(
-  val referralId: String,
   val behaviourType: BehaviourType,
   var sortField: String = "createdDate",
   val sortOrder: String = "desc",

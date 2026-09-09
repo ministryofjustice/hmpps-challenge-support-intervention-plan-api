@@ -12,7 +12,7 @@ spring:
     password: ${DB_PASS}
   flyway:
     locations: classpath:/migration/common,classpath:/migration/test
-  jpa.show-sql: true
+  jpa.show-sql: false
 
 hmpps.sqs:
   provider: localstack

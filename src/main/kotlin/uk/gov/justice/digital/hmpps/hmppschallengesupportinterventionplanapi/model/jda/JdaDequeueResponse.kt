@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda
 
+import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class JdaDequeueResponse(
@@ -12,18 +14,22 @@ data class JdaDequeueResponse(
   val prompt: JdaPrompt,
   val status: JdaDequeueResponseStatus,
   val responseData: List<JdaDequeueResponseData>?,
-  val metadata: JdaDequeueResponseMetadata,
+  val metaData: JdaDequeueResponseMetadata,
 )
 
 data class JdaDequeueResponseData(
+  @JsonProperty("case_note_id")
   val caseNoteId: UUID,
+  @JsonProperty("confidence_level")
   val confidenceLevel: ConfidenceLevel?,
+  @JsonProperty("justifying_spans")
   val justifyingSpans: List<JustifyingSpan>,
 )
 
 data class JdaDequeueResponseMetadata(
   val requestType: JdaRequestType,
-  val completedAt: OffsetDateTime,
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
+  val completedAt: LocalDateTime,
   val completionMs: Long,
 )
 

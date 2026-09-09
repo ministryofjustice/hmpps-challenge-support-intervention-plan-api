@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
+import java.time.LocalDateTime
 import java.util.UUID
 
 class SuggestedCaseNotesControllerTest {
@@ -27,7 +28,6 @@ class SuggestedCaseNotesControllerTest {
   private val prisonerNumber = "A1234AA"
 
   private val request = SuggestedCaseNotesRequest(
-    referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
@@ -37,7 +37,6 @@ class SuggestedCaseNotesControllerTest {
   fun `feature enabled - suggestedCaseNotes delegates to service and returns response`() {
     val expected = SuggestedCaseNotesResponse(
       prisonerNumber = prisonerNumber,
-      referralId = request.referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",
@@ -45,6 +44,7 @@ class SuggestedCaseNotesControllerTest {
         SuggestedCaseNote(
           relevance = "high",
           caseNoteId = UUID.fromString("f4ee95d0-49a4-46a2-a485-b8f26f089170"),
+          createdAt = LocalDateTime.of(2026, 7, 9, 10, 0),
           annotatedCaseNote = "Prisoner became agitated during morning medication round.",
         ),
       ),
@@ -107,13 +107,11 @@ class SuggestedCaseNotesControllerTest {
   @Test
   fun `can construct request with all fields`() {
     val testRequest = SuggestedCaseNotesRequest(
-      referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",
     )
 
-    assertThat(testRequest.referralId).isEqualTo("3fa85f64-5717-4562-b3fc-2c963f66afa6")
     assertThat(testRequest.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
     assertThat(testRequest.sortField).isEqualTo("relevance")
     assertThat(testRequest.sortOrder).isEqualTo("desc")
