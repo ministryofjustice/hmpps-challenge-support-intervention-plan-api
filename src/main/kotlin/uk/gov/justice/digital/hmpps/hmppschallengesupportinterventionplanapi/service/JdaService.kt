@@ -45,10 +45,15 @@ class JdaService(
         ),
       )
 
-    jdaClient.queueRequest(
-      caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
-    )
-
-    log.info("Queued case notes for JDA analysis for correlationId={}", correlationId)
+    val caseNoteCount = caseNotes.content.size
+    if (caseNoteCount > 0) {
+      jdaClient.queueRequest(
+        caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
+      )
+      log.info("Queued {} case notes for JDA analysis for correlationId={}", caseNoteCount, correlationId)
+    } else {
+      log.info("No case notes found for offenderIdentifier={} to queue for JDA analysis for correlationId={}", offenderIdentifier, correlationId)
+      return
+    }
   }
 }
