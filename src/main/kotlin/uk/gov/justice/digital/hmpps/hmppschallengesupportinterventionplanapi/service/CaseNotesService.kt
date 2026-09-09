@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.prisonersearch.PrisonerSearchClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.toZoneDateTime
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
@@ -22,6 +23,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 
 @Service
 class CaseNotesService(
@@ -34,8 +36,10 @@ class CaseNotesService(
     request: CaseNotesLookupRequest,
     params: CaseNotesFilterParams = CaseNotesFilterParams(),
   ): CaseNotesResponse {
-    val now = clock.instant()
-    val (occurredFrom, occurredTo) = caseNoteDateWindow(params.period, now)
+    val occurredTo = LocalDateTime.now(clock).plusHours(1)
+    val occurredFrom = LocalDateTime.now(clock)
+      .minusDays(params.period)
+      .toLocalDate().atStartOfDay()
 
     val caseNotes = caseNotesClient.getCaseNotes(
       request.offenderIdentifier,
@@ -50,17 +54,6 @@ class CaseNotesService(
       ),
     )
     return caseNotes.copy(content = caseNotes.content.filter { it.type != "ALERT" })
-  }
-
-  private fun caseNoteDateWindow(period: Long, now: Instant): Pair<Instant, Instant> {
-    val londonZone = ZoneId.of("Europe/London")
-    val inclusivePeriod = maxOf(1L, period)
-    val today = LocalDate.ofInstant(now, londonZone)
-
-    val occurredFrom = today.atStartOfDay(londonZone).minusDays(inclusivePeriod - 1).toInstant()
-    val occurredTo = today.atTime(LocalTime.MAX).atZone(londonZone).toInstant()
-
-    return occurredFrom to occurredTo
   }
 
   fun validatePrisonerExists(prisonerNumber: String) {

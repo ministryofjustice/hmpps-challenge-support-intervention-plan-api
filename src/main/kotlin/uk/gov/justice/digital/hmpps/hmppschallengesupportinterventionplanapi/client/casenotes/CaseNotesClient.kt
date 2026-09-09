@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exc
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
-import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -58,10 +57,10 @@ class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: We
 data class CaseNotesRequest(
   val includeSensitive: Boolean,
   val typeSubTypes: List<CaseNotesTypeSubType>?,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
-  val occurredFrom: Instant,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
-  val occurredTo: Instant,
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  val occurredFrom: LocalDateTime,
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  val occurredTo: LocalDateTime,
   val page: Int,
   val size: Int,
   val sort: String,

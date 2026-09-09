@@ -32,7 +32,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
@@ -99,16 +98,11 @@ class CaseNotesServiceTest {
       )
 
     val sentRequest = requestCaptor.firstValue
-    val expectedNow = fixedClock.instant()
-    val londonZone = ZoneId.of("Europe/London")
-    val expectedFrom = LocalDate.ofInstant(expectedNow, londonZone)
+    val expectedNow = LocalDateTime.ofInstant(fixedClock.instant(), fixedClock.zone)
+    val expectedFrom = expectedNow.toLocalDate()
       .minusDays(89)
-      .atStartOfDay(londonZone)
-      .toInstant()
-    val expectedTo = LocalDate.ofInstant(expectedNow, londonZone)
-      .atTime(LocalTime.MAX)
-      .atZone(londonZone)
-      .toInstant()
+      .atStartOfDay()
+    val expectedTo = expectedNow
 
     assertThat(sentRequest.includeSensitive)
       .isTrue()
