@@ -71,7 +71,7 @@ jobs:
           ${{ inputs.init_db_cli }}
 
       - name: Generate database schema report
-        uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/database_schema_report@22d87963ea96458c47d7c1dff8670448a0be99ec # v1.1.1
+        uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/database_schema_report@accf37e936517ed39e7a888cf74f0277dab3310e # v1.1.4
         with:
           database_name: ${{ inputs.database_name }}
           schema: ${{ inputs.database_schema }}
