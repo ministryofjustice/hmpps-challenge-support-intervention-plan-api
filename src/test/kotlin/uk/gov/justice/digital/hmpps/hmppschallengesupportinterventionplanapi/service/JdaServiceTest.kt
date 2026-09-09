@@ -109,6 +109,38 @@ class JdaServiceTest {
   }
 
   @Test
+  fun `submitCaseNotesForAnalysis does nothing when no case notes are returned`() {
+    whenever(
+      csipAssistConfig.isActivePrison(prisonCode),
+    ).thenReturn(true)
+
+    whenever(
+      caseNotesService.getCaseNotes(any(), any()),
+    ).thenReturn(
+      CaseNotesResponse(
+        content = emptyList(),
+        hasCaseNotes = false,
+        metadata = CaseNotesMetadata(
+          totalElements = 0,
+          page = 0,
+          size = 0,
+        ),
+      ),
+    )
+
+    service.submitCaseNotesForAnalysis(
+      offenderIdentifier = offenderIdentifier,
+      prisonCode = prisonCode,
+      correlationId = correlationId,
+    )
+
+    verify(caseNotesService)
+      .getCaseNotes(any(), any())
+
+    verifyNoInteractions(jdaClient)
+  }
+
+  @Test
   fun `submitCaseNotesForAnalysis does nothing when feature flag disabled`() {
     serviceWithFeatureDisabled.submitCaseNotesForAnalysis(
       offenderIdentifier = offenderIdentifier,
