@@ -30,9 +30,9 @@ class JdaMockServer : WireMockServer(8114) {
               "status": "succeeded",
               "responseData": [
                 {
-                  "caseNoteId": "11111111-1111-1111-1111-111111111111",
-                  "confidenceLevel": "high",
-                  "justifyingSpans": [
+                  "case_note_id": "11111111-1111-1111-1111-111111111111",
+                  "confidence_level": "high",
+                  "justifying_spans": [
                     {
                       "text": "annotated text",
                       "justifies": "protective_factors"
@@ -40,7 +40,7 @@ class JdaMockServer : WireMockServer(8114) {
                   ]
                 }
               ],
-              "metadata": {
+              "metaData": {
                 "requestType": "async",
                 "completedAt": "2026-06-27T09:55:03Z",
                 "completionMs": 1200
@@ -83,9 +83,9 @@ class JdaMockServer : WireMockServer(8114) {
           "status": "succeeded",
           "responseData": [
             {
-              "caseNoteId": "11111111-1111-1111-1111-111111111111",
-              "confidenceLevel": "high",
-              "justifyingSpans": [
+              "case_note_id": "11111111-1111-1111-1111-111111111111",
+              "confidence_level": "high",
+              "justifying_spans": [
                 {
                   "text": "annotated text",
                   "justifies": "protective_factors"
@@ -93,7 +93,7 @@ class JdaMockServer : WireMockServer(8114) {
               ]
             }
           ],
-          "metadata": {
+          "metaData": {
             "requestType": "async",
             "completedAt": "2026-06-27T09:55:03Z",
             "completionMs": 1200
@@ -133,9 +133,9 @@ class JdaMockServer : WireMockServer(8114) {
               "status": "succeeded",
               "responseData": [
                 {
-                  "caseNoteId": "11111111-1111-1111-1111-111111111111",
-                  "confidenceLevel": "high",
-                  "justifyingSpans": [
+                  "case_note_id": "11111111-1111-1111-1111-111111111111",
+                  "confidence_level": "high",
+                  "justifying_spans": [
                     {
                       "text": "annotated text",
                       "justifies": "protective_factors"
@@ -143,8 +143,8 @@ class JdaMockServer : WireMockServer(8114) {
                   ]
                 }
               ],
-              "metadata": {
-                "requestType": "sync",
+              "metaData": {
+                "requestType": "async",
                 "submittedAt": "2026-06-27T09:55:03Z"
               }
             }

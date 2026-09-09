@@ -48,7 +48,7 @@ jobs:
     steps:
       - id: app_version
         name: Application version creators
-        uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/build-test-and-deploy/create_app_version@860f18498f2263bb888da24cafc3c47cc87e3543 # v1.1.0
+        uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/build-test-and-deploy/create_app_version@22d87963ea96458c47d7c1dff8670448a0be99ec # v1.1.1
   gradle_verify:
     name: Validate the kotlin
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
@@ -88,6 +88,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs:
       - gradle_verify
+    # The top-level permissions above grant contents: read. A called workflow cannot elevate beyond
+    # its caller, so without this override the whole pipeline fails validation before any job starts -
+    # schema-spy.yml needs contents: write to push the report to gh-pages.
+    permissions:
+      contents: write
     uses: ./.github/workflows/schema-spy.yml
     with:
       docker_compose_file: 'docker-compose-schema-spy.yml'

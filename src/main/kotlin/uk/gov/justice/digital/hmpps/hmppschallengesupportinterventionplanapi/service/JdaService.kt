@@ -36,8 +36,6 @@ class JdaService(
       return
     }
 
-    log.info("Queueing case notes for JDA analysis for correlationId={}, offenderIdentifier={}, prisonCode={}", correlationId, offenderIdentifier, prisonCode)
-
     val caseNotes =
       caseNotesService.getCaseNotes(
         CaseNotesLookupRequest(
@@ -45,10 +43,16 @@ class JdaService(
         ),
       )
 
-    jdaClient.queueRequest(
-      caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
-    )
-
-    log.info("Queued case notes for JDA analysis for correlationId={}", correlationId)
+    val caseNoteCount = caseNotes.content.size
+    if (caseNoteCount > 0) {
+      log.info("Queueing case notes for JDA analysis for correlationId={}, offenderIdentifier={}, prisonCode={}", correlationId, offenderIdentifier, prisonCode)
+      jdaClient.queueRequest(
+        caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
+      )
+      log.info("Queued {} case notes for JDA analysis for correlationId={}", caseNoteCount, correlationId)
+    } else {
+      log.info("No case notes found for offenderIdentifier={} to queue for JDA analysis for correlationId={}", offenderIdentifier, correlationId)
+      return
+    }
   }
 }
