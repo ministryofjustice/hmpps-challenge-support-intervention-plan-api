@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
+import java.time.LocalDateTime
 import java.util.UUID
 
 class SuggestedCaseNotesControllerTest {
@@ -43,6 +44,7 @@ class SuggestedCaseNotesControllerTest {
         SuggestedCaseNote(
           relevance = "high",
           caseNoteId = UUID.fromString("f4ee95d0-49a4-46a2-a485-b8f26f089170"),
+          createdAt = LocalDateTime.of(2026, 7, 9, 10, 0),
           annotatedCaseNote = "Prisoner became agitated during morning medication round.",
         ),
       ),
