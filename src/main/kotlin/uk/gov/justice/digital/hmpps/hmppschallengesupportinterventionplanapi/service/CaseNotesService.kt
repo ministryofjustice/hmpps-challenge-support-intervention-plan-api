@@ -23,21 +23,24 @@ import java.time.LocalDateTime
 class CaseNotesService(
   private val caseNotesClient: CaseNotesClient,
   private val prisonerSearch: PrisonerSearchClient,
-  private val clock: Clock,
   private val caseNoteAnnotationRepository: CaseNoteAnnotationRepository,
 ) {
   fun getCaseNotes(
     request: CaseNotesLookupRequest,
     params: CaseNotesFilterParams = CaseNotesFilterParams(),
   ): CaseNotesResponse {
-    val now = LocalDateTime.now(clock)
+    val now = LocalDateTime.now()
+    val occurredFrom = now
+      .toLocalDate()
+      .minusDays(params.period)
+      .atStartOfDay()
 
     val caseNotes = caseNotesClient.getCaseNotes(
       request.offenderIdentifier,
       CaseNotesRequest(
         includeSensitive = request.includeSensitive,
         typeSubTypes = emptyList(),
-        occurredFrom = now.minusDays(params.period),
+        occurredFrom = occurredFrom,
         occurredTo = now,
         page = 1,
         size = params.pageSize,

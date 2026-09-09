@@ -28,10 +28,8 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
-import java.time.Clock
-import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class CaseNotesServiceTest {
@@ -40,17 +38,10 @@ class CaseNotesServiceTest {
   private val prisonerSearchClient = mock<PrisonerSearchClient>()
   private val caseNoteAnnotationRepository = mock<CaseNoteAnnotationRepository>()
 
-  private val fixedClock =
-    Clock.fixed(
-      Instant.parse("2026-07-21T07:00:00Z"),
-      ZoneOffset.UTC,
-    )
-
   private val service =
     CaseNotesService(
       caseNotesClient,
       prisonerSearchClient,
-      fixedClock,
       caseNoteAnnotationRepository,
     )
 
@@ -84,7 +75,9 @@ class CaseNotesServiceTest {
 
     whenever(caseNotesClient.getCaseNotes(eq("A1234AA"), any())).thenReturn(caseNotesResponse)
 
+    val before = LocalDateTime.now()
     val result = service.getCaseNotes(request, params)
+    val after = LocalDateTime.now()
 
     val requestCaptor =
       argumentCaptor<CaseNotesRequest>()
@@ -96,11 +89,9 @@ class CaseNotesServiceTest {
       )
 
     val sentRequest = requestCaptor.firstValue
-    val expectedNow =
-      LocalDateTime.ofInstant(
-        fixedClock.instant(),
-        ZoneOffset.UTC,
-      )
+    val expectedFrom = LocalDate.now()
+      .minusDays(params.period)
+      .atStartOfDay()
 
     assertThat(sentRequest.includeSensitive)
       .isTrue()
@@ -118,10 +109,10 @@ class CaseNotesServiceTest {
       .isEqualTo("occurredAt,desc")
 
     assertThat(sentRequest.occurredTo)
-      .isEqualTo(expectedNow)
+      .isBetween(before, after)
 
     assertThat(sentRequest.occurredFrom)
-      .isEqualTo(expectedNow.minusDays(90))
+      .isEqualTo(expectedFrom)
 
     assertThat(result.content.map { it.type })
       .containsExactly("ACCEPTABLE_TYPE")
