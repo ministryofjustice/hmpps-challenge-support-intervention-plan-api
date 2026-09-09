@@ -30,7 +30,10 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -96,11 +99,16 @@ class CaseNotesServiceTest {
       )
 
     val sentRequest = requestCaptor.firstValue
-    val expectedNow =
-      LocalDateTime.ofInstant(
-        fixedClock.instant(),
-        ZoneOffset.UTC,
-      )
+    val expectedNow = fixedClock.instant()
+    val londonZone = ZoneId.of("Europe/London")
+    val expectedFrom = LocalDate.ofInstant(expectedNow, londonZone)
+      .minusDays(89)
+      .atStartOfDay(londonZone)
+      .toInstant()
+    val expectedTo = LocalDate.ofInstant(expectedNow, londonZone)
+      .atTime(LocalTime.MAX)
+      .atZone(londonZone)
+      .toInstant()
 
     assertThat(sentRequest.includeSensitive)
       .isTrue()
@@ -118,10 +126,10 @@ class CaseNotesServiceTest {
       .isEqualTo("occurredAt,desc")
 
     assertThat(sentRequest.occurredTo)
-      .isEqualTo(expectedNow)
+      .isEqualTo(expectedTo)
 
     assertThat(sentRequest.occurredFrom)
-      .isEqualTo(expectedNow.minusDays(90))
+      .isEqualTo(expectedFrom)
 
     assertThat(result.content.map { it.type })
       .containsExactly("ACCEPTABLE_TYPE")

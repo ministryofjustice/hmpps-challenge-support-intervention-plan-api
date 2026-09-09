@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_THROW_EXCEPTION
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.OFFENDER_IDENTIFIER_ZERO_CASE_NOTES
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -36,8 +37,8 @@ class CaseNotesClientTest {
         subTypes = listOf("string"),
       ),
     ),
-    occurredFrom = LocalDateTime.parse("2026-07-13T08:43:27.935"),
-    occurredTo = LocalDateTime.parse("2026-07-13T08:43:27.935"),
+    occurredFrom = Instant.parse("2026-07-13T08:43:27.935Z"),
+    occurredTo = Instant.parse("2026-07-13T08:43:27.935Z"),
     page = 1,
     size = 1,
     sort = "string",

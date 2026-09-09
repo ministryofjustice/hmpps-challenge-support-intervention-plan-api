@@ -17,7 +17,11 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import java.time.Clock
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 
 @Service
 class CaseNotesService(
@@ -30,21 +34,33 @@ class CaseNotesService(
     request: CaseNotesLookupRequest,
     params: CaseNotesFilterParams = CaseNotesFilterParams(),
   ): CaseNotesResponse {
-    val now = LocalDateTime.now(clock)
+    val now = clock.instant()
+    val (occurredFrom, occurredTo) = caseNoteDateWindow(params.period, now)
 
     val caseNotes = caseNotesClient.getCaseNotes(
       request.offenderIdentifier,
       CaseNotesRequest(
         includeSensitive = request.includeSensitive,
         typeSubTypes = emptyList(),
-        occurredFrom = now.minusDays(params.period),
-        occurredTo = now,
+        occurredFrom = occurredFrom,
+        occurredTo = occurredTo,
         page = 1,
         size = params.pageSize,
         sort = "occurredAt,desc",
       ),
     )
     return caseNotes.copy(content = caseNotes.content.filter { it.type != "ALERT" })
+  }
+
+  private fun caseNoteDateWindow(period: Long, now: Instant): Pair<Instant, Instant> {
+    val londonZone = ZoneId.of("Europe/London")
+    val inclusivePeriod = maxOf(1L, period)
+    val today = LocalDate.ofInstant(now, londonZone)
+
+    val occurredFrom = today.atStartOfDay(londonZone).minusDays(inclusivePeriod - 1).toInstant()
+    val occurredTo = today.atTime(LocalTime.MAX).atZone(londonZone).toInstant()
+
+    return occurredFrom to occurredTo
   }
 
   fun validatePrisonerExists(prisonerNumber: String) {
