@@ -36,8 +36,6 @@ class JdaService(
       return
     }
 
-    log.info("Queueing case notes for JDA analysis for correlationId={}, offenderIdentifier={}, prisonCode={}", correlationId, offenderIdentifier, prisonCode)
-
     val caseNotes =
       caseNotesService.getCaseNotes(
         CaseNotesLookupRequest(
@@ -47,6 +45,7 @@ class JdaService(
 
     val caseNoteCount = caseNotes.content.size
     if (caseNoteCount > 0) {
+      log.info("Queueing case notes for JDA analysis for correlationId={}, offenderIdentifier={}, prisonCode={}", correlationId, offenderIdentifier, prisonCode)
       jdaClient.queueRequest(
         caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
       )
