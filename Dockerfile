@@ -7,7 +7,7 @@ WORKDIR /app
 ADD . .
 RUN ./gradlew --no-daemon assemble
 
-FROM eclipse-temurin:25-jre-jammy
+FROM eclipse-temurin:25-jre-noble
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
 
 ARG BUILD_NUMBER
@@ -21,7 +21,7 @@ ENV TZ=Europe/London
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 
 RUN addgroup --gid 2000 --system appgroup && \
-    adduser --uid 2000 --system appuser --gid 2000
+    adduser --uid 2000 --system appuser --gid 2000 --home /home/appuser
 
 # Install AWS RDS Root cert into Java truststore
 RUN mkdir /home/appuser/.postgresql

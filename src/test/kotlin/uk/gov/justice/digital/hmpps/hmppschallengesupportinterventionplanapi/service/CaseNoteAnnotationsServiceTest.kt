@@ -20,10 +20,13 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 class CaseNoteAnnotationsServiceTest {
@@ -88,9 +91,9 @@ class CaseNoteAnnotationsServiceTest {
       ),
       status = JdaDequeueResponseStatus.SUCCEEDED,
       responseData = null,
-      metadata = JdaDequeueResponseMetadata(
+      metaData = JdaDequeueResponseMetadata(
         requestType = JdaRequestType.ASYNC,
-        completedAt = OffsetDateTime.now(),
+        completedAt = LocalDateTime.now(),
         completionMs = 1200,
       ),
     )
@@ -164,8 +167,96 @@ class CaseNoteAnnotationsServiceTest {
 
     verify(jdaClient, times(4)).getCaseNoteAnnotationsFromQueue()
     val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
-    verify(caseNoteAnnotationRepository, times(10)).save(annotationCaptor.capture())
-    assert(annotationCaptor.allValues.size == 10)
+    verify(caseNoteAnnotationRepository, times(12)).save(annotationCaptor.capture())
+    assert(annotationCaptor.allValues.size == 12)
+  }
+
+  @Test
+  fun `persistSynchronousAnnotations persists annotations from synchronous response`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId)
+
+    service.persistSynchronousAnnotations(response, prisonerNumber)
+
+    val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
+    verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
+
+    val savedAnnotations = annotationCaptor.allValues
+    assert(savedAnnotations.all { it.prisonerNumber == prisonerNumber })
+    assert(savedAnnotations.all { it.requestId == requestId })
+    assert(savedAnnotations.all { it.promptKey == "case-note-analysis" })
+    assert(savedAnnotations.all { it.promptVersion == 0 })
+    assert(savedAnnotations.mapNotNull { it.behaviourType }.toSet().size == 3)
+  }
+
+  @Test
+  fun `persistSynchronousAnnotations handles response with no data gracefully`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId).copy(responseData = null)
+
+    service.persistSynchronousAnnotations(response, prisonerNumber)
+
+    verify(caseNoteAnnotationRepository, never()).save(any())
+  }
+
+  @Test
+  fun `persistSynchronousAnnotations handles response with empty data gracefully`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId).copy(responseData = emptyList())
+
+    service.persistSynchronousAnnotations(response, prisonerNumber)
+
+    verify(caseNoteAnnotationRepository, never()).save(any())
+  }
+
+  @Test
+  fun `persistSynchronousAnnotations continues when saving an annotation fails`() {
+    val requestId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(requestId)
+
+    var saveAttempts = 0
+    whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
+      .thenAnswer {
+        saveAttempts++
+        if (saveAttempts == 3) {
+          throw RuntimeException("Database error")
+        }
+        it.getArgument<CaseNoteAnnotation>(0)
+      }
+
+    service.persistSynchronousAnnotations(response, prisonerNumber)
+
+    val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
+    verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
+  }
+
+  @Test
+  fun `persistAnnotationsFromDequeue continues when saving an annotation fails`() {
+    stubCsipRecordLookup()
+
+    val response = testResponse()
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(response)
+      .thenReturn(null)
+
+    var saveAttempts = 0
+    whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
+      .thenAnswer {
+        saveAttempts++
+        if (saveAttempts == 3) {
+          throw RuntimeException("Database error")
+        }
+        it.getArgument<CaseNoteAnnotation>(0)
+      }
+
+    service.processQueuedCaseNoteAnnotations()
+
+    val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
+    verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
   }
 
   private fun stubCsipRecordLookup(prisonNumber: String = "A1234BC") {
@@ -206,10 +297,48 @@ class CaseNoteAnnotationsServiceTest {
         ),
       ),
     ),
-    metadata = JdaDequeueResponseMetadata(
+    metaData = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
-      completedAt = OffsetDateTime.now(),
+      completedAt = LocalDateTime.now(),
       completionMs = 1200,
+    ),
+  )
+
+  private fun testJdaRequestResponse(requestId: UUID = UUID.randomUUID()): JdaRequestResponse = JdaRequestResponse(
+    requestId = requestId,
+    correlationId = UUID.randomUUID(),
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 0,
+    ),
+    status = JdaRequestStatus.SUCCEEDED,
+    responseData = listOf(
+      JdaDequeueResponseData(
+        caseNoteId = UUID.randomUUID(),
+        confidenceLevel = ConfidenceLevel.HIGH,
+        justifyingSpans = listOf(
+          JustifyingSpan(
+            text = "annotated text 1",
+            justifies = BehaviourType.PROTECTIVE_FACTORS,
+          ),
+          JustifyingSpan(
+            text = "annotated text 2",
+            justifies = BehaviourType.RISKS_AND_TRIGGERS,
+          ),
+          JustifyingSpan(
+            text = "annotated text 3",
+            justifies = BehaviourType.USUAL_BEHAVIOUR_PRESENTATION,
+          ),
+          JustifyingSpan(
+            text = "annotated text 4",
+            justifies = BehaviourType.PROTECTIVE_FACTORS,
+          ),
+        ),
+      ),
+    ),
+    metaData = JdaMetadata(
+      requestType = JdaRequestType.SYNC,
+      submittedAt = java.time.OffsetDateTime.now(),
     ),
   )
 }

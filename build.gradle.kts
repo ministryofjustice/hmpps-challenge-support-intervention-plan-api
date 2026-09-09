@@ -2,13 +2,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.5"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.6"
   kotlin("plugin.spring") version "2.4.10"
   kotlin("plugin.jpa") version "2.4.10"
   jacoco
 }
 
-ext["jackson-bom.version"] = "3.2.0"
+ext["jackson-bom.version"] = "3.2.1"
 ext["jackson-2-bom.version"] = "2.22.1"
 ext["logback.version"] = "1.5.36"
 ext["tomcat.version"] = "11.0.23"
@@ -66,11 +66,14 @@ tasks {
     }
   }
 
+  // Schema documentation helpers - see .github/workflows/schema-spy.yml. These build the database and
+  // export the reference data for the data dictionary, and are not part of the normal suite.
   test {
     if (project.hasProperty("init-db")) {
-      include("**/InitialiseDatabase.class")
+      include("**/InitialiseDatabase.class", "**/ExportReferenceData.class")
+      systemProperty("referenceDataOutput", project.findProperty("referenceDataOutput") ?: "reference-data.csv")
     } else {
-      exclude("**/InitialiseDatabase.class")
+      exclude("**/InitialiseDatabase.class", "**/ExportReferenceData.class")
     }
   }
 }

@@ -32,7 +32,7 @@ class JdaServiceTest {
       jdaClient,
       csipAssistConfig,
       "case-note-analysis",
-      0,
+      1,
       true,
     )
 
@@ -42,16 +42,16 @@ class JdaServiceTest {
       jdaClient,
       csipAssistConfig,
       "case-note-analysis",
-      0,
+      1,
       false,
     )
 
   private val offenderIdentifier = "A1234AA"
   private val prisonCode = "NMI"
-  private val correlationId = "referral-id"
+  private val correlationId = UUID.randomUUID().toString()
 
   @Test
-  fun `submitCaseNotesForAnalysis submits request when feature enabled and prison active`() {
+  fun `submitCaseNotesForAnalysis queues request when feature enabled and prison active`() {
     whenever(
       csipAssistConfig.isActivePrison(prisonCode),
     ).thenReturn(true)
@@ -84,7 +84,7 @@ class JdaServiceTest {
       argumentCaptor<JdaRequest<List<CaseNoteAnalysisItem>>>()
 
     verify(jdaClient)
-      .submitRequest(requestCaptor.capture())
+      .queueRequest(requestCaptor.capture())
 
     assertThat(requestCaptor.firstValue.correlationId)
       .isEqualTo(correlationId)
@@ -93,7 +93,7 @@ class JdaServiceTest {
       .isEqualTo("case-note-analysis")
 
     assertThat(requestCaptor.firstValue.prompt.version)
-      .isEqualTo(0)
+      .isEqualTo(1)
 
     assertThat(requestCaptor.firstValue.requestData)
       .hasSize(1)
@@ -103,6 +103,41 @@ class JdaServiceTest {
 
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteId)
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
+
+    verify(jdaClient, never())
+      .submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
+  }
+
+  @Test
+  fun `submitCaseNotesForAnalysis does nothing when no case notes are returned`() {
+    whenever(
+      csipAssistConfig.isActivePrison(prisonCode),
+    ).thenReturn(true)
+
+    whenever(
+      caseNotesService.getCaseNotes(any(), any()),
+    ).thenReturn(
+      CaseNotesResponse(
+        content = emptyList(),
+        hasCaseNotes = false,
+        metadata = CaseNotesMetadata(
+          totalElements = 0,
+          page = 0,
+          size = 0,
+        ),
+      ),
+    )
+
+    service.submitCaseNotesForAnalysis(
+      offenderIdentifier = offenderIdentifier,
+      prisonCode = prisonCode,
+      correlationId = correlationId,
+    )
+
+    verify(caseNotesService)
+      .getCaseNotes(any(), any())
+
+    verifyNoInteractions(jdaClient)
   }
 
   @Test

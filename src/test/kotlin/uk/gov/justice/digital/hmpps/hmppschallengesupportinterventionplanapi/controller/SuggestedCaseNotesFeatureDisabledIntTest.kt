@@ -22,7 +22,6 @@ class SuggestedCaseNotesFeatureDisabledIntTest : IntegrationTestBase() {
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         SuggestedCaseNotesRequest(
-          referralId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
           behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
           sortField = "creationDateTime",
           sortOrder = "desc",

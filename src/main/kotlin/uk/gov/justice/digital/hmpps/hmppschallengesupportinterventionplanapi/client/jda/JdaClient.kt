@@ -21,11 +21,44 @@ class JdaClient(
 
   fun <T> submitRequest(
     request: JdaRequest<T>,
-  ): JdaRequestResponse = TODO("Implemented in JDA-361")
+  ): JdaRequestResponse = try {
+    webClient
+      .post()
+      .uri("/v1/submitrequest")
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(request)
+      .exchangeToMono { res ->
+        when (res.statusCode()) {
+          HttpStatus.OK -> res.bodyToMono<JdaRequestResponse>()
+          else -> res.createError()
+        }
+      }
+      .block()
+      ?: throw DownstreamServiceException("Submit request returned null response", RuntimeException("No response body"))
+  } catch (e: Exception) {
+    throw DownstreamServiceException("Submit case notes request failed", e)
+  }
 
   fun <T> queueRequest(
     request: JdaRequest<T>,
-  ): JdaRequestResponse = TODO("Future asynchronous JDA integration")
+  ) {
+    try {
+      webClient
+        .post()
+        .uri("/v1/queuerequest")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(request)
+        .exchangeToMono { res ->
+          when (res.statusCode()) {
+            HttpStatus.ACCEPTED -> Mono.empty()
+            else -> res.createError()
+          }
+        }
+        .block()
+    } catch (e: Exception) {
+      throw DownstreamServiceException("Queue JDA request failed", e)
+    }
+  }
 
   fun getCaseNoteAnnotationsFromQueue(): JdaDequeueResponse? = try {
     webClient

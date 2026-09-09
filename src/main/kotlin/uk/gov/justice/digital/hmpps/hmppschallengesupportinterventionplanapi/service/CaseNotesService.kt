@@ -54,15 +54,10 @@ class CaseNotesService(
   fun buildSuggestedCaseNotes(prisonerNumber: String, request: SuggestedCaseNotesRequest): SuggestedCaseNotesResponse {
     val sortOrder = request.sortOrder.trim().lowercase()
     val appliedSortOrder = if (sortOrder == "asc") "asc" else "desc"
+    val sortField = normalizeSortField(request.sortField)
 
     val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType)
-      .sortedWith(
-        if (appliedSortOrder == "asc") {
-          compareBy { it.caseNote.creationDateTime }
-        } else {
-          compareByDescending { it.caseNote.creationDateTime }
-        },
-      )
+      .sortedWith(caseNotesComparator(sortField, appliedSortOrder))
       .map { caseNoteWithAnnotations ->
         val highestConfidence = caseNoteWithAnnotations.annotations
           .mapNotNull { it.confidenceLevel }
@@ -72,15 +67,15 @@ class CaseNotesService(
         SuggestedCaseNote(
           relevance = highestConfidence.value,
           caseNoteId = caseNoteWithAnnotations.caseNote.caseNoteId,
+          createdAt = caseNoteWithAnnotations.caseNote.creationDateTime,
           annotatedCaseNote = composeAnnotationCaseNote(caseNoteWithAnnotations),
         )
       }
 
     return SuggestedCaseNotesResponse(
       prisonerNumber = prisonerNumber,
-      referralId = request.referralId,
       behaviourType = request.behaviourType,
-      sortField = request.sortField,
+      sortField = sortField,
       sortOrder = appliedSortOrder,
       suggestedCaseNotes = suggestedCaseNotes,
     )
@@ -91,8 +86,7 @@ class CaseNotesService(
     if (annotations.isEmpty()) return emptyList()
 
     return annotations
-      .filter { it.caseNoteId != null }
-      .groupBy { it.caseNoteId!! }
+      .groupBy { it.caseNoteId }
       .map { (caseNoteId, caseNoteAnnotations) ->
         CaseNoteWithAnnotations(
           caseNote = caseNotesClient.getCaseNote(prisonerNumber, caseNoteId),
@@ -144,11 +138,40 @@ class CaseNotesService(
     return renderedText.toString()
   }
 
+  private fun caseNotesComparator(sortField: String, sortOrder: String): Comparator<CaseNoteWithAnnotations> = if (sortOrder == "asc") {
+    compareBy { sortDateTime(it, sortField) }
+  } else {
+    compareByDescending { sortDateTime(it, sortField) }
+  }
+
+  private fun normalizeSortField(sortField: String): String = when (sortField.trim().lowercase()) {
+    "lastamendeddate" -> LAST_AMENDED_DATE
+    else -> CREATED_DATE
+  }
+
+  private fun sortDateTime(caseNoteWithAnnotations: CaseNoteWithAnnotations, sortField: String): LocalDateTime {
+    val caseNote = caseNoteWithAnnotations.caseNote
+    return when (sortField) {
+      LAST_AMENDED_DATE -> latestTimelineDate(caseNote.creationDateTime, caseNote.amendments.map { it.creationDateTime })
+      else -> caseNote.creationDateTime
+    }
+  }
+
+  private fun latestTimelineDate(creationDateTime: LocalDateTime, amendmentDateTimes: List<LocalDateTime>): LocalDateTime = amendmentDateTimes
+    .maxOrNull()
+    ?.takeIf { it.isAfter(creationDateTime) }
+    ?: creationDateTime
+
   private data class TextMatch(
     val start: Int,
     val end: Int,
     val text: String,
   )
+
+  private companion object {
+    const val CREATED_DATE = "createdDate"
+    const val LAST_AMENDED_DATE = "lastAmendedDate"
+  }
 
   private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
     id = id,

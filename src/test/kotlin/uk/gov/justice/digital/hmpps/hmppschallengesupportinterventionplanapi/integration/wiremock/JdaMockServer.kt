@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.in
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
@@ -29,9 +30,9 @@ class JdaMockServer : WireMockServer(8114) {
               "status": "succeeded",
               "responseData": [
                 {
-                  "caseNoteId": "11111111-1111-1111-1111-111111111111",
-                  "confidenceLevel": "high",
-                  "justifyingSpans": [
+                  "case_note_id": "11111111-1111-1111-1111-111111111111",
+                  "confidence_level": "high",
+                  "justifying_spans": [
                     {
                       "text": "annotated text",
                       "justifies": "protective_factors"
@@ -39,7 +40,7 @@ class JdaMockServer : WireMockServer(8114) {
                   ]
                 }
               ],
-              "metadata": {
+              "metaData": {
                 "requestType": "async",
                 "completedAt": "2026-06-27T09:55:03Z",
                 "completionMs": 1200
@@ -82,9 +83,9 @@ class JdaMockServer : WireMockServer(8114) {
           "status": "succeeded",
           "responseData": [
             {
-              "caseNoteId": "11111111-1111-1111-1111-111111111111",
-              "confidenceLevel": "high",
-              "justifyingSpans": [
+              "case_note_id": "11111111-1111-1111-1111-111111111111",
+              "confidence_level": "high",
+              "justifying_spans": [
                 {
                   "text": "annotated text",
                   "justifies": "protective_factors"
@@ -92,7 +93,7 @@ class JdaMockServer : WireMockServer(8114) {
               ]
             }
           ],
-          "metadata": {
+          "metaData": {
             "requestType": "async",
             "completedAt": "2026-06-27T09:55:03Z",
             "completionMs": 1200
@@ -112,6 +113,59 @@ class JdaMockServer : WireMockServer(8114) {
 
   fun stubDequeueResponseException(): StubMapping = stubFor(
     get("/v1/dequeueresponse")
+      .willReturn(aResponse().withStatus(500)),
+  )
+
+  fun stubSubmitRequest(): StubMapping = stubFor(
+    post("/v1/submitrequest")
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+              "requestId": "f091bc73-4f88-4ff6-9e50-5148d29ed3f6",
+              "correlationId": "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb",
+              "prompt": {
+                "key": "case-note-analysis",
+                "version": 0
+              },
+              "status": "succeeded",
+              "responseData": [
+                {
+                  "case_note_id": "11111111-1111-1111-1111-111111111111",
+                  "confidence_level": "high",
+                  "justifying_spans": [
+                    {
+                      "text": "annotated text",
+                      "justifies": "protective_factors"
+                    }
+                  ]
+                }
+              ],
+              "metaData": {
+                "requestType": "async",
+                "submittedAt": "2026-06-27T09:55:03Z"
+              }
+            }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+  )
+
+  fun stubSubmitRequestException(): StubMapping = stubFor(
+    post("/v1/submitrequest")
+      .willReturn(aResponse().withStatus(500)),
+  )
+
+  fun stubQueueRequestAccepted(): StubMapping = stubFor(
+    post("/v1/queuerequest")
+      .willReturn(aResponse().withStatus(202)),
+  )
+
+  fun stubQueueRequestException(): StubMapping = stubFor(
+    post("/v1/queuerequest")
       .willReturn(aResponse().withStatus(500)),
   )
 }
