@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 @Service
@@ -110,7 +109,7 @@ class CaseNoteAnnotationsService(
         behaviourType = span.justifies,
         confidenceLevel = item.confidenceLevel,
         annotatedText = span.text,
-        createdDate = LocalDateTime.now(ZoneOffset.UTC),
+        createdDate = LocalDateTime.now(),
       )
     }
   }
