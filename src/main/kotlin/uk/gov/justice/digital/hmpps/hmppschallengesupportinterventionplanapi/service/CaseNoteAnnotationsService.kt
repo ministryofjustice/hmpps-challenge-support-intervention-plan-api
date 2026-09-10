@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
@@ -21,11 +22,12 @@ class CaseNoteAnnotationsService(
   private val jdaClient: JdaClient,
   private val caseNoteAnnotationRepository: CaseNoteAnnotationRepository,
   private val csipRecordService: CsipRecordService,
+  @Value("\${case-note-annotations.max-processing-duration:30s}")
+  private val maxProcessingDuration: Duration,
 ) {
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
-    private val MAX_PROCESSING_DURATION: Duration = Duration.ofSeconds(15)
   }
 
   fun processQueuedCaseNoteAnnotations() {
@@ -91,7 +93,7 @@ class CaseNoteAnnotationsService(
         // TODO may need to save the failed annotation persistence but this is not in current scope
       }
 
-      if (Duration.between(start, Instant.now()) >= MAX_PROCESSING_DURATION) {
+      if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
         break
       }
 
