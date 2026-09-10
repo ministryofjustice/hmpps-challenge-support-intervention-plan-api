@@ -146,16 +146,18 @@ class CaseNotesServiceTest {
   @Test
   fun `buildSuggestedCaseNotes returns single suggested case note for one case note with one annotation`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val createdAt = LocalDateTime.of(2025, 6, 1, 9, 0)
     whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
       .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.HIGH)))
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
-      .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated during the session."))
+      .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated during the session.", creationDateTime = createdAt))
 
     val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     val note = response.suggestedCaseNotes.first()
     assertThat(note.caseNoteId).isEqualTo(caseNoteId)
+    assertThat(note.createdAt).isEqualTo(createdAt)
     assertThat(note.relevance).isEqualTo("high")
     assertThat(note.annotatedCaseNote).contains("<span class=\"annotation-type\">became agitated</span>")
   }
