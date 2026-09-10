@@ -25,6 +25,7 @@ class CaseNoteAnnotationsService(
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val MAX_PROCESSING_DURATION: Duration = Duration.ofSeconds(15)
   }
 
   fun processQueuedCaseNoteAnnotations() {
@@ -90,7 +91,7 @@ class CaseNoteAnnotationsService(
         // TODO may need to save the failed annotation persistence but this is not in current scope
       }
 
-      if (Duration.between(start, Instant.now()) >= Duration.ofSeconds(15)) {
+      if (Duration.between(start, Instant.now()) >= MAX_PROCESSING_DURATION) {
         break
       }
 
