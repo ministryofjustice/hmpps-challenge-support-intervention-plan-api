@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -33,7 +34,12 @@ class CaseNoteAnnotationsServiceTest {
   private val jdaClient = mock<JdaClient>()
   private val caseNoteAnnotationRepository = mock<CaseNoteAnnotationRepository>()
   private val csipRecordService = mock<CsipRecordService>()
-  private val service = CaseNoteAnnotationsService(jdaClient, caseNoteAnnotationRepository, csipRecordService)
+  private val service = CaseNoteAnnotationsService(
+    jdaClient,
+    caseNoteAnnotationRepository,
+    csipRecordService,
+    Duration.ofSeconds(30),
+  )
 
   @Test
   fun `processQueuedCaseNoteAnnotations handles an empty queue gracefully`() {
@@ -257,6 +263,37 @@ class CaseNoteAnnotationsServiceTest {
 
     val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
     verify(caseNoteAnnotationRepository, times(4)).save(annotationCaptor.capture())
+  }
+
+  @Test
+  fun `processQueuedCaseNoteAnnotations stops fetching new messages after configured max processing duration`() {
+    stubCsipRecordLookup()
+
+    val timeoutService = CaseNoteAnnotationsService(
+      jdaClient,
+      caseNoteAnnotationRepository,
+      csipRecordService,
+      Duration.ofMillis(50),
+    )
+
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(testResponse())
+      .thenReturn(testResponse())
+
+    var saveAttempts = 0
+    whenever(caseNoteAnnotationRepository.save(any<CaseNoteAnnotation>()))
+      .thenAnswer {
+        saveAttempts++
+        if (saveAttempts == 1) {
+          Thread.sleep(100)
+        }
+        it.getArgument<CaseNoteAnnotation>(0)
+      }
+
+    timeoutService.processQueuedCaseNoteAnnotations()
+
+    verify(jdaClient, times(1)).getCaseNoteAnnotationsFromQueue()
+    verify(caseNoteAnnotationRepository, times(4)).save(any())
   }
 
   private fun stubCsipRecordLookup(prisonNumber: String = "A1234BC") {
