@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
@@ -46,6 +47,12 @@ class SuggestedCaseNotesControllerTest {
           caseNoteId = UUID.fromString("f4ee95d0-49a4-46a2-a485-b8f26f089170"),
           createdAt = LocalDateTime.of(2026, 7, 9, 10, 0),
           annotatedCaseNote = "Prisoner became agitated during morning medication round.",
+          amendments = listOf(
+            SuggestedCaseNoteAmendment(
+              createdAt = LocalDateTime.of(2026, 7, 9, 10, 5),
+              annotatedText = "Amended note text",
+            ),
+          ),
         ),
       ),
     )

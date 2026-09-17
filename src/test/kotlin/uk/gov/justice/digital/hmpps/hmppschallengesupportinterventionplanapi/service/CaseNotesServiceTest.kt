@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteAnnotationSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteWithAnnotations
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesFilterParams
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
@@ -173,6 +174,80 @@ class CaseNotesServiceTest {
 
     assertThat(response.suggestedCaseNotes).hasSize(2)
     assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactlyInAnyOrder(caseNoteIdOne, caseNoteIdTwo)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes includes case note amendments in response`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val amendmentDateTime = LocalDateTime.of(2025, 6, 2, 10, 30)
+    val amendmentText = "Additional detail after review"
+
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "detail after review", confidenceLevel = ConfidenceLevel.HIGH)))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(
+        caseNote(
+          caseNoteId,
+          text = "Prisoner became agitated during the session.",
+          creationDateTime = LocalDateTime.of(2025, 6, 1, 9, 0),
+          amendments = listOf(
+            CaseNoteAmendment(
+              creationDateTime = amendmentDateTime,
+              authorUserName = "amender.username",
+              authorName = "Amender Name",
+              authorUserId = "USER2",
+              additionalNoteText = "Additional detail after review",
+              id = UUID.randomUUID(),
+            ),
+          ),
+        ),
+      )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+    assertThat(response.suggestedCaseNotes.first().amendments)
+      .containsExactly(SuggestedCaseNoteAmendment(createdAt = amendmentDateTime, annotatedText = "Additional <span class=\"annotation-type\">detail after review</span>"))
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes orders amendments by creation date time descending`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val olderDateTime = LocalDateTime.of(2025, 6, 2, 10, 30)
+    val newerDateTime = LocalDateTime.of(2025, 6, 3, 10, 30)
+
+    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+      .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "detail after review", confidenceLevel = ConfidenceLevel.HIGH)))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(
+        caseNote(
+          caseNoteId,
+          text = "Prisoner became agitated during the session.",
+          creationDateTime = LocalDateTime.of(2025, 6, 1, 9, 0),
+          amendments = listOf(
+            CaseNoteAmendment(
+              creationDateTime = olderDateTime,
+              authorUserName = "amender.username",
+              authorName = "Amender Name",
+              authorUserId = "USER2",
+              additionalNoteText = "Older amendment detail after review",
+              id = UUID.randomUUID(),
+            ),
+            CaseNoteAmendment(
+              creationDateTime = newerDateTime,
+              authorUserName = "amender.username",
+              authorName = "Amender Name",
+              authorUserId = "USER2",
+              additionalNoteText = "Newer amendment detail after review",
+              id = UUID.randomUUID(),
+            ),
+          ),
+        ),
+      )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes.first().amendments.map { it.createdAt }).containsExactly(newerDateTime, olderDateTime)
   }
 
   @Test
@@ -456,7 +531,7 @@ class CaseNotesServiceTest {
       annotationTexts = listOf("became agitated"),
     )
 
-    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+    val result = service.composeCaseNoteAnnotation(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner <span class=\"annotation-type\">became agitated</span> and later raised his voice.",
@@ -471,7 +546,7 @@ class CaseNotesServiceTest {
       annotationTexts = listOf("became agitated", "raised his voice"),
     )
 
-    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+    val result = service.composeCaseNoteAnnotation(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner <span class=\"annotation-type\">became agitated</span> and later <span class=\"annotation-type\">raised his voice</span>.",
@@ -486,7 +561,7 @@ class CaseNotesServiceTest {
       annotationTexts = emptyList(),
     )
 
-    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+    val result = service.composeCaseNoteAnnotation(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(originalText)
   }
@@ -499,7 +574,7 @@ class CaseNotesServiceTest {
       annotationTexts = listOf(null, "raised his voice"),
     )
 
-    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+    val result = service.composeCaseNoteAnnotation(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner became agitated and later <span class=\"annotation-type\">raised his voice</span>.",
@@ -514,7 +589,7 @@ class CaseNotesServiceTest {
       annotationTexts = listOf("   ", "raised his voice"),
     )
 
-    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+    val result = service.composeCaseNoteAnnotation(caseNoteWithAnnotations)
 
     assertThat(result).isEqualTo(
       "Prisoner became agitated and later <span class=\"annotation-type\">raised his voice</span>.",
@@ -529,7 +604,7 @@ class CaseNotesServiceTest {
       annotationTexts = listOf("became agitated"),
     )
 
-    val result = service.composeAnnotationCaseNote(caseNoteWithAnnotations)
+    val result = service.composeCaseNoteAnnotation(caseNoteWithAnnotations)
 
     assertThat(result).startsWith("On review, prisoner ")
     assertThat(result).contains("<span class=\"annotation-type\">became agitated</span>")
