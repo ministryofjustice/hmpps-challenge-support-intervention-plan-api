@@ -49,7 +49,7 @@ class CaseNotesMappingsTest {
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(requestData.first().caseNoteText)
-      .isEqualTo(expectedAnalysisText)
+      .isEqualTo(EXPECTED_ANALYSIS_TEXT)
   }
 
   @Test
@@ -95,7 +95,7 @@ class CaseNotesMappingsTest {
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
-      .isEqualTo(expectedAnalysisText)
+      .isEqualTo(EXPECTED_ANALYSIS_TEXT)
 
     assertThat(jsonNode["requestData"][0].has("caseNotes"))
       .isFalse()
@@ -135,7 +135,7 @@ class CaseNotesMappingsTest {
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
-      .isEqualTo(expectedAnalysisText)
+      .isEqualTo(EXPECTED_ANALYSIS_TEXT)
   }
 
   @Test
@@ -206,6 +206,6 @@ class CaseNotesMappingsTest {
   )
 
   private companion object {
-    const val expectedAnalysisText = "Prisoner became agitated Amendment text one Amendment text two"
+    const val EXPECTED_ANALYSIS_TEXT = "Prisoner became agitated Amendment text one Amendment text two"
   }
 }
