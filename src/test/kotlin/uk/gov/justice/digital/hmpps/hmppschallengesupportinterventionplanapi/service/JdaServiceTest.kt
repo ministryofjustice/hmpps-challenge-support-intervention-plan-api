@@ -10,6 +10,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
@@ -99,7 +100,7 @@ class JdaServiceTest {
       .hasSize(1)
 
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteText)
-      .isEqualTo("Prisoner became agitated")
+      .isEqualTo("Prisoner became agitated Amendment text one Amendment text two")
 
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteId)
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
@@ -203,6 +204,23 @@ class JdaServiceTest {
     text = "Prisoner became agitated",
     locationId = "MDI",
     sensitive = false,
-    amendments = emptyList(),
+    amendments = listOf(
+      CaseNoteAmendment(
+        creationDateTime = LocalDateTime.now(),
+        authorUserName = "amender.username",
+        authorName = "Amender Name",
+        authorUserId = "USER2",
+        additionalNoteText = "Amendment text one",
+        id = UUID.randomUUID(),
+      ),
+      CaseNoteAmendment(
+        creationDateTime = LocalDateTime.now(),
+        authorUserName = "amender.username",
+        authorName = "Amender Name",
+        authorUserId = "USER2",
+        additionalNoteText = "Amendment text two",
+        id = UUID.randomUUID(),
+      ),
+    ),
   )
 }

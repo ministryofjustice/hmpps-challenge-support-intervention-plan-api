@@ -110,9 +110,9 @@ data class CaseNoteAmendment(
   val id: UUID,
 )
 
-fun CaseNote.toCaseNoteAnalysisItem() = CaseNoteAnalysisItem(
+fun CaseNote.toCaseNoteAnalysisItem(caseNoteText: String = text) = CaseNoteAnalysisItem(
   caseNoteId = caseNoteId.toString(),
-  caseNoteText = text,
+  caseNoteText = caseNoteText,
 )
 
 fun CaseNotesResponse.toJdaRequest(
@@ -125,7 +125,14 @@ fun CaseNotesResponse.toJdaRequest(
     key = promptKey,
     version = promptVersion,
   ),
-  requestData = content.map {
-    it.toCaseNoteAnalysisItem()
+  requestData = content.map { caseNote ->
+    caseNote.toCaseNoteAnalysisItem(caseNote.toJdaCaseNoteText())
   },
 )
+
+private fun CaseNote.toJdaCaseNoteText(): String = (
+  listOf(text.trim()) + amendments
+    .map { it.additionalNoteText.trim() }
+    .filter { it.isNotBlank() }
+  ).filter { it.isNotBlank() }
+  .joinToString(separator = " ")

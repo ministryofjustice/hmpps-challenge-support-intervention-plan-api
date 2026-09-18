@@ -20,4 +20,11 @@ data class SuggestedCaseNote(
   val caseNoteId: UUID,
   val createdAt: LocalDateTime,
   val annotatedCaseNote: String,
+  val amendments: List<SuggestedCaseNoteAmendment> = emptyList(),
+)
+
+@Schema(description = "A single case-note amendment included in the suggested case note output")
+data class SuggestedCaseNoteAmendment(
+  val createdAt: LocalDateTime,
+  val annotatedText: String,
 )

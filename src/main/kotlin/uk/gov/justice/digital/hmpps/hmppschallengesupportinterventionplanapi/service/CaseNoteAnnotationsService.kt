@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enu
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteAnnotationSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteWithAnnotations
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
@@ -92,7 +93,8 @@ class CaseNoteAnnotationsService(
           relevance = highestConfidence.value,
           caseNoteId = caseNoteWithAnnotations.caseNote.caseNoteId,
           createdAt = caseNoteWithAnnotations.caseNote.creationDateTime,
-          annotatedCaseNote = composeAnnotationCaseNote(caseNoteWithAnnotations),
+          annotatedCaseNote = composeCaseNoteAnnotation(caseNoteWithAnnotations),
+          amendments = composeAmendmentAnnotations(caseNoteWithAnnotations),
         )
       }
 
@@ -119,13 +121,43 @@ class CaseNoteAnnotationsService(
       }
   }
 
-  fun composeAnnotationCaseNote(caseNoteWithAnnotations: CaseNoteWithAnnotations): String {
-    val originalText = caseNoteWithAnnotations.caseNote.text
-    if (caseNoteWithAnnotations.annotations.isEmpty()) return originalText
-
-    val matches = caseNoteWithAnnotations.annotations
+  fun composeCaseNoteAnnotation(caseNoteWithAnnotations: CaseNoteWithAnnotations, sortOrder: String = "desc"): String {
+    val annotationTexts = caseNoteWithAnnotations.annotations
+      .sortedWith(annotationComparator(sortOrder))
       .mapNotNull { it.annotatedText }
       .filter { it.isNotBlank() }
+
+    return highlightAnnotationMatches(caseNoteWithAnnotations.caseNote.text, annotationTexts)
+  }
+
+  private fun composeAmendmentAnnotations(caseNoteWithAnnotations: CaseNoteWithAnnotations): List<SuggestedCaseNoteAmendment> {
+    if (caseNoteWithAnnotations.caseNote.amendments.isEmpty()) return emptyList()
+
+    val annotationTexts = caseNoteWithAnnotations.annotations
+      .sortedWith(annotationComparator("desc"))
+      .mapNotNull { it.annotatedText }
+      .filter { it.isNotBlank() }
+
+    return caseNoteWithAnnotations.caseNote.amendments
+      .sortedByDescending { it.creationDateTime }
+      .map { amendment ->
+        SuggestedCaseNoteAmendment(
+          createdAt = amendment.creationDateTime,
+          annotatedText = highlightAnnotationMatches(amendment.additionalNoteText, annotationTexts),
+        )
+      }
+  }
+
+  private fun annotationComparator(sortOrder: String): Comparator<CaseNoteAnnotationSummary> = if (sortOrder == "asc") {
+    compareBy { it.createdDate ?: LocalDateTime.MIN }
+  } else {
+    compareByDescending { it.createdDate ?: LocalDateTime.MIN }
+  }
+
+  private fun highlightAnnotationMatches(originalText: String, annotationTexts: List<String>): String {
+    if (annotationTexts.isEmpty()) return originalText
+
+    val matches = annotationTexts
       .mapNotNull { annotationText ->
         val startIndex = originalText.indexOf(annotationText)
         if (startIndex < 0) return@mapNotNull null

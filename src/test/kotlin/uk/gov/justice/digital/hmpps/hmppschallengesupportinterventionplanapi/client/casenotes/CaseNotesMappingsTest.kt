@@ -49,7 +49,7 @@ class CaseNotesMappingsTest {
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(requestData.first().caseNoteText)
-      .isEqualTo(caseNote.text)
+      .isEqualTo(EXPECTED_ANALYSIS_TEXT)
   }
 
   @Test
@@ -95,7 +95,7 @@ class CaseNotesMappingsTest {
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
-      .isEqualTo(caseNote.text)
+      .isEqualTo(EXPECTED_ANALYSIS_TEXT)
 
     assertThat(jsonNode["requestData"][0].has("caseNotes"))
       .isFalse()
@@ -135,7 +135,7 @@ class CaseNotesMappingsTest {
       .isEqualTo(caseNote.caseNoteId.toString())
 
     assertThat(jsonNode["requestData"][0]["case_note_text"].asText())
-      .isEqualTo(caseNote.text)
+      .isEqualTo(EXPECTED_ANALYSIS_TEXT)
   }
 
   @Test
@@ -185,6 +185,27 @@ class CaseNotesMappingsTest {
     text = "Prisoner became agitated",
     locationId = "MDI",
     sensitive = false,
-    amendments = emptyList(),
+    amendments = listOf(
+      CaseNoteAmendment(
+        creationDateTime = LocalDateTime.now(),
+        authorUserName = "amender.username",
+        authorName = "Amender Name",
+        authorUserId = "USER2",
+        additionalNoteText = "Amendment text one",
+        id = UUID.randomUUID(),
+      ),
+      CaseNoteAmendment(
+        creationDateTime = LocalDateTime.now(),
+        authorUserName = "amender.username",
+        authorName = "Amender Name",
+        authorUserId = "USER2",
+        additionalNoteText = "Amendment text two",
+        id = UUID.randomUUID(),
+      ),
+    ),
   )
+
+  private companion object {
+    const val EXPECTED_ANALYSIS_TEXT = "Prisoner became agitated Amendment text one Amendment text two"
+  }
 }
