@@ -4,8 +4,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
@@ -28,9 +26,10 @@ import java.util.UUID
 
 @Service
 class CaseNoteAnnotationsService(
-  private val caseNotesClient: CaseNotesClient,
-  private val jdaClient: JdaClient,
+  private val caseNotesService: CaseNotesService,
+  private val jdaService: JdaService,
   private val caseNoteAnnotationRepository: CaseNoteAnnotationRepository,
+  private val personSummaryService: PersonSummaryService,
   private val csipRecordService: CsipRecordService,
   @Value("\${case-note-annotations.max-processing-duration:30s}")
   private val maxProcessingDuration: Duration,
@@ -43,7 +42,7 @@ class CaseNoteAnnotationsService(
   }
 
   fun processQueuedCaseNoteAnnotations() {
-    val response = jdaClient.getCaseNoteAnnotationsFromQueue()
+    val response = jdaService.getCaseNoteAnnotationsFromQueue()
     log.info("Dequeued case note annotations for request ${response?.requestId} is $response")
     persistAnnotationsFromDequeue(response)
   }
@@ -77,6 +76,8 @@ class CaseNoteAnnotationsService(
   }
 
   fun buildSuggestedCaseNotes(prisonerNumber: String, request: SuggestedCaseNotesRequest): SuggestedCaseNotesResponse {
+    validatePrisonerExists(prisonerNumber)
+
     val sortOrder = request.sortOrder.trim().lowercase()
     val appliedSortOrder = if (sortOrder == "asc") "asc" else "desc"
     val sortField = normalizeSortField(request.sortField)
@@ -93,7 +94,7 @@ class CaseNoteAnnotationsService(
           relevance = highestConfidence.value,
           caseNoteId = caseNoteWithAnnotations.caseNote.caseNoteId,
           createdAt = caseNoteWithAnnotations.caseNote.creationDateTime,
-          annotatedCaseNote = composeCaseNoteAnnotation(caseNoteWithAnnotations),
+          annotatedCaseNote = composeCaseNoteAnnotation(caseNoteWithAnnotations, appliedSortOrder),
           amendments = composeAmendmentAnnotations(caseNoteWithAnnotations),
         )
       }
@@ -107,7 +108,10 @@ class CaseNoteAnnotationsService(
     )
   }
 
-  fun getCaseNotesWithAnnotations(prisonerNumber: String, behaviourType: BehaviourType): List<CaseNoteWithAnnotations> {
+  fun getCaseNotesWithAnnotations(
+    prisonerNumber: String,
+    behaviourType: BehaviourType,
+  ): List<CaseNoteWithAnnotations> {
     val annotations = caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(prisonerNumber, behaviourType)
     if (annotations.isEmpty()) return emptyList()
 
@@ -115,19 +119,68 @@ class CaseNoteAnnotationsService(
       .groupBy { it.caseNoteId }
       .map { (caseNoteId, caseNoteAnnotations) ->
         CaseNoteWithAnnotations(
-          caseNote = caseNotesClient.getCaseNote(prisonerNumber, caseNoteId),
+          caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId),
           annotations = caseNoteAnnotations.map { it.toSummary() },
         )
       }
   }
 
-  fun composeCaseNoteAnnotation(caseNoteWithAnnotations: CaseNoteWithAnnotations, sortOrder: String = "desc"): String {
+  fun composeCaseNoteAnnotation(
+    caseNoteWithAnnotations: CaseNoteWithAnnotations,
+    sortOrder: String = "desc",
+  ): String {
     val annotationTexts = caseNoteWithAnnotations.annotations
       .sortedWith(annotationComparator(sortOrder))
       .mapNotNull { it.annotatedText }
       .filter { it.isNotBlank() }
 
     return highlightAnnotationMatches(caseNoteWithAnnotations.caseNote.text, annotationTexts)
+  }
+
+  internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
+    val start = Instant.now()
+    var response = initialResponse
+    var count = 0
+    while (response != null) {
+      try {
+        val prisonerNumber = csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
+        val caseNoteAnnotations = responseDataToAnnotations(
+          responseData = response.responseData.orEmpty(),
+          requestId = response.requestId,
+          prompt = response.prompt,
+          prisonerNumber = prisonerNumber,
+        )
+        caseNoteAnnotations.forEach { caseNoteAnnotation ->
+          try {
+            caseNoteAnnotationRepository.save(caseNoteAnnotation)
+          } catch (e: Exception) {
+            log.error(
+              "Failed to persist case note annotation for case note ${caseNoteAnnotation.caseNoteId}",
+              e,
+            )
+          }
+        }
+        count++
+      } catch (e: Exception) {
+        log.error("Failed to persist case note annotation for request ${response.requestId}", e)
+        // TODO may need to save the failed annotation persistence but this is not in current scope
+      }
+
+      if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
+        log.info("Exited persistAnnotationsFromDequeue early after processing $count case note annotations")
+        break
+      }
+
+      response = jdaService.getCaseNoteAnnotationsFromQueue()
+    }
+
+    if (count > 0) {
+      log.info("Processed $count case note annotations")
+    }
+  }
+
+  private fun validatePrisonerExists(prisonerNumber: String) {
+    personSummaryService.validatePrisoner(prisonerNumber)
   }
 
   private fun composeAmendmentAnnotations(caseNoteWithAnnotations: CaseNoteWithAnnotations): List<SuggestedCaseNoteAmendment> {
@@ -224,61 +277,6 @@ class CaseNoteAnnotationsService(
     val text: String,
   )
 
-  private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
-    id = id,
-    requestId = requestId,
-    prisonerNumber = prisonerNumber,
-    caseNoteId = caseNoteId,
-    promptKey = promptKey,
-    promptVersion = promptVersion,
-    behaviourType = behaviourType,
-    confidenceLevel = confidenceLevel,
-    annotatedText = annotatedText,
-    createdDate = createdDate,
-  )
-
-  internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
-    val start = Instant.now()
-    var response = initialResponse
-    var count = 0
-    while (response != null) {
-      try {
-        val prisonerNumber = csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
-        val caseNoteAnnotations = responseDataToAnnotations(
-          responseData = response.responseData.orEmpty(),
-          requestId = response.requestId,
-          prompt = response.prompt,
-          prisonerNumber = prisonerNumber,
-        )
-        caseNoteAnnotations.forEach { caseNoteAnnotation ->
-          try {
-            caseNoteAnnotationRepository.save(caseNoteAnnotation)
-          } catch (e: Exception) {
-            log.error(
-              "Failed to persist case note annotation for case note ${caseNoteAnnotation.caseNoteId}",
-              e,
-            )
-          }
-        }
-        count++
-      } catch (e: Exception) {
-        log.error("Failed to persist case note annotation for request ${response.requestId}", e)
-        // TODO may need to save the failed annotation persistence but this is not in current scope
-      }
-
-      if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
-        log.info("Exited persistAnnotationsFromDequeue early after processing $count case note annotations")
-        break
-      }
-
-      response = jdaClient.getCaseNoteAnnotationsFromQueue()
-    }
-
-    if (count > 0) {
-      log.info("Processed $count case note annotations")
-    }
-  }
-
   private fun responseDataToAnnotations(
     responseData: List<JdaDequeueResponseData>,
     requestId: UUID,
@@ -299,4 +297,17 @@ class CaseNoteAnnotationsService(
       )
     }
   }
+
+  private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
+    id = id,
+    requestId = requestId,
+    prisonerNumber = prisonerNumber,
+    caseNoteId = caseNoteId,
+    promptKey = promptKey,
+    promptVersion = promptVersion,
+    behaviourType = behaviourType,
+    confidenceLevel = confidenceLevel,
+    annotatedText = annotatedText,
+    createdDate = createdDate,
+  )
 }

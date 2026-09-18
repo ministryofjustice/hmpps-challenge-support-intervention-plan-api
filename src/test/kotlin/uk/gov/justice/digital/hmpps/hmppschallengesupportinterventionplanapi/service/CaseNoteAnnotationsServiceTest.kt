@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -13,7 +14,6 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
@@ -39,31 +39,34 @@ import java.util.UUID
 
 class CaseNoteAnnotationsServiceTest {
   private val caseNotesClient = mock<CaseNotesClient>()
-  private val jdaClient = mock<JdaClient>()
   private val caseNoteAnnotationRepository = mock<CaseNoteAnnotationRepository>()
   private val csipRecordService = mock<CsipRecordService>()
+  private val caseNotesService = CaseNotesService(caseNotesClient)
+  private val jdaService = mock<JdaService>()
+  private val personSummaryService = mock<PersonSummaryService>()
   private val service = CaseNoteAnnotationsService(
-    caseNotesClient,
-    jdaClient,
+    caseNotesService,
+    jdaService,
     caseNoteAnnotationRepository,
+    personSummaryService,
     csipRecordService,
     Duration.ofSeconds(30),
   )
 
   @Test
   fun `processQueuedCaseNoteAnnotations handles an empty queue gracefully`() {
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue()).thenReturn(null)
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue()).thenReturn(null)
 
     service.processQueuedCaseNoteAnnotations()
 
-    verify(jdaClient, times(1)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
     verify(caseNoteAnnotationRepository, never()).save(any())
     verify(csipRecordService, never()).retrieveCsipRecord(any())
   }
 
   @Test
   fun `getCaseNoteAnnotationsFromQueue propagates downstream failures`() {
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenThrow(
         DownstreamServiceException(
           "Get case note annotations from queue failed",
@@ -74,7 +77,6 @@ class CaseNoteAnnotationsServiceTest {
     assertThrows<DownstreamServiceException> {
       service.processQueuedCaseNoteAnnotations()
     }
-
     verify(caseNoteAnnotationRepository, never()).save(any())
   }
 
@@ -82,7 +84,7 @@ class CaseNoteAnnotationsServiceTest {
   fun `processQueuedCaseNoteAnnotations continues when csip lookup fails`() {
     val response = testResponse()
 
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenReturn(response)
       .thenReturn(null)
     whenever(csipRecordService.retrieveCsipRecord(any()))
@@ -90,7 +92,7 @@ class CaseNoteAnnotationsServiceTest {
 
     service.processQueuedCaseNoteAnnotations()
 
-    verify(jdaClient, times(2)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
     verify(csipRecordService, times(1)).retrieveCsipRecord(any())
     verify(caseNoteAnnotationRepository, never()).save(any())
   }
@@ -113,14 +115,14 @@ class CaseNoteAnnotationsServiceTest {
       ),
     )
 
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenReturn(responseWithoutData)
       .thenReturn(null)
     stubCsipRecordLookup()
 
     service.processQueuedCaseNoteAnnotations()
 
-    verify(jdaClient, times(2)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
     verify(csipRecordService, times(1)).retrieveCsipRecord(any())
     verify(caseNoteAnnotationRepository, never()).save(any())
   }
@@ -129,14 +131,14 @@ class CaseNoteAnnotationsServiceTest {
   fun `getCaseNoteAnnotationsFromQueue polls until dequeue returns null`() {
     stubCsipRecordLookup()
 
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenReturn(testResponse())
       .thenReturn(testResponse())
       .thenReturn(null)
 
     service.processQueuedCaseNoteAnnotations()
 
-    verify(jdaClient, times(3)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(3)).getCaseNoteAnnotationsFromQueue()
     val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
     verify(caseNoteAnnotationRepository, times(8)).save(annotationCaptor.capture())
     assert(annotationCaptor.allValues.all { it.prisonerNumber == "A1234BC" })
@@ -159,7 +161,7 @@ class CaseNoteAnnotationsServiceTest {
     val secondResponse = testResponse()
     val thirdResponse = testResponse()
 
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenReturn(firstResponse)
       .thenReturn(secondResponse)
       .thenReturn(thirdResponse)
@@ -180,7 +182,7 @@ class CaseNoteAnnotationsServiceTest {
 
     service.processQueuedCaseNoteAnnotations()
 
-    verify(jdaClient, times(4)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(4)).getCaseNoteAnnotationsFromQueue()
     val annotationCaptor = argumentCaptor<CaseNoteAnnotation>()
     verify(caseNoteAnnotationRepository, times(12)).save(annotationCaptor.capture())
     assert(annotationCaptor.allValues.size == 12)
@@ -254,7 +256,7 @@ class CaseNoteAnnotationsServiceTest {
     stubCsipRecordLookup()
 
     val response = testResponse()
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenReturn(response)
       .thenReturn(null)
 
@@ -279,14 +281,15 @@ class CaseNoteAnnotationsServiceTest {
     stubCsipRecordLookup()
 
     val timeoutService = CaseNoteAnnotationsService(
-      caseNotesClient,
-      jdaClient,
+      caseNotesService,
+      jdaService,
       caseNoteAnnotationRepository,
+      personSummaryService,
       csipRecordService,
       Duration.ofMillis(50),
     )
 
-    whenever(jdaClient.getCaseNoteAnnotationsFromQueue())
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
       .thenReturn(testResponse())
       .thenReturn(testResponse())
 
@@ -302,14 +305,19 @@ class CaseNoteAnnotationsServiceTest {
 
     timeoutService.processQueuedCaseNoteAnnotations()
 
-    verify(jdaClient, times(1)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
     verify(caseNoteAnnotationRepository, times(4)).save(any())
   }
 
   @Test
   fun `buildSuggestedCaseNotes returns response header fields from request`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "became agitated")))
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
 
@@ -323,13 +331,46 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
+  fun `buildSuggestedCaseNotes throws IllegalArgumentException when prisoner does not exist`() {
+    doThrow(IllegalArgumentException("Prisoner number invalid")).whenever(personSummaryService)
+      .validatePrisoner("NOT_FOUND")
+
+    val exception = assertThrows<IllegalArgumentException> {
+      service.buildSuggestedCaseNotes("NOT_FOUND", suggestedRequest())
+    }
+
+    assertThat(exception.message).isEqualTo("Prisoner number invalid")
+    verify(personSummaryService).validatePrisoner("NOT_FOUND")
+    verify(caseNoteAnnotationRepository, never()).findByPrisonerNumberAndBehaviourType(any(), any())
+  }
+
+  @Test
   fun `buildSuggestedCaseNotes returns single suggested case note for one case note with one annotation`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val createdAt = LocalDateTime.of(2025, 6, 1, 9, 0)
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
-      .thenReturn(listOf(annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.HIGH)))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
+      .thenReturn(
+        listOf(
+          annotation(
+            caseNoteId = caseNoteId,
+            annotatedText = "became agitated",
+            confidenceLevel = ConfidenceLevel.HIGH,
+          ),
+        ),
+      )
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
-      .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated during the session.", creationDateTime = createdAt))
+      .thenReturn(
+        caseNote(
+          caseNoteId,
+          text = "Prisoner became agitated during the session.",
+          creationDateTime = createdAt,
+        ),
+      )
 
     val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
 
@@ -345,7 +386,12 @@ class CaseNoteAnnotationsServiceTest {
   fun `buildSuggestedCaseNotes returns one suggested case note per case note`() {
     val caseNoteIdOne = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val caseNoteIdTwo = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(
         listOf(
           annotation(caseNoteId = caseNoteIdOne, annotatedText = "agitated"),
@@ -360,17 +406,29 @@ class CaseNoteAnnotationsServiceTest {
     val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(2)
-    assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactlyInAnyOrder(caseNoteIdOne, caseNoteIdTwo)
+    assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactlyInAnyOrder(
+      caseNoteIdOne,
+      caseNoteIdTwo,
+    )
   }
 
   @Test
   fun `buildSuggestedCaseNotes uses highest confidence level across annotations for a case note`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(
         listOf(
           annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.LOW),
-          annotation(caseNoteId = caseNoteId, annotatedText = "raised his voice", confidenceLevel = ConfidenceLevel.HIGH),
+          annotation(
+            caseNoteId = caseNoteId,
+            annotatedText = "raised his voice",
+            confidenceLevel = ConfidenceLevel.HIGH,
+          ),
         ),
       )
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
@@ -386,7 +444,12 @@ class CaseNoteAnnotationsServiceTest {
   fun `buildSuggestedCaseNotes orders suggested case notes by creationDateTime descending`() {
     val olderCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val newerCaseNoteId = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(
         listOf(
           annotation(caseNoteId = olderCaseNoteId, annotatedText = "agitated"),
@@ -469,7 +532,12 @@ class CaseNoteAnnotationsServiceTest {
     val middleCaseNoteId = UUID.fromString("173e4567-e89b-12d3-a456-426614174000")
     val newerCaseNoteId = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
 
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(
         listOf(
           annotation(caseNoteId = olderCaseNoteId, annotatedText = "older"),
@@ -515,12 +583,21 @@ class CaseNoteAnnotationsServiceTest {
 
     assertThat(response.sortField).isEqualTo("lastAmendedDate")
     assertThat(response.sortOrder).isEqualTo("desc")
-    assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactly(olderCaseNoteId, newerCaseNoteId, middleCaseNoteId)
+    assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactly(
+      olderCaseNoteId,
+      newerCaseNoteId,
+      middleCaseNoteId,
+    )
   }
 
   @Test
   fun `buildSuggestedCaseNotes returns empty list when no annotations exist`() {
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(emptyList())
 
     val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
@@ -531,11 +608,24 @@ class CaseNoteAnnotationsServiceTest {
   @Test
   fun `buildSuggestedCaseNotes renders annotation content in annotatedCaseNote field`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(
         listOf(
-          annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.MEDIUM),
-          annotation(caseNoteId = caseNoteId, annotatedText = "raised his voice", confidenceLevel = ConfidenceLevel.MEDIUM),
+          annotation(
+            caseNoteId = caseNoteId,
+            annotatedText = "became agitated",
+            confidenceLevel = ConfidenceLevel.MEDIUM,
+          ),
+          annotation(
+            caseNoteId = caseNoteId,
+            annotatedText = "raised his voice",
+            confidenceLevel = ConfidenceLevel.MEDIUM,
+          ),
         ),
       )
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
@@ -552,13 +642,21 @@ class CaseNoteAnnotationsServiceTest {
 
   @Test
   fun `getCaseNotesWithAnnotations returns empty list when no matching annotations`() {
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(emptyList())
 
     val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
 
     assertThat(result).isEmpty()
-    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
+    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType(
+      "A1234AA",
+      BehaviourType.RISKS_AND_TRIGGERS,
+    )
   }
 
   @Test
@@ -567,7 +665,12 @@ class CaseNoteAnnotationsServiceTest {
     val annotationOne = annotation(caseNoteId = caseNoteId, annotatedText = "text 1")
     val annotationTwo = annotation(caseNoteId = caseNoteId, annotatedText = "text 2")
 
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(listOf(annotationOne, annotationTwo))
 
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
@@ -579,7 +682,10 @@ class CaseNoteAnnotationsServiceTest {
     assertThat(result.first().annotations).hasSize(2)
     assertThat(result.first().annotations.map { it.annotatedText }).containsExactlyInAnyOrder("text 1", "text 2")
 
-    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
+    verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType(
+      "A1234AA",
+      BehaviourType.RISKS_AND_TRIGGERS,
+    )
     verify(caseNotesClient, times(1)).getCaseNote("A1234AA", caseNoteId)
   }
 
@@ -588,7 +694,12 @@ class CaseNoteAnnotationsServiceTest {
     val caseNoteIdOne = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val caseNoteIdTwo = UUID.fromString("223e4567-e89b-12d3-a456-426614174000")
 
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.PROTECTIVE_FACTORS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.PROTECTIVE_FACTORS,
+      ),
+    )
       .thenReturn(
         listOf(
           annotation(
@@ -773,7 +884,12 @@ class CaseNoteAnnotationsServiceTest {
     val middle = LocalDateTime.of(2025, 3, 1, 9, 0)
     val newer = LocalDateTime.of(2025, 6, 1, 9, 0)
 
-    whenever(caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType("A1234AA", BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(
+      caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(
+        "A1234AA",
+        BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+    )
       .thenReturn(
         listOf(
           annotation(caseNoteId = olderCaseNoteId, annotatedText = "older"),

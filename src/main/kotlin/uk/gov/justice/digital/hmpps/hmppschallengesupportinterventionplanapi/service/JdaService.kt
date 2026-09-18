@@ -55,4 +55,6 @@ class JdaService(
       return
     }
   }
+
+  fun getCaseNoteAnnotationsFromQueue() = jdaClient.getCaseNoteAnnotationsFromQueue()
 }

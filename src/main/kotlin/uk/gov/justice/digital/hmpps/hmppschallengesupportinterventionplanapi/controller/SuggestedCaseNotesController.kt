@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.PersonSummaryService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
@@ -28,7 +27,6 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @Tag(name = "10. Suggested Case Notes Controller", description = "Endpoints for suggested case notes")
 class SuggestedCaseNotesController(
   private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
-  private val personSummaryService: PersonSummaryService,
   @Value("\${feature.suggested-case-notes}")
   private val suggestedCaseNotesEnabled: Boolean,
 ) {
@@ -65,8 +63,6 @@ class SuggestedCaseNotesController(
     if (!suggestedCaseNotesEnabled) {
       throw ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "suggestedCaseNotes feature is not enabled")
     }
-
-    personSummaryService.validatePrisoner(prisonerNumber)
 
     return caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request)
   }

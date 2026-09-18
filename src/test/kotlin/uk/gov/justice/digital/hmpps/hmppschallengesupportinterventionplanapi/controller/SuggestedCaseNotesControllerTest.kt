@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -17,16 +16,14 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.PersonSummaryService
 import java.time.LocalDateTime
 import java.util.UUID
 
 class SuggestedCaseNotesControllerTest {
 
   private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
-  private val personSummaryService = mock<PersonSummaryService>()
-  private val enabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, personSummaryService, true)
-  private val disabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, personSummaryService, false)
+  private val enabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, true)
+  private val disabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, false)
 
   private val prisonerNumber = "A1234AA"
 
@@ -37,7 +34,7 @@ class SuggestedCaseNotesControllerTest {
   )
 
   @Test
-  fun `feature enabled - suggestedCaseNotes delegates to services and returns response`() {
+  fun `feature enabled - suggestedCaseNotes delegates to service and returns response`() {
     val expected = SuggestedCaseNotesResponse(
       prisonerNumber = prisonerNumber,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
@@ -63,23 +60,21 @@ class SuggestedCaseNotesControllerTest {
 
     val response = enabledController.suggestedCaseNotes(prisonerNumber, request)
 
-    verify(personSummaryService).validatePrisoner(prisonerNumber)
     verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, request)
-    verifyNoMoreInteractions(caseNoteAnnotationsService, personSummaryService)
+    verifyNoMoreInteractions(caseNoteAnnotationsService)
     assertThat(response).isEqualTo(expected)
   }
 
   @Test
-  fun `feature enabled - invalid prisoner throws and does not call buildSuggestedCaseNotes`() {
-    whenever(personSummaryService.validatePrisoner(prisonerNumber)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
+  fun `feature enabled - invalid prisoner throws from service`() {
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
 
     val exception = assertThrows<IllegalArgumentException> {
       enabledController.suggestedCaseNotes(prisonerNumber, request)
     }
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
-    verify(personSummaryService).validatePrisoner(prisonerNumber)
-    verify(caseNoteAnnotationsService, never()).buildSuggestedCaseNotes(prisonerNumber, request)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, request)
   }
 
   @Test
@@ -89,7 +84,7 @@ class SuggestedCaseNotesControllerTest {
     }
 
     assertThat(exception.statusCode).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
-    verifyNoInteractions(caseNoteAnnotationsService, personSummaryService)
+    verifyNoInteractions(caseNoteAnnotationsService)
   }
 
   @Test
