@@ -379,6 +379,7 @@ class CaseNoteAnnotationsServiceTest {
     val note = response.suggestedCaseNotes.first()
     assertThat(note.caseNoteId).isEqualTo(caseNoteId)
     assertThat(note.createdAt).isEqualTo(createdAt)
+    assertThat(note.createdBy).isEqualTo("Test User")
     assertThat(note.relevance).isEqualTo("high")
     assertThat(note.annotatedCaseNote).contains("<span class=\"annotation-type\">became agitated</span>")
   }

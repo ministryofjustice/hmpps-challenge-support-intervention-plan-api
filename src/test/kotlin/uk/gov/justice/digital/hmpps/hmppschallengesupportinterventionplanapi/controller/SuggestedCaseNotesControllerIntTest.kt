@@ -215,6 +215,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       .jsonPath("$.behaviourType").isEqualTo("risks_and_triggers")
       .jsonPath("$.suggestedCaseNotes[0].caseNoteId").isEqualTo(caseNoteId.toString())
       .jsonPath("$.suggestedCaseNotes[0].createdAt").isEqualTo("2026-07-09T15:30:00")
+      .jsonPath("$.suggestedCaseNotes[0].createdBy").isEqualTo("Author Name")
       .jsonPath("$.suggestedCaseNotes[0].relevance").isEqualTo("high")
       .jsonPath("$.suggestedCaseNotes[0].annotatedCaseNote").value<String> {
         assertThat(it).contains("<span class=\"annotation-type\">became agitated</span>")
