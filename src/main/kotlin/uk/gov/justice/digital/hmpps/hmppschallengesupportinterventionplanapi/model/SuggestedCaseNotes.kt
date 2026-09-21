@@ -19,6 +19,7 @@ data class SuggestedCaseNote(
   val relevance: String,
   val caseNoteId: UUID,
   val createdAt: LocalDateTime,
+  val createdBy: String,
   val annotatedCaseNote: String,
   val amendments: List<SuggestedCaseNoteAmendment> = emptyList(),
 )

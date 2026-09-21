@@ -45,6 +45,7 @@ class SuggestedCaseNotesControllerTest {
           relevance = "high",
           caseNoteId = UUID.fromString("f4ee95d0-49a4-46a2-a485-b8f26f089170"),
           createdAt = LocalDateTime.of(2026, 7, 9, 10, 0),
+          createdBy = "Author Name",
           annotatedCaseNote = "Prisoner became agitated during morning medication round.",
           amendments = listOf(
             SuggestedCaseNoteAmendment(
