@@ -52,6 +52,7 @@ class CaseNoteAnnotationsServiceTest {
     csipRecordService,
     Duration.ofSeconds(30),
   )
+  private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
 
   @Test
   fun `processQueuedCaseNoteAnnotations handles an empty queue gracefully`() {
@@ -322,7 +323,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
 
     val request = suggestedRequest()
-    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, request)
 
     assertThat(response.prisonerNumber).isEqualTo("A1234AA")
     assertThat(response.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
@@ -336,7 +337,7 @@ class CaseNoteAnnotationsServiceTest {
       .validatePrisoner("NOT_FOUND")
 
     val exception = assertThrows<IllegalArgumentException> {
-      service.buildSuggestedCaseNotes("NOT_FOUND", suggestedRequest())
+      service.buildSuggestedCaseNotes("NOT_FOUND", referralId, suggestedRequest())
     }
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
@@ -372,7 +373,7 @@ class CaseNoteAnnotationsServiceTest {
         ),
       )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     val note = response.suggestedCaseNotes.first()
@@ -403,7 +404,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdTwo))
       .thenReturn(caseNote(caseNoteIdTwo, text = "Prisoner raised his voice."))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(2)
     assertThat(response.suggestedCaseNotes.map { it.caseNoteId }).containsExactlyInAnyOrder(
@@ -434,7 +435,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
       .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated and raised his voice."))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     assertThat(response.suggestedCaseNotes.first().relevance).isEqualTo("high")
@@ -463,7 +464,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", newerCaseNoteId))
       .thenReturn(caseNote(newerCaseNoteId, text = "Prisoner raised his voice.", creationDateTime = newer))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(2)
     assertThat(response.suggestedCaseNotes[0].caseNoteId).isEqualTo(newerCaseNoteId)
@@ -475,10 +476,11 @@ class CaseNoteAnnotationsServiceTest {
     val setup = setupThreeCaseNotesForSorting()
 
     val request = SuggestedCaseNotesRequest(
+      referralId = referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, request)
 
     assertThat(response.sortField).isEqualTo("createdDate")
     assertThat(response.sortOrder).isEqualTo("desc")
@@ -493,12 +495,13 @@ class CaseNoteAnnotationsServiceTest {
     val setup = setupThreeCaseNotesForSorting()
 
     val request = SuggestedCaseNotesRequest(
+      referralId = referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "createdDate",
       sortOrder = "asc",
     )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, request)
 
     assertThat(response.sortOrder).isEqualTo("asc")
     assertThat(response.suggestedCaseNotes).hasSize(3)
@@ -512,12 +515,13 @@ class CaseNoteAnnotationsServiceTest {
     val setup = setupThreeCaseNotesForSorting()
 
     val ascRequest = SuggestedCaseNotesRequest(
+      referralId = referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "createdDate",
       sortOrder = "desc",
     )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", ascRequest)
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, ascRequest)
 
     assertThat(response.sortOrder).isEqualTo("desc")
     assertThat(response.suggestedCaseNotes).hasSize(3)
@@ -574,12 +578,13 @@ class CaseNoteAnnotationsServiceTest {
       .thenReturn(caseNote(newerCaseNoteId, text = "newer", creationDateTime = newer))
 
     val request = SuggestedCaseNotesRequest(
+      referralId = referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "lastAmendedDate",
       sortOrder = "desc",
     )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", request)
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, request)
 
     assertThat(response.sortField).isEqualTo("lastAmendedDate")
     assertThat(response.sortOrder).isEqualTo("desc")
@@ -600,7 +605,7 @@ class CaseNoteAnnotationsServiceTest {
     )
       .thenReturn(emptyList())
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).isEmpty()
   }
@@ -631,7 +636,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
       .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated and raised his voice."))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     val annotatedContent = response.suggestedCaseNotes.first().annotatedCaseNote
@@ -650,7 +655,7 @@ class CaseNoteAnnotationsServiceTest {
     )
       .thenReturn(emptyList())
 
-    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
+    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS, referralId)
 
     assertThat(result).isEmpty()
     verify(caseNoteAnnotationRepository).findByPrisonerNumberAndBehaviourType(
@@ -675,7 +680,7 @@ class CaseNoteAnnotationsServiceTest {
 
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId)).thenReturn(caseNote(caseNoteId))
 
-    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS)
+    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.RISKS_AND_TRIGGERS, referralId)
 
     assertThat(result).hasSize(1)
     assertThat(result.first().caseNote.caseNoteId).isEqualTo(caseNoteId)
@@ -718,7 +723,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdOne)).thenReturn(caseNote(caseNoteIdOne))
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteIdTwo)).thenReturn(caseNote(caseNoteIdTwo))
 
-    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.PROTECTIVE_FACTORS)
+    val result = service.getCaseNotesWithAnnotations("A1234AA", BehaviourType.PROTECTIVE_FACTORS, referralId)
 
     assertThat(result).hasSize(2)
     assertThat(result.map { it.caseNote.caseNoteId }).containsExactlyInAnyOrder(caseNoteIdOne, caseNoteIdTwo)
@@ -871,6 +876,7 @@ class CaseNoteAnnotationsServiceTest {
   )
 
   private fun suggestedRequest() = SuggestedCaseNotesRequest(
+    referralId = referralId,
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",

@@ -26,8 +26,10 @@ class SuggestedCaseNotesControllerTest {
   private val disabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, false)
 
   private val prisonerNumber = "A1234AA"
+  private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
 
   private val request = SuggestedCaseNotesRequest(
+    referralId = referralId,
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
@@ -56,25 +58,25 @@ class SuggestedCaseNotesControllerTest {
       ),
     )
 
-    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request)).thenReturn(expected)
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request)).thenReturn(expected)
 
     val response = enabledController.suggestedCaseNotes(prisonerNumber, request)
 
-    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, request)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request)
     verifyNoMoreInteractions(caseNoteAnnotationsService)
     assertThat(response).isEqualTo(expected)
   }
 
   @Test
   fun `feature enabled - invalid prisoner throws from service`() {
-    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
 
     val exception = assertThrows<IllegalArgumentException> {
       enabledController.suggestedCaseNotes(prisonerNumber, request)
     }
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
-    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, request)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request)
   }
 
   @Test
@@ -111,11 +113,13 @@ class SuggestedCaseNotesControllerTest {
   @Test
   fun `can construct request with all fields`() {
     val testRequest = SuggestedCaseNotesRequest(
+      referralId = referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",
     )
 
+    assertThat(testRequest.referralId).isEqualTo(referralId)
     assertThat(testRequest.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
     assertThat(testRequest.sortField).isEqualTo("relevance")
     assertThat(testRequest.sortOrder).isEqualTo("desc")
