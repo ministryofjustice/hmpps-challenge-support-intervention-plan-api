@@ -13,9 +13,13 @@ class PersonSummaryService(
   private val prisonerSearch: PrisonerSearchClient,
   private val personSummaryRepository: PersonSummaryRepository,
 ) {
+  fun validatePrisoner(prisonNumber: String) {
+    getPrisoner(prisonNumber)
+  }
+
   fun updateExistingDetails(prisonNumber: String) {
     personSummaryRepository.findByIdOrNull(prisonNumber)?.also {
-      val prisoner = requireNotNull(prisonerSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
+      val prisoner = getPrisoner(prisonNumber)
       it.update(
         prisoner.firstName,
         prisoner.lastName,
@@ -33,7 +37,7 @@ class PersonSummaryService(
   fun getPersonSummaryByPrisonNumber(prisonNumber: String): PersonSummary {
     val person = personSummaryRepository.findByIdOrNull(prisonNumber)
     return if (person == null) {
-      val prisoner = requireNotNull(prisonerSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
+      val prisoner = getPrisoner(prisonNumber)
       personSummaryRepository.save(
         PersonSummary(
           prisoner.prisonerNumber,
@@ -52,4 +56,6 @@ class PersonSummaryService(
   }
 
   fun removePersonSummaryByPrisonNumber(prisonNumber: String) = personSummaryRepository.findByIdOrNull(prisonNumber)?.also(personSummaryRepository::delete)
+
+  private fun getPrisoner(prisonNumber: String) = requireNotNull(prisonerSearch.getPrisoner(prisonNumber)) { "Prisoner number invalid" }
 }

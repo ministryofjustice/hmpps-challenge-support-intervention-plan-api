@@ -19,14 +19,14 @@ import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_PRISONER_CASE_NOTES_RO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "10. Suggested Case Notes Controller", description = "Endpoints for suggested case notes")
 class SuggestedCaseNotesController(
-  private val caseNotesService: CaseNotesService,
+  private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
   @Value("\${feature.suggested-case-notes}")
   private val suggestedCaseNotesEnabled: Boolean,
 ) {
@@ -64,8 +64,6 @@ class SuggestedCaseNotesController(
       throw ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "suggestedCaseNotes feature is not enabled")
     }
 
-    caseNotesService.validatePrisonerExists(prisonerNumber)
-
-    return caseNotesService.buildSuggestedCaseNotes(prisonerNumber, request)
+    return caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request)
   }
 }

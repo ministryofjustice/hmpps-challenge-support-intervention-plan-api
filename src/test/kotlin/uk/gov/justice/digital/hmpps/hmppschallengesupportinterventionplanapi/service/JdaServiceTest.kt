@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
@@ -15,8 +15,17 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import java.time.LocalDateTime
 import java.util.UUID
@@ -53,15 +62,8 @@ class JdaServiceTest {
 
   @Test
   fun `submitCaseNotesForAnalysis queues request when feature enabled and prison active`() {
-    whenever(
-      csipAssistConfig.isActivePrison(prisonCode),
-    ).thenReturn(true)
-
-    val response = testCaseNotesResponse()
-
-    whenever(
-      caseNotesService.getCaseNotes(any(), any()),
-    ).thenReturn(response)
+    whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(true)
+    whenever(caseNotesService.getCaseNotes(any(), any())).thenReturn(testCaseNotesResponse())
 
     service.submitCaseNotesForAnalysis(
       offenderIdentifier = offenderIdentifier,
@@ -69,55 +71,33 @@ class JdaServiceTest {
       correlationId = correlationId,
     )
 
-    verify(csipAssistConfig)
-      .isActivePrison(prisonCode)
+    verify(csipAssistConfig).isActivePrison(prisonCode)
 
     val caseNotesLookupRequestCaptor = argumentCaptor<CaseNotesLookupRequest>()
-    verify(caseNotesService)
-      .getCaseNotes(caseNotesLookupRequestCaptor.capture(), any())
+    verify(caseNotesService).getCaseNotes(caseNotesLookupRequestCaptor.capture(), any())
 
-    assertThat(caseNotesLookupRequestCaptor.firstValue.offenderIdentifier)
-      .isEqualTo(offenderIdentifier)
-    assertThat(caseNotesLookupRequestCaptor.firstValue.includeSensitive)
-      .isTrue()
+    assertThat(caseNotesLookupRequestCaptor.firstValue.offenderIdentifier).isEqualTo(offenderIdentifier)
+    assertThat(caseNotesLookupRequestCaptor.firstValue.includeSensitive).isTrue()
 
-    val requestCaptor =
-      argumentCaptor<JdaRequest<List<CaseNoteAnalysisItem>>>()
+    val requestCaptor = argumentCaptor<JdaRequest<List<CaseNoteAnalysisItem>>>()
+    verify(jdaClient).queueRequest(requestCaptor.capture())
 
-    verify(jdaClient)
-      .queueRequest(requestCaptor.capture())
-
-    assertThat(requestCaptor.firstValue.correlationId)
-      .isEqualTo(correlationId)
-
-    assertThat(requestCaptor.firstValue.prompt.key)
-      .isEqualTo("case-note-analysis")
-
-    assertThat(requestCaptor.firstValue.prompt.version)
-      .isEqualTo(1)
-
-    assertThat(requestCaptor.firstValue.requestData)
-      .hasSize(1)
-
+    assertThat(requestCaptor.firstValue.correlationId).isEqualTo(correlationId)
+    assertThat(requestCaptor.firstValue.prompt.key).isEqualTo("case-note-analysis")
+    assertThat(requestCaptor.firstValue.prompt.version).isEqualTo(1)
+    assertThat(requestCaptor.firstValue.requestData).hasSize(1)
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteText)
       .isEqualTo("Prisoner became agitated Amendment text one Amendment text two")
-
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteId)
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
 
-    verify(jdaClient, never())
-      .submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
+    verify(jdaClient, never()).submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
   }
 
   @Test
   fun `submitCaseNotesForAnalysis does nothing when no case notes are returned`() {
-    whenever(
-      csipAssistConfig.isActivePrison(prisonCode),
-    ).thenReturn(true)
-
-    whenever(
-      caseNotesService.getCaseNotes(any(), any()),
-    ).thenReturn(
+    whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(true)
+    whenever(caseNotesService.getCaseNotes(any(), any())).thenReturn(
       CaseNotesResponse(
         content = emptyList(),
         hasCaseNotes = false,
@@ -135,9 +115,7 @@ class JdaServiceTest {
       correlationId = correlationId,
     )
 
-    verify(caseNotesService)
-      .getCaseNotes(any(), any())
-
+    verify(caseNotesService).getCaseNotes(any(), any())
     verifyNoInteractions(jdaClient)
   }
 
@@ -149,19 +127,14 @@ class JdaServiceTest {
       correlationId = correlationId,
     )
 
-    verify(csipAssistConfig, never())
-      .isActivePrison(any())
-
+    verify(csipAssistConfig, never()).isActivePrison(any())
     verifyNoInteractions(caseNotesService)
-
     verifyNoInteractions(jdaClient)
   }
 
   @Test
   fun `submitCaseNotesForAnalysis does nothing when prison is not active`() {
-    whenever(
-      csipAssistConfig.isActivePrison(prisonCode),
-    ).thenReturn(false)
+    whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(false)
 
     service.submitCaseNotesForAnalysis(
       offenderIdentifier = offenderIdentifier,
@@ -169,12 +142,45 @@ class JdaServiceTest {
       correlationId = correlationId,
     )
 
-    verify(csipAssistConfig)
-      .isActivePrison(prisonCode)
-
+    verify(csipAssistConfig).isActivePrison(prisonCode)
     verifyNoInteractions(caseNotesService)
-
     verifyNoInteractions(jdaClient)
+  }
+
+  @Test
+  fun `getCaseNoteAnnotationsFromQueue delegates to client`() {
+    val response = JdaDequeueResponse(
+      requestId = UUID.randomUUID(),
+      correlationId = UUID.randomUUID(),
+      prompt = JdaPrompt(
+        key = "case-note-analysis",
+        version = 1,
+      ),
+      status = JdaDequeueResponseStatus.SUCCEEDED,
+      responseData = listOf(
+        JdaDequeueResponseData(
+          caseNoteId = UUID.randomUUID(),
+          confidenceLevel = ConfidenceLevel.HIGH,
+          justifyingSpans = listOf(
+            JustifyingSpan(
+              text = "annotated text",
+              justifies = BehaviourType.RISKS_AND_TRIGGERS,
+            ),
+          ),
+        ),
+      ),
+      metaData = JdaDequeueResponseMetadata(
+        requestType = JdaRequestType.ASYNC,
+        completedAt = LocalDateTime.now(),
+        completionMs = 100,
+      ),
+    )
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue()).thenReturn(response)
+
+    val result = service.getCaseNoteAnnotationsFromQueue()
+
+    assertThat(result).isEqualTo(response)
+    verify(jdaClient).getCaseNoteAnnotationsFromQueue()
   }
 
   private fun testCaseNotesResponse(
