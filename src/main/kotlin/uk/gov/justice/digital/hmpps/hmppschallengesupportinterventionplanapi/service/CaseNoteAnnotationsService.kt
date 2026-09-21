@@ -94,6 +94,7 @@ class CaseNoteAnnotationsService(
           relevance = highestConfidence.value,
           caseNoteId = caseNoteWithAnnotations.caseNote.caseNoteId,
           createdAt = caseNoteWithAnnotations.caseNote.creationDateTime,
+          createdBy = caseNoteWithAnnotations.caseNote.authorName,
           annotatedCaseNote = composeCaseNoteAnnotation(caseNoteWithAnnotations, appliedSortOrder),
           amendments = composeAmendmentAnnotations(caseNoteWithAnnotations),
         )
