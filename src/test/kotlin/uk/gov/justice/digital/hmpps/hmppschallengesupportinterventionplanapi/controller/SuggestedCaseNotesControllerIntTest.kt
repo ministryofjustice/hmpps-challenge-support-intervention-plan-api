@@ -351,8 +351,10 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       .exchange()
       .errorResponse(HttpStatus.BAD_REQUEST)
 
-    assertThat(response.userMessage).isEqualTo("Validation failure: referralId is required")
-    assertThat(response.developerMessage).isEqualTo("400 BAD_REQUEST Validation failure: referralId is required")
+    assertThat(response.userMessage).isEqualTo("Validation failure: Couldn't read request body")
+    assertThat(response.developerMessage).contains("Instantiation of")
+    assertThat(response.developerMessage).contains("SuggestedCaseNotesRequest")
+    assertThat(response.developerMessage).contains("referralId")
   }
 
   private fun urlToTest(prisonNumber: String) = "/v1/suggestedCaseNotes/$prisonNumber"
