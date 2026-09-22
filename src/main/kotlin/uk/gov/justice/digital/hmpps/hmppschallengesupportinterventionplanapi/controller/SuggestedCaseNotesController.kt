@@ -64,6 +64,6 @@ class SuggestedCaseNotesController(
       throw ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "suggestedCaseNotes feature is not enabled")
     }
 
-    return caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request)
+    return caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request.referralId, request)
   }
 }
