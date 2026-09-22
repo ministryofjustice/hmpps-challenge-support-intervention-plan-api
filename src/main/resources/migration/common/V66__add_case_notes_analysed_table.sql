@@ -1,10 +1,10 @@
 CREATE TABLE case_notes_analysed
 (
     id                               UUID PRIMARY KEY NOT NULL,
-    request_id                       UUID,
+    request_id                       UUID NOT NULL,
     investigation_id                 UUID NOT NULL,
     prisoner_number                  VARCHAR(10) NOT NULL,
-    case_note_id                     UUID,
+    case_note_id                     UUID NOT NULL,
     prompt_key                       VARCHAR(255),
     prompt_version                   INT,
     behaviour_type                   VARCHAR(30) NOT NULL,
