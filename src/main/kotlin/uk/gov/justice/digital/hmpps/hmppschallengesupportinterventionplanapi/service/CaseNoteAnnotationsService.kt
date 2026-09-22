@@ -75,14 +75,18 @@ class CaseNoteAnnotationsService(
     }
   }
 
-  fun buildSuggestedCaseNotes(prisonerNumber: String, request: SuggestedCaseNotesRequest): SuggestedCaseNotesResponse {
+  fun buildSuggestedCaseNotes(
+    prisonerNumber: String,
+    referralId: UUID,
+    request: SuggestedCaseNotesRequest,
+  ): SuggestedCaseNotesResponse {
     validatePrisonerExists(prisonerNumber)
 
     val sortOrder = request.sortOrder.trim().lowercase()
     val appliedSortOrder = if (sortOrder == "asc") "asc" else "desc"
     val sortField = normalizeSortField(request.sortField)
 
-    val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType)
+    val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType, referralId)
       .sortedWith(caseNotesComparator(sortField, appliedSortOrder))
       .map { caseNoteWithAnnotations ->
         val highestConfidence = caseNoteWithAnnotations.annotations
@@ -112,7 +116,9 @@ class CaseNoteAnnotationsService(
   fun getCaseNotesWithAnnotations(
     prisonerNumber: String,
     behaviourType: BehaviourType,
+    referralId: UUID,
   ): List<CaseNoteWithAnnotations> {
+    // TODO case_notes_analysed: use referralId to scope Suggested Case Notes retrieval once referral-linked analysis results are available.
     val annotations = caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(prisonerNumber, behaviourType)
     if (annotations.isEmpty()) return emptyList()
 

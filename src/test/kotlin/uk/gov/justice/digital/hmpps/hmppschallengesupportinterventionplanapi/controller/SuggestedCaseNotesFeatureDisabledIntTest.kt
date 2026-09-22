@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.con
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
+import java.util.UUID
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["feature.suggested-case-notes=false"])
 class SuggestedCaseNotesFeatureDisabledIntTest : IntegrationTestBase() {
@@ -22,6 +23,7 @@ class SuggestedCaseNotesFeatureDisabledIntTest : IntegrationTestBase() {
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         SuggestedCaseNotesRequest(
+          referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
           behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
           sortField = "creationDateTime",
           sortOrder = "desc",

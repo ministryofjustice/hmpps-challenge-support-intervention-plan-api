@@ -325,12 +325,38 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
   }
 
   private fun suggestedCaseNotesRequest(
+    referralId: UUID = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
   ) = SuggestedCaseNotesRequest(
+    referralId = referralId,
     behaviourType = behaviourType,
     sortField = "creationDateTime",
     sortOrder = "desc",
   )
+
+  @Test
+  fun `returns bad request when referralId is missing`() {
+    val response = webTestClient.post()
+      .uri(urlToTest(givenValidPrisonNumber("A9999AA")))
+      .headers(setAuthorisation(roles = listOf(ROLE_PRISONER_CASE_NOTES_RO)))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(
+        """
+        {
+          "behaviourType": "risks_and_triggers",
+          "sortField": "creationDateTime",
+          "sortOrder": "desc"
+        }
+        """.trimIndent(),
+      )
+      .exchange()
+      .errorResponse(HttpStatus.BAD_REQUEST)
+
+    assertThat(response.userMessage).isEqualTo("Validation failure: Couldn't read request body")
+    assertThat(response.developerMessage).contains("Instantiation of")
+    assertThat(response.developerMessage).contains("SuggestedCaseNotesRequest")
+    assertThat(response.developerMessage).contains("referralId")
+  }
 
   private fun urlToTest(prisonNumber: String) = "/v1/suggestedCaseNotes/$prisonNumber"
 
