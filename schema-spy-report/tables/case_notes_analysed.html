@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>csip_summary - csip.public</title>
+        <title>case_notes_analysed - csip.public</title>
         <!-- Tell the browser to be responsive to screen width -->
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <link rel="icon" type="image/png" sizes="16x16" href="../favicon.png">
@@ -73,7 +73,7 @@
             <div class="content-wrapper">
                 <!-- Content Header (Page header) -->
                 <section class="content-header">
-                    <h1>csip_summary</h1><p><span id="recordNumber">0</span> rows</p><br />
+                    <h1>case_notes_analysed</h1><p><span id="recordNumber">-1</span> rows</p><br />
                     <div class="box box-primary">
                         <div class="box-header with-border">
                             <i class="fa fa-file-text-o"></i>
@@ -84,7 +84,7 @@
                             </div>
                         </div><!-- /.box-header -->
                         <div class="box-body clearfix">
-                            <p>Denormalised view over csip_record, person_summary, referral and plan used to search and paginate CSIPs. Read only - every column is sourced from the tables it joins.</p>
+                            <p>Machine generated analysis results over a person&rsquo;s prison case notes, used to suggest content for the CSIP investigation screen. Each row captures the model output for one analysed case note and behaviour type.</p>
                         </div><!-- /.box-body -->
                     </div>
                 </section>
@@ -122,202 +122,10 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="prison_number">prison_number</span></td>
-                                    <td>varchar</td>
-                                    <td>10</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                            <tr>
-                                                <td title="csip_summary.prison_number&#39;s name implies that it&#39;s a child of person_summary.prison_number, but it doesn&#39;t reference that column."><a href='person_summary.html'>person_summary</a><span class='relatedKey'>.prison_number</span></td>
-                                                <td class="constraint detail">Implied Constraint</td>
-                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                    <td><p>The prison number of the person the CSIP is for. Sourced from person_summary.prison_number. <a href="./../null">Sensitivity: PERSONAL</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="first_name">first_name</span></td>
-                                    <td>varchar</td>
-                                    <td>64</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The first name of the person. Sourced from person_summary.first_name. <a href="./../null">Sensitivity: PERSONAL</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="last_name">last_name</span></td>
-                                    <td>varchar</td>
-                                    <td>64</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The last name of the person. Sourced from person_summary.last_name. <a href="./../null">Sensitivity: PERSONAL</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="restricted_patient">restricted_patient</span></td>
-                                    <td>bool</td>
-                                    <td>1</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>Whether the person is a restricted patient, i.e. detained under the Mental Health Act. Sourced from person_summary.restricted_patient. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="prison_code">prison_code</span></td>
-                                    <td>varchar</td>
-                                    <td>16</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The code of the prison the person is resident at, or TRN/OUT if they are not in prison. Sourced from person_summary.prison_code. <a href="./../null">Sensitivity: PERSONAL</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="cell_location">cell_location</span></td>
-                                    <td>varchar</td>
-                                    <td>64</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The cell location of the person, or an alternative location reference. Sourced from person_summary.cell_location. <a href="./../null">Sensitivity: PERSONAL</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="supporting_prison_code">supporting_prison_code</span></td>
-                                    <td>varchar</td>
-                                    <td>16</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The code of the prison supporting the person where they are a restricted patient. Sourced from person_summary.supporting_prison_code. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="referral_date">referral_date</span></td>
-                                    <td>date</td>
-                                    <td>13</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The date the referral was submitted. Sourced from referral.referral_date. <a href="./../null">Sensitivity: NONE</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="incident_type">incident_type</span></td>
-                                    <td>varchar</td>
-                                    <td>40</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>Description of the type of incident or behaviour that motivated the referral. Sourced from referral.incident_type_id. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="next_review_date">next_review_date</span></td>
-                                    <td>date</td>
-                                    <td>13</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The next date the plan should be reviewed. Sourced from plan.next_review_date. <a href="./../null">Sensitivity: NONE</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="case_manager">case_manager</span></td>
-                                    <td>varchar</td>
-                                    <td>100</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The case manager assigned to the plan. Free text, so not guaranteed to match user information. Sourced from plan.case_manager. <a href="./../null">Sensitivity: STAFF</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
                                     <td>uuid</td>
                                     <td>2147483647</td>
-                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -328,12 +136,80 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The CSIP record identifier, exposed as id for the search API. Sourced from csip_record.record_id. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Primary key. Surrogate UUID with no business meaning. <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="log_code">log_code</span></td>
+                                    <td><span id="request_id">request_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td><p>Identifier of the analysis request that produced this analysis. Groups rows generated by one run. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                </tr>
+                                <tr>
+                                    <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="investigation_id">investigation_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td><p>Identifier of the CSIP investigation this analysis belongs to. Matches csip_record.record_id via correlation_id. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                </tr>
+                                <tr>
+                                    <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="prisoner_number">prisoner_number</span></td>
                                     <td>varchar</td>
                                     <td>10</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td><p>NOMIS offender number (noms id) of the person whose case notes were analysed. <a href="./../null">Sensitivity: PERSONAL</a></p></td>
+                                </tr>
+                                <tr>
+                                    <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="case_note_id">case_note_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td><p>Identifier of the source case note in the case notes service. This table holds a copy of analysis results for that note. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="prompt_key">prompt_key</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
                                     <td title='nullable'>√</td>
                                     <td title=''></td>
                                     <td>null</td>
@@ -345,27 +221,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>User entered identifier for the CSIP record. Sourced from csip_record.log_code. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Key of the prompt used to generate the analysis. Provenance only. <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="closed_date">closed_date</span></td>
-                                    <td>date</td>
-                                    <td>13</td>
-                                    <td title='nullable'>√</td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>The date the plan was closed. Null unless the status is CSIP_CLOSED. Sourced from plan.closed_date. <a href="./../null">Sensitivity: NONE</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="priority">priority</span></td>
+                                    <td><span id="prompt_version">prompt_version</span></td>
                                     <td>int4</td>
                                     <td>10</td>
                                     <td title='nullable'>√</td>
@@ -379,13 +238,13 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Sort weight derived from the status code, used to order search results. Carries no meaning outside the query. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Version of the prompt used to generate the analysis, so results from a superseded prompt can be identified. <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="status_code">status_code</span></td>
+                                    <td><span id="behaviour_type">behaviour_type</span></td>
                                     <td>varchar</td>
-                                    <td>32</td>
-                                    <td title='nullable'>√</td>
+                                    <td>30</td>
+                                    <td title=''></td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -396,15 +255,15 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The short code of the overall CSIP status. Sourced from csip_record.status_id. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
+                                    <td><p>What the model inferred the case note evidences about the person. One of RISKS_AND_TRIGGERS, USUAL_BEHAVIOUR_PRESENTATION, PROTECTIVE_FACTORS. This is a machine generated hypothesis offered to a caseworker, not a professional assessment or a recorded observation. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="status_description">status_description</span></td>
-                                    <td>varchar</td>
-                                    <td>40</td>
-                                    <td title='nullable'>√</td>
+                                    <td><span id="usual_behaviour_relevancy">usual_behaviour_relevancy</span></td>
+                                    <td>int4</td>
+                                    <td>10</td>
                                     <td title=''></td>
-                                    <td>null</td>
+                                    <td title=''></td>
+                                    <td>0</td>
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
@@ -413,11 +272,99 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The description of the overall CSIP status. Sourced from csip_record.status_id. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
+                                    <td><p>Relevancy score for usual behaviour presentation. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="risks_and_triggers_relevancy">risks_and_triggers_relevancy</span></td>
+                                    <td>int4</td>
+                                    <td>10</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>0</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td><p>Relevancy score for risks and triggers. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="protective_factors_relevancy">protective_factors_relevancy</span></td>
+                                    <td>int4</td>
+                                    <td>10</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>0</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td><p>Relevancy score for protective factors. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-sitemap"></i>
+                            <h3 id="Indexes" class="box-title">Indexes</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="indexes_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="10"
+                                    data-length-change="false">
+                                <thead>
+                                <tr>
+                                    <th>Constraint Name</th>
+                                    <th>Type</th>
+                                    <th>Sort</th>
+                                    <th>Column(s)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> case_notes_analysed_pkey</td>
+                                    <td>Primary key</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>id</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>idx_case_notes_analysed_case_note_id</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>case_note_id</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>idx_case_notes_analysed_investigation_id</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>investigation_id</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>idx_case_notes_analysed_prisoner_number</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>prisoner_number</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div><!-- /.box-body -->
                     </div>
                     <div class="box box-primary">
                         <div class="box-header with-border">
@@ -433,52 +380,13 @@
                                 <h5>Close relationships within degrees of separation</h5>
                                 <ul class="nav nav-tabs pull-left ui-sortable-handle">
                                     <li class="active"><a href="#oneDegreeImg-chart" data-toggle="tab" aria-expanded="true">One</a></li>
-                                    <li class=""><a href="#oneimpliedDegreeImg-chart" data-toggle="tab" aria-expanded="true">One implied</a></li>
-                                    <li class=""><a href="#twoimpliedDegreeImg-chart" data-toggle="tab" aria-expanded="true">Two implied</a></li>
                                 </ul>
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         
-                                        <a name='diagram'><object type="image/svg+xml" id="oneDegreeImg" data="../diagrams/tables/csip_summary.1degree.svg" class="diagram" border="0" align="left"></object></a>
-                                    </div>
-                                    <div class="chart tab-pane " id="oneimpliedDegreeImg-chart" style="position: relative; overflow-x:auto;">
-                                        
-                                        <a name='diagram'><object type="image/svg+xml" id="oneimpliedDegreeImg" data="../diagrams/tables/csip_summary.implied1degrees.svg" class="diagram" border="0" align="left"></object></a>
-                                    </div>
-                                    <div class="chart tab-pane " id="twoimpliedDegreeImg-chart" style="position: relative; overflow-x:auto;">
-                                        
-                                        <a name='diagram'><object type="image/svg+xml" id="twoimpliedDegreeImg" data="../diagrams/tables/csip_summary.implied2degrees.svg" class="diagram" border="0" align="left"></object></a>
+                                        <a name='diagram'><object type="image/svg+xml" id="oneDegreeImg" data="../diagrams/tables/case_notes_analysed.1degree.svg" class="diagram" border="0" align="left"></object></a>
                                     </div>
                                 </div>
-                            </div>
-                        </div><!-- /.box-body -->
-                    </div>
-                    <div class="box box-primary">
-                        <div class="box-header with-border">
-                            <i class="fa fa-file-code-o"></i>
-                            <h3 id="ViewDefinition" class="box-title">View Definition</h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
-                            </div>
-                        </div>
-                        <div class="box-body">
-                            <textarea id="sql-script-codemirror" name="sql-script-codemirror" rows="" style="display: none;">SELECT person.prison_number,&#10;    person.first_name,&#10;    person.last_name,&#10;    person.restricted_patient,&#10;    person.prison_code,&#10;    person.cell_location,&#10;    person.supporting_prison_code,&#10;    ref.referral_date,&#10;    inc.description AS incident_type,&#10;    p.next_review_date,&#10;    p.case_manager,&#10;    csip.record_id AS id,&#10;    csip.log_code,&#10;        CASE&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_CLOSED&#39;::text) THEN p.closed_date&#10;            ELSE NULL::date&#10;        END AS closed_date,&#10;        CASE&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_OPEN&#39;::text) THEN 1&#10;            WHEN ((st.code)::text &#61; &#39;CSIP_CLOSED&#39;::text) THEN 3&#10;            WHEN ((st.code)::text &#61; ANY ((ARRAY[&#39;NO_FURTHER_ACTION&#39;::character varying, &#39;SUPPORT_OUTSIDE_CSIP&#39;::character varying])::text[])) THEN 4&#10;            ELSE 2&#10;        END AS priority,&#10;    st.code AS status_code,&#10;    st.description AS status_description&#10;   FROM (((((csip_record csip&#10;     JOIN person_summary person ON (((person.prison_number)::text &#61; (csip.prison_number)::text)))&#10;     JOIN referral ref ON ((ref.referral_id &#61; csip.record_id)))&#10;     JOIN reference_data inc ON ((inc.reference_data_id &#61; ref.incident_type_id)))&#10;     LEFT JOIN plan p ON ((p.plan_id &#61; csip.record_id)))&#10;     JOIN reference_data st ON ((st.reference_data_id &#61; csip.status_id)));</textarea>
-                            <div style="padding-top: 5px;"><hr></div>
-                            <div class="box box-solid">
-                                <div class="box-header with-border">
-                                    <i class="fa fa-puzzle-piece"></i>
-                                    <h3 class="box-title">Possibly Referenced Tables/Views</h3>
-                                </div>
-                                <!-- /.box-header -->
-                                <div class="box-body">
-                                    <ul class="list-unstyled">
-                                        <li><a href="csip_record.html">csip_record</a></li>
-                                        <li><a href="person_summary.html">person_summary</a></li>
-                                        <li><a href="referral.html">referral</a></li>
-                                        <li><a href="reference_data.html">reference_data</a></li>
-                                    </ul>
-                                </div><!-- /.box-body -->
                             </div>
                         </div><!-- /.box-body -->
                     </div>

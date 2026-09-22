@@ -1,7 +1,6 @@
 audit_revision
 reference_data
 person_summary
-case_note_annotations
 csip_record
 referral
 plan
@@ -24,4 +23,6 @@ decision_and_actions_audit
 interview
 interview_audit
 referral_audit
+case_note_annotations
+case_notes_analysed
 flyway_schema_history
