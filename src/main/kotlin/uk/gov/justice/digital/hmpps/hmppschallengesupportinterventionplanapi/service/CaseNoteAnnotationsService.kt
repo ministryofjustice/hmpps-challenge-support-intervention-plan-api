@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
@@ -53,6 +54,7 @@ class CaseNoteAnnotationsService(
     persistAnnotationsFromDequeue(response)
   }
 
+  @Transactional
   fun persistSynchronousAnnotations(
     response: JdaRequestResponse,
     prisonerNumber: String,
@@ -144,6 +146,7 @@ class CaseNoteAnnotationsService(
     return highlightAnnotationMatches(caseNoteWithAnnotations.caseNote.text, annotationTexts)
   }
 
+  @Transactional
   internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
     val start = Instant.now()
     var response = initialResponse
@@ -378,7 +381,7 @@ class CaseNoteAnnotationsService(
     promptKey = caseNotesAnalysed.promptKey,
     promptVersion = caseNotesAnalysed.promptVersion,
     behaviourType = behaviourType,
-    confidenceLevel = caseNotesAnalysed.confidenceLevelFor(behaviourType),
+    confidenceLevel = behaviourType?.let { caseNotesAnalysed.confidenceLevelFor(it) },
     annotatedText = annotatedText,
     createdDate = createdDate,
   )
