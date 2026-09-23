@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_PRISONER_CASE_NOTES_RO
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
@@ -29,12 +31,16 @@ import java.util.UUID
 class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
 
   @Autowired
+  lateinit var caseNoteAnalysedRepository: CaseNoteAnalysedRepository
+
+  @Autowired
   lateinit var caseNoteAnnotationRepository: CaseNoteAnnotationRepository
 
   @BeforeEach
   fun setUp() {
     caseNotesServer.resetAll()
     caseNoteAnnotationRepository.deleteAll()
+    caseNoteAnalysedRepository.deleteAll()
   }
 
   @Test
@@ -249,7 +255,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = olderCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.LOW,
+      confidenceLevel = ConfidenceLevel.MEDIUM,
       annotatedText = "stood by cell door",
     )
     saveAnnotation(
@@ -309,19 +315,38 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     confidenceLevel: ConfidenceLevel,
     annotatedText: String,
   ) {
-    caseNoteAnnotationRepository.save(
-      CaseNoteAnnotation(
+    val analysed = caseNoteAnalysedRepository.save(
+      CaseNoteAnalysed(
         requestId = UUID.randomUUID(),
+        investigationId = UUID.randomUUID(),
         prisonerNumber = prisonerNumber,
         caseNoteId = caseNoteId,
         promptKey = "case-note-analysis",
         promptVersion = 1,
         behaviourType = behaviourType,
-        confidenceLevel = confidenceLevel,
+        usualBehaviourRelevancy = if (behaviourType == BehaviourType.USUAL_BEHAVIOUR_PRESENTATION) confidenceLevel.toRelevancy() else 0,
+        risksAndTriggersRelevancy = if (behaviourType == BehaviourType.RISKS_AND_TRIGGERS) confidenceLevel.toRelevancy() else 0,
+        protectiveFactorsRelevancy = if (behaviourType == BehaviourType.PROTECTIVE_FACTORS) confidenceLevel.toRelevancy() else 0,
+      ),
+    )
+
+    caseNoteAnnotationRepository.save(
+      CaseNoteAnnotation(
+        requestId = UUID.randomUUID(),
+        investigationId = analysed.investigationId,
+        caseNotesAnalysed = analysed,
+        caseNoteId = caseNoteId,
+        behaviourType = behaviourType,
         annotatedText = annotatedText,
         createdDate = LocalDateTime.now(),
       ),
     )
+  }
+
+  private fun ConfidenceLevel.toRelevancy(): Int = when (this) {
+    ConfidenceLevel.LOW -> 1
+    ConfidenceLevel.MEDIUM -> 2
+    ConfidenceLevel.HIGH -> 3
   }
 
   private fun suggestedCaseNotesRequest(

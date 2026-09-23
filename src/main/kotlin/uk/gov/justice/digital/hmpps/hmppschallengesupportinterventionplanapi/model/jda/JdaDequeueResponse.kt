@@ -24,6 +24,14 @@ data class JdaDequeueResponseData(
   val confidenceLevel: ConfidenceLevel?,
   @JsonProperty("justifying_spans")
   val justifyingSpans: List<JustifyingSpan>,
+  @JsonProperty("usual_behaviour_presentation")
+  val usualBehaviourPresentation: Int? = null,
+  @JsonProperty("risks_and_triggers")
+  val risksAndTriggers: Int? = null,
+  @JsonProperty("protective_factors")
+  val protectiveFactors: Int? = null,
+  @JsonProperty("comment")
+  val comment: String? = null,
 )
 
 data class JdaDequeueResponseMetadata(

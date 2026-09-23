@@ -4,10 +4,12 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -17,25 +19,21 @@ class CaseNoteAnnotation(
   @Id
   val id: UUID = newUuid(),
 
-  val requestId: UUID?,
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
+  @JoinColumn(name = "case_notes_analysed_id", nullable = false)
+  val caseNotesAnalysed: CaseNoteAnalysed,
 
-  @Column(nullable = false, length = 10)
-  val prisonerNumber: String,
+  val requestId: UUID,
+
+  val investigationId: UUID,
 
   val caseNoteId: UUID,
 
-  val promptKey: String?,
-
-  val promptVersion: Int?,
-
   @Enumerated(EnumType.STRING)
-  val behaviourType: BehaviourType?,
-
-  @Enumerated(EnumType.STRING)
-  val confidenceLevel: ConfidenceLevel?,
+  val behaviourType: BehaviourType,
 
   @Column(columnDefinition = "TEXT")
-  val annotatedText: String?,
+  val annotatedText: String,
 
-  val createdDate: LocalDateTime?,
+  val createdDate: LocalDateTime,
 )
