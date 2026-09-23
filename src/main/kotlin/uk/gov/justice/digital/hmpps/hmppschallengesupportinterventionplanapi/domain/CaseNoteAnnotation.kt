@@ -30,10 +30,10 @@ class CaseNoteAnnotation(
   val caseNoteId: UUID,
 
   @Enumerated(EnumType.STRING)
-  val behaviourType: BehaviourType,
+  val behaviourType: BehaviourType?,
 
   @Column(columnDefinition = "TEXT")
-  val annotatedText: String,
+  val annotatedText: String?,
 
-  val createdDate: LocalDateTime,
+  val createdDate: LocalDateTime?,
 )
