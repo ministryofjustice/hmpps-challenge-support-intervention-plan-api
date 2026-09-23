@@ -3,7 +3,11 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
@@ -28,7 +32,9 @@ import java.util.UUID
 class CaseNoteAnnotationsService(
   private val caseNotesService: CaseNotesService,
   private val jdaService: JdaService,
+  private val caseNoteAnalysedRepository: CaseNoteAnalysedRepository,
   private val caseNoteAnnotationRepository: CaseNoteAnnotationRepository,
+  private val jdbcTemplate: NamedParameterJdbcTemplate,
   private val personSummaryService: PersonSummaryService,
   private val csipRecordService: CsipRecordService,
   @Value("\${case-note-annotations.max-processing-duration:30s}")
@@ -52,23 +58,14 @@ class CaseNoteAnnotationsService(
     prisonerNumber: String,
   ) {
     try {
-      val caseNoteAnnotations = responseDataToAnnotations(
+      persistResponseData(
         responseData = response.responseData.orEmpty(),
         requestId = response.requestId,
+        investigationId = response.correlationId,
         prompt = response.prompt,
         prisonerNumber = prisonerNumber,
       )
-      caseNoteAnnotations.forEach { caseNoteAnnotation ->
-        try {
-          caseNoteAnnotationRepository.save(caseNoteAnnotation)
-        } catch (e: Exception) {
-          log.error(
-            "Failed to persist case note annotation for case note ${caseNoteAnnotation.caseNoteId}",
-            e,
-          )
-        }
-      }
-      log.debug("Persisted ${caseNoteAnnotations.size} case note annotations from synchronous JDA response")
+      log.debug("Persisted synchronous JDA response ${response.requestId}")
     } catch (e: Exception) {
       log.error("Failed to persist case note annotations from synchronous JDA response ${response.requestId}", e)
       throw e
@@ -85,7 +82,6 @@ class CaseNoteAnnotationsService(
     val sortOrder = request.sortOrder.trim().lowercase()
     val appliedSortOrder = if (sortOrder == "asc") "asc" else "desc"
     val sortField = normalizeSortField(request.sortField)
-
     val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType, referralId)
       .sortedWith(caseNotesComparator(sortField, appliedSortOrder))
       .map { caseNoteWithAnnotations ->
@@ -119,17 +115,21 @@ class CaseNoteAnnotationsService(
     referralId: UUID,
   ): List<CaseNoteWithAnnotations> {
     // TODO case_notes_analysed: use referralId to scope Suggested Case Notes retrieval once referral-linked analysis results are available.
-    val annotations = caseNoteAnnotationRepository.findByPrisonerNumberAndBehaviourType(prisonerNumber, behaviourType)
-    if (annotations.isEmpty()) return emptyList()
-
-    return annotations
+    val analysedCaseNotes = caseNoteAnalysedRepository
+      .findByPrisonerNumber(prisonerNumber)
+      .filter { it.behaviourType == behaviourType && it.relevancyFor(behaviourType) > 1 }
       .groupBy { it.caseNoteId }
-      .map { (caseNoteId, caseNoteAnnotations) ->
-        CaseNoteWithAnnotations(
-          caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId),
-          annotations = caseNoteAnnotations.map { it.toSummary() },
-        )
-      }
+
+    if (analysedCaseNotes.isEmpty()) return emptyList()
+
+    return analysedCaseNotes.keys.map { caseNoteId ->
+      val caseNoteAnnotations = caseNoteAnnotationRepository.findByCaseNoteIdAndBehaviourType(caseNoteId, behaviourType)
+
+      CaseNoteWithAnnotations(
+        caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId),
+        annotations = caseNoteAnnotations.map { it.toSummary() },
+      )
+    }
   }
 
   fun composeCaseNoteAnnotation(
@@ -151,22 +151,13 @@ class CaseNoteAnnotationsService(
     while (response != null) {
       try {
         val prisonerNumber = csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
-        val caseNoteAnnotations = responseDataToAnnotations(
+        persistResponseData(
           responseData = response.responseData.orEmpty(),
           requestId = response.requestId,
+          investigationId = response.correlationId,
           prompt = response.prompt,
           prisonerNumber = prisonerNumber,
         )
-        caseNoteAnnotations.forEach { caseNoteAnnotation ->
-          try {
-            caseNoteAnnotationRepository.save(caseNoteAnnotation)
-          } catch (e: Exception) {
-            log.error(
-              "Failed to persist case note annotation for case note ${caseNoteAnnotation.caseNoteId}",
-              e,
-            )
-          }
-        }
         count++
       } catch (e: Exception) {
         log.error("Failed to persist case note annotation for request ${response.requestId}", e)
@@ -278,42 +269,116 @@ class CaseNoteAnnotationsService(
     ?.takeIf { it.isAfter(creationDateTime) }
     ?: creationDateTime
 
+  private fun persistResponseData(
+    responseData: List<JdaDequeueResponseData>,
+    requestId: UUID,
+    investigationId: UUID,
+    prompt: JdaPrompt,
+    prisonerNumber: String,
+  ) {
+    responseData.forEach { item ->
+      try {
+        val analysedCaseNote = caseNoteAnalysedRepository.save(
+          CaseNoteAnalysed(
+            requestId = requestId,
+            investigationId = investigationId,
+            prisonerNumber = prisonerNumber,
+            caseNoteId = item.caseNoteId,
+            promptKey = prompt.key,
+            promptVersion = prompt.version,
+            behaviourType = item.summaryBehaviourType(),
+            usualBehaviourRelevancy = item.usualBehaviourPresentation ?: 0,
+            risksAndTriggersRelevancy = item.risksAndTriggers ?: 0,
+            protectiveFactorsRelevancy = item.protectiveFactors ?: 0,
+          ),
+        )
+
+        item.justifyingSpans.forEach { span ->
+          try {
+            insertCaseNoteAnnotation(
+              caseNotesAnalysedId = analysedCaseNote.id,
+              requestId = requestId,
+              investigationId = investigationId,
+              caseNoteId = item.caseNoteId,
+              behaviourType = span.justifies,
+              annotatedText = span.text,
+              createdDate = LocalDateTime.now(ZoneOffset.UTC),
+            )
+          } catch (e: Exception) {
+            log.error("Failed to persist case note annotation for case note ${item.caseNoteId}", e)
+          }
+        }
+      } catch (e: Exception) {
+        log.error("Failed to persist case note analysis for case note ${item.caseNoteId}", e)
+      }
+    }
+  }
+
+  private fun insertCaseNoteAnnotation(
+    caseNotesAnalysedId: UUID,
+    requestId: UUID,
+    investigationId: UUID,
+    caseNoteId: UUID,
+    behaviourType: BehaviourType,
+    annotatedText: String,
+    createdDate: LocalDateTime,
+  ) {
+    jdbcTemplate.update(
+      """
+      INSERT INTO case_note_annotations (
+        id,
+        case_notes_analysed_id,
+        request_id,
+        investigation_id,
+        case_note_id,
+        behaviour_type,
+        annotated_text,
+        created_date
+      ) VALUES (
+        :id,
+        :caseNotesAnalysedId,
+        :requestId,
+        :investigationId,
+        :caseNoteId,
+        :behaviourType,
+        :annotatedText,
+        :createdDate
+      )
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addValue("id", UUID.randomUUID())
+        .addValue("caseNotesAnalysedId", caseNotesAnalysedId)
+        .addValue("requestId", requestId)
+        .addValue("investigationId", investigationId)
+        .addValue("caseNoteId", caseNoteId)
+        .addValue("behaviourType", behaviourType.name)
+        .addValue("annotatedText", annotatedText)
+        .addValue("createdDate", createdDate),
+    )
+  }
+
   private data class TextMatch(
     val start: Int,
     val end: Int,
     val text: String,
   )
 
-  private fun responseDataToAnnotations(
-    responseData: List<JdaDequeueResponseData>,
-    requestId: UUID,
-    prompt: JdaPrompt,
-    prisonerNumber: String,
-  ): List<CaseNoteAnnotation> = responseData.flatMap { item ->
-    item.justifyingSpans.map { span ->
-      CaseNoteAnnotation(
-        requestId = requestId,
-        prisonerNumber = prisonerNumber,
-        caseNoteId = item.caseNoteId,
-        promptKey = prompt.key,
-        promptVersion = prompt.version,
-        behaviourType = span.justifies,
-        confidenceLevel = item.confidenceLevel,
-        annotatedText = span.text,
-        createdDate = LocalDateTime.now(ZoneOffset.UTC),
-      )
-    }
+  private fun JdaDequeueResponseData.summaryBehaviourType(): BehaviourType = when {
+    (usualBehaviourPresentation ?: 0) >= (risksAndTriggers ?: 0) &&
+      (usualBehaviourPresentation ?: 0) >= (protectiveFactors ?: 0) -> BehaviourType.USUAL_BEHAVIOUR_PRESENTATION
+    (risksAndTriggers ?: 0) >= (protectiveFactors ?: 0) -> BehaviourType.RISKS_AND_TRIGGERS
+    else -> BehaviourType.PROTECTIVE_FACTORS
   }
 
   private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
     id = id,
     requestId = requestId,
-    prisonerNumber = prisonerNumber,
+    prisonerNumber = caseNotesAnalysed.prisonerNumber,
     caseNoteId = caseNoteId,
-    promptKey = promptKey,
-    promptVersion = promptVersion,
+    promptKey = caseNotesAnalysed.promptKey,
+    promptVersion = caseNotesAnalysed.promptVersion,
     behaviourType = behaviourType,
-    confidenceLevel = confidenceLevel,
+    confidenceLevel = caseNotesAnalysed.confidenceLevelFor(behaviourType),
     annotatedText = annotatedText,
     createdDate = createdDate,
   )

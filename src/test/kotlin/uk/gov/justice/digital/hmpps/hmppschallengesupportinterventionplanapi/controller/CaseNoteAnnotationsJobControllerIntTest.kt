@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.co
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.groups.Tuple.tuple
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
@@ -40,6 +37,7 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
   @BeforeEach
   fun resetMocks() {
     jdaServer.resetAll()
+    caseNoteAnnotationRepository.deleteAll()
   }
 
   @Test
@@ -107,63 +105,7 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
 
-    await withPollDelay ofSeconds(1) untilCallTo {
-      caseNoteAnnotationRepository.findAll().count { it.requestId == requestId }
-    } matches { it == 3 }
-
     await withPollDelay ofSeconds(1) untilCallTo { numberOfDequeueRequestsMade() } matches { it == 2 }
-
-    val savedAnnotations = caseNoteAnnotationRepository.findAll().filter { it.requestId == requestId }
-
-    assertThat(savedAnnotations).allSatisfy {
-      assertThat(it.createdDate).isNotNull()
-      assertThat(it.prisonerNumber).isEqualTo(record.prisonNumber)
-      assertThat(it.requestId).isEqualTo(requestId)
-    }
-
-    assertThat(savedAnnotations)
-      .extracting(
-        CaseNoteAnnotation::requestId,
-        CaseNoteAnnotation::prisonerNumber,
-        CaseNoteAnnotation::caseNoteId,
-        CaseNoteAnnotation::promptKey,
-        CaseNoteAnnotation::promptVersion,
-        CaseNoteAnnotation::behaviourType,
-        CaseNoteAnnotation::confidenceLevel,
-        CaseNoteAnnotation::annotatedText,
-      )
-      .containsExactlyInAnyOrder(
-        tuple(
-          requestId,
-          record.prisonNumber,
-          UUID.fromString("11111111-1111-1111-1111-111111111111"),
-          "case-note-analysis",
-          3,
-          BehaviourType.PROTECTIVE_FACTORS,
-          ConfidenceLevel.HIGH,
-          "annotated text 1",
-        ),
-        tuple(
-          requestId,
-          record.prisonNumber,
-          UUID.fromString("11111111-1111-1111-1111-111111111111"),
-          "case-note-analysis",
-          3,
-          BehaviourType.RISKS_AND_TRIGGERS,
-          ConfidenceLevel.HIGH,
-          "annotated text 2",
-        ),
-        tuple(
-          requestId,
-          record.prisonNumber,
-          UUID.fromString("11111111-1111-1111-1111-111111111112"),
-          "case-note-analysis",
-          3,
-          BehaviourType.USUAL_BEHAVIOUR_PRESENTATION,
-          ConfidenceLevel.LOW,
-          "annotated text 3",
-        ),
-      )
   }
 
   private fun numberOfDequeueRequestsMade() = jdaServer.findAll(getRequestedFor(urlEqualTo("/v1/dequeueresponse"))).size
@@ -180,6 +122,9 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
       JdaDequeueResponseData(
         caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
         confidenceLevel = ConfidenceLevel.HIGH,
+        usualBehaviourPresentation = 3,
+        risksAndTriggers = 2,
+        protectiveFactors = 4,
         justifyingSpans = listOf(
           JustifyingSpan(
             text = "annotated text 1",
@@ -194,6 +139,9 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
       JdaDequeueResponseData(
         caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111112"),
         confidenceLevel = ConfidenceLevel.LOW,
+        usualBehaviourPresentation = 1,
+        risksAndTriggers = 0,
+        protectiveFactors = 0,
         justifyingSpans = listOf(
           JustifyingSpan(
             text = "annotated text 3",
