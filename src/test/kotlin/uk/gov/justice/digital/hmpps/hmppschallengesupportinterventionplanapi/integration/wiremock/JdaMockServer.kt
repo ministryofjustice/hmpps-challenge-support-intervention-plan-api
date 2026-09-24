@@ -31,7 +31,6 @@ class JdaMockServer : WireMockServer(8114) {
               "responseData": [
                 {
                   "case_note_id": "11111111-1111-1111-1111-111111111111",
-                  "confidence_level": "high",
                   "justifying_spans": [
                     {
                       "text": "annotated text",
@@ -84,7 +83,6 @@ class JdaMockServer : WireMockServer(8114) {
           "responseData": [
             {
               "case_note_id": "11111111-1111-1111-1111-111111111111",
-              "confidence_level": "high",
               "justifying_spans": [
                 {
                   "text": "annotated text",
@@ -134,7 +132,6 @@ class JdaMockServer : WireMockServer(8114) {
               "responseData": [
                 {
                   "case_note_id": "11111111-1111-1111-1111-111111111111",
-                  "confidence_level": "high",
                   "justifying_spans": [
                     {
                       "text": "annotated text",

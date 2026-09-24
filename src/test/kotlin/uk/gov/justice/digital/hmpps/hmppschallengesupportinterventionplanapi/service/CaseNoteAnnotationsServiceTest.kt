@@ -138,12 +138,12 @@ class CaseNoteAnnotationsServiceTest {
   @Test
   fun `buildSuggestedCaseNotes returns relevance derived from annotations`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnalysedRepository.findByPrisonerNumber("A1234AA"))
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationIdAndBehaviourType("A1234AA", referralId, BehaviourType.RISKS_AND_TRIGGERS))
       .thenReturn(
         listOf(
           CaseNoteAnalysed(
             requestId = UUID.randomUUID(),
-            investigationId = UUID.randomUUID(),
+            investigationId = referralId,
             prisonerNumber = "A1234AA",
             caseNoteId = caseNoteId,
             promptKey = "case-note-analysis",
@@ -177,12 +177,12 @@ class CaseNoteAnnotationsServiceTest {
   @Test
   fun `getCaseNotesWithAnnotations groups annotations under one case note`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnalysedRepository.findByPrisonerNumber("A1234AA"))
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationIdAndBehaviourType("A1234AA", referralId, BehaviourType.RISKS_AND_TRIGGERS))
       .thenReturn(
         listOf(
           CaseNoteAnalysed(
             requestId = UUID.randomUUID(),
-            investigationId = UUID.randomUUID(),
+            investigationId = referralId,
             prisonerNumber = "A1234AA",
             caseNoteId = caseNoteId,
             promptKey = "case-note-analysis",
@@ -306,7 +306,6 @@ class CaseNoteAnnotationsServiceTest {
     responseData = listOf(
       JdaDequeueResponseData(
         caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
-        confidenceLevel = ConfidenceLevel.HIGH,
         usualBehaviourPresentation = 3,
         risksAndTriggers = 2,
         protectiveFactors = 4,
@@ -337,7 +336,6 @@ class CaseNoteAnnotationsServiceTest {
     responseData = listOf(
       JdaDequeueResponseData(
         caseNoteId = UUID.randomUUID(),
-        confidenceLevel = ConfidenceLevel.HIGH,
         usualBehaviourPresentation = 3,
         risksAndTriggers = 2,
         protectiveFactors = 4,

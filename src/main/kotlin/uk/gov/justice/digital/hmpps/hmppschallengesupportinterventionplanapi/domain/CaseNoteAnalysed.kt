@@ -9,7 +9,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import java.util.UUID
 
 @Entity
@@ -50,11 +49,5 @@ class CaseNoteAnalysed(
     BehaviourType.USUAL_BEHAVIOUR_PRESENTATION -> usualBehaviourRelevancy
     BehaviourType.RISKS_AND_TRIGGERS -> risksAndTriggersRelevancy
     BehaviourType.PROTECTIVE_FACTORS -> protectiveFactorsRelevancy
-  }
-
-  fun confidenceLevelFor(behaviourType: BehaviourType): ConfidenceLevel = when (relevancyFor(behaviourType)) {
-    in 3..Int.MAX_VALUE -> ConfidenceLevel.HIGH
-    in 1..2 -> ConfidenceLevel.MEDIUM
-    else -> ConfidenceLevel.LOW
   }
 }

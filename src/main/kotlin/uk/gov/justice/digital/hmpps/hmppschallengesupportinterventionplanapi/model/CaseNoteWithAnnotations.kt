@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mo
 
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import java.time.LocalDateTime
 import java.util.UUID
 
 data class CaseNoteWithAnnotations(
   val caseNote: CaseNote,
   val annotations: List<CaseNoteAnnotationSummary>,
+  val relevanceScore: Int = 0,
 )
 
 data class CaseNoteAnnotationSummary(
@@ -19,7 +19,6 @@ data class CaseNoteAnnotationSummary(
   val promptKey: String?,
   val promptVersion: Int?,
   val behaviourType: BehaviourType?,
-  val confidenceLevel: ConfidenceLevel?,
   val annotatedText: String?,
   val createdDate: LocalDateTime?,
 )

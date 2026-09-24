@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaMockServer
@@ -121,7 +120,6 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
     responseData = listOf(
       JdaDequeueResponseData(
         caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
-        confidenceLevel = ConfidenceLevel.HIGH,
         usualBehaviourPresentation = 3,
         risksAndTriggers = 2,
         protectiveFactors = 4,
@@ -138,7 +136,6 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
       ),
       JdaDequeueResponseData(
         caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111112"),
-        confidenceLevel = ConfidenceLevel.LOW,
         usualBehaviourPresentation = 1,
         risksAndTriggers = 0,
         protectiveFactors = 0,

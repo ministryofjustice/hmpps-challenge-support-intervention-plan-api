@@ -9,5 +9,9 @@ import java.util.UUID
 interface CaseNoteAnalysedRepository : JpaRepository<CaseNoteAnalysed, UUID> {
   fun findByPrisonerNumber(prisonerNumber: String): List<CaseNoteAnalysed>
 
-  fun findByPrisonerNumberAndBehaviourType(prisonerNumber: String, behaviourType: BehaviourType): List<CaseNoteAnalysed>
+  fun findByPrisonerNumberAndInvestigationIdAndBehaviourType(
+    prisonerNumber: String,
+    investigationId: UUID,
+    behaviourType: BehaviourType,
+  ): List<CaseNoteAnalysed>
 }

@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteAnnotationSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteWithAnnotations
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
@@ -87,13 +86,8 @@ class CaseNoteAnnotationsService(
     val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType, referralId)
       .sortedWith(caseNotesComparator(sortField, appliedSortOrder))
       .map { caseNoteWithAnnotations ->
-        val highestConfidence = caseNoteWithAnnotations.annotations
-          .mapNotNull { it.confidenceLevel }
-          .maxByOrNull { it.ordinal }
-          ?: ConfidenceLevel.LOW
-
         SuggestedCaseNote(
-          relevance = highestConfidence.value,
+          relevance = caseNoteWithAnnotations.relevanceScore.toRelevance(),
           caseNoteId = caseNoteWithAnnotations.caseNote.caseNoteId,
           createdAt = caseNoteWithAnnotations.caseNote.creationDateTime,
           createdBy = caseNoteWithAnnotations.caseNote.authorName,
@@ -118,18 +112,20 @@ class CaseNoteAnnotationsService(
   ): List<CaseNoteWithAnnotations> {
     // TODO case_notes_analysed: use referralId to scope Suggested Case Notes retrieval once referral-linked analysis results are available.
     val analysedCaseNotes = caseNoteAnalysedRepository
-      .findByPrisonerNumber(prisonerNumber)
-      .filter { it.behaviourType == behaviourType && it.relevancyFor(behaviourType) > 1 }
+      .findByPrisonerNumberAndInvestigationIdAndBehaviourType(prisonerNumber, referralId, behaviourType)
+      .filter { it.relevancyFor(behaviourType) > 1 }
       .groupBy { it.caseNoteId }
 
     if (analysedCaseNotes.isEmpty()) return emptyList()
 
     return analysedCaseNotes.keys.map { caseNoteId ->
       val caseNoteAnnotations = caseNoteAnnotationRepository.findByCaseNoteIdAndBehaviourType(caseNoteId, behaviourType)
+      val relevanceScore = analysedCaseNotes[caseNoteId].orEmpty().maxOfOrNull { it.relevancyFor(behaviourType) } ?: 0
 
       CaseNoteWithAnnotations(
         caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId),
         annotations = caseNoteAnnotations.map { it.toSummary() },
+        relevanceScore = relevanceScore,
       )
     }
   }
@@ -373,6 +369,12 @@ class CaseNoteAnnotationsService(
     else -> BehaviourType.PROTECTIVE_FACTORS
   }
 
+  private fun Int.toRelevance(): String = when (this) {
+    in 3..Int.MAX_VALUE -> "high"
+    in 1..2 -> "medium"
+    else -> "low"
+  }
+
   private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
     id = id,
     requestId = requestId,
@@ -381,7 +383,6 @@ class CaseNoteAnnotationsService(
     promptKey = caseNotesAnalysed.promptKey,
     promptVersion = caseNotesAnalysed.promptVersion,
     behaviourType = behaviourType,
-    confidenceLevel = behaviourType?.let { caseNotesAnalysed.confidenceLevelFor(it) },
     annotatedText = annotatedText,
     createdDate = createdDate,
   )

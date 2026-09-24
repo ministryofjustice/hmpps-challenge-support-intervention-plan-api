@@ -314,11 +314,12 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     behaviourType: BehaviourType,
     confidenceLevel: ConfidenceLevel,
     annotatedText: String,
+    investigationId: UUID = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
   ) {
     val analysed = caseNoteAnalysedRepository.save(
       CaseNoteAnalysed(
         requestId = UUID.randomUUID(),
-        investigationId = UUID.randomUUID(),
+        investigationId = investigationId,
         prisonerNumber = prisonerNumber,
         caseNoteId = caseNoteId,
         promptKey = "case-note-analysis",
