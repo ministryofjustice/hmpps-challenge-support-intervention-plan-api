@@ -15,7 +15,6 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaMockServer
@@ -50,7 +49,6 @@ class JdaClientTest {
     assertThat(result?.status).isEqualTo(JdaDequeueResponseStatus.SUCCEEDED)
     assertThat(result?.responseData).hasSize(1)
     assertThat(result?.responseData?.first()?.caseNoteId).isEqualTo(UUID.fromString("11111111-1111-1111-1111-111111111111"))
-    assertThat(result?.responseData?.first()?.confidenceLevel).isEqualTo(ConfidenceLevel.HIGH)
     assertThat(result?.responseData?.first()?.justifyingSpans).containsExactly(
       JustifyingSpan(
         text = "annotated text",
@@ -93,7 +91,6 @@ class JdaClientTest {
                 "responseData": [
                   {
                     "case_note_id": "76304207-b018-4812-a3bf-f294a05347e8",
-                    "confidence_level": "high",
                     "justifying_spans": [
                       {
                         "text": "he appeared visibly anxious and withdrawn upon arrival",
