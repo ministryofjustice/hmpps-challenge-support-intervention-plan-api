@@ -12,22 +12,6 @@ interface CaseNoteAnnotationRepository : JpaRepository<CaseNoteAnnotation, UUID>
   @Query(
     """
     select a from CaseNoteAnnotation a
-    join a.caseNotesAnalysed cna
-    where cna.prisonerNumber = :prisonerNumber
-      and a.behaviourType = :behaviourType
-    order by a.createdDate desc
-    """,
-  )
-  fun findByPrisonerNumberAndBehaviourType(
-    @Param("prisonerNumber") prisonerNumber: String,
-    @Param("behaviourType") behaviourType: BehaviourType,
-  ): List<CaseNoteAnnotation>
-
-  fun findByCaseNoteIdAndBehaviourType(caseNoteId: UUID, behaviourType: BehaviourType): List<CaseNoteAnnotation>
-
-  @Query(
-    """
-    select a from CaseNoteAnnotation a
     where a.caseNotesAnalysed.id in :caseNotesAnalysedIds
       and a.behaviourType = :behaviourType
     order by a.createdDate desc

@@ -218,7 +218,6 @@ class CaseNoteAnnotationsServiceTest {
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
     verify(personSummaryService).validatePrisoner("NOT_FOUND")
-    verify(caseNoteAnnotationRepository, never()).findByPrisonerNumberAndBehaviourType(any(), any())
   }
 
   private fun stubCsipRecordLookup(prisonNumber: String = "A1234BC") {
