@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
@@ -157,8 +156,8 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
       .thenReturn(
         listOf(
-          annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.LOW),
-          annotation(caseNoteId = caseNoteId, annotatedText = "raised his voice", confidenceLevel = ConfidenceLevel.HIGH),
+          annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", relevancy = 1),
+          annotation(caseNoteId = caseNoteId, annotatedText = "raised his voice", relevancy = 3),
         ),
       )
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
@@ -230,14 +229,8 @@ class CaseNoteAnnotationsServiceTest {
     caseNoteId: UUID,
     annotatedText: String,
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-    confidenceLevel: ConfidenceLevel = ConfidenceLevel.HIGH,
+    relevancy: Int = 3,
   ): CaseNoteAnnotation {
-    val relevancy = when (confidenceLevel) {
-      ConfidenceLevel.LOW -> 1
-      ConfidenceLevel.MEDIUM -> 2
-      ConfidenceLevel.HIGH -> 3
-    }
-
     val analysed = CaseNoteAnalysed(
       requestId = UUID.randomUUID(),
       investigationId = UUID.randomUUID(),

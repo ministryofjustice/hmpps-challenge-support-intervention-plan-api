@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.CsipComponent
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.DecisionAction
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.OptionalYesNoAnswer
@@ -89,9 +88,6 @@ class ExportReferenceData : IntegrationTestBase() {
       add(Row("audit_revision.affected_components", it.name, "The ${it.name.lowercase().replace('_', ' ')} was affected by the change.", ""))
     }
     BehaviourType.entries.forEach { add(Row("case_note_annotations.behaviour_type", it.name, BEHAVIOUR_TYPES[it]!!, AI_NOTE)) }
-    ConfidenceLevel.entries.forEach {
-      add(Row("case_note_annotations.confidence_level", it.name, "${it.name.lowercase().replaceFirstChar { c -> c.uppercase() }} confidence in the classification of the source case note.", AI_NOTE))
-    }
   }
 
   private data class Row(val columnRef: String, val code: String, val description: String, val notes: String) {

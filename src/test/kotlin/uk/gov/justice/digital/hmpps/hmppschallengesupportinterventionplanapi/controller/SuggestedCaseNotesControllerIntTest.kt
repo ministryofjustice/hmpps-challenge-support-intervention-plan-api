@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CaseNotesServer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_NOT_FOUND
@@ -53,14 +52,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = matchingCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "became agitated",
     )
     saveAnnotation(
       prisonerNumber = "A2222AA",
       caseNoteId = ignoredCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "ignored",
     )
 
@@ -90,14 +89,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = risksCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "raised his voice",
     )
     saveAnnotation(
       prisonerNumber = prisonerNumber,
       caseNoteId = protectiveCaseNoteId,
       behaviourType = BehaviourType.PROTECTIVE_FACTORS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "settled down",
     )
 
@@ -126,7 +125,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "became agitated",
     )
 
@@ -162,14 +161,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "became agitated",
     )
     saveAnnotation(
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "raised his voice",
     )
 
@@ -200,7 +199,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "became agitated",
     )
 
@@ -255,14 +254,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = olderCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "stood by cell door",
     )
     saveAnnotation(
       prisonerNumber = prisonerNumber,
       caseNoteId = newerCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "accepted support",
     )
 
@@ -312,7 +311,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     prisonerNumber: String,
     caseNoteId: UUID,
     behaviourType: BehaviourType,
-    confidenceLevel: ConfidenceLevel,
+    relevancy: Int,
     annotatedText: String,
     investigationId: UUID = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
   ) {
@@ -324,9 +323,9 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
         caseNoteId = caseNoteId,
         promptKey = "case-note-analysis",
         promptVersion = 1,
-        usualBehaviourRelevancy = if (behaviourType == BehaviourType.USUAL_BEHAVIOUR_PRESENTATION) confidenceLevel.toRelevancy() else 0,
-        risksAndTriggersRelevancy = if (behaviourType == BehaviourType.RISKS_AND_TRIGGERS) confidenceLevel.toRelevancy() else 0,
-        protectiveFactorsRelevancy = if (behaviourType == BehaviourType.PROTECTIVE_FACTORS) confidenceLevel.toRelevancy() else 0,
+        usualBehaviourRelevancy = if (behaviourType == BehaviourType.USUAL_BEHAVIOUR_PRESENTATION) relevancy else 0,
+        risksAndTriggersRelevancy = if (behaviourType == BehaviourType.RISKS_AND_TRIGGERS) relevancy else 0,
+        protectiveFactorsRelevancy = if (behaviourType == BehaviourType.PROTECTIVE_FACTORS) relevancy else 0,
       ),
     )
 
@@ -341,12 +340,6 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
         createdDate = LocalDateTime.now(),
       ),
     )
-  }
-
-  private fun ConfidenceLevel.toRelevancy(): Int = when (this) {
-    ConfidenceLevel.LOW -> 1
-    ConfidenceLevel.MEDIUM -> 2
-    ConfidenceLevel.HIGH -> 3
   }
 
   private fun suggestedCaseNotesRequest(
