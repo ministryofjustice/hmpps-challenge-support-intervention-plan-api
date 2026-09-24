@@ -112,19 +112,23 @@ class CaseNoteAnnotationsService(
   ): List<CaseNoteWithAnnotations> {
     // TODO case_notes_analysed: use referralId to scope Suggested Case Notes retrieval once referral-linked analysis results are available.
     val analysedCaseNotes = caseNoteAnalysedRepository
-      .findByPrisonerNumberAndInvestigationIdAndBehaviourType(prisonerNumber, referralId, behaviourType)
-      .filter { it.relevancyFor(behaviourType) > 1 }
+      .findByPrisonerNumberAndInvestigationId(prisonerNumber, referralId)
+      .filter { behaviourTypeRelevant(it, behaviourType) }
       .groupBy { it.caseNoteId }
 
     if (analysedCaseNotes.isEmpty()) return emptyList()
 
+    val analysedCaseNoteIds = analysedCaseNotes.values.flatten().map { it.id }
+    val caseNoteAnnotations = caseNoteAnnotationRepository
+      .findByCaseNotesAnalysedIdInAndBehaviourType(analysedCaseNoteIds, behaviourType)
+      .groupBy { it.caseNoteId }
+
     return analysedCaseNotes.keys.map { caseNoteId ->
-      val caseNoteAnnotations = caseNoteAnnotationRepository.findByCaseNoteIdAndBehaviourType(caseNoteId, behaviourType)
       val relevanceScore = analysedCaseNotes[caseNoteId].orEmpty().maxOfOrNull { it.relevancyFor(behaviourType) } ?: 0
 
       CaseNoteWithAnnotations(
         caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId),
-        annotations = caseNoteAnnotations.map { it.toSummary() },
+        annotations = caseNoteAnnotations[caseNoteId].orEmpty().map { it.toSummary() },
         relevanceScore = relevanceScore,
       )
     }
@@ -285,7 +289,6 @@ class CaseNoteAnnotationsService(
             caseNoteId = item.caseNoteId,
             promptKey = prompt.key,
             promptVersion = prompt.version,
-            behaviourType = item.summaryBehaviourType(),
             usualBehaviourRelevancy = item.usualBehaviourPresentation ?: 0,
             risksAndTriggersRelevancy = item.risksAndTriggers ?: 0,
             protectiveFactorsRelevancy = item.protectiveFactors ?: 0,
@@ -362,12 +365,8 @@ class CaseNoteAnnotationsService(
     val text: String,
   )
 
-  private fun JdaDequeueResponseData.summaryBehaviourType(): BehaviourType = when {
-    (usualBehaviourPresentation ?: 0) >= (risksAndTriggers ?: 0) &&
-      (usualBehaviourPresentation ?: 0) >= (protectiveFactors ?: 0) -> BehaviourType.USUAL_BEHAVIOUR_PRESENTATION
-    (risksAndTriggers ?: 0) >= (protectiveFactors ?: 0) -> BehaviourType.RISKS_AND_TRIGGERS
-    else -> BehaviourType.PROTECTIVE_FACTORS
-  }
+  private fun behaviourTypeRelevant(analysedCaseNote: CaseNoteAnalysed, behaviourType: BehaviourType): Boolean =
+    analysedCaseNote.relevancyFor(behaviourType) > 1
 
   private fun Int.toRelevance(): String = when (this) {
     in 3..Int.MAX_VALUE -> "high"

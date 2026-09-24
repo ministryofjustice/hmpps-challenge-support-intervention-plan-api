@@ -7,6 +7,7 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -93,7 +94,6 @@ class CaseNoteAnnotationsServiceTest {
     assertThat(analysedCaptor.firstValue.prisonerNumber).isEqualTo("A1234BC")
     assertThat(analysedCaptor.firstValue.promptKey).isEqualTo("case-note-analysis")
     assertThat(analysedCaptor.firstValue.promptVersion).isEqualTo(3)
-    assertThat(analysedCaptor.firstValue.behaviourType).isEqualTo(BehaviourType.PROTECTIVE_FACTORS)
     assertThat(analysedCaptor.firstValue.usualBehaviourRelevancy).isEqualTo(3)
     assertThat(analysedCaptor.firstValue.risksAndTriggersRelevancy).isEqualTo(2)
     assertThat(analysedCaptor.firstValue.protectiveFactorsRelevancy).isEqualTo(4)
@@ -130,7 +130,7 @@ class CaseNoteAnnotationsServiceTest {
     val analysedCaptor = argumentCaptor<CaseNoteAnalysed>()
     verify(caseNoteAnalysedRepository, times(1)).save(analysedCaptor.capture())
     assertThat(analysedCaptor.firstValue.prisonerNumber).isEqualTo(prisonerNumber)
-    assertThat(analysedCaptor.firstValue.behaviourType).isEqualTo(BehaviourType.PROTECTIVE_FACTORS)
+    assertThat(analysedCaptor.firstValue.protectiveFactorsRelevancy).isEqualTo(4)
 
     verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
   }
@@ -138,7 +138,7 @@ class CaseNoteAnnotationsServiceTest {
   @Test
   fun `buildSuggestedCaseNotes returns relevance derived from annotations`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationIdAndBehaviourType("A1234AA", referralId, BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
       .thenReturn(
         listOf(
           CaseNoteAnalysed(
@@ -148,14 +148,13 @@ class CaseNoteAnnotationsServiceTest {
             caseNoteId = caseNoteId,
             promptKey = "case-note-analysis",
             promptVersion = 3,
-            behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
             usualBehaviourRelevancy = 0,
             risksAndTriggersRelevancy = 3,
             protectiveFactorsRelevancy = 0,
           ),
         ),
       )
-    whenever(caseNoteAnnotationRepository.findByCaseNoteIdAndBehaviourType(caseNoteId, BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
       .thenReturn(
         listOf(
           annotation(caseNoteId = caseNoteId, annotatedText = "became agitated", confidenceLevel = ConfidenceLevel.LOW),
@@ -177,7 +176,7 @@ class CaseNoteAnnotationsServiceTest {
   @Test
   fun `getCaseNotesWithAnnotations groups annotations under one case note`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationIdAndBehaviourType("A1234AA", referralId, BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
       .thenReturn(
         listOf(
           CaseNoteAnalysed(
@@ -187,14 +186,13 @@ class CaseNoteAnnotationsServiceTest {
             caseNoteId = caseNoteId,
             promptKey = "case-note-analysis",
             promptVersion = 3,
-            behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
             usualBehaviourRelevancy = 0,
             risksAndTriggersRelevancy = 3,
             protectiveFactorsRelevancy = 0,
           ),
         ),
       )
-    whenever(caseNoteAnnotationRepository.findByCaseNoteIdAndBehaviourType(caseNoteId, BehaviourType.RISKS_AND_TRIGGERS))
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
       .thenReturn(
         listOf(
           annotation(caseNoteId = caseNoteId, annotatedText = "text 1"),
@@ -248,7 +246,6 @@ class CaseNoteAnnotationsServiceTest {
       caseNoteId = caseNoteId,
       promptKey = "case-note-analysis",
       promptVersion = 3,
-      behaviourType = behaviourType,
       usualBehaviourRelevancy = if (behaviourType == BehaviourType.USUAL_BEHAVIOUR_PRESENTATION) relevancy else 0,
       risksAndTriggersRelevancy = if (behaviourType == BehaviourType.RISKS_AND_TRIGGERS) relevancy else 0,
       protectiveFactorsRelevancy = if (behaviourType == BehaviourType.PROTECTIVE_FACTORS) relevancy else 0,

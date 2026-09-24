@@ -324,7 +324,6 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
         caseNoteId = caseNoteId,
         promptKey = "case-note-analysis",
         promptVersion = 1,
-        behaviourType = behaviourType,
         usualBehaviourRelevancy = if (behaviourType == BehaviourType.USUAL_BEHAVIOUR_PRESENTATION) confidenceLevel.toRelevancy() else 0,
         risksAndTriggersRelevancy = if (behaviourType == BehaviourType.RISKS_AND_TRIGGERS) confidenceLevel.toRelevancy() else 0,
         protectiveFactorsRelevancy = if (behaviourType == BehaviourType.PROTECTIVE_FACTORS) confidenceLevel.toRelevancy() else 0,

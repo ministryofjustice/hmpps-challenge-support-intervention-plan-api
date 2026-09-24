@@ -24,4 +24,17 @@ interface CaseNoteAnnotationRepository : JpaRepository<CaseNoteAnnotation, UUID>
   ): List<CaseNoteAnnotation>
 
   fun findByCaseNoteIdAndBehaviourType(caseNoteId: UUID, behaviourType: BehaviourType): List<CaseNoteAnnotation>
+
+  @Query(
+    """
+    select a from CaseNoteAnnotation a
+    where a.caseNotesAnalysed.id in :caseNotesAnalysedIds
+      and a.behaviourType = :behaviourType
+    order by a.createdDate desc
+    """,
+  )
+  fun findByCaseNotesAnalysedIdInAndBehaviourType(
+    @Param("caseNotesAnalysedIds") caseNotesAnalysedIds: Collection<UUID>,
+    @Param("behaviourType") behaviourType: BehaviourType,
+  ): List<CaseNoteAnnotation>
 }

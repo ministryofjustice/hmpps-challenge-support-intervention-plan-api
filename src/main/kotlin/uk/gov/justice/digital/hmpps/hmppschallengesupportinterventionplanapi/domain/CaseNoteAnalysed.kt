@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.do
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
@@ -29,9 +27,6 @@ class CaseNoteAnalysed(
   val promptKey: String?,
 
   val promptVersion: Int?,
-
-  @Enumerated(EnumType.STRING)
-  val behaviourType: BehaviourType,
 
   @Column(nullable = false)
   val usualBehaviourRelevancy: Int = 0,
