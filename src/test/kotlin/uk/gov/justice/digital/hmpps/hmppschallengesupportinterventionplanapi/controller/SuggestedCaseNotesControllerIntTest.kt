@@ -325,7 +325,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       request = SuggestedCaseNotesRequest(
         referralId = investigationId,
         behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-        sortField = "relevance",
+        sortField = "createdDate",
         sortOrder = "desc",
       ),
     ).successResponse<SuggestedCaseNotesResponse>()
