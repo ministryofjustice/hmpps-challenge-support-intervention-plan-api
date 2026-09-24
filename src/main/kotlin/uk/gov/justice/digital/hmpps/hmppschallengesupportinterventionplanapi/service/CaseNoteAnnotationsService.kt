@@ -365,8 +365,7 @@ class CaseNoteAnnotationsService(
     val text: String,
   )
 
-  private fun behaviourTypeRelevant(analysedCaseNote: CaseNoteAnalysed, behaviourType: BehaviourType): Boolean =
-    analysedCaseNote.relevancyFor(behaviourType) > 1
+  private fun behaviourTypeRelevant(analysedCaseNote: CaseNoteAnalysed, behaviourType: BehaviourType): Boolean = analysedCaseNote.relevancyFor(behaviourType) > 1
 
   private fun Int.toRelevance(): String = when (this) {
     in 3..Int.MAX_VALUE -> "high"
