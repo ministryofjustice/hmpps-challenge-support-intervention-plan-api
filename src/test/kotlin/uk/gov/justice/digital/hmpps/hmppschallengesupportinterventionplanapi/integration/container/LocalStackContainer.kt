@@ -8,6 +8,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 import java.io.IOException
 import java.net.ServerSocket
+import java.time.Duration
 
 object LocalStackContainer {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -29,7 +30,9 @@ object LocalStackContainer {
       withServices(LocalStackContainer.Service.SQS, LocalStackContainer.Service.SNS)
       withEnv("DEFAULT_REGION", "eu-west-2")
       waitingFor(
-        Wait.forLogMessage(".*Ready.\n", 1),
+        Wait.forHttp("/_localstack/health")
+          .forStatusCode(200)
+          .withStartupTimeout(Duration.ofMinutes(5)),
       )
       start()
       followOutput(logConsumer)
