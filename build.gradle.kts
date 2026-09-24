@@ -8,9 +8,9 @@ plugins {
   jacoco
 }
 
-ext["jackson-bom.version"] = "3.2.1"
-ext["jackson-2-bom.version"] = "2.22.1"
-ext["logback.version"] = "1.5.36"
+ext["jackson-bom.version"] = "3.2.2"
+ext["jackson-2-bom.version"] = "2.22.2"
+ext["logback.version"] = "1.6.3"
 ext["tomcat.version"] = "11.0.23"
 ext["postgresql.version"] = "42.7.12"
 ext["httpcore5.version"] = "5.4.3"
