@@ -153,7 +153,7 @@ class CaseNoteAnnotationsService(
   internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
     val start = Instant.now()
     var response = initialResponse
-    var count = 0
+    var acknowledgedMessageCount = 0
 
     while (response != null) {
       val messageReceiptId = response.receiptId
@@ -171,20 +171,12 @@ class CaseNoteAnnotationsService(
           prisonerNumber = prisonerNumber,
         )
 
-        try {
-          jdaService.acknowledgeCaseNoteAnnotationsMessage(messageReceiptId)
-
-          count++
+        acknowledgeMessage(messageReceiptId, messageRequestId) {
+          acknowledgedMessageCount++
 
           log.info(
             "Message processed successfully: requestId=$messageRequestId, receiptId=$messageReceiptId",
           )
-        } catch (e: Exception) {
-          log.error(
-            "Failed to acknowledge message: requestId=$messageRequestId, receiptId=$messageReceiptId",
-            e,
-          )
-          // Message remains in queue if acknowledgement fails - will be retried
         }
       } catch (e: Exception) {
         log.error(
@@ -197,7 +189,7 @@ class CaseNoteAnnotationsService(
 
       if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
         log.info(
-          "Exited persistAnnotationsFromDequeue early after processing $count acknowledged messages",
+          "Exited persistAnnotationsFromDequeue early after processing $acknowledgedMessageCount acknowledged messages",
         )
         break
       }
@@ -205,13 +197,30 @@ class CaseNoteAnnotationsService(
       response = jdaService.getCaseNoteAnnotationsFromQueue()
     }
 
-    if (count > 0) {
-      log.info("Processing complete: $count messages acknowledged and deleted from queue")
+    if (acknowledgedMessageCount > 0) {
+      log.info("Processing complete: $acknowledgedMessageCount messages acknowledged and deleted from queue")
     }
   }
 
   private fun validatePrisonerExists(prisonerNumber: String) {
     personSummaryService.validatePrisoner(prisonerNumber)
+  }
+
+  private fun acknowledgeMessage(
+    messageReceiptId: String,
+    messageRequestId: UUID,
+    onSuccess: () -> Unit,
+  ) {
+    try {
+      jdaService.acknowledgeCaseNoteAnnotationsMessage(messageReceiptId)
+      onSuccess()
+    } catch (e: Exception) {
+      log.error(
+        "Failed to acknowledge message: requestId=$messageRequestId, receiptId=$messageReceiptId",
+        e,
+      )
+      // Message remains in queue if acknowledgement fails - will be retried
+    }
   }
 
   private fun composeAmendmentAnnotations(caseNoteWithAnnotations: CaseNoteWithAnnotations): List<SuggestedCaseNoteAmendment> {
