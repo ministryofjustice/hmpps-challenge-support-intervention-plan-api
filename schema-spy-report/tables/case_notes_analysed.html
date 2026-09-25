@@ -130,6 +130,11 @@
                                     <td>null</td>
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="case_note_annotations.case_notes_analysed_id references case_notes_analysed.id via fk_case_note_annotations_case_notes_analysed"><a href='case_note_annotations.html'>case_note_annotations</a><span class='relatedKey'>.case_notes_analysed_id</span></td>
+                                                <td class="constraint detail">fk_case_note_annotations_case_notes_analysed</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
                                         </table>
                                     </td>
                                     <td>
@@ -239,23 +244,6 @@
                                         </table>
                                     </td>
                                     <td><p>Version of the prompt used to generate the analysis, so results from a superseded prompt can be identified. <a href="./../null">Sensitivity: NONE</a></p></td>
-                                </tr>
-                                <tr>
-                                    <td><span id="behaviour_type">behaviour_type</span></td>
-                                    <td>varchar</td>
-                                    <td>30</td>
-                                    <td title=''></td>
-                                    <td title=''></td>
-                                    <td>null</td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td>
-                                        <table border='0' cellspacing='0' cellpadding='0'>
-                                        </table>
-                                    </td>
-                                    <td><p>What the model inferred the case note evidences about the person. One of RISKS_AND_TRIGGERS, USUAL_BEHAVIOUR_PRESENTATION, PROTECTIVE_FACTORS. This is a machine generated hypothesis offered to a caseworker, not a professional assessment or a recorded observation. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="usual_behaviour_relevancy">usual_behaviour_relevancy</span></td>

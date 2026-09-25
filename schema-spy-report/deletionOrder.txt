@@ -1,6 +1,4 @@
 flyway_schema_history
-case_notes_analysed
-case_note_annotations
 referral_audit
 interview_audit
 interview
@@ -18,11 +16,13 @@ attendee_audit
 attendee
 plan_audit
 investigation_audit
+case_note_annotations
 review
 investigation
 plan
 referral
 csip_record
+case_notes_analysed
 person_summary
 reference_data
 audit_revision
