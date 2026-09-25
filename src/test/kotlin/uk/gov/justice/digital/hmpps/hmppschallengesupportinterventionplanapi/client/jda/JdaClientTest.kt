@@ -83,6 +83,7 @@ class JdaClientTest {
               {
                 "requestId": "01a067ab-ab44-77b8-b127-423c9a0d52d6",
                 "correlationId": "019fcc4c-fff1-71ce-b853-b52f0b52cc72",
+                "receiptId": "receipt-case-note-id-test",
                 "prompt": {
                   "key": "case-note-analysis",
                   "version": 1
@@ -224,6 +225,43 @@ class JdaClientTest {
     assertThat(exception.message).isEqualTo("Queue JDA request failed")
     assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
     server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/queuerequest")))
+  }
+
+  @Test
+  fun `acknowledgeCaseNoteAnnotationsMessage - successful acknowledgement`() {
+    val receiptId = "receipt-123-abc"
+    server.stubAcknowledgeDequeueResponseSuccess()
+
+    client.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `acknowledgeCaseNoteAnnotationsMessage - server error throws exception`() {
+    val receiptId = "receipt-456-def"
+    server.stubAcknowledgeDequeueResponseException()
+
+    val exception = assertThrows<DownstreamServiceException> {
+      client.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    }
+
+    assertThat(exception.message).containsIgnoringCase("acknowledge")
+    assertThat(exception.message).containsIgnoringCase(receiptId)
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `acknowledgeCaseNoteAnnotationsMessage - unauthorized error throws exception`() {
+    val receiptId = "receipt-789-ghi"
+    server.stubAcknowledgeDequeueResponseUnauthorized()
+
+    val exception = assertThrows<DownstreamServiceException> {
+      client.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    }
+
+    assertThat(exception.message).containsIgnoringCase("acknowledge")
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
   }
 
   companion object {

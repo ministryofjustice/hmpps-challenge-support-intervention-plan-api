@@ -49,8 +49,12 @@ class CaseNoteAnnotationsService(
 
   fun processQueuedCaseNoteAnnotations() {
     val response = jdaService.getCaseNoteAnnotationsFromQueue()
-    log.info("Dequeued case note annotations for request ${response?.requestId} is $response")
-    persistAnnotationsFromDequeue(response)
+    if (response != null) {
+      log.info("Received message from queue: requestId=${response.requestId}, receiptId=${response.receiptId}")
+      persistAnnotationsFromDequeue(response)
+    } else {
+      log.debug("No messages in queue")
+    }
   }
 
   @Transactional
@@ -66,9 +70,9 @@ class CaseNoteAnnotationsService(
         prompt = response.prompt,
         prisonerNumber = prisonerNumber,
       )
-      log.debug("Persisted synchronous JDA response ${response.requestId}")
+      log.debug("Persisted synchronous JDA response {}", response.requestId)
     } catch (e: Exception) {
-      log.error("Failed to persist case note annotations from synchronous JDA response ${response.requestId}", e)
+      log.error("Failed to persist case note annotations from synchronous JDA response {}", response.requestId, e)
       throw e
     }
   }
@@ -110,7 +114,6 @@ class CaseNoteAnnotationsService(
     behaviourType: BehaviourType,
     referralId: UUID,
   ): List<CaseNoteWithAnnotations> {
-    // TODO case_notes_analysed: use referralId to scope Suggested Case Notes retrieval once referral-linked analysis results are available.
     val analysedCaseNotes = caseNoteAnalysedRepository
       .findByPrisonerNumberAndInvestigationId(prisonerNumber, referralId)
       .filter { behaviourTypeRelevant(it, behaviourType) }
@@ -151,9 +154,15 @@ class CaseNoteAnnotationsService(
     val start = Instant.now()
     var response = initialResponse
     var count = 0
+
     while (response != null) {
+      val messageReceiptId = response.receiptId
+      val messageRequestId = response.requestId
+
       try {
-        val prisonerNumber = csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
+        val prisonerNumber =
+          csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
+
         persistResponseData(
           responseData = response.responseData.orEmpty(),
           requestId = response.requestId,
@@ -161,14 +170,35 @@ class CaseNoteAnnotationsService(
           prompt = response.prompt,
           prisonerNumber = prisonerNumber,
         )
-        count++
+
+        try {
+          jdaService.acknowledgeCaseNoteAnnotationsMessage(messageReceiptId)
+
+          count++
+
+          log.info(
+            "Message processed successfully: requestId=$messageRequestId, receiptId=$messageReceiptId",
+          )
+        } catch (e: Exception) {
+          log.error(
+            "Failed to acknowledge message: requestId=$messageRequestId, receiptId=$messageReceiptId",
+            e,
+          )
+          // Message remains in queue if acknowledgement fails - will be retried
+        }
       } catch (e: Exception) {
-        log.error("Failed to persist case note annotation for request ${response.requestId}", e)
-        // TODO may need to save the failed annotation persistence but this is not in current scope
+        log.error(
+          "Failed to process message: requestId=${response.requestId}, receiptId=$messageReceiptId - " +
+            "${e.message}. Message will be retried.",
+          e,
+        )
+        // Message remains in queue if persistence fails
       }
 
       if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
-        log.info("Exited persistAnnotationsFromDequeue early after processing $count case note annotations")
+        log.info(
+          "Exited persistAnnotationsFromDequeue early after processing $count acknowledged messages",
+        )
         break
       }
 
@@ -176,7 +206,7 @@ class CaseNoteAnnotationsService(
     }
 
     if (count > 0) {
-      log.info("Processed $count case note annotations")
+      log.info("Processing complete: $count messages acknowledged and deleted from queue")
     }
   }
 

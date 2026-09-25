@@ -10,6 +10,7 @@ import java.util.UUID
 data class JdaDequeueResponse(
   val requestId: UUID,
   val correlationId: UUID,
+  val receiptId: String,
   val prompt: JdaPrompt,
   val status: JdaDequeueResponseStatus,
   val responseData: List<JdaDequeueResponseData>?,
