@@ -57,4 +57,8 @@ class JdaService(
   }
 
   fun getCaseNoteAnnotationsFromQueue() = jdaClient.getCaseNoteAnnotationsFromQueue()
+
+  fun acknowledgeCaseNoteAnnotationsMessage(receiptId: String) {
+    jdaClient.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+  }
 }

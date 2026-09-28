@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.retryIdempotentRequestOnTransientException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueAcknowledgementRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
@@ -76,5 +77,24 @@ class JdaClient(
       .block()
   } catch (e: Exception) {
     throw DownstreamServiceException("Get case note annotations from queue failed", e)
+  }
+
+  fun acknowledgeCaseNoteAnnotationsMessage(receiptId: String) {
+    try {
+      webClient
+        .post()
+        .uri("/v1/dequeueresponse")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(JdaDequeueAcknowledgementRequest(receiptId = receiptId))
+        .exchangeToMono { res ->
+          when (res.statusCode()) {
+            HttpStatus.OK -> Mono.empty()
+            else -> res.createError()
+          }
+        }
+        .block()
+    } catch (e: Exception) {
+      throw DownstreamServiceException("Failed to acknowledge case note annotations message with receiptId=$receiptId", e)
+    }
   }
 }

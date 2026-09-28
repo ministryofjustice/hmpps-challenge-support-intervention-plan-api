@@ -75,6 +75,7 @@ class CaseNoteAnnotationsServiceTest {
     verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
     verify(caseNoteAnalysedRepository, never()).save(any())
     verify(caseNoteAnnotationRepository, never()).save(any())
+    verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
     verify(csipRecordService, never()).retrieveCsipRecord(any())
   }
 
@@ -119,6 +120,41 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
+  fun `processQueuedCaseNoteAnnotations skips responses with no response data`() {
+    val responseWithoutData = testResponse(responseData = null)
+
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(responseWithoutData)
+      .thenReturn(null)
+    stubCsipRecordLookup()
+
+    service.processQueuedCaseNoteAnnotations()
+
+    verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
+    verify(csipRecordService, times(1)).retrieveCsipRecord(any())
+    verify(caseNoteAnalysedRepository, never()).save(any())
+    verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
+  }
+
+  @Test
+  fun `processQueuedCaseNoteAnnotations skips empty response data and still acknowledges`() {
+    val responseWithoutData = testResponse(responseData = emptyList())
+
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(responseWithoutData)
+      .thenReturn(null)
+    stubCsipRecordLookup()
+
+    service.processQueuedCaseNoteAnnotations()
+
+    verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
+    verify(csipRecordService, times(1)).retrieveCsipRecord(any())
+    verify(caseNoteAnalysedRepository, never()).save(any())
+    verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
+    verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(responseWithoutData.receiptId)
+  }
+
+  @Test
   fun `persistSynchronousAnnotations persists analysed rows and annotations`() {
     val requestId = UUID.randomUUID()
     val prisonerNumber = "A1234BC"
@@ -132,6 +168,21 @@ class CaseNoteAnnotationsServiceTest {
     assertThat(analysedCaptor.firstValue.protectiveFactorsRelevancy).isEqualTo(4)
 
     verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
+  }
+
+  @Test
+  fun `processQueuedCaseNoteAnnotations acknowledges successfully persisted message`() {
+    stubCsipRecordLookup()
+
+    val response = testResponse()
+
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(response)
+      .thenReturn(null)
+
+    service.processQueuedCaseNoteAnnotations()
+
+    verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(response.receiptId)
   }
 
   @Test
@@ -284,15 +335,9 @@ class CaseNoteAnnotationsServiceTest {
     sortOrder = "desc",
   )
 
-  private fun testResponse() = JdaDequeueResponse(
-    requestId = UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6"),
-    correlationId = UUID.fromString("f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"),
-    prompt = JdaPrompt(
-      key = "case-note-analysis",
-      version = 3,
-    ),
-    status = JdaDequeueResponseStatus.SUCCEEDED,
-    responseData = listOf(
+  private fun testResponse(
+    receiptId: String = "receipt-${UUID.randomUUID()}",
+    responseData: List<JdaDequeueResponseData>? = listOf(
       JdaDequeueResponseData(
         caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
         usualBehaviourPresentation = 3,
@@ -307,6 +352,16 @@ class CaseNoteAnnotationsServiceTest {
         ),
       ),
     ),
+  ) = JdaDequeueResponse(
+    requestId = UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6"),
+    correlationId = UUID.fromString("f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb"),
+    receiptId = receiptId,
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 3,
+    ),
+    status = JdaDequeueResponseStatus.SUCCEEDED,
+    responseData = responseData,
     metaData = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
       completedAt = LocalDateTime.now(),

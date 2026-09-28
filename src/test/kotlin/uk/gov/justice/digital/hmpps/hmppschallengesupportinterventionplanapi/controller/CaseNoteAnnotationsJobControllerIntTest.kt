@@ -41,7 +41,10 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
 
   @Test
   fun `successfully processes all available case note annotations from queue`() {
-    jdaServer.stubDequeueResponseThenNotFound()
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
+    val response = createCaseNoteDequeueResponse(correlationId = record.id, requestId = UUID.fromString("f091bc73-4f88-4ff6-9e50-5148d29ed3f6"))
+
+    jdaServer.stubDequeueResponseThenNotFound(jsonMapper.writeValueAsString(response))
 
     webTestClient.post()
       .uri("/queue/case-note-annotations")
@@ -112,6 +115,7 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
   private fun createCaseNoteDequeueResponse(correlationId: UUID, requestId: UUID) = JdaDequeueResponse(
     requestId = requestId,
     correlationId = correlationId,
+    receiptId = "receipt-${UUID.randomUUID()}",
     prompt = JdaPrompt(
       key = "case-note-analysis",
       version = 3,

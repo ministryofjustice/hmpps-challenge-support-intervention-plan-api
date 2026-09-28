@@ -23,6 +23,7 @@ class JdaMockServer : WireMockServer(8114) {
             {
               "requestId": "f091bc73-4f88-4ff6-9e50-5148d29ed3f6",
               "correlationId": "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb",
+              "receiptId": "receipt-jda-12345",
               "prompt": {
                 "key": "case-note-analysis",
                 "version": 3
@@ -124,6 +125,7 @@ class JdaMockServer : WireMockServer(8114) {
             {
               "requestId": "f091bc73-4f88-4ff6-9e50-5148d29ed3f6",
               "correlationId": "f4f7ac6f-1d75-472f-a3a0-f0ee8a33fbbb",
+              "receiptId": "receipt-jda-12345",
               "prompt": {
                 "key": "case-note-analysis",
                 "version": 0
@@ -164,5 +166,20 @@ class JdaMockServer : WireMockServer(8114) {
   fun stubQueueRequestException(): StubMapping = stubFor(
     post("/v1/queuerequest")
       .willReturn(aResponse().withStatus(500)),
+  )
+
+  fun stubAcknowledgeDequeueResponseSuccess(): StubMapping = stubFor(
+    post("/v1/dequeueresponse")
+      .willReturn(aResponse().withStatus(200)),
+  )
+
+  fun stubAcknowledgeDequeueResponseException(): StubMapping = stubFor(
+    post("/v1/dequeueresponse")
+      .willReturn(aResponse().withStatus(500)),
+  )
+
+  fun stubAcknowledgeDequeueResponseUnauthorized(): StubMapping = stubFor(
+    post("/v1/dequeueresponse")
+      .willReturn(aResponse().withStatus(401)),
   )
 }

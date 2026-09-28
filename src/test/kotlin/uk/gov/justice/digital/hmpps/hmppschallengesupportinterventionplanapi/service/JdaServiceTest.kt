@@ -151,6 +151,7 @@ class JdaServiceTest {
     val response = JdaDequeueResponse(
       requestId = UUID.randomUUID(),
       correlationId = UUID.randomUUID(),
+      receiptId = "receipt-${UUID.randomUUID()}",
       prompt = JdaPrompt(
         key = "case-note-analysis",
         version = 1,
