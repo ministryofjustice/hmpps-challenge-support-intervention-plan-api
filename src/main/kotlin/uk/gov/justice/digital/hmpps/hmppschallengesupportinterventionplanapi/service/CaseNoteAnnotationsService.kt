@@ -154,6 +154,8 @@ class CaseNoteAnnotationsService(
     val start = Instant.now()
     var response = initialResponse
     var acknowledgedMessageCount = 0
+    var processedResponseDataCount = 0
+    var totalResponseDataCount = 0
 
     while (response != null) {
       val messageReceiptId = response.receiptId
@@ -162,14 +164,23 @@ class CaseNoteAnnotationsService(
       try {
         val prisonerNumber =
           csipRecordService.retrieveCsipRecord(response.correlationId).prisonNumber
+        val responseData = response.responseData.orEmpty()
+        totalResponseDataCount += responseData.size
 
-        persistResponseData(
-          responseData = response.responseData.orEmpty(),
+        val processedCaseNotesInThisResponse = persistResponseData(
+          responseData = responseData,
           requestId = response.requestId,
           investigationId = response.correlationId,
           prompt = response.prompt,
           prisonerNumber = prisonerNumber,
+          timeoutReached = { Duration.between(start, Instant.now()) >= maxProcessingDuration },
         )
+        processedResponseDataCount += processedCaseNotesInThisResponse
+
+        if (processedCaseNotesInThisResponse < responseData.size) {
+          log.info(timeoutProgressMessage(processedResponseDataCount, totalResponseDataCount))
+          break
+        }
 
         acknowledgeMessage(messageReceiptId, messageRequestId) {
           acknowledgedMessageCount++
@@ -188,9 +199,7 @@ class CaseNoteAnnotationsService(
       }
 
       if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
-        log.info(
-          "Exited persistAnnotationsFromDequeue early after processing $acknowledgedMessageCount acknowledged messages",
-        )
+        log.info(timeoutProgressMessage(processedResponseDataCount, totalResponseDataCount))
         break
       }
 
@@ -317,42 +326,53 @@ class CaseNoteAnnotationsService(
     investigationId: UUID,
     prompt: JdaPrompt,
     prisonerNumber: String,
-  ) {
-    responseData.forEach { item ->
+    timeoutReached: () -> Boolean = { false },
+  ): Int {
+    var processedCount = 0
+
+    responseData.forEachIndexed { itemIndex, caseNoteData ->
       try {
         val analysedCaseNote = caseNoteAnalysedRepository.save(
           CaseNoteAnalysed(
             requestId = requestId,
             investigationId = investigationId,
             prisonerNumber = prisonerNumber,
-            caseNoteId = item.caseNoteId,
+            caseNoteId = caseNoteData.caseNoteId,
             promptKey = prompt.key,
             promptVersion = prompt.version,
-            usualBehaviourRelevancy = item.usualBehaviourPresentation ?: 0,
-            risksAndTriggersRelevancy = item.risksAndTriggers ?: 0,
-            protectiveFactorsRelevancy = item.protectiveFactors ?: 0,
+            usualBehaviourRelevancy = caseNoteData.usualBehaviourPresentation ?: 0,
+            risksAndTriggersRelevancy = caseNoteData.risksAndTriggers ?: 0,
+            protectiveFactorsRelevancy = caseNoteData.protectiveFactors ?: 0,
           ),
         )
 
-        item.justifyingSpans.forEach { span ->
+        caseNoteData.justifyingSpans.forEach { span ->
           try {
             insertCaseNoteAnnotation(
               caseNotesAnalysedId = analysedCaseNote.id,
               requestId = requestId,
               investigationId = investigationId,
-              caseNoteId = item.caseNoteId,
+              caseNoteId = caseNoteData.caseNoteId,
               behaviourType = span.justifies,
               annotatedText = span.text,
               createdDate = LocalDateTime.now(ZoneOffset.UTC),
             )
           } catch (e: Exception) {
-            log.error("Failed to persist case note annotation for case note ${item.caseNoteId}", e)
+            log.error("Failed to persist case note annotation for case note ${caseNoteData.caseNoteId}", e)
           }
         }
       } catch (e: Exception) {
-        log.error("Failed to persist case note analysis for case note ${item.caseNoteId}", e)
+        log.error("Failed to persist case note analysis for case note ${caseNoteData.caseNoteId}", e)
+      }
+
+      processedCount++
+
+      if (itemIndex < responseData.lastIndex && timeoutReached()) {
+        return processedCount
       }
     }
+
+    return processedCount
   }
 
   private fun insertCaseNoteAnnotation(
@@ -410,6 +430,17 @@ class CaseNoteAnnotationsService(
     in 3..Int.MAX_VALUE -> "high"
     in 1..2 -> "medium"
     else -> "low"
+  }
+
+  private fun timeoutProgressMessage(processedResponseDataCount: Int, totalResponseDataCount: Int): String {
+    val processedPercentage = if (totalResponseDataCount == 0) {
+      0
+    } else {
+      (processedResponseDataCount * 100) / totalResponseDataCount
+    }
+
+    return "Exited persistAnnotationsFromDequeue early after processing " +
+      "$processedResponseDataCount case notes ($processedPercentage%), out of $totalResponseDataCount"
   }
 
   private fun CaseNoteAnnotation.toSummary() = CaseNoteAnnotationSummary(
