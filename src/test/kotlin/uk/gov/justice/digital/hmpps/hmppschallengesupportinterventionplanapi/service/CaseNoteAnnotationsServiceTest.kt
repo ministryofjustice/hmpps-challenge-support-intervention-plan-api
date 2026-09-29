@@ -224,6 +224,130 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
+  fun `buildSuggestedCaseNotes only highlights the case note with matching annotations`() {
+    val caseNoteId1 = UUID.fromString("123e4567-e89b-12d3-a456-426614174001")
+    val caseNoteId2 = UUID.fromString("123e4567-e89b-12d3-a456-426614174002")
+    val sharedText = "same text in amendment and other case note"
+
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
+      .thenReturn(
+        listOf(
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = caseNoteId1,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 3,
+            protectiveFactorsRelevancy = 0,
+          ),
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = caseNoteId2,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 3,
+            protectiveFactorsRelevancy = 0,
+          ),
+        ),
+      )
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
+      .thenReturn(
+        listOf(
+          annotation(caseNoteId = caseNoteId2, annotatedText = sharedText),
+        ),
+      )
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId1))
+      .thenReturn(caseNote(caseNoteId1, text = sharedText))
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId2))
+      .thenReturn(
+        caseNote(
+          caseNoteId2,
+          text = "case note body that does not match",
+          amendments = listOf(amendment(sharedText)),
+        ),
+      )
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val note1 = response.suggestedCaseNotes.first { it.caseNoteId == caseNoteId1 }
+    val note2 = response.suggestedCaseNotes.first { it.caseNoteId == caseNoteId2 }
+
+    assertThat(note1.annotatedCaseNote).isEqualTo(sharedText)
+    assertThat(note1.annotatedCaseNote).doesNotContain("<span class=\"annotation-type\">")
+    assertThat(note1.amendments).isEmpty()
+    assertThat(note2.annotatedCaseNote).doesNotContain("<span class=\"annotation-type\">")
+    assertThat(note2.amendments).hasSize(1)
+    assertThat(note2.amendments.first().annotatedText)
+      .contains("<span class=\"annotation-type\">$sharedText</span>")
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes excludes case notes with relevancy one`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174003")
+
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
+      .thenReturn(
+        listOf(
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = caseNoteId,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 1,
+            protectiveFactorsRelevancy = 0,
+          ),
+        ),
+      )
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
+      .thenReturn(emptyList())
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).isEmpty()
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes returns case notes with relevancy two even when there are no annotations`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174004")
+
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
+      .thenReturn(
+        listOf(
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = caseNoteId,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 2,
+            protectiveFactorsRelevancy = 0,
+          ),
+        ),
+      )
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
+      .thenReturn(emptyList())
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(caseNote(caseNoteId, text = "Case note text"))
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+    assertThat(response.suggestedCaseNotes.first().caseNoteId).isEqualTo(caseNoteId)
+    assertThat(response.suggestedCaseNotes.first().annotatedCaseNote).isEqualTo("Case note text")
+    assertThat(response.suggestedCaseNotes.first().amendments).isEmpty()
+  }
+
+  @Test
   fun `getCaseNotesWithAnnotations groups annotations under one case note`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
@@ -275,6 +399,18 @@ class CaseNoteAnnotationsServiceTest {
     whenever(csipRecord.prisonNumber).thenReturn(prisonNumber)
     whenever(csipRecordService.retrieveCsipRecord(any())).thenReturn(csipRecord)
   }
+
+  private fun amendment(
+    additionalNoteText: String,
+    creationDateTime: LocalDateTime = LocalDateTime.now(),
+  ) = CaseNoteAmendment(
+    creationDateTime = creationDateTime,
+    authorUserName = "testuser",
+    authorName = "Test User",
+    authorUserId = "USER1",
+    additionalNoteText = additionalNoteText,
+    id = UUID.randomUUID(),
+  )
 
   private fun annotation(
     caseNoteId: UUID,
