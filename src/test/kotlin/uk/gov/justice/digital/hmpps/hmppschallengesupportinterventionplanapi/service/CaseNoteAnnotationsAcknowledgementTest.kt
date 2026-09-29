@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
@@ -9,6 +11,8 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.boot.test.system.CapturedOutput
+import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
@@ -30,6 +34,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
+@ExtendWith(OutputCaptureExtension::class)
 class CaseNoteAnnotationsAcknowledgementTest {
   private val caseNotesClient = mock<CaseNotesClient>()
   private val caseNoteAnnotationRepository = mock<CaseNoteAnnotationRepository>()
@@ -299,9 +304,71 @@ class CaseNoteAnnotationsAcknowledgementTest {
     verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId2)
   }
 
+  @Test
+  fun `timeout log includes processed case note percentage`(output: CapturedOutput) {
+    val timeoutService = CaseNoteAnnotationsService(
+      caseNotesService,
+      jdaService,
+      caseNoteAnalysedRepository,
+      caseNoteAnnotationRepository,
+      jdbcTemplate,
+      personSummaryService,
+      csipRecordService,
+      Duration.ZERO,
+    )
+    val receiptId = "receipt-timeout"
+    val csipRecordId = UUID.randomUUID()
+    val prisonNumber = "T1234ME"
+    val response = testResponse(receiptId = receiptId, correlationId = csipRecordId)
+
+    stubCsipRecordLookup(csipRecordId, prisonNumber)
+    stubSuccessfulAnnotationSaves()
+
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(response)
+
+    timeoutService.processQueuedCaseNoteAnnotations()
+
+    assertThat(output.out).contains("1 case notes (100%), out of 1")
+  }
+
+  @Test
+  fun `timeout log includes half processed case notes`(output: CapturedOutput) {
+    val timeoutService = CaseNoteAnnotationsService(
+      caseNotesService,
+      jdaService,
+      caseNoteAnalysedRepository,
+      caseNoteAnnotationRepository,
+      jdbcTemplate,
+      personSummaryService,
+      csipRecordService,
+      Duration.ZERO,
+    )
+    val receiptId = "receipt-half-timeout"
+    val csipRecordId = UUID.randomUUID()
+    val prisonNumber = "T1234HF"
+    val response = testResponse(
+      receiptId = receiptId,
+      correlationId = csipRecordId,
+      responseData = listOf(testResponseData(), testResponseData()),
+    )
+
+    stubCsipRecordLookup(csipRecordId, prisonNumber)
+    stubSuccessfulAnnotationSaves()
+
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(response)
+
+    timeoutService.processQueuedCaseNoteAnnotations()
+
+    assertThat(output.out).contains("1 case notes (50%), out of 2")
+    verify(jdaService, never()).acknowledgeCaseNoteAnnotationsMessage(receiptId)
+  }
+
   private fun testResponse(
     receiptId: String = "receipt-${UUID.randomUUID()}",
     correlationId: UUID = UUID.randomUUID(),
+    responseData: List<JdaDequeueResponseData> = listOf(testResponseData()),
   ) = JdaDequeueResponse(
     requestId = UUID.randomUUID(),
     correlationId = correlationId,
@@ -311,37 +378,37 @@ class CaseNoteAnnotationsAcknowledgementTest {
       version = 1,
     ),
     status = JdaDequeueResponseStatus.SUCCEEDED,
-    responseData = listOf(
-      JdaDequeueResponseData(
-        caseNoteId = UUID.randomUUID(),
-        usualBehaviourPresentation = 3,
-        risksAndTriggers = 2,
-        protectiveFactors = 4,
-        comment = "test comment",
-        justifyingSpans = listOf(
-          JustifyingSpan(
-            text = "annotated text 1",
-            justifies = BehaviourType.PROTECTIVE_FACTORS,
-          ),
-          JustifyingSpan(
-            text = "annotated text 2",
-            justifies = BehaviourType.RISKS_AND_TRIGGERS,
-          ),
-          JustifyingSpan(
-            text = "annotated text 3",
-            justifies = BehaviourType.USUAL_BEHAVIOUR_PRESENTATION,
-          ),
-          JustifyingSpan(
-            text = "annotated text 4",
-            justifies = BehaviourType.PROTECTIVE_FACTORS,
-          ),
-        ),
-      ),
-    ),
+    responseData = responseData,
     metaData = JdaDequeueResponseMetadata(
       requestType = JdaRequestType.ASYNC,
       completedAt = LocalDateTime.now(),
       completionMs = 1200,
+    ),
+  )
+
+  private fun testResponseData() = JdaDequeueResponseData(
+    caseNoteId = UUID.randomUUID(),
+    usualBehaviourPresentation = 3,
+    risksAndTriggers = 2,
+    protectiveFactors = 4,
+    comment = "test comment",
+    justifyingSpans = listOf(
+      JustifyingSpan(
+        text = "annotated text 1",
+        justifies = BehaviourType.PROTECTIVE_FACTORS,
+      ),
+      JustifyingSpan(
+        text = "annotated text 2",
+        justifies = BehaviourType.RISKS_AND_TRIGGERS,
+      ),
+      JustifyingSpan(
+        text = "annotated text 3",
+        justifies = BehaviourType.USUAL_BEHAVIOUR_PRESENTATION,
+      ),
+      JustifyingSpan(
+        text = "annotated text 4",
+        justifies = BehaviourType.PROTECTIVE_FACTORS,
+      ),
     ),
   )
 
