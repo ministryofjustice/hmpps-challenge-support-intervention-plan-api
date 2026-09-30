@@ -11,6 +11,7 @@ class DomainEventsListener(
   private val personUpdatedHandler: PersonUpdatedHandler,
   private val moveEventHandler: MoveEventHandler,
   private val reconciliationHandler: PersonReconciliationHandler,
+  private val personCaseNoteHandler: PersonCaseNoteHandler,
 ) {
   @SqsListener("hmppsdomaineventsqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun receive(notification: Notification) {
@@ -19,6 +20,8 @@ class DomainEventsListener(
       PRISONER_MERGED -> moveEventHandler.handleMerge(jsonMapper.readValue(notification.message))
       BOOKING_MOVED -> moveEventHandler.handleBookingMoved(jsonMapper.readValue(notification.message))
       PERSON_RECONCILIATION -> reconciliationHandler.handle(jsonMapper.readValue(notification.message))
+      PERSON_CASE_NOTE_CREATED -> personCaseNoteHandler.handleCreated(jsonMapper.readValue(notification.message))
+      PERSON_CASE_NOTE_UPDATED -> personCaseNoteHandler.handleUpdated(jsonMapper.readValue(notification.message))
     }
   }
 
@@ -27,5 +30,7 @@ class DomainEventsListener(
     const val PRISONER_MERGED = "prison-offender-events.prisoner.merged"
     const val BOOKING_MOVED = "prison-offender-events.prisoner.booking.moved"
     const val PERSON_RECONCILIATION = "csip.person.reconciliation"
+    const val PERSON_CASE_NOTE_CREATED = "person.case-note.created"
+    const val PERSON_CASE_NOTE_UPDATED = "person.case-note.updated"
   }
 }

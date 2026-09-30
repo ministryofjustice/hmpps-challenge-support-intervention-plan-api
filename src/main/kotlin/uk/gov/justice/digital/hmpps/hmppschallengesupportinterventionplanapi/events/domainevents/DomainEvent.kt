@@ -1,27 +1,28 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.ZonedDateTime
 
 interface DomainEvent {
-  val eventType: String
-  val version: Int
-  val detailUrl: String?
-  val occurredAt: ZonedDateTime
-  val description: String
-  val additionalInformation: AdditionalInformation
-  val personReference: PersonReference?
+ val eventType: String
+ val version: Int
+ val detailUrl: String?
+ val occurredAt: ZonedDateTime
+ val description: String
+ val additionalInformation: AdditionalInformation
+ val personReference: PersonReference?
 }
 
 data class PersonReference(val identifiers: List<Identifier> = listOf()) {
-  operator fun get(key: String) = identifiers.find { it.type == key }?.value
-  fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
+ operator fun get(key: String) = identifiers.find { it.type == key }?.value
+ fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
 
-  companion object {
-    const val NOMS_NUMBER_TYPE = "NOMS"
-    fun withPrisonNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
-  }
+ companion object {
+   const val NOMS_NUMBER_TYPE = "NOMS"
+   fun withPrisonNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
+ }
 
-  data class Identifier(val type: String, val value: String)
+ data class Identifier(val type: String, val value: String)
 }
 
 data class HmppsDomainEvent<T : AdditionalInformation>(
@@ -54,3 +55,16 @@ data class BookingMovedInformation(
 ) : AdditionalInformation
 
 data class PersonReconciliationInformation(val prisonNumbers: Set<String>) : AdditionalInformation
+
+data class CaseNoteAdditionalInformation(
+ val id: String? = null,
+ val legacyId: Long? = null,
+ val type: String? = null,
+ val subType: String? = null,
+ val source: String? = null,
+ val syncToNomis: Boolean? = null,
+ val systemGenerated: Boolean? = null,
+ val previousNomsNumber: String? = null,
+) : AdditionalInformation
+
+typealias PersonCaseNoteInformation = CaseNoteAdditionalInformation
