@@ -10,11 +10,7 @@ class PersonCaseNoteHandler {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun handleCreated(event: HmppsDomainEvent<CaseNoteAdditionalInformation>) {
-    log.info("Received person.case-note.created event: {}", event)
-  }
-
-  fun handleUpdated(event: HmppsDomainEvent<CaseNoteAdditionalInformation>) {
-    log.info("Received person.case-note.updated event: {}", event)
+  fun handle(event: HmppsDomainEvent<PersonCaseNoteInformation>) {
+    log.debug("Received {} event for case note {}", event.eventType, event.additionalInformation.id)
   }
 }

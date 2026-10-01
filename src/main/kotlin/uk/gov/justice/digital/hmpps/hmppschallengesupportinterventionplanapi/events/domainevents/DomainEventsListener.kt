@@ -20,8 +20,7 @@ class DomainEventsListener(
       PRISONER_MERGED -> moveEventHandler.handleMerge(jsonMapper.readValue(notification.message))
       BOOKING_MOVED -> moveEventHandler.handleBookingMoved(jsonMapper.readValue(notification.message))
       PERSON_RECONCILIATION -> reconciliationHandler.handle(jsonMapper.readValue(notification.message))
-      PERSON_CASE_NOTE_CREATED -> personCaseNoteHandler.handleCreated(jsonMapper.readValue(notification.message))
-      PERSON_CASE_NOTE_UPDATED -> personCaseNoteHandler.handleUpdated(jsonMapper.readValue(notification.message))
+      PERSON_CASE_NOTE_CREATED, PERSON_CASE_NOTE_UPDATED -> personCaseNoteHandler.handle(jsonMapper.readValue(notification.message))
     }
   }
 
