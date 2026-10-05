@@ -18,6 +18,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.UserDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
@@ -48,6 +49,7 @@ class CaseNoteAnnotationsServiceTest {
   private val caseNotesService = CaseNotesService(caseNotesClient)
   private val jdaService = mock<JdaService>()
   private val personSummaryService = mock<PersonSummaryService>()
+  private val userService = mock<UserService>()
   private val service = CaseNoteAnnotationsService(
     caseNotesService,
     jdaService,
@@ -56,6 +58,7 @@ class CaseNoteAnnotationsServiceTest {
     jdbcTemplate,
     personSummaryService,
     csipRecordService,
+    userService,
     Duration.ofSeconds(30),
   )
   private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
@@ -64,6 +67,18 @@ class CaseNoteAnnotationsServiceTest {
   fun setUp() {
     whenever(caseNoteAnalysedRepository.save(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
     whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenReturn(1)
+    whenever(userService.getUserDetails(any())).thenReturn(
+      UserDetails(
+        username = "TEST_USER",
+        active = true,
+        name = "Test User",
+        authSource = "nomis",
+        userId = "123",
+        uuid = UUID.randomUUID(),
+        activeCaseLoadId = "LEI",
+      ),
+    )
+    whenever(userService.getUserRoles(any())).thenReturn(emptyList())
   }
 
   @Test
@@ -287,6 +302,114 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
+  fun `buildSuggestedCaseNotes excludes sensitive case notes when user lacks required roles`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174005")
+
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
+      .thenReturn(
+        listOf(
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = caseNoteId,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 3,
+            protectiveFactorsRelevancy = 0,
+          ),
+        ),
+      )
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
+      .thenReturn(emptyList())
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(caseNote(caseNoteId, text = "Sensitive case note", sensitive = true))
+    whenever(userService.getUserRoles("TEST_USER")).thenReturn(emptyList())
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).isEmpty()
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes keeps non-sensitive case notes but excludes sensitive ones when user lacks required roles`() {
+    val sensitiveCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174007")
+    val normalCaseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174008")
+
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
+      .thenReturn(
+        listOf(
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = sensitiveCaseNoteId,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 3,
+            protectiveFactorsRelevancy = 0,
+          ),
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = normalCaseNoteId,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 2,
+            protectiveFactorsRelevancy = 0,
+          ),
+        ),
+      )
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
+      .thenReturn(emptyList())
+    whenever(caseNotesClient.getCaseNote("A1234AA", sensitiveCaseNoteId))
+      .thenReturn(caseNote(sensitiveCaseNoteId, text = "Sensitive case note", sensitive = true))
+    whenever(caseNotesClient.getCaseNote("A1234AA", normalCaseNoteId))
+      .thenReturn(caseNote(normalCaseNoteId, text = "Normal case note", sensitive = false))
+    whenever(userService.getUserRoles("TEST_USER")).thenReturn(emptyList())
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+    assertThat(response.suggestedCaseNotes.first().caseNoteId).isEqualTo(normalCaseNoteId)
+  }
+
+  @Test
+  fun `buildSuggestedCaseNotes includes sensitive case notes when user has required roles`() {
+    val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174006")
+
+    whenever(caseNoteAnalysedRepository.findByPrisonerNumberAndInvestigationId("A1234AA", referralId))
+      .thenReturn(
+        listOf(
+          CaseNoteAnalysed(
+            requestId = UUID.randomUUID(),
+            investigationId = referralId,
+            prisonerNumber = "A1234AA",
+            caseNoteId = caseNoteId,
+            promptKey = "case-note-analysis",
+            promptVersion = 3,
+            usualBehaviourRelevancy = 0,
+            risksAndTriggersRelevancy = 3,
+            protectiveFactorsRelevancy = 0,
+          ),
+        ),
+      )
+    whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
+      .thenReturn(emptyList())
+    whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
+      .thenReturn(caseNote(caseNoteId, text = "Sensitive case note", sensitive = true))
+    whenever(userService.getUserRoles("TEST_USER")).thenReturn(listOf("POM"))
+
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+
+    assertThat(response.suggestedCaseNotes).hasSize(1)
+  }
+
+  @Test
   fun `buildSuggestedCaseNotes excludes case notes with relevancy one`() {
     val caseNoteId = UUID.fromString("123e4567-e89b-12d3-a456-426614174003")
 
@@ -446,6 +569,7 @@ class CaseNoteAnnotationsServiceTest {
     text: String = "Case note text",
     creationDateTime: LocalDateTime = LocalDateTime.now(),
     amendments: List<CaseNoteAmendment> = emptyList(),
+    sensitive: Boolean = false,
   ) = CaseNote(
     caseNoteId = caseNoteId,
     offenderIdentifier = "A1234AA",
@@ -460,12 +584,13 @@ class CaseNoteAnnotationsServiceTest {
     authorUsername = "testuser",
     text = text,
     locationId = "MDI",
-    sensitive = false,
+    sensitive = sensitive,
     amendments = amendments,
   )
 
   private fun suggestedRequest() = SuggestedCaseNotesRequest(
     referralId = referralId,
+    userName = "TEST_USER",
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",

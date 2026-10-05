@@ -26,10 +26,12 @@ class SuggestedCaseNotesControllerTest {
   private val disabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, false)
 
   private val prisonerNumber = "A1234AA"
+  private val username = "TEST_USER"
   private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
 
   private val request = SuggestedCaseNotesRequest(
     referralId = referralId,
+    userName = username,
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
@@ -115,6 +117,7 @@ class SuggestedCaseNotesControllerTest {
   fun `can construct request with all fields`() {
     val testRequest = SuggestedCaseNotesRequest(
       referralId = referralId,
+      userName = username,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",

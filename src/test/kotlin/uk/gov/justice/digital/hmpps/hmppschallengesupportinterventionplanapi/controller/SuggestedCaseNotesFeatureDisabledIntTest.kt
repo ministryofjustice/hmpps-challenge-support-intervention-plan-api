@@ -24,6 +24,7 @@ class SuggestedCaseNotesFeatureDisabledIntTest : IntegrationTestBase() {
       .bodyValue(
         SuggestedCaseNotesRequest(
           referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
+          userName = "TEST_USER",
           behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
           sortField = "creationDateTime",
           sortOrder = "desc",

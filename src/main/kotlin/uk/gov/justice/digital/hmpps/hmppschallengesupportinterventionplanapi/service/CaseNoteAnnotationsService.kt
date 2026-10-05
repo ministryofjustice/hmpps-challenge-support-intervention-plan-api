@@ -37,6 +37,7 @@ class CaseNoteAnnotationsService(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
   private val personSummaryService: PersonSummaryService,
   private val csipRecordService: CsipRecordService,
+  private val userService: UserService,
   @Value("\${case-note-annotations.max-processing-duration:30s}")
   private val maxProcessingDuration: Duration,
 ) {
@@ -45,6 +46,14 @@ class CaseNoteAnnotationsService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val CREATED_DATE = "createdDate"
     const val LAST_AMENDED_DATE = "lastAmendedDate"
+    private val SENSITIVE_CASE_NOTE_ROLES = setOf(
+      "POM",
+      "VIEW_SENSITIVE_CASE_NOTES",
+      "ADD_SENSITIVE_CASE_NOTES",
+      "ROLE_POM",
+      "ROLE_VIEW_SENSITIVE_CASE_NOTES",
+      "ROLE_ADD_SENSITIVE_CASE_NOTES",
+    )
   }
 
   fun processQueuedCaseNoteAnnotations() {
@@ -84,10 +93,19 @@ class CaseNoteAnnotationsService(
   ): SuggestedCaseNotesResponse {
     validatePrisonerExists(prisonerNumber)
 
+    val userName = request.userName.ifBlank { throw IllegalArgumentException("userName is required") }
+    val userRoles = userService.getUserRoles(userName)
+    val canViewSensitiveCaseNotes = userRoles
+      .map { it.trim().uppercase().removePrefix("ROLE_") }
+      .any { it in SENSITIVE_CASE_NOTE_ROLES }
+
     val sortOrder = request.sortOrder.trim().lowercase()
     val appliedSortOrder = if (sortOrder == "asc") "asc" else "desc"
     val sortField = normalizeSortField(request.sortField)
     val suggestedCaseNotes = getCaseNotesWithAnnotations(prisonerNumber, request.behaviourType, referralId)
+      .filter { caseNoteWithAnnotations ->
+        !caseNoteWithAnnotations.caseNote.sensitive || canViewSensitiveCaseNotes
+      }
       .sortedWith(caseNotesComparator(sortField, appliedSortOrder))
       .map { caseNoteWithAnnotations ->
         SuggestedCaseNote(
