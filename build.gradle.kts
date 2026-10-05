@@ -2,16 +2,16 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.9"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.11"
   kotlin("plugin.spring") version "2.4.20"
   kotlin("plugin.jpa") version "2.4.20"
   jacoco
 }
 
-ext["jackson-bom.version"] = "3.2.2"
-ext["jackson-2-bom.version"] = "2.22.2"
+ext["jackson-bom.version"] = "3.2.3"
+ext["jackson-2-bom.version"] = "2.22.3"
 ext["logback.version"] = "1.6.3"
-ext["tomcat.version"] = "11.0.23"
+ext["tomcat.version"] = "11.0.25"
 ext["postgresql.version"] = "42.7.12"
 ext["httpcore5.version"] = "5.4.3"
 
