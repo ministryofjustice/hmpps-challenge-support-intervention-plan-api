@@ -6,4 +6,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 @Service
 class UserService(private val manageUsersClient: ManageUsersClient) {
   fun getUserDetails(username: String) = manageUsersClient.getUserDetails(username)
+
+  fun getUserRoles(username: String): List<String> = manageUsersClient.getUserRoles(username)
 }
