@@ -31,7 +31,6 @@ class SuggestedCaseNotesControllerTest {
 
   private val request = SuggestedCaseNotesRequest(
     referralId = referralId,
-    userName = username,
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
@@ -117,7 +116,6 @@ class SuggestedCaseNotesControllerTest {
   fun `can construct request with all fields`() {
     val testRequest = SuggestedCaseNotesRequest(
       referralId = referralId,
-      userName = username,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",

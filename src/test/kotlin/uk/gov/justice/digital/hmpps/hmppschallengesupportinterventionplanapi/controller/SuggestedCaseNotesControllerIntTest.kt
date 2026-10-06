@@ -347,7 +347,6 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
   ) = SuggestedCaseNotesRequest(
     referralId = referralId,
-    userName = "TEST_USER",
     behaviourType = behaviourType,
     sortField = "creationDateTime",
     sortOrder = "desc",

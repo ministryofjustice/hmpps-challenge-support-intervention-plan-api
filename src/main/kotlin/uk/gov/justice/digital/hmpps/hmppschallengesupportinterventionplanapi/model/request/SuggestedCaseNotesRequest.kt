@@ -7,7 +7,6 @@ import java.util.UUID
 data class SuggestedCaseNotesRequest(
   @field:NotNull(message = "referralId is required")
   val referralId: UUID,
-  val userName: String,
   val behaviourType: BehaviourType,
   var sortField: String = "createdDate",
   val sortOrder: String = "desc",

@@ -590,7 +590,6 @@ class CaseNoteAnnotationsServiceTest {
 
   private fun suggestedRequest() = SuggestedCaseNotesRequest(
     referralId = referralId,
-    userName = "TEST_USER",
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
