@@ -69,4 +69,3 @@ data class InvestigationEvaluation(
   val eligible: Boolean,
   val reason: String? = null,
 )
-

@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ev
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.kotlin.mock
 import org.springframework.boot.test.system.CapturedOutput
 import org.springframework.boot.test.system.OutputCaptureExtension
 import java.time.ZonedDateTime
@@ -84,4 +84,3 @@ class PersonCaseNoteHandlerTest {
     personReference = personReference,
   )
 }
-

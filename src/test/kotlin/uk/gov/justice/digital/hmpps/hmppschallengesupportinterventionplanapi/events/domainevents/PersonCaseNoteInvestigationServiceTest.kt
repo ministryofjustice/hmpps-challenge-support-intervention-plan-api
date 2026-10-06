@@ -142,6 +142,3 @@ class PersonCaseNoteInvestigationServiceTest {
     return record
   }
 }
-
-
-
