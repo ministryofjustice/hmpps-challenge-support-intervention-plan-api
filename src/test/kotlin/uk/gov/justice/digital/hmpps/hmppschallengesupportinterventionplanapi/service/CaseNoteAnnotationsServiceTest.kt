@@ -509,6 +509,17 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
+  fun `buildSuggestedCaseNotes throws IllegalArgumentException when no authenticated user is present`() {
+    SecurityContextHolder.clearContext()
+
+    val exception = assertThrows<IllegalArgumentException> {
+      service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    }
+
+    assertThat(exception.message).isEqualTo("Authenticated username is required")
+  }
+
+  @Test
   fun `buildSuggestedCaseNotes throws IllegalArgumentException when prisoner does not exist`() {
     doThrow(IllegalArgumentException("Prisoner number invalid")).whenever(personSummaryService)
       .validatePrisoner("NOT_FOUND")
