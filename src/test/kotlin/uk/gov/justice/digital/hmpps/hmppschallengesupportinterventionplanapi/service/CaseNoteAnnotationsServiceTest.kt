@@ -43,6 +43,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class CaseNoteAnnotationsServiceTest {
+  private val testUsername = "TEST_USER"
   private val caseNotesClient = mock<CaseNotesClient>()
   private val caseNoteAnalysedRepository = mock<CaseNoteAnalysedRepository>()
   private val caseNoteAnnotationRepository = mock<CaseNoteAnnotationRepository>()
@@ -233,7 +234,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
       .thenReturn(caseNote(caseNoteId, text = "Prisoner became agitated and raised his voice."))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     assertThat(response.suggestedCaseNotes.first().relevance).isEqualTo("high")
@@ -292,7 +293,7 @@ class CaseNoteAnnotationsServiceTest {
         ),
       )
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
     val note1 = response.suggestedCaseNotes.first { it.caseNoteId == caseNoteId1 }
     val note2 = response.suggestedCaseNotes.first { it.caseNoteId == caseNoteId2 }
 
@@ -331,7 +332,7 @@ class CaseNoteAnnotationsServiceTest {
       .thenReturn(caseNote(caseNoteId, text = "Sensitive case note", sensitive = true))
     whenever(userService.getUserRoles("TEST_USER")).thenReturn(emptyList())
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
 
     assertThat(response.suggestedCaseNotes).isEmpty()
   }
@@ -376,7 +377,7 @@ class CaseNoteAnnotationsServiceTest {
       .thenReturn(caseNote(normalCaseNoteId, text = "Normal case note", sensitive = false))
     whenever(userService.getUserRoles("TEST_USER")).thenReturn(emptyList())
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     assertThat(response.suggestedCaseNotes.first().caseNoteId).isEqualTo(normalCaseNoteId)
@@ -408,7 +409,7 @@ class CaseNoteAnnotationsServiceTest {
       .thenReturn(caseNote(caseNoteId, text = "Sensitive case note", sensitive = true))
     whenever(userService.getUserRoles("TEST_USER")).thenReturn(listOf("POM"))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
   }
@@ -436,7 +437,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNoteAnnotationRepository.findByCaseNotesAnalysedIdInAndBehaviourType(any(), eq(BehaviourType.RISKS_AND_TRIGGERS)))
       .thenReturn(emptyList())
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
 
     assertThat(response.suggestedCaseNotes).isEmpty()
   }
@@ -466,7 +467,7 @@ class CaseNoteAnnotationsServiceTest {
     whenever(caseNotesClient.getCaseNote("A1234AA", caseNoteId))
       .thenReturn(caseNote(caseNoteId, text = "Case note text"))
 
-    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
+    val response = service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest(), testUsername)
 
     assertThat(response.suggestedCaseNotes).hasSize(1)
     assertThat(response.suggestedCaseNotes.first().caseNoteId).isEqualTo(caseNoteId)
@@ -509,23 +510,12 @@ class CaseNoteAnnotationsServiceTest {
   }
 
   @Test
-  fun `buildSuggestedCaseNotes throws IllegalArgumentException when no authenticated user is present`() {
-    SecurityContextHolder.clearContext()
-
-    val exception = assertThrows<IllegalArgumentException> {
-      service.buildSuggestedCaseNotes("A1234AA", referralId, suggestedRequest())
-    }
-
-    assertThat(exception.message).isEqualTo("Authenticated username is required")
-  }
-
-  @Test
   fun `buildSuggestedCaseNotes throws IllegalArgumentException when prisoner does not exist`() {
     doThrow(IllegalArgumentException("Prisoner number invalid")).whenever(personSummaryService)
       .validatePrisoner("NOT_FOUND")
 
     val exception = assertThrows<IllegalArgumentException> {
-      service.buildSuggestedCaseNotes("NOT_FOUND", referralId, suggestedRequest())
+      service.buildSuggestedCaseNotes("NOT_FOUND", referralId, suggestedRequest(), testUsername)
     }
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")

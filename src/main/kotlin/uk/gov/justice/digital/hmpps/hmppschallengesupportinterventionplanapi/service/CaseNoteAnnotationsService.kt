@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
@@ -23,7 +22,6 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
-import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -92,10 +90,9 @@ class CaseNoteAnnotationsService(
     prisonerNumber: String,
     referralId: UUID,
     request: SuggestedCaseNotesRequest,
+    userName: String,
   ): SuggestedCaseNotesResponse {
     validatePrisonerExists(prisonerNumber)
-
-    val userName = authenticatedUsername() ?: throw IllegalArgumentException("Authenticated username is required")
     log.info("Building suggested case notes for prisoner {} and referral {} by user {}", prisonerNumber, referralId, userName)
     val userRoles = userService.getUserRoles(userName)
     val canViewSensitiveCaseNotes = userRoles
@@ -230,16 +227,6 @@ class CaseNoteAnnotationsService(
     if (acknowledgedMessageCount > 0) {
       log.info("Processing complete: $acknowledgedMessageCount messages acknowledged and deleted from queue")
     }
-  }
-
-  private fun authenticatedUsername(): String? {
-    val authentication = SecurityContextHolder.getContext().authentication ?: return null
-    val username = when (authentication) {
-      is AuthAwareAuthenticationToken -> authentication.name
-      else -> authentication.name
-    }.trim()
-
-    return username.takeUnless { it.isBlank() }
   }
 
   private fun validatePrisonerExists(prisonerNumber: String) {

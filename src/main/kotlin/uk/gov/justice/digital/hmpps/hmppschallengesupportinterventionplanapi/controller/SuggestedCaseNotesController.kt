@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -59,11 +60,20 @@ class SuggestedCaseNotesController(
   fun suggestedCaseNotes(
     @PathVariable prisonerNumber: String,
     @RequestBody request: SuggestedCaseNotesRequest,
+    authentication: Authentication,
   ): SuggestedCaseNotesResponse {
     if (!suggestedCaseNotesEnabled) {
       throw ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "suggestedCaseNotes feature is not enabled")
     }
 
-    return caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, request.referralId, request)
+    val userName = authentication.name.trim().takeIf { it.isNotBlank() }
+      ?: throw IllegalArgumentException("Authenticated username is required")
+
+    return caseNoteAnnotationsService.buildSuggestedCaseNotes(
+      prisonerNumber = prisonerNumber,
+      referralId = request.referralId,
+      request = request,
+      userName = userName,
+    )
   }
 }
