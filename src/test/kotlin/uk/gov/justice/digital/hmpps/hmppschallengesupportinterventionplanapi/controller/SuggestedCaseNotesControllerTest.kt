@@ -9,6 +9,7 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
@@ -24,6 +25,7 @@ class SuggestedCaseNotesControllerTest {
   private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
   private val enabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, true)
   private val disabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, false)
+  private val authentication = mock<Authentication>()
 
   private val prisonerNumber = "A1234AA"
   private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
@@ -58,32 +60,48 @@ class SuggestedCaseNotesControllerTest {
         ),
       ),
     )
+    whenever(authentication.name).thenReturn("TEST_USER")
 
-    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request)).thenReturn(expected)
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")).thenReturn(expected)
 
-    val response = enabledController.suggestedCaseNotes(prisonerNumber, request)
+    val response = enabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
 
-    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")
     verifyNoMoreInteractions(caseNoteAnnotationsService)
     assertThat(response).isEqualTo(expected)
   }
 
   @Test
   fun `feature enabled - invalid prisoner throws from service`() {
-    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
+    whenever(authentication.name).thenReturn("TEST_USER")
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")).thenThrow(IllegalArgumentException("Prisoner number invalid"))
 
     val exception = assertThrows<IllegalArgumentException> {
-      enabledController.suggestedCaseNotes(prisonerNumber, request)
+      enabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
     }
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
-    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")
+  }
+
+  @Test
+  fun `feature enabled - blank authentication name throws before invoking service`() {
+    whenever(authentication.name).thenReturn("   ")
+
+    val exception = assertThrows<IllegalArgumentException> {
+      enabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
+    }
+
+    assertThat(exception.message).isEqualTo("Authenticated username is required")
+    verifyNoInteractions(caseNoteAnnotationsService)
   }
 
   @Test
   fun `feature disabled - suggestedCaseNotes returns method not allowed and does not call service`() {
+    whenever(authentication.name).thenReturn("TEST_USER")
+
     val exception = assertThrows<ResponseStatusException> {
-      disabledController.suggestedCaseNotes(prisonerNumber, request)
+      disabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
     }
 
     assertThat(exception.statusCode).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
