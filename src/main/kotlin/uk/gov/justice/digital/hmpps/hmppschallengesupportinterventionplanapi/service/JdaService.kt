@@ -4,10 +4,14 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.toJdaRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.jda.JdaClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
+import java.util.UUID
 
 @Service
 class JdaService(
@@ -31,7 +35,7 @@ class JdaService(
     prisonCode: String,
     correlationId: String,
   ) {
-    if (!featureFlag || !csipAssistConfig.isActivePrison(prisonCode)) {
+    if (!isFeatureEnabledOrPrisonActive(prisonCode)) {
       log.debug("Skipping JDA enqueue for correlationId={}, prisonCode={} (feature disabled or prison not active)", correlationId, prisonCode)
       return
     }
@@ -52,8 +56,50 @@ class JdaService(
       log.info("Queued {} case notes for JDA analysis for correlationId={}", caseNoteCount, correlationId)
     } else {
       log.info("No case notes found for offenderIdentifier={} to queue for JDA analysis for correlationId={}", offenderIdentifier, correlationId)
+    }
+  }
+
+  fun submitCaseNotesForReAnalysis(
+    offenderIdentifier: String,
+    investigationId: UUID,
+    caseNoteId: UUID,
+  ) {
+    val caseNote = try {
+      caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)
+    } catch (e: Exception) {
+      log.warn(
+        "Unable to retrieve case note {} for offenderIdentifier={} during JDA re-analysis for investigationId={}",
+        caseNoteId,
+        offenderIdentifier,
+        investigationId,
+        e,
+      )
       return
     }
+
+    val prisonCode = caseNote.locationId
+    if (!isFeatureEnabledOrPrisonActive(prisonCode)) {
+      log.debug(
+        "Skipping JDA re-analysis for investigationId={}, prisonCode={} (feature disabled or prison not active)",
+        investigationId,
+        prisonCode,
+      )
+      return
+    }
+
+    val request = buildJdaRequest(
+      correlationId = investigationId.toString(),
+      caseNote = caseNote,
+    )
+
+    log.info(
+      "Submitting case note {} for JDA re-analysis with investigationId={}, offenderIdentifier={}, prisonCode={}",
+      caseNoteId,
+      investigationId,
+      offenderIdentifier,
+      prisonCode,
+    )
+    jdaClient.submitRequest(request)
   }
 
   fun getCaseNoteAnnotationsFromQueue() = jdaClient.getCaseNoteAnnotationsFromQueue()
@@ -61,4 +107,11 @@ class JdaService(
   fun acknowledgeCaseNoteAnnotationsMessage(receiptId: String) {
     jdaClient.acknowledgeCaseNoteAnnotationsMessage(receiptId)
   }
+
+  private fun isFeatureEnabledOrPrisonActive(prisonCode: String): Boolean = featureFlag && csipAssistConfig.isActivePrison(prisonCode)
+
+  private fun buildJdaRequest(
+    correlationId: String,
+    caseNote: CaseNote,
+  ): JdaRequest<List<CaseNoteAnalysisItem>> = listOf(caseNote).toJdaRequest(correlationId, promptKey, promptVersion)
 }

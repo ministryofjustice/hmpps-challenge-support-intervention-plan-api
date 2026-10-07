@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ev
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.JdaService
 
 @Service
 class PersonCaseNoteHandler(
   private val personCaseNoteInvestigationService: PersonCaseNoteInvestigationService,
+  private val jdaService: JdaService,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -54,5 +56,13 @@ class PersonCaseNoteHandler(
       prisonNumber,
       resolution.eligibleInvestigationIds,
     )
+
+    resolution.eligibleInvestigationIds.forEach { investigationId ->
+      jdaService.submitCaseNotesForReAnalysis(
+        offenderIdentifier = prisonNumber,
+        investigationId = investigationId,
+        caseNoteId = caseNoteId,
+      )
+    }
   }
 }
