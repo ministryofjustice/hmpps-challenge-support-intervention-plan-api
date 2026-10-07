@@ -34,3 +34,6 @@ generic-prometheus-alerts:
   rdsAlertsDatabases:
     cloud-platform-d4b8139eb1269041: 'CSIP DB'
   rdsAlertsConnectionThreshold: 100
+
+caseNoteAnnotations:
+  enabled: true
