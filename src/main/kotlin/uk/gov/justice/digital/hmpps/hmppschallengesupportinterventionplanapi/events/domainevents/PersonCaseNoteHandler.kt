@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ev
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.JdaService
 
 @Service
 class PersonCaseNoteHandler(
   private val personCaseNoteInvestigationService: PersonCaseNoteInvestigationService,
   private val jdaService: JdaService,
+  private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -39,7 +41,7 @@ class PersonCaseNoteHandler(
       prisonNumber,
       resolution.discoveredInvestigationIds,
     )
-    log.info(
+    log.debug(
       "Evaluated investigation statuses for prison number {}: {}",
       prisonNumber,
       resolution.evaluations.associate { it.investigationId to (it.status ?: it.reason) },
@@ -58,11 +60,29 @@ class PersonCaseNoteHandler(
     )
 
     resolution.eligibleInvestigationIds.forEach { investigationId ->
-      jdaService.submitCaseNotesForReAnalysis(
+
+      log.info(
+        "Triggering JDA re-analysis for investigationId={}, caseNoteId={}, prisonNumber={}",
+        investigationId,
+        caseNoteId,
+        prisonNumber,
+      )
+
+      val response = jdaService.submitCaseNotesForReAnalysis(
         offenderIdentifier = prisonNumber,
         investigationId = investigationId,
         caseNoteId = caseNoteId,
       )
+
+      if (response != null) {
+        log.info(
+          "Persisting synchronous JDA response {} for investigationId={}",
+          response.requestId,
+          investigationId,
+        )
+
+        caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonNumber)
+      }
     }
   }
 }
