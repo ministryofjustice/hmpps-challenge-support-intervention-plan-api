@@ -44,6 +44,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
   private val caseNotesService = CaseNotesService(caseNotesClient)
   private val jdaService = mock<JdaService>()
   private val personSummaryService = mock<PersonSummaryService>()
+  private val userService = mock<UserService>()
   private val service = CaseNoteAnnotationsService(
     caseNotesService,
     jdaService,
@@ -52,6 +53,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
     jdbcTemplate,
     personSummaryService,
     csipRecordService,
+    userService,
     Duration.ofSeconds(30),
   )
 
@@ -314,6 +316,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       jdbcTemplate,
       personSummaryService,
       csipRecordService,
+      userService,
       Duration.ZERO,
     )
     val receiptId = "receipt-timeout"
@@ -342,6 +345,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       jdbcTemplate,
       personSummaryService,
       csipRecordService,
+      userService,
       Duration.ZERO,
     )
     val receiptId = "receipt-half-timeout"

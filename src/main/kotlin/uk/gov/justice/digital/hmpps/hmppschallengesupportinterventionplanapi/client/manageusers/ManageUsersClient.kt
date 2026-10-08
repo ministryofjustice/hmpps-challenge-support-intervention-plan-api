@@ -28,7 +28,28 @@ class ManageUsersClient(@Qualifier("manageUsersWebClient") private val webClient
   } catch (e: Exception) {
     throw DownstreamServiceException("Get user details request failed", e)
   }
+
+  fun getUserRoles(username: String): List<String> = try {
+    webClient
+      .get()
+      .uri("/users/{username}/roles", username)
+      .exchangeToMono { res ->
+        when (res.statusCode()) {
+          HttpStatus.NOT_FOUND -> Mono.just(emptyList())
+          HttpStatus.OK -> res.bodyToMono<List<RoleDetails>>().map { it.map { role -> role.roleCode } }
+          else -> res.createError()
+        }
+      }
+      .retryIdempotentRequestOnTransientException()
+      .block() ?: emptyList()
+  } catch (e: Exception) {
+    throw DownstreamServiceException("Get user roles request failed", e)
+  }
 }
+
+data class RoleDetails(
+  val roleCode: String,
+)
 
 data class UserDetails(
   val username: String,
