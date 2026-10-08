@@ -12,4 +12,9 @@ interface CaseNoteAnalysedRepository : JpaRepository<CaseNoteAnalysed, UUID> {
     prisonerNumber: String,
     investigationId: UUID,
   ): List<CaseNoteAnalysed>
+
+  fun findByInvestigationIdAndCaseNoteId(
+    investigationId: UUID,
+    caseNoteId: UUID,
+  ): CaseNoteAnalysed?
 }

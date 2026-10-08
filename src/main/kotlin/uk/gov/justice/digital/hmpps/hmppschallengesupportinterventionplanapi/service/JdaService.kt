@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.cli
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.config.CsipAssistConfig
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.CaseNoteAnalysisItem
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import java.util.UUID
 
@@ -63,7 +64,7 @@ class JdaService(
     offenderIdentifier: String,
     investigationId: UUID,
     caseNoteId: UUID,
-  ) {
+  ): JdaRequestResponse? {
     val caseNote = try {
       caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)
     } catch (e: Exception) {
@@ -74,7 +75,7 @@ class JdaService(
         investigationId,
         e,
       )
-      return
+      return null
     }
 
     val prisonCode = caseNote.locationId
@@ -84,7 +85,7 @@ class JdaService(
         investigationId,
         prisonCode,
       )
-      return
+      return null
     }
 
     val request = buildJdaRequest(
@@ -99,7 +100,7 @@ class JdaService(
       offenderIdentifier,
       prisonCode,
     )
-    jdaClient.submitRequest(request)
+    return jdaClient.submitRequest(request)
   }
 
   fun getCaseNoteAnnotationsFromQueue() = jdaClient.getCaseNoteAnnotationsFromQueue()
