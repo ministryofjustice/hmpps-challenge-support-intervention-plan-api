@@ -51,6 +51,16 @@ class ManageUsersClientTest {
   }
 
   @Test
+  fun `getUserRoles - success`() {
+    server.stubGetUserRoles(TEST_USER, listOf("POM", "VIEW_SENSITIVE_CASE_NOTES"))
+
+    val result = client.getUserRoles(TEST_USER)
+
+    assertThat(result).containsExactly("POM", "VIEW_SENSITIVE_CASE_NOTES")
+    server.verify(exactly(1), getRequestedFor(urlEqualTo("/users/$TEST_USER/roles")))
+  }
+
+  @Test
   fun `getUserDetails - user not found`() {
     val result = client.getUserDetails(USER_NOT_FOUND)
 
@@ -69,6 +79,19 @@ class ManageUsersClientTest {
       assertThat(this!!.message).isEqualTo("500 Internal Server Error from GET http://localhost:8111/users/${USER_THROW_EXCEPTION}")
     }
     server.verify(exactly(4), getRequestedFor(urlEqualTo("/users/$USER_THROW_EXCEPTION")))
+  }
+
+  @Test
+  fun `getUserRoles - downstream service exception`() {
+    server.stubGetUserRolesException()
+
+    val exception = assertThrows<DownstreamServiceException> { client.getUserRoles(USER_THROW_EXCEPTION) }
+    assertThat(exception.message).isEqualTo("Get user roles request failed")
+    with(exception.cause) {
+      assertThat(this).isInstanceOf(WebClientResponseException::class.java)
+      assertThat(this!!.message).isEqualTo("500 Internal Server Error from GET http://localhost:8111/users/${USER_THROW_EXCEPTION}/roles")
+    }
+    server.verify(exactly(4), getRequestedFor(urlEqualTo("/users/$USER_THROW_EXCEPTION/roles")))
   }
 
   companion object {

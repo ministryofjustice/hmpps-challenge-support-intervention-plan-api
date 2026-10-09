@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents
 
 import java.time.ZonedDateTime
+import java.util.UUID
 
 interface DomainEvent {
   val eventType: String
@@ -54,3 +55,14 @@ data class BookingMovedInformation(
 ) : AdditionalInformation
 
 data class PersonReconciliationInformation(val prisonNumbers: Set<String>) : AdditionalInformation
+
+data class PersonCaseNoteInformation(
+  val id: UUID,
+  val legacyId: Long? = null,
+  val type: String? = null,
+  val subType: String? = null,
+  val source: String? = null,
+  val syncToNomis: Boolean? = false,
+  val systemGenerated: Boolean? = null,
+  val previousNomsNumber: String? = null,
+) : AdditionalInformation

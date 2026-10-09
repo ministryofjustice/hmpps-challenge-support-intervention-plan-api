@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -19,14 +20,14 @@ import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_PRISONER_CASE_NOTES_RO
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "10. Suggested Case Notes Controller", description = "Endpoints for suggested case notes")
 class SuggestedCaseNotesController(
-  private val caseNotesService: CaseNotesService,
+  private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
   @Value("\${feature.suggested-case-notes}")
   private val suggestedCaseNotesEnabled: Boolean,
 ) {
@@ -59,13 +60,20 @@ class SuggestedCaseNotesController(
   fun suggestedCaseNotes(
     @PathVariable prisonerNumber: String,
     @RequestBody request: SuggestedCaseNotesRequest,
+    authentication: Authentication,
   ): SuggestedCaseNotesResponse {
     if (!suggestedCaseNotesEnabled) {
       throw ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "suggestedCaseNotes feature is not enabled")
     }
 
-    caseNotesService.validatePrisonerExists(prisonerNumber)
+    val userName = authentication.name.trim().takeIf { it.isNotBlank() }
+      ?: throw IllegalArgumentException("Authenticated username is required")
 
-    return caseNotesService.buildSuggestedCaseNotes(prisonerNumber, request)
+    return caseNoteAnnotationsService.buildSuggestedCaseNotes(
+      prisonerNumber = prisonerNumber,
+      referralId = request.referralId,
+      request = request,
+      userName = userName,
+    )
   }
 }

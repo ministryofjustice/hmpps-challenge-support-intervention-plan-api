@@ -4,30 +4,34 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNote
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.SuggestedCaseNotesResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.SuggestedCaseNotesRequest
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
 import java.time.LocalDateTime
 import java.util.UUID
 
 class SuggestedCaseNotesControllerTest {
 
-  private val caseNotesService = mock<CaseNotesService>()
-  private val enabledController = SuggestedCaseNotesController(caseNotesService, true)
-  private val disabledController = SuggestedCaseNotesController(caseNotesService, false)
+  private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
+  private val enabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, true)
+  private val disabledController = SuggestedCaseNotesController(caseNoteAnnotationsService, false)
+  private val authentication = mock<Authentication>()
 
   private val prisonerNumber = "A1234AA"
+  private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
 
   private val request = SuggestedCaseNotesRequest(
+    referralId = referralId,
     behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
     sortField = "relevance",
     sortOrder = "desc",
@@ -45,42 +49,63 @@ class SuggestedCaseNotesControllerTest {
           relevance = "high",
           caseNoteId = UUID.fromString("f4ee95d0-49a4-46a2-a485-b8f26f089170"),
           createdAt = LocalDateTime.of(2026, 7, 9, 10, 0),
+          createdBy = "Author Name",
           annotatedCaseNote = "Prisoner became agitated during morning medication round.",
+          amendments = listOf(
+            SuggestedCaseNoteAmendment(
+              createdAt = LocalDateTime.of(2026, 7, 9, 10, 5),
+              annotatedText = "Amended note text",
+            ),
+          ),
         ),
       ),
     )
+    whenever(authentication.name).thenReturn("TEST_USER")
 
-    whenever(caseNotesService.buildSuggestedCaseNotes(prisonerNumber, request)).thenReturn(expected)
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")).thenReturn(expected)
 
-    val response = enabledController.suggestedCaseNotes(prisonerNumber, request)
+    val response = enabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
 
-    verify(caseNotesService).validatePrisonerExists(prisonerNumber)
-    verify(caseNotesService).buildSuggestedCaseNotes(prisonerNumber, request)
-    verifyNoMoreInteractions(caseNotesService)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")
+    verifyNoMoreInteractions(caseNoteAnnotationsService)
     assertThat(response).isEqualTo(expected)
   }
 
   @Test
-  fun `feature enabled - invalid prisoner throws and does not call buildSuggestedCaseNotes`() {
-    whenever(caseNotesService.validatePrisonerExists(prisonerNumber)).thenThrow(IllegalArgumentException("Prisoner number invalid"))
+  fun `feature enabled - invalid prisoner throws from service`() {
+    whenever(authentication.name).thenReturn("TEST_USER")
+    whenever(caseNoteAnnotationsService.buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")).thenThrow(IllegalArgumentException("Prisoner number invalid"))
 
     val exception = assertThrows<IllegalArgumentException> {
-      enabledController.suggestedCaseNotes(prisonerNumber, request)
+      enabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
     }
 
     assertThat(exception.message).isEqualTo("Prisoner number invalid")
-    verify(caseNotesService).validatePrisonerExists(prisonerNumber)
-    verify(caseNotesService, never()).buildSuggestedCaseNotes(prisonerNumber, request)
+    verify(caseNoteAnnotationsService).buildSuggestedCaseNotes(prisonerNumber, referralId, request, "TEST_USER")
+  }
+
+  @Test
+  fun `feature enabled - blank authentication name throws before invoking service`() {
+    whenever(authentication.name).thenReturn("   ")
+
+    val exception = assertThrows<IllegalArgumentException> {
+      enabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
+    }
+
+    assertThat(exception.message).isEqualTo("Authenticated username is required")
+    verifyNoInteractions(caseNoteAnnotationsService)
   }
 
   @Test
   fun `feature disabled - suggestedCaseNotes returns method not allowed and does not call service`() {
+    whenever(authentication.name).thenReturn("TEST_USER")
+
     val exception = assertThrows<ResponseStatusException> {
-      disabledController.suggestedCaseNotes(prisonerNumber, request)
+      disabledController.suggestedCaseNotes(prisonerNumber, request, authentication)
     }
 
     assertThat(exception.statusCode).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
-    verifyNoInteractions(caseNotesService)
+    verifyNoInteractions(caseNoteAnnotationsService)
   }
 
   @Test
@@ -107,11 +132,13 @@ class SuggestedCaseNotesControllerTest {
   @Test
   fun `can construct request with all fields`() {
     val testRequest = SuggestedCaseNotesRequest(
+      referralId = referralId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
       sortField = "relevance",
       sortOrder = "desc",
     )
 
+    assertThat(testRequest.referralId).isEqualTo(referralId)
     assertThat(testRequest.behaviourType).isEqualTo(BehaviourType.RISKS_AND_TRIGGERS)
     assertThat(testRequest.sortField).isEqualTo("relevance")
     assertThat(testRequest.sortOrder).isEqualTo("desc")

@@ -133,3 +133,6 @@ csip:
 jda:
   prompt-key: case-note-analysis
   prompt-version: 1
+
+case-note-annotations:
+  max-processing-duration: 30s

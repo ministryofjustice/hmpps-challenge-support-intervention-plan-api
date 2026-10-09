@@ -14,10 +14,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.constant.ROLE_PRISONER_CASE_NOTES_RO
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CaseNotesServer
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PRISON_NUMBER_NOT_FOUND
@@ -29,12 +30,16 @@ import java.util.UUID
 class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
 
   @Autowired
+  lateinit var caseNoteAnalysedRepository: CaseNoteAnalysedRepository
+
+  @Autowired
   lateinit var caseNoteAnnotationRepository: CaseNoteAnnotationRepository
 
   @BeforeEach
   fun setUp() {
     caseNotesServer.resetAll()
     caseNoteAnnotationRepository.deleteAll()
+    caseNoteAnalysedRepository.deleteAll()
   }
 
   @Test
@@ -47,14 +52,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = matchingCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "became agitated",
     )
     saveAnnotation(
       prisonerNumber = "A2222AA",
       caseNoteId = ignoredCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "ignored",
     )
 
@@ -84,14 +89,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = risksCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "raised his voice",
     )
     saveAnnotation(
       prisonerNumber = prisonerNumber,
       caseNoteId = protectiveCaseNoteId,
       behaviourType = BehaviourType.PROTECTIVE_FACTORS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "settled down",
     )
 
@@ -120,7 +125,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "became agitated",
     )
 
@@ -156,14 +161,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "became agitated",
     )
     saveAnnotation(
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "raised his voice",
     )
 
@@ -194,7 +199,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = caseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.HIGH,
+      relevancy = 3,
       annotatedText = "became agitated",
     )
 
@@ -215,6 +220,7 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       .jsonPath("$.behaviourType").isEqualTo("risks_and_triggers")
       .jsonPath("$.suggestedCaseNotes[0].caseNoteId").isEqualTo(caseNoteId.toString())
       .jsonPath("$.suggestedCaseNotes[0].createdAt").isEqualTo("2026-07-09T15:30:00")
+      .jsonPath("$.suggestedCaseNotes[0].createdBy").isEqualTo("Author Name")
       .jsonPath("$.suggestedCaseNotes[0].relevance").isEqualTo("high")
       .jsonPath("$.suggestedCaseNotes[0].annotatedCaseNote").value<String> {
         assertThat(it).contains("<span class=\"annotation-type\">became agitated</span>")
@@ -248,14 +254,14 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
       prisonerNumber = prisonerNumber,
       caseNoteId = olderCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.LOW,
+      relevancy = 2,
       annotatedText = "stood by cell door",
     )
     saveAnnotation(
       prisonerNumber = prisonerNumber,
       caseNoteId = newerCaseNoteId,
       behaviourType = BehaviourType.RISKS_AND_TRIGGERS,
-      confidenceLevel = ConfidenceLevel.MEDIUM,
+      relevancy = 2,
       annotatedText = "accepted support",
     )
 
@@ -305,18 +311,31 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
     prisonerNumber: String,
     caseNoteId: UUID,
     behaviourType: BehaviourType,
-    confidenceLevel: ConfidenceLevel,
+    relevancy: Int,
     annotatedText: String,
+    investigationId: UUID = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
   ) {
-    caseNoteAnnotationRepository.save(
-      CaseNoteAnnotation(
+    val analysed = caseNoteAnalysedRepository.save(
+      CaseNoteAnalysed(
         requestId = UUID.randomUUID(),
+        investigationId = investigationId,
         prisonerNumber = prisonerNumber,
         caseNoteId = caseNoteId,
         promptKey = "case-note-analysis",
         promptVersion = 1,
+        usualBehaviourRelevancy = if (behaviourType == BehaviourType.USUAL_BEHAVIOUR_PRESENTATION) relevancy else 0,
+        risksAndTriggersRelevancy = if (behaviourType == BehaviourType.RISKS_AND_TRIGGERS) relevancy else 0,
+        protectiveFactorsRelevancy = if (behaviourType == BehaviourType.PROTECTIVE_FACTORS) relevancy else 0,
+      ),
+    )
+
+    caseNoteAnnotationRepository.save(
+      CaseNoteAnnotation(
+        requestId = UUID.randomUUID(),
+        investigationId = analysed.investigationId,
+        caseNotesAnalysed = analysed,
+        caseNoteId = caseNoteId,
         behaviourType = behaviourType,
-        confidenceLevel = confidenceLevel,
         annotatedText = annotatedText,
         createdDate = LocalDateTime.now(),
       ),
@@ -324,12 +343,38 @@ class SuggestedCaseNotesControllerIntTest : IntegrationTestBase() {
   }
 
   private fun suggestedCaseNotesRequest(
+    referralId: UUID = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e"),
     behaviourType: BehaviourType = BehaviourType.RISKS_AND_TRIGGERS,
   ) = SuggestedCaseNotesRequest(
+    referralId = referralId,
     behaviourType = behaviourType,
     sortField = "creationDateTime",
     sortOrder = "desc",
   )
+
+  @Test
+  fun `returns bad request when referralId is missing`() {
+    val response = webTestClient.post()
+      .uri(urlToTest(givenValidPrisonNumber("A9999AA")))
+      .headers(setAuthorisation(roles = listOf(ROLE_PRISONER_CASE_NOTES_RO)))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(
+        """
+        {
+          "behaviourType": "risks_and_triggers",
+          "sortField": "creationDateTime",
+          "sortOrder": "desc"
+        }
+        """.trimIndent(),
+      )
+      .exchange()
+      .errorResponse(HttpStatus.BAD_REQUEST)
+
+    assertThat(response.userMessage).isEqualTo("Validation failure: Couldn't read request body")
+    assertThat(response.developerMessage).contains("Instantiation of")
+    assertThat(response.developerMessage).contains("SuggestedCaseNotesRequest")
+    assertThat(response.developerMessage).contains("referralId")
+  }
 
   private fun urlToTest(prisonNumber: String) = "/v1/suggestedCaseNotes/$prisonNumber"
 

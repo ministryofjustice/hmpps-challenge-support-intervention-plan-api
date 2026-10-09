@@ -15,7 +15,6 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
-import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ConfidenceLevel
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.exception.DownstreamServiceException
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaMockServer
@@ -50,7 +49,6 @@ class JdaClientTest {
     assertThat(result?.status).isEqualTo(JdaDequeueResponseStatus.SUCCEEDED)
     assertThat(result?.responseData).hasSize(1)
     assertThat(result?.responseData?.first()?.caseNoteId).isEqualTo(UUID.fromString("11111111-1111-1111-1111-111111111111"))
-    assertThat(result?.responseData?.first()?.confidenceLevel).isEqualTo(ConfidenceLevel.HIGH)
     assertThat(result?.responseData?.first()?.justifyingSpans).containsExactly(
       JustifyingSpan(
         text = "annotated text",
@@ -85,6 +83,7 @@ class JdaClientTest {
               {
                 "requestId": "01a067ab-ab44-77b8-b127-423c9a0d52d6",
                 "correlationId": "019fcc4c-fff1-71ce-b853-b52f0b52cc72",
+                "receiptId": "receipt-case-note-id-test",
                 "prompt": {
                   "key": "case-note-analysis",
                   "version": 1
@@ -93,7 +92,6 @@ class JdaClientTest {
                 "responseData": [
                   {
                     "case_note_id": "76304207-b018-4812-a3bf-f294a05347e8",
-                    "confidence_level": "high",
                     "justifying_spans": [
                       {
                         "text": "he appeared visibly anxious and withdrawn upon arrival",
@@ -227,6 +225,43 @@ class JdaClientTest {
     assertThat(exception.message).isEqualTo("Queue JDA request failed")
     assertThat(exception.cause).isInstanceOf(WebClientResponseException::class.java)
     server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/queuerequest")))
+  }
+
+  @Test
+  fun `acknowledgeCaseNoteAnnotationsMessage - successful acknowledgement`() {
+    val receiptId = "receipt-123-abc"
+    server.stubAcknowledgeDequeueResponseSuccess()
+
+    client.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `acknowledgeCaseNoteAnnotationsMessage - server error throws exception`() {
+    val receiptId = "receipt-456-def"
+    server.stubAcknowledgeDequeueResponseException()
+
+    val exception = assertThrows<DownstreamServiceException> {
+      client.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    }
+
+    assertThat(exception.message).containsIgnoringCase("acknowledge")
+    assertThat(exception.message).containsIgnoringCase(receiptId)
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `acknowledgeCaseNoteAnnotationsMessage - unauthorized error throws exception`() {
+    val receiptId = "receipt-789-ghi"
+    server.stubAcknowledgeDequeueResponseUnauthorized()
+
+    val exception = assertThrows<DownstreamServiceException> {
+      client.acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    }
+
+    assertThat(exception.message).containsIgnoringCase("acknowledge")
+    server.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
   }
 
   companion object {

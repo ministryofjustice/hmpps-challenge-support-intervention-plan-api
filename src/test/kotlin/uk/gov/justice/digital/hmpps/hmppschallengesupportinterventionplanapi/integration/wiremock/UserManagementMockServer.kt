@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.jsonMapper
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.RoleDetails
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.manageusers.UserDetails
 import java.util.UUID
 
@@ -47,6 +48,22 @@ class ManageUsersServer : WireMockServer(8111) {
   )
 
   fun stubGetUserDetailsException(username: String = USER_THROW_EXCEPTION): StubMapping = stubFor(get("/users/$username").willReturn(aResponse().withStatus(500)))
+
+  fun stubGetUserRoles(username: String = TEST_USER, roles: List<String> = listOf("GLOBAL_SEARCH")): StubMapping = stubFor(
+    get("/users/$username/roles")
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            mapper.writeValueAsString(
+              roles.map { RoleDetails(roleCode = it) },
+            ),
+          )
+          .withStatus(200),
+      ),
+  )
+
+  fun stubGetUserRolesException(username: String = USER_THROW_EXCEPTION): StubMapping = stubFor(get("/users/$username/roles").willReturn(aResponse().withStatus(500)))
 }
 
 class ManageUsersExtension :
@@ -66,6 +83,8 @@ class ManageUsersExtension :
     manageUsers.resetRequests()
     manageUsers.stubGetUserDetails()
     manageUsers.stubGetUserDetailsException()
+    manageUsers.stubGetUserRoles()
+    manageUsers.stubGetUserRolesException()
   }
 
   override fun afterAll(context: ExtensionContext) {
