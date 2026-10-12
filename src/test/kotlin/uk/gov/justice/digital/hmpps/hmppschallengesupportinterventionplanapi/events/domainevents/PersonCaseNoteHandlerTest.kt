@@ -11,7 +11,17 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.boot.test.system.CapturedOutput
 import org.springframework.boot.test.system.OutputCaptureExtension
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.JdaService
+import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -19,7 +29,8 @@ import java.util.UUID
 class PersonCaseNoteHandlerTest {
   private val personCaseNoteInvestigationService = mock<PersonCaseNoteInvestigationService>()
   private val jdaService = mock<JdaService>()
-  private val handler = PersonCaseNoteHandler(personCaseNoteInvestigationService, jdaService)
+  private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
+  private val handler = PersonCaseNoteHandler(personCaseNoteInvestigationService, jdaService, caseNoteAnnotationsService)
 
   @Test
   fun `created event with valid prison number resolves investigations and logs receipt`(output: CapturedOutput) {
@@ -74,6 +85,49 @@ class PersonCaseNoteHandlerTest {
   }
 
   @Test
+  fun `eligible investigations persist synchronous annotations when re-analysis returns a response`() {
+    val prisonNumber = "A1234BC"
+    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    val investigationId = UUID.randomUUID()
+    val response = testJdaRequestResponse(investigationId, caseNoteId)
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
+      .thenReturn(
+        PersonCaseNoteInvestigationResolution(
+          prisonNumber,
+          listOf(investigationId),
+          listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_PENDING", true)),
+        ),
+      )
+    whenever(jdaService.submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)).thenReturn(response)
+
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonNumber))
+
+    verify(jdaService).submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)
+    verify(caseNoteAnnotationsService).persistSynchronousAnnotations(response, prisonNumber)
+  }
+
+  @Test
+  fun `eligible investigations do not persist annotations when re-analysis returns null`() {
+    val prisonNumber = "A1234BC"
+    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    val investigationId = UUID.randomUUID()
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
+      .thenReturn(
+        PersonCaseNoteInvestigationResolution(
+          prisonNumber,
+          listOf(investigationId),
+          listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_PENDING", true)),
+        ),
+      )
+    whenever(jdaService.submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)).thenReturn(null)
+
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonNumber))
+
+    verify(jdaService).submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)
+    verify(caseNoteAnnotationsService, never()).persistSynchronousAnnotations(any(), any())
+  }
+
+  @Test
   fun `missing personReference logs warning and exits`(output: CapturedOutput) {
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, personReference = null))
 
@@ -111,5 +165,30 @@ class PersonCaseNoteHandlerTest {
       subType = "GEN",
     ),
     personReference = personReference,
+  )
+
+  private fun testJdaRequestResponse(investigationId: UUID, caseNoteId: UUID) = JdaRequestResponse(
+    requestId = UUID.randomUUID(),
+    correlationId = investigationId,
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 1,
+    ),
+    status = JdaRequestStatus.SUCCEEDED,
+    responseData = listOf(
+      JdaDequeueResponseData(
+        caseNoteId = caseNoteId,
+        justifyingSpans = listOf(
+          JustifyingSpan(
+            text = "annotated text",
+            justifies = BehaviourType.RISKS_AND_TRIGGERS,
+          ),
+        ),
+      ),
+    ),
+    metaData = JdaMetadata(
+      requestType = JdaRequestType.SYNC,
+      submittedAt = OffsetDateTime.now(),
+    ),
   )
 }

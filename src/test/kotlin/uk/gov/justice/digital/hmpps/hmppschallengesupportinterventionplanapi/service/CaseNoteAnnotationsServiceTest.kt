@@ -71,6 +71,7 @@ class CaseNoteAnnotationsServiceTest {
     SecurityContextHolder.getContext().authentication = UsernamePasswordAuthenticationToken("TEST_USER", "password")
 
     whenever(caseNoteAnalysedRepository.save(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
+    whenever(caseNoteAnalysedRepository.saveAndFlush(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
     whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenReturn(1)
     whenever(userService.getUserDetails(any())).thenReturn(
       UserDetails(
@@ -183,11 +184,119 @@ class CaseNoteAnnotationsServiceTest {
     service.persistSynchronousAnnotations(response, prisonerNumber)
 
     val analysedCaptor = argumentCaptor<CaseNoteAnalysed>()
-    verify(caseNoteAnalysedRepository, times(1)).save(analysedCaptor.capture())
+    verify(caseNoteAnalysedRepository, times(1)).saveAndFlush(analysedCaptor.capture())
     assertThat(analysedCaptor.firstValue.prisonerNumber).isEqualTo(prisonerNumber)
     assertThat(analysedCaptor.firstValue.protectiveFactorsRelevancy).isEqualTo(4)
 
+    verify(caseNoteAnnotationRepository, never()).deleteByCaseNotesAnalysedId(any())
     verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
+  }
+
+  @Test
+  fun `persistSynchronousAnnotations updates existing analysed row for matching investigation and case note even when requestId differs`() {
+    val requestId = UUID.randomUUID()
+    val existingRequestId = UUID.randomUUID()
+    val caseNoteId = UUID.randomUUID()
+    val existingAnalysedId = UUID.randomUUID()
+    val prisonerNumber = "A1234BC"
+    val response = testJdaRequestResponse(
+      requestId = requestId,
+      correlationId = referralId,
+      responseData = listOf(
+        JdaDequeueResponseData(
+          caseNoteId = caseNoteId,
+          usualBehaviourPresentation = 1,
+          risksAndTriggers = 4,
+          protectiveFactors = 2,
+          justifyingSpans = listOf(
+            JustifyingSpan(text = "replacement annotation", justifies = BehaviourType.RISKS_AND_TRIGGERS),
+          ),
+        ),
+      ),
+    )
+
+    whenever(
+      caseNoteAnalysedRepository.findByInvestigationIdAndCaseNoteId(
+        referralId,
+        caseNoteId,
+      ),
+    ).thenReturn(
+      CaseNoteAnalysed(
+        id = existingAnalysedId,
+        requestId = existingRequestId,
+        investigationId = referralId,
+        prisonerNumber = prisonerNumber,
+        caseNoteId = caseNoteId,
+        promptKey = "old-prompt",
+        promptVersion = 1,
+        usualBehaviourRelevancy = 4,
+        risksAndTriggersRelevancy = 1,
+        protectiveFactorsRelevancy = 0,
+      ),
+    )
+
+    service.persistSynchronousAnnotations(response, prisonerNumber)
+
+    verify(caseNoteAnnotationRepository).deleteByCaseNotesAnalysedId(existingAnalysedId)
+
+    val analysedCaptor = argumentCaptor<CaseNoteAnalysed>()
+    verify(caseNoteAnalysedRepository).saveAndFlush(analysedCaptor.capture())
+    assertThat(analysedCaptor.firstValue.id).isEqualTo(existingAnalysedId)
+    assertThat(analysedCaptor.firstValue.requestId).isEqualTo(requestId)
+    assertThat(analysedCaptor.firstValue.promptKey).isEqualTo("case-note-analysis")
+    assertThat(analysedCaptor.firstValue.promptVersion).isEqualTo(3)
+    assertThat(analysedCaptor.firstValue.usualBehaviourRelevancy).isEqualTo(1)
+    assertThat(analysedCaptor.firstValue.risksAndTriggersRelevancy).isEqualTo(4)
+    assertThat(analysedCaptor.firstValue.protectiveFactorsRelevancy).isEqualTo(2)
+    verify(caseNoteAnalysedRepository).findByInvestigationIdAndCaseNoteId(referralId, caseNoteId)
+    verify(jdbcTemplate, times(1)).update(any<String>(), any<MapSqlParameterSource>())
+  }
+
+  @Test
+  fun `persistSynchronousAnnotations rethrows failures so the transaction can roll back`() {
+    val requestId = UUID.randomUUID()
+    val caseNoteId = UUID.randomUUID()
+    val existingAnalysedId = UUID.randomUUID()
+    val response = testJdaRequestResponse(
+      requestId = requestId,
+      correlationId = referralId,
+      responseData = listOf(
+        JdaDequeueResponseData(
+          caseNoteId = caseNoteId,
+          justifyingSpans = listOf(
+            JustifyingSpan(text = "replacement annotation", justifies = BehaviourType.RISKS_AND_TRIGGERS),
+          ),
+        ),
+      ),
+    )
+
+    whenever(
+      caseNoteAnalysedRepository.findByInvestigationIdAndCaseNoteId(
+        referralId,
+        caseNoteId,
+      ),
+    ).thenReturn(
+      CaseNoteAnalysed(
+        id = existingAnalysedId,
+        requestId = requestId,
+        investigationId = referralId,
+        prisonerNumber = "A1234BC",
+        caseNoteId = caseNoteId,
+        promptKey = "old-prompt",
+        promptVersion = 1,
+        usualBehaviourRelevancy = 4,
+        risksAndTriggersRelevancy = 1,
+        protectiveFactorsRelevancy = 0,
+      ),
+    )
+    whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenThrow(RuntimeException("boom"))
+
+    assertThrows<RuntimeException> {
+      service.persistSynchronousAnnotations(response, "A1234BC")
+    }
+
+    verify(caseNoteAnnotationRepository).deleteByCaseNotesAnalysedId(existingAnalysedId)
+    verify(caseNoteAnalysedRepository).saveAndFlush(any<CaseNoteAnalysed>())
   }
 
   @Test
@@ -634,15 +743,10 @@ class CaseNoteAnnotationsServiceTest {
     ),
   )
 
-  private fun testJdaRequestResponse(requestId: UUID = UUID.randomUUID()) = JdaRequestResponse(
-    requestId = requestId,
-    correlationId = UUID.randomUUID(),
-    prompt = JdaPrompt(
-      key = "case-note-analysis",
-      version = 3,
-    ),
-    status = JdaRequestStatus.SUCCEEDED,
-    responseData = listOf(
+  private fun testJdaRequestResponse(
+    requestId: UUID = UUID.randomUUID(),
+    correlationId: UUID = UUID.randomUUID(),
+    responseData: List<JdaDequeueResponseData> = listOf(
       JdaDequeueResponseData(
         caseNoteId = UUID.randomUUID(),
         usualBehaviourPresentation = 3,
@@ -656,6 +760,15 @@ class CaseNoteAnnotationsServiceTest {
         ),
       ),
     ),
+  ) = JdaRequestResponse(
+    requestId = requestId,
+    correlationId = correlationId,
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 3,
+    ),
+    status = JdaRequestStatus.SUCCEEDED,
+    responseData = responseData,
     metaData = JdaMetadata(
       requestType = JdaRequestType.SYNC,
       submittedAt = java.time.OffsetDateTime.now(),

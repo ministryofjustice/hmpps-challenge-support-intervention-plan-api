@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.newUuid
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteAnnotationSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.CaseNoteWithAnnotations
@@ -72,13 +73,15 @@ class CaseNoteAnnotationsService(
     prisonerNumber: String,
   ) {
     try {
-      persistResponseData(
-        responseData = response.responseData.orEmpty(),
-        requestId = response.requestId,
-        investigationId = response.correlationId,
-        prompt = response.prompt,
-        prisonerNumber = prisonerNumber,
-      )
+      response.responseData.orEmpty().forEach { caseNoteData ->
+        persistSynchronousResponseData(
+          responseData = caseNoteData,
+          requestId = response.requestId,
+          investigationId = response.correlationId,
+          prompt = response.prompt,
+          prisonerNumber = prisonerNumber,
+        )
+      }
       log.debug("Persisted synchronous JDA response {}", response.requestId)
     } catch (e: Exception) {
       log.error("Failed to persist case note annotations from synchronous JDA response {}", response.requestId, e)
@@ -391,6 +394,50 @@ class CaseNoteAnnotationsService(
     }
 
     return processedCount
+  }
+
+  private fun persistSynchronousResponseData(
+    responseData: JdaDequeueResponseData,
+    requestId: UUID,
+    investigationId: UUID,
+    prompt: JdaPrompt,
+    prisonerNumber: String,
+  ) {
+    val existingAnalysedCaseNote = caseNoteAnalysedRepository.findByInvestigationIdAndCaseNoteId(
+      investigationId = investigationId,
+      caseNoteId = responseData.caseNoteId,
+    )
+
+    if (existingAnalysedCaseNote != null) {
+      caseNoteAnnotationRepository.deleteByCaseNotesAnalysedId(existingAnalysedCaseNote.id)
+    }
+
+    val analysedCaseNote = caseNoteAnalysedRepository.saveAndFlush(
+      CaseNoteAnalysed(
+        id = existingAnalysedCaseNote?.id ?: newUuid(),
+        requestId = requestId,
+        investigationId = investigationId,
+        prisonerNumber = prisonerNumber,
+        caseNoteId = responseData.caseNoteId,
+        promptKey = prompt.key,
+        promptVersion = prompt.version,
+        usualBehaviourRelevancy = responseData.usualBehaviourPresentation ?: 0,
+        risksAndTriggersRelevancy = responseData.risksAndTriggers ?: 0,
+        protectiveFactorsRelevancy = responseData.protectiveFactors ?: 0,
+      ),
+    )
+
+    responseData.justifyingSpans.forEach { span ->
+      insertCaseNoteAnnotation(
+        caseNotesAnalysedId = analysedCaseNote.id,
+        requestId = requestId,
+        investigationId = investigationId,
+        caseNoteId = responseData.caseNoteId,
+        behaviourType = span.justifies,
+        annotatedText = span.text,
+        createdDate = LocalDateTime.now(ZoneOffset.UTC),
+      )
+    }
   }
 
   private fun insertCaseNoteAnnotation(

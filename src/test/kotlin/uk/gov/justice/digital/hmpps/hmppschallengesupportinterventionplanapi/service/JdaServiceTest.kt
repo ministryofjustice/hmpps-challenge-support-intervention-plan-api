@@ -21,12 +21,16 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponse
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseMetadata
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaPrompt
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequest
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestResponse
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.request.CaseNotesLookupRequest
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class JdaServiceTest {
@@ -149,12 +153,14 @@ class JdaServiceTest {
   }
 
   @Test
-  fun `submitCaseNotesForReAnalysis submits request when feature enabled and prison active`() {
+  fun `submitCaseNotesForReAnalysis returns response when feature enabled and prison active`() {
     val caseNote = testCaseNote(locationId = prisonCode)
+    val response = testJdaRequestResponse()
     whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenReturn(caseNote)
     whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(true)
+    whenever(jdaClient.submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())).thenReturn(response)
 
-    service.submitCaseNotesForReAnalysis(
+    val result = service.submitCaseNotesForReAnalysis(
       offenderIdentifier = offenderIdentifier,
       investigationId = investigationId,
       caseNoteId = caseNoteId,
@@ -174,50 +180,54 @@ class JdaServiceTest {
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteText)
       .isEqualTo("Prisoner became agitated Amendment text one Amendment text two")
 
+    assertThat(result).isEqualTo(response)
     verify(jdaClient, never()).queueRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
   }
 
   @Test
-  fun `submitCaseNotesForReAnalysis does nothing when feature flag disabled`() {
+  fun `submitCaseNotesForReAnalysis returns null when feature flag disabled`() {
     whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenReturn(testCaseNote(locationId = prisonCode))
 
-    serviceWithFeatureDisabled.submitCaseNotesForReAnalysis(
+    val result = serviceWithFeatureDisabled.submitCaseNotesForReAnalysis(
       offenderIdentifier = offenderIdentifier,
       investigationId = investigationId,
       caseNoteId = caseNoteId,
     )
 
+    assertThat(result).isNull()
     verify(caseNotesService).getCaseNote(offenderIdentifier, caseNoteId)
     verify(csipAssistConfig, never()).isActivePrison(any())
     verifyNoInteractions(jdaClient)
   }
 
   @Test
-  fun `submitCaseNotesForReAnalysis does nothing when prison is not active`() {
+  fun `submitCaseNotesForReAnalysis returns null when prison is not active`() {
     whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenReturn(testCaseNote(locationId = prisonCode))
     whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(false)
 
-    service.submitCaseNotesForReAnalysis(
+    val result = service.submitCaseNotesForReAnalysis(
       offenderIdentifier = offenderIdentifier,
       investigationId = investigationId,
       caseNoteId = caseNoteId,
     )
 
+    assertThat(result).isNull()
     verify(caseNotesService).getCaseNote(offenderIdentifier, caseNoteId)
     verify(csipAssistConfig).isActivePrison(prisonCode)
     verifyNoInteractions(jdaClient)
   }
 
   @Test
-  fun `submitCaseNotesForReAnalysis does nothing when case note retrieval fails`() {
+  fun `submitCaseNotesForReAnalysis returns null when case note retrieval fails`() {
     whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenThrow(RuntimeException("boom"))
 
-    service.submitCaseNotesForReAnalysis(
+    val result = service.submitCaseNotesForReAnalysis(
       offenderIdentifier = offenderIdentifier,
       investigationId = investigationId,
       caseNoteId = caseNoteId,
     )
 
+    assertThat(result).isNull()
     verify(caseNotesService).getCaseNote(offenderIdentifier, caseNoteId)
     verifyNoInteractions(csipAssistConfig)
     verifyNoInteractions(jdaClient)
@@ -305,6 +315,31 @@ class JdaServiceTest {
         additionalNoteText = "Amendment text two",
         id = UUID.randomUUID(),
       ),
+    ),
+  )
+
+  private fun testJdaRequestResponse() = JdaRequestResponse(
+    requestId = UUID.randomUUID(),
+    correlationId = investigationId,
+    prompt = JdaPrompt(
+      key = "case-note-analysis",
+      version = 1,
+    ),
+    status = JdaRequestStatus.SUCCEEDED,
+    responseData = listOf(
+      JdaDequeueResponseData(
+        caseNoteId = caseNoteId,
+        justifyingSpans = listOf(
+          JustifyingSpan(
+            text = "annotated text",
+            justifies = BehaviourType.RISKS_AND_TRIGGERS,
+          ),
+        ),
+      ),
+    ),
+    metaData = JdaMetadata(
+      requestType = JdaRequestType.SYNC,
+      submittedAt = OffsetDateTime.now(),
     ),
   )
 }
