@@ -135,5 +135,5 @@ jda:
   prompt-version: 1
 
 case-note-annotations:
-  max-processing-duration: 20s
-  cron-run-budget: 45s
+  max-processing-duration: ${CASE_NOTE_ANNOTATIONS_MAX_PROCESSING_DURATION:20s}
+  cron-run-budget: ${CASE_NOTE_ANNOTATIONS_CRON_RUN_BUDGET:45s}

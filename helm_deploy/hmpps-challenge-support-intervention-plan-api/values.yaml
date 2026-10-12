@@ -48,6 +48,8 @@ generic-service:
     DB_SSL_MODE: "verify-full"
     AWS_REGION: "eu-west-2"
     HMPPS_SQS_USE_WEB_TOKEN: "true"
+    CASE_NOTE_ANNOTATIONS_MAX_PROCESSING_DURATION: "20s"
+    CASE_NOTE_ANNOTATIONS_CRON_RUN_BUDGET: "45s"
 
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException,org.springframework.web.servlet.resource.NoResourceFoundException,org.springframework.web.context.request.async.AsyncRequestNotUsableException"
 
