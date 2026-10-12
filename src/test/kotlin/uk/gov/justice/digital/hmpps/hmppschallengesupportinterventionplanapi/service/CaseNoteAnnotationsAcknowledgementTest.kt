@@ -55,6 +55,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
     csipRecordService,
     userService,
     Duration.ofSeconds(30),
+    Duration.ofSeconds(50),
   )
 
   @BeforeEach
@@ -307,6 +308,38 @@ class CaseNoteAnnotationsAcknowledgementTest {
   }
 
   @Test
+  fun `cron run budget stops additional queue polling`() {
+    val budgetZeroService = CaseNoteAnnotationsService(
+      caseNotesService,
+      jdaService,
+      caseNoteAnalysedRepository,
+      caseNoteAnnotationRepository,
+      jdbcTemplate,
+      personSummaryService,
+      csipRecordService,
+      userService,
+      Duration.ofSeconds(30),
+      Duration.ZERO,
+    )
+    val receiptId = "receipt-budget-zero"
+    val csipRecordId = UUID.randomUUID()
+    val prisonNumber = "Z9876ZA"
+    val response = testResponse(receiptId = receiptId, correlationId = csipRecordId)
+
+    stubCsipRecordLookup(csipRecordId, prisonNumber)
+    stubSuccessfulAnnotationSaves()
+
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue())
+      .thenReturn(response)
+
+    budgetZeroService.processQueuedCaseNoteAnnotations()
+
+    verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
+    verify(caseNoteAnalysedRepository, never()).save(any<CaseNoteAnalysed>())
+    verify(jdaService, never()).acknowledgeCaseNoteAnnotationsMessage(receiptId)
+  }
+
+  @Test
   fun `timeout log includes processed case note percentage`(output: CapturedOutput) {
     val timeoutService = CaseNoteAnnotationsService(
       caseNotesService,
@@ -318,6 +351,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       csipRecordService,
       userService,
       Duration.ZERO,
+      Duration.ofSeconds(50),
     )
     val receiptId = "receipt-timeout"
     val csipRecordId = UUID.randomUUID()
@@ -347,6 +381,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       csipRecordService,
       userService,
       Duration.ZERO,
+      Duration.ofSeconds(50),
     )
     val receiptId = "receipt-half-timeout"
     val csipRecordId = UUID.randomUUID()

@@ -124,7 +124,7 @@ feature:
 
 api:
   jda:
-    timeout: 90s
+    timeout: 15s
 
 csip:
   assist:
@@ -135,4 +135,5 @@ jda:
   prompt-version: 1
 
 case-note-annotations:
-  max-processing-duration: 30s
+  max-processing-duration: 20s
+  cron-run-budget: 45s

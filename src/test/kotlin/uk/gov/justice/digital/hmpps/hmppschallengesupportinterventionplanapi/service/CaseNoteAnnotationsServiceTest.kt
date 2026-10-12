@@ -63,6 +63,7 @@ class CaseNoteAnnotationsServiceTest {
     csipRecordService,
     userService,
     Duration.ofSeconds(30),
+    Duration.ofSeconds(50),
   )
   private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
 

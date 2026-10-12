@@ -38,8 +38,10 @@ class CaseNoteAnnotationsService(
   private val personSummaryService: PersonSummaryService,
   private val csipRecordService: CsipRecordService,
   private val userService: UserService,
-  @Value("\${case-note-annotations.max-processing-duration:30s}")
+  @Value("\${case-note-annotations.max-processing-duration:20s}")
   private val maxProcessingDuration: Duration,
+  @Value("\${case-note-annotations.cron-run-budget:45s}")
+  private val cronRunBudget: Duration,
 ) {
 
   private companion object {
@@ -174,8 +176,10 @@ class CaseNoteAnnotationsService(
     var acknowledgedMessageCount = 0
     var processedResponseDataCount = 0
     var totalResponseDataCount = 0
+    var polls = 0
 
-    while (response != null) {
+    while (response != null && Duration.between(start, Instant.now()) < cronRunBudget) {
+      polls++
       val messageReceiptId = response.receiptId
       val messageRequestId = response.requestId
 
@@ -222,6 +226,14 @@ class CaseNoteAnnotationsService(
       }
 
       response = jdaService.getCaseNoteAnnotationsFromQueue()
+    }
+
+    if (response != null && Duration.between(start, Instant.now()) >= cronRunBudget) {
+      log.info(
+        "Stopping queue polling after {} polls because cron run budget of {} was reached; remaining messages will be processed on the next run",
+        polls,
+        cronRunBudget,
+      )
     }
 
     if (acknowledgedMessageCount > 0) {
