@@ -21,4 +21,6 @@ interface CaseNoteAnnotationRepository : JpaRepository<CaseNoteAnnotation, UUID>
     @Param("caseNotesAnalysedIds") caseNotesAnalysedIds: Collection<UUID>,
     @Param("behaviourType") behaviourType: BehaviourType,
   ): List<CaseNoteAnnotation>
+
+  fun deleteByCaseNotesAnalysedId(caseNotesAnalysedId: UUID)
 }

@@ -1,5 +1,4 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes
-
 import com.fasterxml.jackson.annotation.JsonFormat
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
@@ -119,13 +118,19 @@ fun CaseNotesResponse.toJdaRequest(
   correlationId: String,
   promptKey: String,
   promptVersion: Int,
+): JdaRequest<List<CaseNoteAnalysisItem>> = content.toJdaRequest(correlationId, promptKey, promptVersion)
+
+fun List<CaseNote>.toJdaRequest(
+  correlationId: String,
+  promptKey: String,
+  promptVersion: Int,
 ): JdaRequest<List<CaseNoteAnalysisItem>> = JdaRequest(
   correlationId = correlationId,
   prompt = JdaPrompt(
     key = promptKey,
     version = promptVersion,
   ),
-  requestData = content.map { caseNote ->
+  requestData = map { caseNote ->
     caseNote.toCaseNoteAnalysisItem(caseNote.toJdaCaseNoteText())
   },
 )
