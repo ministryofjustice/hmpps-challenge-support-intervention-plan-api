@@ -7,6 +7,7 @@ generic-service:
 
   env:
     SENTRY_ENVIRONMENT: prod
+    JDA_PROMPT_VERSION: "1"
     API_BASE_URL_HMPPS_AUTH: "https://sign-in.hmpps.service.justice.gov.uk/auth"
     API_BASE_URL_MANAGE_USERS: "https://manage-users-api.hmpps.service.justice.gov.uk"
     API_BASE_URL_CASENOTES: "https://offender-case-notes.service.justice.gov.uk"
