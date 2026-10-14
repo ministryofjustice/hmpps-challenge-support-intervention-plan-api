@@ -26,6 +26,8 @@ interface CsipRecordRepository :
 
   fun countByPrisonNumber(prisonNumber: String): Int
 
+  fun findByPrisonNumber(prisonNumber: String): List<CsipRecord>
+
   fun findByPrisonNumberAndIdIn(prisonNumber: String, ids: Set<UUID>): List<CsipRecord>
 
   @Query(
