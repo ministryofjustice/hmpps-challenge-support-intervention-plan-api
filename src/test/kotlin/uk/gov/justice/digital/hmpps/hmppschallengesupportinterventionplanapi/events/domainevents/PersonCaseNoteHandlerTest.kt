@@ -33,43 +33,43 @@ class PersonCaseNoteHandlerTest {
   private val handler = PersonCaseNoteHandler(personCaseNoteInvestigationService, jdaService, caseNoteAnnotationsService)
 
   @Test
-  fun `created event with valid prison number resolves investigations and logs receipt`(output: CapturedOutput) {
-    val prisonNumber = "A1234BC"
-    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
-      .thenReturn(PersonCaseNoteInvestigationResolution(prisonNumber, emptyList(), emptyList()))
+  fun `created event with valid prisoner number resolves investigations and logs receipt`(output: CapturedOutput) {
+    val prisonerNumber = "A1234BC"
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
+      .thenReturn(PersonCaseNoteInvestigationResolution(prisonerNumber, emptyList(), emptyList()))
 
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonNumber))
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
 
-    verify(personCaseNoteInvestigationService, times(1)).resolveInvestigations(prisonNumber)
+    verify(personCaseNoteInvestigationService, times(1)).resolveInvestigations(prisonerNumber)
     verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
     assertThat(output.out).contains("Received person.case-note.created event")
-    assertThat(output.out).contains("Resolved prison number A1234BC")
+    assertThat(output.out).contains("Resolved prisoner number A1234BC")
   }
 
   @Test
-  fun `updated event with valid prison number resolves investigations and logs receipt`(output: CapturedOutput) {
-    val prisonNumber = "A1234BC"
-    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
-      .thenReturn(PersonCaseNoteInvestigationResolution(prisonNumber, emptyList(), emptyList()))
+  fun `updated event with valid prisoner number resolves investigations and logs receipt`(output: CapturedOutput) {
+    val prisonerNumber = "A1234BC"
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
+      .thenReturn(PersonCaseNoteInvestigationResolution(prisonerNumber, emptyList(), emptyList()))
 
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_UPDATED, prisonNumber = prisonNumber))
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_UPDATED, prisonNumber = prisonerNumber))
 
-    verify(personCaseNoteInvestigationService, times(1)).resolveInvestigations(prisonNumber)
+    verify(personCaseNoteInvestigationService, times(1)).resolveInvestigations(prisonerNumber)
     verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
     assertThat(output.out).contains("Received person.case-note.updated event")
-    assertThat(output.out).contains("Resolved prison number A1234BC")
+    assertThat(output.out).contains("Resolved prisoner number A1234BC")
   }
 
   @Test
   fun `eligible investigations trigger re-analysis submissions`() {
-    val prisonNumber = "A1234BC"
+    val prisonerNumber = "A1234BC"
     val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
     val investigationId1 = UUID.randomUUID()
     val investigationId2 = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
       .thenReturn(
         PersonCaseNoteInvestigationResolution(
-          prisonNumber,
+          prisonerNumber,
           listOf(investigationId1, investigationId2),
           listOf(
             InvestigationEvaluation(investigationId1, "INVESTIGATION_PENDING", true),
@@ -78,52 +78,52 @@ class PersonCaseNoteHandlerTest {
         ),
       )
 
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonNumber))
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
 
-    verify(jdaService, times(1)).submitCaseNotesForReAnalysis(prisonNumber, investigationId1, caseNoteId)
-    verify(jdaService, times(1)).submitCaseNotesForReAnalysis(prisonNumber, investigationId2, caseNoteId)
+    verify(jdaService, times(1)).submitCaseNotesForReAnalysis(prisonerNumber, investigationId1, caseNoteId)
+    verify(jdaService, times(1)).submitCaseNotesForReAnalysis(prisonerNumber, investigationId2, caseNoteId)
   }
 
   @Test
   fun `eligible investigations persist synchronous annotations when re-analysis returns a response`() {
-    val prisonNumber = "A1234BC"
+    val prisonerNumber = "A1234BC"
     val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
     val investigationId = UUID.randomUUID()
     val response = testJdaRequestResponse(investigationId, caseNoteId)
-    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
       .thenReturn(
         PersonCaseNoteInvestigationResolution(
-          prisonNumber,
+          prisonerNumber,
           listOf(investigationId),
           listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_PENDING", true)),
         ),
       )
-    whenever(jdaService.submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)).thenReturn(response)
+    whenever(jdaService.submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)).thenReturn(response)
 
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonNumber))
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
 
-    verify(jdaService).submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)
-    verify(caseNoteAnnotationsService).persistSynchronousAnnotations(response, prisonNumber)
+    verify(jdaService).submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)
+    verify(caseNoteAnnotationsService).persistSynchronousAnnotations(response, prisonerNumber)
   }
 
   @Test
   fun `eligible investigations do not persist annotations when re-analysis returns null`() {
-    val prisonNumber = "A1234BC"
+    val prisonerNumber = "A1234BC"
     val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
     val investigationId = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonNumber))
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
       .thenReturn(
         PersonCaseNoteInvestigationResolution(
-          prisonNumber,
+          prisonerNumber,
           listOf(investigationId),
           listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_PENDING", true)),
         ),
       )
-    whenever(jdaService.submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)).thenReturn(null)
+    whenever(jdaService.submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)).thenReturn(null)
 
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonNumber))
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
 
-    verify(jdaService).submitCaseNotesForReAnalysis(prisonNumber, investigationId, caseNoteId)
+    verify(jdaService).submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)
     verify(caseNoteAnnotationsService, never()).persistSynchronousAnnotations(any(), any())
   }
 
@@ -132,7 +132,7 @@ class PersonCaseNoteHandlerTest {
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, personReference = null))
 
     verify(personCaseNoteInvestigationService, never()).resolveInvestigations(any())
-    assertThat(output.out).contains("because no NOMS prison number was provided in personReference")
+    assertThat(output.out).contains("because no NOMS prisoner number was provided in personReference")
   }
 
   @Test
@@ -147,7 +147,7 @@ class PersonCaseNoteHandlerTest {
     )
 
     verify(personCaseNoteInvestigationService, never()).resolveInvestigations(any())
-    assertThat(output.out).contains("because no NOMS prison number was provided in personReference")
+    assertThat(output.out).contains("because no NOMS prisoner number was provided in personReference")
   }
 
   private fun caseNoteEvent(
