@@ -17,12 +17,12 @@ class PersonCaseNoteInvestigationService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun resolveInvestigations(prisonNumber: String): PersonCaseNoteInvestigationResolution {
-    val records = csipRecordRepository.findByPrisonNumber(prisonNumber)
-    log.info("Loaded {} CSIP records for prison number {}: {}", records.size, prisonNumber, records.map { it.id })
+  fun resolveInvestigations(prisonerNumber: String): PersonCaseNoteInvestigationResolution {
+    val records = csipRecordRepository.findByPrisonNumber(prisonerNumber)
+    log.info("Loaded {} CSIP records for prisoner number {}: {}", records.size, prisonerNumber, records.map { it.id })
 
     val distinctRecords = records.distinctBy { it.id }
-    log.info("Distinct investigation IDs for prison number {}: {}", prisonNumber, distinctRecords.map { it.id })
+    log.info("Distinct investigation IDs for prisoner number {}: {}", prisonerNumber, distinctRecords.map { it.id })
 
     val evaluations = distinctRecords.map { record ->
       when {
@@ -42,7 +42,7 @@ class PersonCaseNoteInvestigationService(
     }
 
     return PersonCaseNoteInvestigationResolution(
-      prisonNumber = prisonNumber,
+      prisonerNumber = prisonerNumber,
       discoveredInvestigationIds = distinctRecords.map { it.id },
       evaluations = evaluations,
     )
@@ -50,7 +50,7 @@ class PersonCaseNoteInvestigationService(
 }
 
 data class PersonCaseNoteInvestigationResolution(
-  val prisonNumber: String,
+  val prisonerNumber: String,
   val discoveredInvestigationIds: List<UUID>,
   val evaluations: List<InvestigationEvaluation>,
 ) {
