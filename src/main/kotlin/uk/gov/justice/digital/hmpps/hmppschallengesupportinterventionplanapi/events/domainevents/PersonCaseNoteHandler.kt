@@ -18,58 +18,58 @@ class PersonCaseNoteHandler(
 
   fun handle(event: HmppsDomainEvent<PersonCaseNoteInformation>) {
     val caseNoteId = event.additionalInformation.id
-    val prisonNumber = event.personReference?.findNomsNumber()
+    val prisonerNumber = event.personReference?.findNomsNumber()
 
     log.info("Received {} event for case note {}", event.eventType, caseNoteId)
 
-    if (prisonNumber == null) {
+    if (prisonerNumber == null) {
       log.warn(
-        "Ignoring {} event for case note {} because no NOMS prison number was provided in personReference",
+        "Ignoring {} event for case note {} because no NOMS prisoner number was provided in personReference",
         event.eventType,
         caseNoteId,
       )
       return
     }
 
-    log.info("Resolved prison number {} for case note {}", prisonNumber, caseNoteId)
+    log.info("Resolved prisoner number {} for case note {}", prisonerNumber, caseNoteId)
 
-    val resolution = personCaseNoteInvestigationService.resolveInvestigations(prisonNumber)
+    val resolution = personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber)
 
     log.info(
-      "Found {} distinct investigations for prison number {}: {}",
+      "Found {} distinct investigations for prisoner number {}: {}",
       resolution.discoveredInvestigationIds.size,
-      prisonNumber,
+      prisonerNumber,
       resolution.discoveredInvestigationIds,
     )
     log.debug(
-      "Evaluated investigation statuses for prison number {}: {}",
-      prisonNumber,
+      "Evaluated investigation statuses for prisoner number {}: {}",
+      prisonerNumber,
       resolution.evaluations.associate { it.investigationId to (it.status ?: it.reason) },
     )
     if (resolution.ignoredInvestigations.isNotEmpty()) {
       log.info(
-        "Ignored investigations for prison number {}: {}",
-        prisonNumber,
+        "Ignored investigations for prisoner number {}: {}",
+        prisonerNumber,
         resolution.ignoredInvestigations,
       )
     }
     log.info(
-      "Eligible investigations for future JDA processing for prison number {}: {}",
-      prisonNumber,
+      "Eligible investigations for future JDA processing for prisoner number {}: {}",
+      prisonerNumber,
       resolution.eligibleInvestigationIds,
     )
 
     resolution.eligibleInvestigationIds.forEach { investigationId ->
 
       log.info(
-        "Triggering JDA re-analysis for investigationId={}, caseNoteId={}, prisonNumber={}",
+        "Triggering JDA re-analysis for investigationId={}, caseNoteId={}, prisonerNumber={}",
         investigationId,
         caseNoteId,
-        prisonNumber,
+        prisonerNumber,
       )
 
       val response = jdaService.submitCaseNotesForReAnalysis(
-        offenderIdentifier = prisonNumber,
+        offenderIdentifier = prisonerNumber,
         investigationId = investigationId,
         caseNoteId = caseNoteId,
       )
@@ -81,7 +81,7 @@ class PersonCaseNoteHandler(
           investigationId,
         )
 
-        caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonNumber)
+        caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonerNumber)
       }
     }
   }
