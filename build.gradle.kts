@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.11"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.12"
   kotlin("plugin.spring") version "2.4.21"
   kotlin("plugin.jpa") version "2.4.21"
   jacoco
@@ -49,7 +49,7 @@ dependencies {
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
 
   constraints {
-    implementation("io.opentelemetry:opentelemetry-api:1.66.0") {
+    implementation("io.opentelemetry:opentelemetry-api:1.67.0") {
       because("CVE-2026-45292 - remove when transitive dependency is updated")
     }
   }
