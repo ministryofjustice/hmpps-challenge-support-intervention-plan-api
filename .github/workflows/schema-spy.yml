@@ -80,7 +80,7 @@ jobs:
 
       # The shared action leaves its output in /tmp/schemaspy, so writing the CSVs into the same
       # directory gets them published by the step below without any change to the shared action.
-      - name: Generate CSV data dictionary
+      - name: Generate CSV data dictionary and SAR data requirements
         shell: bash
         env:
           DB_NAME: ${{ inputs.database_name }}
@@ -89,6 +89,7 @@ jobs:
           DB_SCHEMA: ${{ inputs.database_schema }}
         run: |
           scripts/generate-data-dictionary.sh /tmp/schemaspy/data-dictionary.csv
+          scripts/generate-sar-data-requirements.sh /tmp/schemaspy/sar-data-requirements.csv
           cp reference-data.csv /tmp/schemaspy/reference-data.csv
 
       # The shared action above runs SchemaSpy into /tmp/schemaspy and uploads it as a build artifact.
