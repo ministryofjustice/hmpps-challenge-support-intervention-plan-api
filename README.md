@@ -19,12 +19,13 @@ For more instructions and general hmpps project setup guidelines:
 
 A browsable schema report is published from `main` to
 [ministryofjustice.github.io/hmpps-challenge-support-intervention-plan-api/schema-spy-report](https://ministryofjustice.github.io/hmpps-challenge-support-intervention-plan-api/schema-spy-report/),
-along with two CSV exports for the MOJ Data Catalogue and SAR assurance:
+along with three CSV exports for the MOJ Data Catalogue and SAR assurance:
 
 | File | Contents |
 |------|----------|
-| `data-dictionary.csv` | Every table, view and column, with its description, sensitivity classification, type, nullability, PK and FK |
+| `data-dictionary.csv` | Every table, view and column, with its description, sensitivity classification, type, nullability, PK and FK, example value and SAR classification |
 | `reference-data.csv` | The `reference_data` rows, plus the enums persisted as strings with no table behind them - `decision_and_actions.actions`, `review.actions`, `audit_revision.source` and the rest resolve in Kotlin only |
+| `sar-data-requirements.csv` | The SAR Data Requirements extract the Offender SAR team review - see [Subject access requests](#subject-access-requests) |
 
 Table and column descriptions live in `src/main/resources/migration/common/` as `COMMENT ON`
 statements (`V60__schema_comments.sql` and `V65__schema_comments_sensitivity.sql`), so the database is
@@ -52,7 +53,8 @@ This is the most Article 9 heavy schema in Manage Safety: CSIP exists to manage 
 suicide, so triggers, protective factors, usual behaviour and the screening decision are health data
 about the person, not merely notes about a process. **The audit tables carry the same tag as the
 column they mirror** - Envers records the full history of every mutable property, so an audit row
-holds the same content as the live row and a subject access request has to reach it.
+holds the same content as the live row. Whether a subject access request report shows that history
+is a question put to the Offender SAR team - see [Subject access requests](#subject-access-requests).
 
 `SchemaCommentsTest` runs in the normal build and fails if a table, view or column has no comment, or
 if a column comment does not end in a valid tag. Note it checks views as well as tables, so
@@ -66,6 +68,7 @@ docker compose -f docker-compose-schema-spy.yml up -d --wait
 docker run --rm --network host -v /tmp/schemaspy:/output schemaspy/schemaspy:6.2.4 \
   -t pgsql -host localhost -port 5432 -db csip -s public -u csip -p csip -vizjs
 scripts/generate-data-dictionary.sh
+scripts/generate-sar-data-requirements.sh
 ```
 
 Two things to know when reading the generated report. The test profile adds
@@ -73,3 +76,29 @@ Two things to know when reading the generated report. The test profile adds
 migrations. And if you edit a migration while the compose Postgres is still running, tear it down with
 `docker compose -f docker-compose-schema-spy.yml down -v` first, or Flyway fails on a checksum
 mismatch.
+
+## Subject access requests
+
+CSIP is going through the
+[Central SAR Change Control Process](https://dsdmoj.atlassian.net/wiki/spaces/NDSS/pages/6057492803) as a
+New Product (IR-2067). It has never been registered with the SAR tool. CSIPs are synchronised with NOMIS,
+but the Offender SAR team report that the NOMIS section of a prisoner's SAR report does not include them.
+
+`scripts/generate-sar-data-requirements.sh` produces the SAR Data Requirements extract the Offender SAR team
+review at the data review checkpoint, and it is published with the schema report. It is generated from the
+column comments, so it cannot drift from the schema: every column carries an example value and a SAR
+classification as well as its sensitivity, and `SchemaCommentsTest` fails the build if a new column is
+missing any of them. The two tags sit between the description and the sensitivity tag, for example
+`[Example: VPA] [SAR: Y] [Sensitivity: SPECIAL-CATEGORY]`.
+
+`[SAR: Y]` means the value reaches the report under the response proposed for the data review, `[SAR: N]`
+that it does not. It is set deliberately per column in `V69__sar_data_requirements.sql` and is not derived
+from the sensitivity tag, which answers a different question. The proposal shows the current version of each
+CSIP, not the Envers history, and leaves out the CSIP Assist tables; both are questions for the Offender SAR
+team. Their decision goes in a later migration, and any new column needs the same decision.
+
+Two ordering rules apply to every change that affects the SAR response or template:
+
+1. No code or template reaches preprod or prod until the Offender SAR team have signed off the test report.
+2. The template must be registered with the SAR tool in an environment **before** the code deploys there,
+   or the product is suspended. Ask the HAA team on `#haa-sar-functionality-change-request`.

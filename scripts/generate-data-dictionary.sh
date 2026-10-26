@@ -4,9 +4,11 @@
 #
 # The descriptions come from the COMMENT ON statements in migration/common/V60__schema_comments.sql
 # and V65__schema_comments_sensitivity.sql, so this is the same source of truth as the SchemaSpy
-# report. The sensitivity classification is pulled out of the trailing [Sensitivity: X] tag into its
-# own column, so a consumer can filter on it rather than parse prose. The output is intended for the
-# MOJ Data Catalogue / AWS Glue.
+# report. Each column comment ends with three tags - an example value, a subject access request
+# classification (both added in V69__sar_data_requirements.sql) and a sensitivity classification. Each
+# is pulled out into its own column, so a consumer can filter on it rather than parse prose, and all
+# three are stripped from the description. The two newer columns go at the end so existing consumers
+# of the CSV are not disturbed. The output is intended for the MOJ Data Catalogue / AWS Glue.
 #
 # Usage:
 #   scripts/generate-data-dictionary.sh [output-file]
@@ -43,14 +45,22 @@ SELECT
   pg_get_expr(ad.adbin, ad.adrelid)                      AS column_default,
   regexp_replace(
     col_description(c.oid, a.attnum),
-    '\s*\[Sensitivity: [A-Z-]+\]\$', ''
+    '\s*\[(Example|SAR|Sensitivity): [^\]]*\]', '', 'g'
   )                                                      AS column_description,
   substring(
     col_description(c.oid, a.attnum)
     from '\[Sensitivity: ([A-Z-]+)\]'
   )                                                      AS sensitivity,
   CASE WHEN pk.column_name IS NOT NULL THEN 'Y' ELSE 'N' END AS is_primary_key,
-  fk.references_table                                    AS foreign_key_references
+  fk.references_table                                    AS foreign_key_references,
+  substring(
+    col_description(c.oid, a.attnum)
+    from '\[Example: ([^\]]*)\]'
+  )                                                      AS example_value,
+  substring(
+    col_description(c.oid, a.attnum)
+    from '\[SAR: ([YN])\]'
+  )                                                      AS sar_impact
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
