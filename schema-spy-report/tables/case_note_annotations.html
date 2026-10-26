@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Primary key. Surrogate UUID with no business meaning. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Primary key. Surrogate UUID with no business meaning. <a href="./../null">Example: 0192a3b4-0000-7e8f-9a0b-1c2d3e4f5a6b</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="case_notes_analysed_id">case_notes_analysed_id</span></td>
@@ -158,7 +158,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Parent record linking this annotation to the case-note analysis metadata. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Parent record linking this annotation to the case-note analysis metadata. <a href="./../null">Example: 0192a3b4-1111-7e8f-9a0b-1c2d3e4f5a6b</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="request_id">request_id</span></td>
@@ -175,7 +175,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Identifier of the latest request that produced or updated this fragment. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Identifier of the latest request that produced or updated this fragment. <a href="./../null">Example: 0192a3b4-2222-7e8f-9a0b-1c2d3e4f5a6b</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="investigation_id">investigation_id</span></td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>The CSIP investigation the annotation belongs to. Supports fast lookup of all analysis evidence for a case note within one investigation. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>The CSIP investigation the annotation belongs to. Supports fast lookup of all analysis evidence for a case note within one investigation. <a href="./../null">Example: 0192a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="case_note_id">case_note_id</span></td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Identifier of the source case note in the case notes service. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>Identifier of the source case note in the case notes service. <a href="./../null">Example: 0192a3b4-3333-7e8f-9a0b-1c2d3e4f5a6b</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="behaviour_type">behaviour_type</span></td>
@@ -226,7 +226,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>What the model inferred the annotated text evidences about the person. One of RISKS_AND_TRIGGERS, USUAL_BEHAVIOUR_PRESENTATION, PROTECTIVE_FACTORS. This is a machine generated hypothesis offered to a caseworker, not a professional assessment or a recorded observation. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
+                                    <td><p>What the model inferred the annotated text evidences about the person. One of RISKS_AND_TRIGGERS, USUAL_BEHAVIOUR_PRESENTATION, PROTECTIVE_FACTORS. This is a machine generated hypothesis offered to a caseworker, not a professional assessment or a recorded observation. <a href="./../null">Example: RISKS_AND_TRIGGERS</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="annotated_text">annotated_text</span></td>
@@ -243,7 +243,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Verbatim extract copied from the source case note - the passage the model cites as evidence for behaviour_type. This can contain health, safeguarding, or other sensitive details from the original case note. <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
+                                    <td><p>Verbatim extract copied from the source case note - the passage the model cites as evidence for behaviour_type. This can contain health, safeguarding, or other sensitive details from the original case note. <a href="./../null">Example: became agitated when asked about money he owed</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: SPECIAL-CATEGORY</a></p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_date">created_date</span></td>
@@ -260,7 +260,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>When the annotation was created or last updated. This is not the source case note date. <a href="./../null">Sensitivity: NONE</a></p></td>
+                                    <td><p>When the annotation was created or last updated. This is not the source case note date. <a href="./../null">Example: 2026-03-18T10:15:00</a> <a href="./../null">SAR: N</a> <a href="./../null">Sensitivity: NONE</a></p></td>
                                 </tr>
                                 </tbody>
                             </table>
