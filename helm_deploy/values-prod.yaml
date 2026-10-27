@@ -15,8 +15,8 @@ generic-service:
     API_BASE_URL_PRISONER_SEARCH: "https://prisoner-search.prison.service.justice.gov.uk"
     SERVICE_BASE_URL: "https://csip-api.hmpps.service.justice.gov.uk"
     SERVICE_ACTIVE_PRISONS: "***"
-    FEATURE_CSIP_ASSIST: "false"
-    CSIP_ASSIST_ACTIVE_PRISONS: ""
+    FEATURE_CSIP_ASSIST: "true"
+    CSIP_ASSIST_ACTIVE_PRISONS: "HII"
 
   postgresDatabaseRestore:
     jobName: csip-prod-to-preprod-restore
@@ -54,3 +54,6 @@ generic-data-analytics-extractor:
 reconciliation:
   person:
     schedule: "0 3 * * 0"
+
+caseNoteAnnotations:
+  enabled: true
