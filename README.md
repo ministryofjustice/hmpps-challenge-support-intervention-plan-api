@@ -95,7 +95,9 @@ missing any of them. The two tags sit between the description and the sensitivit
 that it does not. It is set deliberately per column in `V69__sar_data_requirements.sql` and is not derived
 from the sensitivity tag, which answers a different question. The proposal shows the current version of each
 CSIP, not the Envers history, and leaves out the CSIP Assist tables; both are questions for the Offender SAR
-team. Their decision goes in a later migration, and any new column needs the same decision.
+team. Their decisions from the data review are in `V70__sar_data_review_outcome.sql`. They have asked for
+earlier versions of a CSIP as well, which is not yet reflected in the tags. Any new column needs the same
+decision.
 
 Two ordering rules apply to every change that affects the SAR response or template:
 
