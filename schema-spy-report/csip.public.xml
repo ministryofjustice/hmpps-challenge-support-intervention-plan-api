@@ -346,7 +346,7 @@
             <column ascending="true" name="decision_and_actions_id"/>
          </index>
       </table>
-      <table name="flyway_schema_history" numRows="75" remarks="" schema="public" type="TABLE">
+      <table name="flyway_schema_history" numRows="76" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="installed_rank" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="version" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
@@ -651,7 +651,7 @@
             <parent column="reference_data_id" foreignKey="referral_incident_location_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="referred_by" nullable="false" remarks="Either the display name of the user making the referral or free text if making the referral on behalf of someone else. Therefore not guaranteed to match user information. Maps to OFFENDER_CSIP_REPORTS.RFR_REPORTED_BY [Example: Jane Doe] [SAR: Y] [Sensitivity: STAFF]" size="240" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="referer_area_of_work_id" nullable="false" remarks="Foreign key to reference data using the 'AREA_OF_WORK' domain for the area of work of the person making the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION [Example: RSD] [SAR: Y] [Sensitivity: NONE]" size="10" type="int4" typeCode="4">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="referer_area_of_work_id" nullable="false" remarks="Foreign key to reference data using the 'AREA_OF_WORK' domain for the area of work of the person making the referral. The reference_data.code value maps to OFFENDER_CSIP_REPORTS.RFR_CSIP_FUNCTION [Example: RSD] [SAR: N] [Sensitivity: NONE]" size="10" type="int4" typeCode="4">
             <parent column="reference_data_id" foreignKey="referral_referer_area_of_work_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="reference_data"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="referral_date" nullable="false" remarks="The date the referral was submitted. Set to today by the UI. Maps to OFFENDER_CSIP_REPORTS.RFR_DATE_REPORTED [Example: 2026-03-15] [SAR: Y] [Sensitivity: NONE]" size="13" type="date" typeCode="91"/>
