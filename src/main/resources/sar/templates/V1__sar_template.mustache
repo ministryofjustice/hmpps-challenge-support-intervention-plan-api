@@ -1,0 +1,130 @@
+<h1 class="title">Challenge, Support and Intervention Plans (CSIP)</h1>
+{{^.}}<p>No Data Held</p>{{/.}}
+{{#.}}
+<h2>CSIP{{#if this.referral}} referred on {{ formatDate this.referral.referralDate }}{{/if}}</h2>
+<table class="summary-list">
+<tr><td>Log code</td><td>{{ optionalValue this.logCode }}</td></tr>
+<tr><td>Prison where recorded</td><td>{{#if this.prisonCodeWhenRecorded}}{{ getPrisonName this.prisonCodeWhenRecorded }}{{else}}No Data Held{{/if}}</td></tr>
+<tr><td>Status</td><td>{{ optionalValue this.status }}</td></tr>
+</table>
+{{#with this.referral}}
+<h3>Referral</h3>
+<table class="summary-list">
+<tr><td>Date of referral</td><td>{{ optionalValue (formatDate this.referralDate) }}</td></tr>
+<tr><td>Referred by</td><td>{{ optionalValue this.referredBy }}</td></tr>
+<tr><td>Proactive referral</td><td>{{ optionalValue this.proactiveReferral }}</td></tr>
+<tr><td>Type of incident</td><td>{{ optionalValue this.incidentType }}</td></tr>
+<tr><td>Date of incident</td><td>{{ optionalValue (formatDate this.incidentDate) }}</td></tr>
+<tr><td>Time of incident</td><td>{{ optionalValue this.incidentTime }}</td></tr>
+<tr><td>Location of incident</td><td>{{ optionalValue this.incidentLocation }}</td></tr>
+<tr><td>How the prisoner was involved</td><td>{{ optionalValue this.incidentInvolvement }}</td></tr>
+<tr><td>Staff assaulted</td><td>{{ optionalValue this.staffAssaulted }}</td></tr>
+<tr><td>Names of staff assaulted</td><td>{{ optionalValue this.assaultedStaffName }}</td></tr>
+<tr><td>Description of the concern</td><td>{{ optionalValue this.descriptionOfConcern }}</td></tr>
+<tr><td>Reasons known for the behaviour</td><td>{{ optionalValue this.knownReasons }}</td></tr>
+<tr><td>Other information</td><td>{{ optionalValue this.otherInformation }}</td></tr>
+<tr><td>Safer Custody team informed</td><td>{{ optionalValue this.saferCustodyTeamInformed }}</td></tr>
+<tr><td>Referral completed by</td><td>{{ optionalValue this.referralCompletedByLastName }}</td></tr>
+<tr><td>Date referral completed</td><td>{{ optionalValue (formatDate this.referralCompletedDate) }}</td></tr>
+</table>
+<h3>Contributory factors</h3>
+{{^this.contributoryFactors}}<p>No Data Held</p>{{/this.contributoryFactors}}
+{{#this.contributoryFactors}}
+<table class="summary-list">
+<tr><td>Factor</td><td>{{ optionalValue this.factorType }}</td></tr>
+<tr><td>Comment</td><td>{{ optionalValue this.comment }}</td></tr>
+</table>
+{{/this.contributoryFactors}}
+<h3>Safer Custody screening</h3>
+{{^this.saferCustodyScreeningOutcome}}<p>No Data Held</p>{{/this.saferCustodyScreeningOutcome}}
+{{#with this.saferCustodyScreeningOutcome}}
+<table class="summary-list">
+<tr><td>Outcome</td><td>{{ optionalValue this.outcome }}</td></tr>
+<tr><td>Reason for the decision</td><td>{{ optionalValue this.reasonForDecision }}</td></tr>
+<tr><td>Recorded by</td><td>{{ optionalValue this.recordedByLastName }}</td></tr>
+<tr><td>Date</td><td>{{ optionalValue (formatDate this.date) }}</td></tr>
+</table>
+{{/with}}
+<h3>Investigation</h3>
+{{^this.investigation}}<p>No Data Held</p>{{/this.investigation}}
+{{#with this.investigation}}
+<table class="summary-list">
+<tr><td>Staff involved</td><td>{{ optionalValue this.staffInvolved }}</td></tr>
+<tr><td>Evidence secured</td><td>{{ optionalValue this.evidenceSecured }}</td></tr>
+<tr><td>Why the behaviour occurred</td><td>{{ optionalValue this.occurrenceReason }}</td></tr>
+<tr><td>The prisoner's usual behaviour</td><td>{{ optionalValue this.personsUsualBehaviour }}</td></tr>
+<tr><td>The prisoner's triggers</td><td>{{ optionalValue this.personsTrigger }}</td></tr>
+<tr><td>Protective factors</td><td>{{ optionalValue this.protectiveFactors }}</td></tr>
+<tr><td>Recorded by</td><td>{{ optionalValue this.recordedByLastName }}</td></tr>
+</table>
+<h4>Interviews</h4>
+{{^this.interviews}}<p>No Data Held</p>{{/this.interviews}}
+{{#this.interviews}}
+<table class="summary-list">
+<tr><td>Interviewee</td><td>{{ optionalValue this.interviewee }}</td></tr>
+<tr><td>Their role</td><td>{{ optionalValue this.intervieweeRole }}</td></tr>
+<tr><td>Date of interview</td><td>{{ optionalValue (formatDate this.interviewDate) }}</td></tr>
+<tr><td>What they said</td><td>{{ optionalValue this.interviewText }}</td></tr>
+</table>
+{{/this.interviews}}
+{{/with}}
+<h3>Decision and actions</h3>
+{{^this.decisionAndActions}}<p>No Data Held</p>{{/this.decisionAndActions}}
+{{#with this.decisionAndActions}}
+<table class="summary-list">
+<tr><td>Conclusion</td><td>{{ optionalValue this.conclusion }}</td></tr>
+<tr><td>Outcome</td><td>{{ optionalValue this.outcome }}</td></tr>
+<tr><td>Role of the person who signed it off</td><td>{{ optionalValue this.signedOffByRole }}</td></tr>
+<tr><td>Recorded by</td><td>{{ optionalValue this.recordedByLastName }}</td></tr>
+<tr><td>Date</td><td>{{ optionalValue (formatDate this.date) }}</td></tr>
+<tr><td>Next steps</td><td>{{ optionalValue this.nextSteps }}</td></tr>
+<tr><td>Actions</td><td>{{^this.actions}}No Data Held{{/this.actions}}{{#this.actions}}{{ this }}<br>{{/this.actions}}</td></tr>
+<tr><td>Other actions</td><td>{{ optionalValue this.actionOther }}</td></tr>
+</table>
+{{/with}}
+{{/with}}
+<h3>Plan</h3>
+{{^this.plan}}<p>No Data Held</p>{{/this.plan}}
+{{#with this.plan}}
+<table class="summary-list">
+<tr><td>Case manager</td><td>{{ optionalValue this.caseManager }}</td></tr>
+<tr><td>Reason for the plan</td><td>{{ optionalValue this.reasonForPlan }}</td></tr>
+<tr><td>Date of first review</td><td>{{ optionalValue (formatDate this.firstCaseReviewDate) }}</td></tr>
+</table>
+<h4>Identified needs</h4>
+{{^this.identifiedNeeds}}<p>No Data Held</p>{{/this.identifiedNeeds}}
+{{#this.identifiedNeeds}}
+<table class="summary-list">
+<tr><td>Need</td><td>{{ optionalValue this.identifiedNeed }}</td></tr>
+<tr><td>Intervention</td><td>{{ optionalValue this.intervention }}</td></tr>
+<tr><td>Person responsible</td><td>{{ optionalValue this.responsiblePerson }}</td></tr>
+<tr><td>Date identified</td><td>{{ optionalValue (formatDate this.createdDate) }}</td></tr>
+<tr><td>Target date</td><td>{{ optionalValue (formatDate this.targetDate) }}</td></tr>
+<tr><td>Date closed</td><td>{{ optionalValue (formatDate this.closedDate) }}</td></tr>
+<tr><td>Progress</td><td>{{ optionalValue this.progression }}</td></tr>
+</table>
+{{/this.identifiedNeeds}}
+<h4>Reviews</h4>
+{{^this.reviews}}<p>No Data Held</p>{{/this.reviews}}
+{{#this.reviews}}
+<table class="summary-list">
+<tr><td>Date of review</td><td>{{ optionalValue (formatDate this.reviewDate) }}</td></tr>
+<tr><td>Recorded by</td><td>{{ optionalValue this.recordedByLastName }}</td></tr>
+<tr><td>Summary</td><td>{{ optionalValue this.summary }}</td></tr>
+<tr><td>Actions</td><td>{{^this.actions}}No Data Held{{/this.actions}}{{#this.actions}}{{ this }}<br>{{/this.actions}}</td></tr>
+<tr><td>Date of next review</td><td>{{ optionalValue (formatDate this.nextReviewDate) }}</td></tr>
+<tr><td>Date the CSIP was closed</td><td>{{ optionalValue (formatDate this.csipClosedDate) }}</td></tr>
+</table>
+<h4>People at the review</h4>
+{{^this.attendees}}<p>No Data Held</p>{{/this.attendees}}
+{{#this.attendees}}
+<table class="summary-list">
+<tr><td>Name</td><td>{{ optionalValue this.name }}</td></tr>
+<tr><td>Role</td><td>{{ optionalValue this.role }}</td></tr>
+<tr><td>Attended</td><td>{{ optionalValue this.attended }}</td></tr>
+<tr><td>Contribution</td><td>{{ optionalValue this.contribution }}</td></tr>
+</table>
+{{/this.attendees}}
+{{/this.reviews}}
+{{/with}}
+{{/.}}
