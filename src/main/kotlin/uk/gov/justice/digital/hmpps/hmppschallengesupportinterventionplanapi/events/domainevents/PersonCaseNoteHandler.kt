@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.ev
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.JdaService
 
 @Service
@@ -11,6 +13,8 @@ class PersonCaseNoteHandler(
   private val personCaseNoteInvestigationService: PersonCaseNoteInvestigationService,
   private val jdaService: JdaService,
   private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
+  private val caseNoteAnalysedRepository: CaseNoteAnalysedRepository,
+  private val caseNotesService: CaseNotesService,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -59,7 +63,23 @@ class PersonCaseNoteHandler(
       resolution.eligibleInvestigationIds,
     )
 
-    resolution.eligibleInvestigationIds.forEach { investigationId ->
+    for (investigationId in resolution.eligibleInvestigationIds) {
+      if (!caseNoteAnalysedRepository.existsByInvestigationId(investigationId)) {
+        log.warn(
+          "{} domain event: investigationId={} does not exist in case_notes_analysed; triggering initial JDA analysis for prisonerNumber={}",
+          event.eventType,
+          investigationId,
+          prisonerNumber,
+        )
+
+        val caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId)
+        jdaService.submitCaseNotesForAnalysis(
+          offenderIdentifier = prisonerNumber,
+          prisonCode = caseNote.locationId,
+          correlationId = investigationId.toString(),
+        )
+        continue
+      }
 
       log.info(
         "Triggering JDA re-analysis for investigationId={}, caseNoteId={}, prisonerNumber={}",
@@ -80,7 +100,6 @@ class PersonCaseNoteHandler(
           response.requestId,
           investigationId,
         )
-
         caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonerNumber)
       }
     }
