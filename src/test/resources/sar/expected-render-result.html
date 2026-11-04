@@ -1,0 +1,444 @@
+<style>
+    * {
+        font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+        font-size: 12pt;
+        color: #0b0c0c;
+    }
+    /* --- HEADINGS --- */
+
+    .title {
+        font-size: 20pt;
+        text-align: center;
+    }
+
+    h1, h2, h3 {
+        color: #0b0c0c;
+        font-weight: 700;
+        display: block;
+        margin-top: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    h1 {
+        font-size: 18pt;
+        line-height: 1.09375;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        margin-block-start: 0.67em;
+        margin-block-end: 0.67em;
+    }
+
+    h2 {
+        font-size: 17pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h3 {
+        font-size: 16pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h4 {
+        font-size: 15pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h5 {
+        font-size: 14pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    /* --- SUMMARY LIST --- */
+
+    table.summary-list {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.summary-list tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.summary-list tr td {
+        border-bottom: 1px solid #b1b4b6;
+        /*margin-bottom: 5px;*/
+        overflow-wrap: break-word;
+        display: table-cell;
+        /*padding-top: 2px;*/
+        /*padding-bottom: 2px;*/
+        /*padding-right: 0;*/
+        margin-inline-start: 40px;
+        width: 70%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: normal;
+        vertical-align: top;
+    }
+
+    table.summary-list tr td:first-child {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        vertical-align: top;
+    }
+
+    /* --- DATA TABLE --- */
+
+    table.data-table {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.data-table tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.data-table tr td {
+        border-bottom: 1px solid #b1b4b6;
+        margin-bottom: 5px;
+        overflow-wrap: break-word;
+        display: table-cell;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        padding-right: 0;
+        margin-inline-start: 40px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: pre-wrap;
+        vertical-align: top;
+    }
+
+    table.data-table tr:first-child td {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        border-bottom: none;
+        vertical-align: top;
+    }
+
+    table.data-table tr td.data-column-5 { width: 5% }
+    table.data-table tr td.data-column-10 { width: 10% }
+    table.data-table tr td.data-column-15 { width: 15% }
+    table.data-table tr td.data-column-20 { width: 20% }
+    table.data-table tr td.data-column-25 { width: 25% }
+    table.data-table tr td.data-column-30 { width: 30% }
+    table.data-table tr td.data-column-35 { width: 35% }
+    table.data-table tr td.data-column-40 { width: 40% }
+    table.data-table tr td.data-column-45 { width: 45% }
+    table.data-table tr td.data-column-50 { width: 50% }
+    table.data-table tr td.data-column-55 { width: 55% }
+    table.data-table tr td.data-column-60 { width: 60% }
+    table.data-table tr td.data-column-65 { width: 65% }
+    table.data-table tr td.data-column-70 { width: 70% }
+    table.data-table tr td.data-column-75 { width: 75% }
+    table.data-table tr td.data-column-80 { width: 80% }
+    table.data-table tr td.data-column-85 { width: 85% }
+    table.data-table tr td.data-column-90 { width: 90% }
+    table.data-table tr td.data-column-95 { width: 95% }
+
+    table tr td.data-column-5 { width: 5% }
+    table tr td.data-column-10 { width: 10% }
+    table tr td.data-column-15 { width: 15% }
+    table tr td.data-column-20 { width: 20% }
+    table tr td.data-column-25 { width: 25% }
+    table tr td.data-column-30 { width: 30% }
+    table tr td.data-column-35 { width: 35% }
+    table tr td.data-column-40 { width: 40% }
+    table tr td.data-column-45 { width: 45% }
+    table tr td.data-column-50 { width: 50% }
+    table tr td.data-column-55 { width: 55% }
+    table tr td.data-column-60 { width: 60% }
+    table tr td.data-column-65 { width: 65% }
+    table tr td.data-column-70 { width: 70% }
+    table tr td.data-column-75 { width: 75% }
+    table tr td.data-column-80 { width: 80% }
+    table tr td.data-column-85 { width: 85% }
+    table tr td.data-column-90 { width: 90% }
+    table tr td.data-column-95 { width: 95% }
+
+    table.summary-list tr td.data-column-5 { width: 5% }
+    table.summary-list tr td.data-column-10 { width: 10% }
+    table.summary-list tr td.data-column-15 { width: 15% }
+    table.summary-list tr td.data-column-20 { width: 20% }
+    table.summary-list tr td.data-column-25 { width: 25% }
+    table.summary-list tr td.data-column-30 { width: 30% }
+    table.summary-list tr td.data-column-35 { width: 35% }
+    table.summary-list tr td.data-column-40 { width: 40% }
+    table.summary-list tr td.data-column-45 { width: 45% }
+    table.summary-list tr td.data-column-50 { width: 50% }
+    table.summary-list tr td.data-column-55 { width: 55% }
+    table.summary-list tr td.data-column-60 { width: 60% }
+    table.summary-list tr td.data-column-65 { width: 65% }
+    table.summary-list tr td.data-column-70 { width: 70% }
+    table.summary-list tr td.data-column-75 { width: 75% }
+    table.summary-list tr td.data-column-80 { width: 80% }
+    table.summary-list tr td.data-column-85 { width: 85% }
+    table.summary-list tr td.data-column-90 { width: 90% }
+    table.summary-list tr td.data-column-95 { width: 95% }
+
+    ul {
+        padding: 0 0 0 10px;
+    }
+
+</style>
+
+<h1 class="title">Challenge, Support and Intervention Plans (CSIP)</h1>
+
+
+<h2>CSIP referred on 10 March 2025</h2>
+<table class="summary-list">
+<tr><td>Log code</td><td>MDI-0042</td></tr>
+<tr><td>Prison where recorded</td><td>Moorland (HMP &amp; YOI)</td></tr>
+<tr><td>Status</td><td>CSIP closed</td></tr>
+</table>
+
+<h3>Referral</h3>
+<table class="summary-list">
+<tr><td>Date of referral</td><td>10 March 2025</td></tr>
+<tr><td>Referred by</td><td>Officer Jane O&#x27;Neill</td></tr>
+<tr><td>Proactive referral</td><td>No</td></tr>
+<tr><td>Type of incident</td><td>Abuse or threats - staff</td></tr>
+<tr><td>Date of incident</td><td>08 March 2025</td></tr>
+<tr><td>Time of incident</td><td>14:30</td></tr>
+<tr><td>Location of incident</td><td>Exercise yard</td></tr>
+<tr><td>How the prisoner was involved</td><td>Perpetrator</td></tr>
+<tr><td>Staff assaulted</td><td>Yes</td></tr>
+<tr><td>Names of staff assaulted</td><td>Officer P Green</td></tr>
+<tr><td>Description of the concern</td><td>Shouted threats at an officer on the exercise yard and pushed them.</td></tr>
+<tr><td>Reasons known for the behaviour</td><td>Upset after a visit was cancelled.</td></tr>
+<tr><td>Other information</td><td>Has asked to speak to the chaplain.</td></tr>
+<tr><td>Safer Custody team informed</td><td>Yes</td></tr>
+<tr><td>Referral completed by</td><td>O&#x27;Neill</td></tr>
+<tr><td>Date referral completed</td><td>10 March 2025</td></tr>
+</table>
+<h3>Contributory factors</h3>
+
+
+<table class="summary-list">
+<tr><td>Factor</td><td>Alcohol or fermenting liquid</td></tr>
+<tr><td>Comment</td><td>No Data Held</td></tr>
+</table>
+
+<table class="summary-list">
+<tr><td>Factor</td><td>Basic needs (property or cell)</td></tr>
+<tr><td>Comment</td><td>Had no kettle in their cell for a week.</td></tr>
+</table>
+
+<h3>Safer Custody screening</h3>
+
+
+<table class="summary-list">
+<tr><td>Outcome</td><td>Progress to investigation</td></tr>
+<tr><td>Reason for the decision</td><td>Second incident this month. Needs looking into.</td></tr>
+<tr><td>Recorded by</td><td>Smith</td></tr>
+<tr><td>Date</td><td>11 March 2025</td></tr>
+</table>
+
+<h3>Investigation</h3>
+
+
+<table class="summary-list">
+<tr><td>Staff involved</td><td>Officer Green, Officer O&#x27;Neill</td></tr>
+<tr><td>Evidence secured</td><td>Body-worn camera footage.</td></tr>
+<tr><td>Why the behaviour occurred</td><td>Frustration about the cancelled visit.</td></tr>
+<tr><td>The prisoner's usual behaviour</td><td>Usually calm and polite to staff.</td></tr>
+<tr><td>The prisoner's triggers</td><td>Changes to family contact.</td></tr>
+<tr><td>Protective factors</td><td>Close to their sister. Works in the kitchen.</td></tr>
+<tr><td>Recorded by</td><td>Khan</td></tr>
+</table>
+<h4>Interviews</h4>
+
+
+<table class="summary-list">
+<tr><td>Interviewee</td><td>Sam Smith</td></tr>
+<tr><td>Their role</td><td>Perpetrator</td></tr>
+<tr><td>Date of interview</td><td>13 March 2025</td></tr>
+<tr><td>What they said</td><td>Said they were angry about the visit and are sorry.</td></tr>
+</table>
+
+<table class="summary-list">
+<tr><td>Interviewee</td><td>Joe Jones B2345SR</td></tr>
+<tr><td>Their role</td><td>Witness</td></tr>
+<tr><td>Date of interview</td><td>14 March 2025</td></tr>
+<tr><td>What they said</td><td>Saw the officer being pushed.</td></tr>
+</table>
+
+
+<h3>Decision and actions</h3>
+
+
+<table class="summary-list">
+<tr><td>Conclusion</td><td>A plan is needed to support contact with family.</td></tr>
+<tr><td>Outcome</td><td>Progress to CSIP</td></tr>
+<tr><td>Role of the person who signed it off</td><td>Custodial Manager</td></tr>
+<tr><td>Recorded by</td><td>Smith</td></tr>
+<tr><td>Date</td><td>20 March 2025</td></tr>
+<tr><td>Next steps</td><td>Case manager to meet the prisoner this week.</td></tr>
+<tr><td>Actions</td><td>Open a CSIP alert<br>Unit or cell move<br></td></tr>
+<tr><td>Other actions</td><td>Speak to the visits team.</td></tr>
+</table>
+
+
+<h3>Plan</h3>
+
+
+<table class="summary-list">
+<tr><td>Case manager</td><td>Supervising Officer Patel</td></tr>
+<tr><td>Reason for the plan</td><td>To support the prisoner to keep in touch with family.</td></tr>
+<tr><td>Date of first review</td><td>10 April 2025</td></tr>
+</table>
+<h4>Identified needs</h4>
+
+
+<table class="summary-list">
+<tr><td>Need</td><td>Regular contact with family.</td></tr>
+<tr><td>Intervention</td><td>Book a social video call each week.</td></tr>
+<tr><td>Person responsible</td><td>Visits team</td></tr>
+<tr><td>Date identified</td><td>21 March 2025</td></tr>
+<tr><td>Target date</td><td>21 April 2025</td></tr>
+<tr><td>Date closed</td><td>08 May 2025</td></tr>
+<tr><td>Progress</td><td>Calls taking place each week.</td></tr>
+</table>
+
+<table class="summary-list">
+<tr><td>Need</td><td>Somewhere to talk when upset.</td></tr>
+<tr><td>Intervention</td><td>Weekly meeting with the chaplain.</td></tr>
+<tr><td>Person responsible</td><td>Chaplaincy</td></tr>
+<tr><td>Date identified</td><td>21 March 2025</td></tr>
+<tr><td>Target date</td><td>21 May 2025</td></tr>
+<tr><td>Date closed</td><td>08 May 2025</td></tr>
+<tr><td>Progress</td><td>No Data Held</td></tr>
+</table>
+
+<h4>Reviews</h4>
+
+
+<table class="summary-list">
+<tr><td>Date of review</td><td>10 April 2025</td></tr>
+<tr><td>Recorded by</td><td>Patel</td></tr>
+<tr><td>Summary</td><td>Going well. No further incidents.</td></tr>
+<tr><td>Actions</td><td>People responsible for the prisoner informed<br>Keep the prisoner on the plan<br></td></tr>
+<tr><td>Date of next review</td><td>08 May 2025</td></tr>
+<tr><td>Date the CSIP was closed</td><td>No Data Held</td></tr>
+</table>
+<h4>People at the review</h4>
+
+
+<table class="summary-list">
+<tr><td>Name</td><td>Sam Smith</td></tr>
+<tr><td>Role</td><td>Prisoner</td></tr>
+<tr><td>Attended</td><td>Yes</td></tr>
+<tr><td>Contribution</td><td>Calls are helping.</td></tr>
+</table>
+
+<table class="summary-list">
+<tr><td>Name</td><td>Sister</td></tr>
+<tr><td>Role</td><td>Family</td></tr>
+<tr><td>Attended</td><td>No</td></tr>
+<tr><td>Contribution</td><td>Sent a letter of support.</td></tr>
+</table>
+
+
+<table class="summary-list">
+<tr><td>Date of review</td><td>08 May 2025</td></tr>
+<tr><td>Recorded by</td><td>Patel</td></tr>
+<tr><td>Summary</td><td>Needs met. CSIP closed.</td></tr>
+<tr><td>Actions</td><td>Case note made<br>Close the CSIP<br></td></tr>
+<tr><td>Date of next review</td><td>No Data Held</td></tr>
+<tr><td>Date the CSIP was closed</td><td>08 May 2025</td></tr>
+</table>
+<h4>People at the review</h4>
+<p>No Data Held</p>
+
+
+
+
+<h2>CSIP referred on 03 June 2024</h2>
+<table class="summary-list">
+<tr><td>Log code</td><td>No Data Held</td></tr>
+<tr><td>Prison where recorded</td><td>No Data Held</td></tr>
+<tr><td>Status</td><td>No further action</td></tr>
+</table>
+
+<h3>Referral</h3>
+<table class="summary-list">
+<tr><td>Date of referral</td><td>03 June 2024</td></tr>
+<tr><td>Referred by</td><td>Education</td></tr>
+<tr><td>Proactive referral</td><td>No Data Held</td></tr>
+<tr><td>Type of incident</td><td>Abuse or threats - other</td></tr>
+<tr><td>Date of incident</td><td>02 June 2024</td></tr>
+<tr><td>Time of incident</td><td>No Data Held</td></tr>
+<tr><td>Location of incident</td><td>Education</td></tr>
+<tr><td>How the prisoner was involved</td><td>No Data Held</td></tr>
+<tr><td>Staff assaulted</td><td>No Data Held</td></tr>
+<tr><td>Names of staff assaulted</td><td>No Data Held</td></tr>
+<tr><td>Description of the concern</td><td>Argument with another learner.</td></tr>
+<tr><td>Reasons known for the behaviour</td><td>No Data Held</td></tr>
+<tr><td>Other information</td><td>No Data Held</td></tr>
+<tr><td>Safer Custody team informed</td><td>Do not know</td></tr>
+<tr><td>Referral completed by</td><td>No Data Held</td></tr>
+<tr><td>Date referral completed</td><td>No Data Held</td></tr>
+</table>
+<h3>Contributory factors</h3>
+<p>No Data Held</p>
+
+<h3>Safer Custody screening</h3>
+
+
+<table class="summary-list">
+<tr><td>Outcome</td><td>No further action</td></tr>
+<tr><td>Reason for the decision</td><td>A one-off, resolved on the day.</td></tr>
+<tr><td>Recorded by</td><td>Smith</td></tr>
+<tr><td>Date</td><td>04 June 2024</td></tr>
+</table>
+
+<h3>Investigation</h3>
+<p>No Data Held</p>
+
+<h3>Decision and actions</h3>
+<p>No Data Held</p>
+
+
+<h3>Plan</h3>
+<p>No Data Held</p>
+
+

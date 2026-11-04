@@ -136,3 +136,10 @@ jda:
 
 case-note-annotations:
   max-processing-duration: 30s
+# The subject access request report template, served from /subject-access-request/template.
+# The SAR tool recognises a template by its hash, so a template must not be edited in place once registered: a change
+# is a new version, registered with the SAR tool in each environment before the code that serves it deploys there.
+hmpps.sar:
+  template:
+    enabled: true
+    path: ${HMPPS_SAR_TEMPLATE_PATH:/sar/templates/V1__sar_template.mustache}
