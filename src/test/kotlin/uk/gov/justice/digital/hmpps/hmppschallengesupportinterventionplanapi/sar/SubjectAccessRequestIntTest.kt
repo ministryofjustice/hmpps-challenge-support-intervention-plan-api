@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.JsonNode
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.referral.Investigation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.toPersonSummary
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType.SCREENING_OUTCOME_TYPE
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReviewAction
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.int
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.NomisIdGenerator.prisonNumber
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.prisoner
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.set
 import java.time.LocalDate
 
 /**
@@ -72,12 +74,24 @@ class SubjectAccessRequestIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `an open CSIP is returned for any range after it started`() {
+  fun `an open CSIP runs from when it started to today`() {
     val prn = prisonNumber()
+    val today = LocalDate.now()
     givenOpenCsip(prn, logCode = "OPEN", referral = "2024-01-10")
 
-    assertThat(logCodes(prn, "2026-01-01", "2026-01-31")).containsExactly("OPEN")
+    assertThat(logCodes(prn, "2024-06-01", "2024-06-30")).containsExactly("OPEN")
+    assertThat(logCodes(prn, today.toString(), today.plusDays(30).toString())).containsExactly("OPEN")
+    assertThat(logCodes(prn, today.plusDays(1).toString(), today.plusDays(30).toString())).isEmpty()
     assertThat(logCodes(prn, "2023-01-01", "2023-12-31")).isEmpty()
+  }
+
+  @Test
+  fun `an open CSIP with a later recorded date runs to that date`() {
+    val prn = prisonNumber()
+    val tomorrow = LocalDate.now().plusDays(1)
+    givenOpenCsip(prn, logCode = "OPEN", referral = tomorrow.toString())
+
+    assertThat(logCodes(prn, tomorrow.toString(), tomorrow.toString())).containsExactly("OPEN")
   }
 
   @Test
@@ -94,6 +108,28 @@ class SubjectAccessRequestIntTest : IntegrationTestBase() {
 
     assertThat(logCodes(prn, "2024-01-12", "2024-12-31")).containsExactly("NFA")
     assertThat(logCodes(prn, "2024-01-13", "2024-12-31")).isEmpty()
+  }
+
+  @Test
+  fun `a staff username synced from NOMIS as the display name is not sent`() {
+    val prn = prisonNumber()
+    val record = generateCsipRecord(person(prn), logCode = "SYNCED")
+    dataSetup(record) {
+      it.withReferral()
+      val referral = requireNotNull(it.referral)
+      referral.withSaferCustodyScreeningOutcome(
+        outcome = givenReferenceData(SCREENING_OUTCOME_TYPE, "NFA"),
+        recordedBy = "JSMITH_GEN",
+        recordedByDisplayName = "JSMITH_GEN",
+      )
+      referral.set(referral::investigation, Investigation(referral, "JSMITH_GEN", "JSMITH_GEN"))
+    }
+
+    val csip = content(prn).single()
+
+    assertThat(csip["referral"].has("saferCustodyScreeningOutcome")).isTrue()
+    assertThat(csip["referral"].has("investigation")).isTrue()
+    assertThat(csip.toString()).doesNotContainIgnoringCase("JSMITH_GEN")
   }
 
   private fun givenOpenCsip(prn: String, logCode: String, referral: String) {
@@ -123,7 +159,9 @@ class SubjectAccessRequestIntTest : IntegrationTestBase() {
   /** The prisoner's existing summary if an earlier CSIP created it, as a prison number has only one. */
   private fun person(prn: String) = personSummaryRepository.findByIdOrNull(prn) ?: prisoner(prisonerNumber = prn).toPersonSummary()
 
-  private fun logCodes(prn: String, from: String? = null, to: String? = null): List<String> {
+  private fun logCodes(prn: String, from: String? = null, to: String? = null): List<String> = content(prn, from, to).map { it["logCode"].asString() }
+
+  private fun content(prn: String, from: String? = null, to: String? = null): List<JsonNode> {
     val query = listOfNotNull("prn=$prn", from?.let { "fromDate=$it" }, to?.let { "toDate=$it" }).joinToString("&")
     val result = webTestClient.get().uri("/subject-access-request?$query")
       .headers(setAuthorisation(roles = listOf("ROLE_SAR_DATA_ACCESS")))
@@ -134,6 +172,6 @@ class SubjectAccessRequestIntTest : IntegrationTestBase() {
     }
     assertThat(result.status.value()).isEqualTo(200)
     val body = result.responseBody.blockFirst()!!
-    return body["content"].toList().map { it["logCode"].asString() }
+    return body["content"].toList()
   }
 }

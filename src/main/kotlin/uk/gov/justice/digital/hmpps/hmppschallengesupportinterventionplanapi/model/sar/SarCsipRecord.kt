@@ -124,7 +124,7 @@ data class SarReferral(
       knownReasons = referral.knownReasons,
       otherInformation = referral.otherInformation,
       saferCustodyTeamInformed = referral.saferCustodyTeamInformed.label(),
-      referralCompletedByLastName = surname(referral.referralCompletedByDisplayName),
+      referralCompletedByLastName = surname(referral.referralCompletedByDisplayName, referral.referralCompletedBy),
       referralCompletedDate = referral.referralCompletedDate,
       contributoryFactors = referral.contributoryFactors()
         .sortedWith(compareBy<ContributoryFactor> { it.contributoryFactorType.description }.thenBy { it.id })
@@ -166,7 +166,7 @@ data class SarScreeningOutcome(
       outcome = screening.outcome.description,
       date = screening.date,
       reasonForDecision = screening.reasonForDecision,
-      recordedByLastName = surname(screening.recordedByDisplayName),
+      recordedByLastName = surname(screening.recordedByDisplayName, screening.recordedBy),
     )
   }
 }
@@ -192,7 +192,7 @@ data class SarInvestigation(
       personsUsualBehaviour = investigation.personsUsualBehaviour,
       personsTrigger = investigation.personsTrigger,
       protectiveFactors = investigation.protectiveFactors,
-      recordedByLastName = surname(investigation.recordedByDisplayName),
+      recordedByLastName = surname(investigation.recordedByDisplayName, investigation.recordedBy),
       interviews = investigation.interviews()
         .sortedWith(compareBy<Interview> { it.interviewDate }.thenBy { it.id })
         .map(SarInterview::from),
@@ -238,7 +238,7 @@ data class SarDecisionAndActions(
       outcome = decision.outcome?.description,
       conclusion = decision.conclusion,
       signedOffByRole = decision.signedOffBy?.description,
-      recordedByLastName = surname(decision.recordedByDisplayName),
+      recordedByLastName = surname(decision.recordedByDisplayName, decision.recordedBy),
       date = decision.date,
       nextSteps = decision.nextSteps,
       actions = decision.actions.map { it.label() },
@@ -307,7 +307,7 @@ data class SarReview(
   companion object {
     fun from(review: Review) = SarReview(
       reviewDate = review.reviewDate,
-      recordedByLastName = surname(review.recordedByDisplayName),
+      recordedByLastName = surname(review.recordedByDisplayName, review.recordedBy),
       summary = review.summary,
       actions = review.actions.map { it.label() },
       nextReviewDate = review.nextReviewDate,
@@ -347,9 +347,13 @@ data class SarAttendee(
  * spaces loses its first part, which is the price of not showing first names. A name all in capitals, or all in
  * lower case, is given ordinary capitalisation, as in the incident reporting report: "O'NEILL" becomes "O'Neill".
  * A name with any mix of cases was typed that way deliberately and is left alone.
+ *
+ * Changes synced from NOMIS can record the username as the display name, so a "name" matching [username] gives
+ * nothing: a username is not sent, and the report shows no name rather than a staff login.
  */
-internal fun surname(displayName: String?): String? {
-  val last = displayName?.trim()?.split(Regex("""\s+"""))?.last()?.takeIf { it.isNotEmpty() } ?: return null
+internal fun surname(displayName: String?, username: String?): String? {
+  val name = displayName?.trim()?.takeIf { it.isNotEmpty() && !it.equals(username?.trim(), ignoreCase = true) } ?: return null
+  val last = name.split(Regex("""\s+""")).last()
   if (last.any { it.isUpperCase() } && last.any { it.isLowerCase() }) {
     return last
   }

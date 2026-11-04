@@ -30,9 +30,10 @@ class SubjectAccessRequestService(
    * [fromDate] and [toDate] are both inclusive. A CSIP is returned in full if any part of it falls within them, so
    * a prisoner never receives part of a CSIP - as agreed with the Offender SAR team at the data review.
    *
-   * A CSIP runs from the earliest date recorded on it to the latest, or to today while it is still open. The dates
-   * are those of things that happened - the incident, referral, screening, interviews, decision, needs being opened
-   * and closed, reviews and closure - not dates planned for the future, such as a target or next review date.
+   * A CSIP runs from the earliest date recorded on it to the latest, or to today while it is still open, so an open
+   * CSIP is not returned for dates wholly in the future. The dates are those of things that happened - the incident,
+   * referral, screening, interviews, decision, needs being opened and closed, reviews and closure - not dates planned
+   * for the future, such as a target or next review date.
    *
    * A prisoner has few CSIPs, so they are filtered here rather than in the query, where the same rule would need a
    * join to every part of the CSIP. Newest referral first. Returns null when there are none, which the library
@@ -56,8 +57,9 @@ class SubjectAccessRequestService(
   private fun CsipRecord.overlaps(from: LocalDate?, to: LocalDate?): Boolean {
     val dates = datesOfActivity()
     val start = dates.minOrNull() ?: return true
-    val end = if (isOpen()) null else dates.max()
-    return (to == null || !start.isAfter(to)) && (from == null || end == null || !end.isBefore(from))
+    val latest = dates.max()
+    val end = if (isOpen()) maxOf(latest, LocalDate.now()) else latest
+    return (to == null || !start.isAfter(to)) && (from == null || !end.isBefore(from))
   }
 
   private fun CsipRecord.isOpen() = status?.code?.let { it !in FINISHED } ?: true

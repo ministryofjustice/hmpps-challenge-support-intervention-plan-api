@@ -20,12 +20,27 @@ class SurnameTest {
     "Smith, Smith",
   )
   fun `takes the last word and gives names in one case ordinary capitalisation`(displayName: String, expected: String) {
-    assertThat(surname(displayName)).isEqualTo(expected)
+    assertThat(surname(displayName, "JSMITH_GEN")).isEqualTo(expected)
   }
 
   @Test
   fun `nothing recorded gives nothing`() {
-    assertThat(surname(null)).isNull()
-    assertThat(surname("   ")).isNull()
+    assertThat(surname(null, "JSMITH_GEN")).isNull()
+    assertThat(surname("   ", "JSMITH_GEN")).isNull()
+  }
+
+  @ParameterizedTest(name = "\"{0}\" recorded by \"{1}\"")
+  @CsvSource(
+    "JSMITH_GEN, JSMITH_GEN",
+    "jsmith_gen, JSMITH_GEN",
+    "' JSMITH_GEN ', JSMITH_GEN",
+  )
+  fun `a username recorded as the name gives nothing`(displayName: String, username: String) {
+    assertThat(surname(displayName, username)).isNull()
+  }
+
+  @Test
+  fun `no recorded username still gives the surname`() {
+    assertThat(surname("John Smith", null)).isEqualTo("Smith")
   }
 }
