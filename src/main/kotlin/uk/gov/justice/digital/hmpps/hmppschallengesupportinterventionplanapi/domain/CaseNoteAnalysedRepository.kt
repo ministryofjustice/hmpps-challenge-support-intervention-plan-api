@@ -17,4 +17,8 @@ interface CaseNoteAnalysedRepository : JpaRepository<CaseNoteAnalysed, UUID> {
     investigationId: UUID,
     caseNoteId: UUID,
   ): CaseNoteAnalysed?
+
+  fun existsByInvestigationId(
+    investigationId: UUID,
+  ): Boolean
 }

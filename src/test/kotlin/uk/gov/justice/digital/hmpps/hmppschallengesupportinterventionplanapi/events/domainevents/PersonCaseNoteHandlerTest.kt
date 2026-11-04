@@ -11,6 +11,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.boot.test.system.CapturedOutput
 import org.springframework.boot.test.system.OutputCaptureExtension
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
@@ -20,7 +22,9 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNoteAnnotationsService
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.CaseNotesService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service.JdaService
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -30,7 +34,20 @@ class PersonCaseNoteHandlerTest {
   private val personCaseNoteInvestigationService = mock<PersonCaseNoteInvestigationService>()
   private val jdaService = mock<JdaService>()
   private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
-  private val handler = PersonCaseNoteHandler(personCaseNoteInvestigationService, jdaService, caseNoteAnnotationsService)
+  private val caseNoteAnalysedRepository = mock<CaseNoteAnalysedRepository>()
+  private val caseNotesService = mock<CaseNotesService>()
+  private val handler = PersonCaseNoteHandler(
+    personCaseNoteInvestigationService,
+    jdaService,
+    caseNoteAnnotationsService,
+    caseNoteAnalysedRepository,
+    caseNotesService,
+  )
+
+  init {
+    whenever(caseNoteAnalysedRepository.existsByInvestigationId(any())).thenReturn(true)
+    whenever(caseNotesService.getCaseNote(any(), any())).thenReturn(testCaseNote())
+  }
 
   @Test
   fun `created event with valid prisoner number resolves investigations and logs receipt`(output: CapturedOutput) {
@@ -128,6 +145,69 @@ class PersonCaseNoteHandlerTest {
   }
 
   @Test
+  fun `domain event does not trigger JDA processing when no PENDING investigations`() {
+    val prisonerNumber = "A1234BC"
+    val investigationId = UUID.randomUUID()
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
+      .thenReturn(
+        PersonCaseNoteInvestigationResolution(
+          prisonerNumber,
+          listOf(investigationId),
+          listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_COMPLETE", false, "status is not INVESTIGATION_PENDING")),
+        ),
+      )
+
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
+
+    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
+    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
+  }
+
+  @Test
+  fun `domain event triggers JDA re-analysis when pending investigations exist and they have already been analysed by JDA before`(output: CapturedOutput) {
+    val prisonerNumber = "A1234BC"
+    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    val investigationId = UUID.randomUUID()
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
+      .thenReturn(
+        PersonCaseNoteInvestigationResolution(
+          prisonerNumber,
+          listOf(investigationId),
+          listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_PENDING", true)),
+        ),
+      )
+    whenever(caseNoteAnalysedRepository.existsByInvestigationId(investigationId)).thenReturn(true)
+
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
+
+    verify(jdaService).submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)
+    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
+    assertThat(output.out).contains("Triggering JDA re-analysis for investigationId=")
+  }
+
+  @Test
+  fun `domain event triggers complete initial JDA analysis when pending investigations exist but none have been analysed by JDA before`(output: CapturedOutput) {
+    val prisonerNumber = "A1234BC"
+    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    val investigationId = UUID.randomUUID()
+    whenever(personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber))
+      .thenReturn(
+        PersonCaseNoteInvestigationResolution(
+          prisonerNumber,
+          listOf(investigationId),
+          listOf(InvestigationEvaluation(investigationId, "INVESTIGATION_PENDING", true)),
+        ),
+      )
+    whenever(caseNoteAnalysedRepository.existsByInvestigationId(investigationId)).thenReturn(false)
+    whenever(caseNotesService.getCaseNote(prisonerNumber, caseNoteId)).thenReturn(testCaseNote())
+
+    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, prisonNumber = prisonerNumber))
+    verify(jdaService, never()).submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)
+    verify(jdaService).submitCaseNotesForAnalysis(prisonerNumber, "MDI", investigationId.toString())
+    assertThat(output.out).contains("does not exist in case_notes_analysed; triggering initial JDA analysis")
+  }
+
+  @Test
   fun `missing personReference logs warning and exits`(output: CapturedOutput) {
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_CREATED, personReference = null))
 
@@ -149,6 +229,24 @@ class PersonCaseNoteHandlerTest {
     verify(personCaseNoteInvestigationService, never()).resolveInvestigations(any())
     assertThat(output.out).contains("because no NOMS prisoner number was provided in personReference")
   }
+
+  private fun testCaseNote() = CaseNote(
+    caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
+    offenderIdentifier = "A1234BC",
+    type = "OBSERVE",
+    typeDescription = "Observation",
+    subType = "GEN",
+    subTypeDescription = "General",
+    creationDateTime = LocalDateTime.now(),
+    occurrenceDateTime = LocalDateTime.now(),
+    authorName = "Test User",
+    authorUserId = "user-1",
+    authorUsername = "user1",
+    text = "Case note text",
+    locationId = "MDI",
+    sensitive = false,
+    amendments = emptyList(),
+  )
 
   private fun caseNoteEvent(
     eventType: String,
