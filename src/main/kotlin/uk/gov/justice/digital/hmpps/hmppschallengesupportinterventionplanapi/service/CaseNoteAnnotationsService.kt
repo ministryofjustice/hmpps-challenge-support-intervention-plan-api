@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
@@ -41,6 +42,7 @@ class CaseNoteAnnotationsService(
   private val userService: UserService,
   @Value("\${case-note-annotations.max-processing-duration:30s}")
   private val maxProcessingDuration: Duration,
+  private val transactionTemplate: TransactionTemplate,
 ) {
 
   private companion object {
@@ -74,7 +76,7 @@ class CaseNoteAnnotationsService(
   ) {
     try {
       response.responseData.orEmpty().forEach { caseNoteData ->
-        persistSynchronousResponseData(
+        persistSnapshot(
           responseData = caseNoteData,
           requestId = response.requestId,
           investigationId = response.correlationId,
@@ -170,7 +172,6 @@ class CaseNoteAnnotationsService(
     return highlightAnnotationMatches(caseNoteWithAnnotations.caseNote.text, annotationTexts)
   }
 
-  @Transactional
   internal fun persistAnnotationsFromDequeue(initialResponse: JdaDequeueResponse?) {
     val start = Instant.now()
     var response = initialResponse
@@ -216,7 +217,7 @@ class CaseNoteAnnotationsService(
             "${e.message}. Message will be retried.",
           e,
         )
-        // Message remains in queue if persistence fails
+        throw e
       }
 
       if (Duration.between(start, Instant.now()) >= maxProcessingDuration) {
@@ -352,38 +353,14 @@ class CaseNoteAnnotationsService(
     var processedCount = 0
 
     responseData.forEachIndexed { itemIndex, caseNoteData ->
-      try {
-        val analysedCaseNote = caseNoteAnalysedRepository.save(
-          CaseNoteAnalysed(
-            requestId = requestId,
-            investigationId = investigationId,
-            prisonerNumber = prisonerNumber,
-            caseNoteId = caseNoteData.caseNoteId,
-            promptKey = prompt.key,
-            promptVersion = prompt.version,
-            usualBehaviourRelevancy = caseNoteData.usualBehaviourPresentation ?: 0,
-            risksAndTriggersRelevancy = caseNoteData.risksAndTriggers ?: 0,
-            protectiveFactorsRelevancy = caseNoteData.protectiveFactors ?: 0,
-          ),
+      transactionTemplate.executeWithoutResult {
+        persistSnapshot(
+          responseData = caseNoteData,
+          requestId = requestId,
+          investigationId = investigationId,
+          prompt = prompt,
+          prisonerNumber = prisonerNumber,
         )
-
-        caseNoteData.justifyingSpans.forEach { span ->
-          try {
-            insertCaseNoteAnnotation(
-              caseNotesAnalysedId = analysedCaseNote.id,
-              requestId = requestId,
-              investigationId = investigationId,
-              caseNoteId = caseNoteData.caseNoteId,
-              behaviourType = span.justifies,
-              annotatedText = span.text,
-              createdDate = LocalDateTime.now(ZoneOffset.UTC),
-            )
-          } catch (e: Exception) {
-            log.error("Failed to persist case note annotation for case note ${caseNoteData.caseNoteId}", e)
-          }
-        }
-      } catch (e: Exception) {
-        log.error("Failed to persist case note analysis for case note ${caseNoteData.caseNoteId}", e)
       }
 
       processedCount++
@@ -396,7 +373,7 @@ class CaseNoteAnnotationsService(
     return processedCount
   }
 
-  private fun persistSynchronousResponseData(
+  private fun persistSnapshot(
     responseData: JdaDequeueResponseData,
     requestId: UUID,
     investigationId: UUID,

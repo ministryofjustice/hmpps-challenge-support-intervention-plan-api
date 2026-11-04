@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.co
 
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.JdaDequeueResponseStatus
@@ -33,10 +36,15 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
   @Autowired
   lateinit var caseNoteAnnotationRepository: CaseNoteAnnotationRepository
 
+  @Autowired
+  lateinit var caseNoteAnalysedRepository: CaseNoteAnalysedRepository
+
   @BeforeEach
   fun resetMocks() {
     jdaServer.resetAll()
     caseNoteAnnotationRepository.deleteAll()
+    caseNoteAnalysedRepository.deleteAll()
+    jdaServer.stubAcknowledgeDequeueResponseSuccess()
   }
 
   @Test
@@ -53,6 +61,108 @@ class CaseNoteAnnotationsJobControllerIntTest : IntegrationTestBase() {
 
     await withPollDelay ofSeconds(1) untilCallTo { numberOfDequeueRequestsMade() } matches { it == 2 }
     jdaServer.verify(exactly(2), getRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `duplicate delivery converges to one parent and annotation set per case note`() {
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
+    val response = createCaseNoteDequeueResponse(record.id, UUID.randomUUID())
+
+    processSnapshot(response)
+    val originalIds = analysedIds(response)
+    processSnapshot(response)
+
+    assertThat(analysedIds(response)).containsExactlyElementsOf(originalIds)
+    assertThat(caseNoteAnalysedRepository.findAll()).hasSize(2)
+    assertThat(caseNoteAnnotationRepository.findAll().map { it.annotatedText })
+      .containsExactlyInAnyOrder("annotated text 1", "annotated text 2", "annotated text 3")
+    jdaServer.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `latest snapshot replaces previous annotations and parent metadata`() {
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
+    val response = createCaseNoteDequeueResponse(record.id, UUID.randomUUID())
+    processSnapshot(response)
+    val originalIds = analysedIds(response)
+    val latest = response.copy(
+      requestId = UUID.randomUUID(),
+      prompt = JdaPrompt(key = "latest-prompt", version = 4),
+      responseData = response.responseData!!.map {
+        it.copy(
+          risksAndTriggers = 5,
+          justifyingSpans = listOf(JustifyingSpan("latest annotation", BehaviourType.RISKS_AND_TRIGGERS)),
+        )
+      },
+    )
+
+    processSnapshot(latest)
+
+    assertThat(analysedIds(latest)).containsExactlyElementsOf(originalIds)
+    assertThat(caseNoteAnalysedRepository.findAll()).hasSize(2).allSatisfy {
+      assertThat(it.requestId).isEqualTo(latest.requestId)
+      assertThat(it.promptKey).isEqualTo("latest-prompt")
+      assertThat(it.promptVersion).isEqualTo(4)
+      assertThat(it.risksAndTriggersRelevancy).isEqualTo(5)
+    }
+    assertThat(caseNoteAnnotationRepository.findAll().map { it.annotatedText })
+      .containsExactlyInAnyOrder("latest annotation", "latest annotation")
+    jdaServer.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  @Test
+  fun `failed replacement rolls back the snapshot without acknowledgement and can be retried`() {
+    val record = givenCsipRecord(generateCsipRecord().withReferral())
+    val response = createCaseNoteDequeueResponse(record.id, UUID.randomUUID())
+    processSnapshot(response)
+    val originalIds = analysedIds(response)
+    val latest = response.copy(
+      requestId = UUID.randomUUID(),
+      responseData = response.responseData!!.map {
+        it.copy(justifyingSpans = listOf(JustifyingSpan("latest annotation", BehaviourType.RISKS_AND_TRIGGERS)))
+      },
+    )
+    val invalid = latest.copy(
+      prompt = JdaPrompt(key = "x".repeat(256), version = 4),
+    )
+    jdaServer.resetAll()
+    jdaServer.stubAcknowledgeDequeueResponseSuccess()
+    jdaServer.stubDequeueResponseThenNotFound(jsonMapper.writeValueAsString(invalid))
+
+    webTestClient.post()
+      .uri("/queue/case-note-annotations")
+      .exchange()
+      .expectStatus().is5xxServerError
+
+    assertThat(analysedIds(response)).containsExactlyElementsOf(originalIds)
+    assertThat(caseNoteAnalysedRepository.findAll()).allSatisfy {
+      assertThat(it.requestId).isEqualTo(response.requestId)
+    }
+    assertThat(caseNoteAnnotationRepository.findAll().map { it.annotatedText })
+      .containsExactlyInAnyOrder("annotated text 1", "annotated text 2", "annotated text 3")
+    jdaServer.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+    jdaServer.verify(exactly(1), getRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+
+    processSnapshot(latest)
+
+    assertThat(analysedIds(latest)).containsExactlyElementsOf(originalIds)
+    assertThat(caseNoteAnnotationRepository.findAll().map { it.annotatedText })
+      .containsExactlyInAnyOrder("latest annotation", "latest annotation")
+    jdaServer.verify(exactly(1), postRequestedFor(urlEqualTo("/v1/dequeueresponse")))
+  }
+
+  private fun processSnapshot(response: JdaDequeueResponse) {
+    jdaServer.resetAll()
+    jdaServer.stubAcknowledgeDequeueResponseSuccess()
+    jdaServer.stubDequeueResponseThenNotFound(jsonMapper.writeValueAsString(response))
+    webTestClient.post()
+      .uri("/queue/case-note-annotations")
+      .exchange()
+      .expectStatus().isOk
+  }
+
+  private fun analysedIds(response: JdaDequeueResponse): List<UUID> = response.responseData!!.map { data ->
+    requireNotNull(caseNoteAnalysedRepository.findByInvestigationIdAndCaseNoteId(response.correlationId, data.caseNoteId)).id
   }
 
   @Test
