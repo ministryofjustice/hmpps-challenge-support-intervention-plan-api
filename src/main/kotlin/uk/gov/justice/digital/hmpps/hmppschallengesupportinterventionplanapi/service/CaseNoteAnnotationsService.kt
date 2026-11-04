@@ -208,7 +208,9 @@ class CaseNoteAnnotationsService(
           acknowledgedMessageCount++
 
           log.info(
-            "Message processed successfully: requestId=$messageRequestId, receiptId=$messageReceiptId",
+            "Acknowledged queue message: requestId={}, receiptId={}",
+            messageRequestId,
+            messageReceiptId,
           )
         }
       } catch (e: Exception) {
@@ -353,16 +355,38 @@ class CaseNoteAnnotationsService(
     var processedCount = 0
 
     responseData.forEachIndexed { itemIndex, caseNoteData ->
-      transactionTemplate.executeWithoutResult {
-        persistSnapshot(
-          responseData = caseNoteData,
-          requestId = requestId,
-          investigationId = investigationId,
-          prompt = prompt,
-          prisonerNumber = prisonerNumber,
+      log.info(
+        "Persisting analysis snapshot for investigationId={}, caseNoteId={}, requestId={}",
+        investigationId,
+        caseNoteData.caseNoteId,
+        requestId,
+      )
+      try {
+        transactionTemplate.executeWithoutResult {
+          persistSnapshot(
+            responseData = caseNoteData,
+            requestId = requestId,
+            investigationId = investigationId,
+            prompt = prompt,
+            prisonerNumber = prisonerNumber,
+          )
+        }
+      } catch (e: Exception) {
+        log.info(
+          "Failed to persist analysis snapshot for investigationId={}, caseNoteId={}, requestId={}",
+          investigationId,
+          caseNoteData.caseNoteId,
+          requestId,
         )
+        throw e
       }
 
+      log.info(
+        "Successfully persisted analysis snapshot for investigationId={}, caseNoteId={}, requestId={}",
+        investigationId,
+        caseNoteData.caseNoteId,
+        requestId,
+      )
       processedCount++
 
       if (itemIndex < responseData.lastIndex && timeoutReached()) {
