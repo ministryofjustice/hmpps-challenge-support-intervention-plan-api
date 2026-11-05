@@ -17,6 +17,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
@@ -53,6 +55,7 @@ class CaseNoteAnnotationsServiceTest {
   private val jdaService = mock<JdaService>()
   private val personSummaryService = mock<PersonSummaryService>()
   private val userService = mock<UserService>()
+  private val transactionManager = mock<PlatformTransactionManager>()
   private val service = CaseNoteAnnotationsService(
     caseNotesService,
     jdaService,
@@ -63,6 +66,7 @@ class CaseNoteAnnotationsServiceTest {
     csipRecordService,
     userService,
     Duration.ofSeconds(30),
+    TransactionTemplate(transactionManager),
   )
   private val referralId = UUID.fromString("9ec1ca0c-0d92-4ae4-b307-0a57759ac52e")
 
@@ -70,7 +74,7 @@ class CaseNoteAnnotationsServiceTest {
   fun setUp() {
     SecurityContextHolder.getContext().authentication = UsernamePasswordAuthenticationToken("TEST_USER", "password")
 
-    whenever(caseNoteAnalysedRepository.save(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
+    whenever(transactionManager.getTransaction(any())).thenReturn(mock())
     whenever(caseNoteAnalysedRepository.saveAndFlush(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
     whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenReturn(1)
     whenever(userService.getUserDetails(any())).thenReturn(
@@ -94,7 +98,7 @@ class CaseNoteAnnotationsServiceTest {
     service.processQueuedCaseNoteAnnotations()
 
     verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
-    verify(caseNoteAnalysedRepository, never()).save(any())
+    verify(caseNoteAnalysedRepository, never()).saveAndFlush(any())
     verify(caseNoteAnnotationRepository, never()).save(any())
     verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
     verify(csipRecordService, never()).retrieveCsipRecord(any())
@@ -111,7 +115,7 @@ class CaseNoteAnnotationsServiceTest {
     service.processQueuedCaseNoteAnnotations()
 
     val analysedCaptor = argumentCaptor<CaseNoteAnalysed>()
-    verify(caseNoteAnalysedRepository, times(1)).save(analysedCaptor.capture())
+    verify(caseNoteAnalysedRepository, times(1)).saveAndFlush(analysedCaptor.capture())
     assertThat(analysedCaptor.firstValue.prisonerNumber).isEqualTo("A1234BC")
     assertThat(analysedCaptor.firstValue.promptKey).isEqualTo("case-note-analysis")
     assertThat(analysedCaptor.firstValue.promptVersion).isEqualTo(3)
@@ -119,11 +123,12 @@ class CaseNoteAnnotationsServiceTest {
     assertThat(analysedCaptor.firstValue.risksAndTriggersRelevancy).isEqualTo(2)
     assertThat(analysedCaptor.firstValue.protectiveFactorsRelevancy).isEqualTo(4)
 
+    verify(caseNoteAnnotationRepository, never()).deleteByCaseNotesAnalysedId(any())
     verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
   }
 
   @Test
-  fun `processQueuedCaseNoteAnnotations continues when csip lookup fails`() {
+  fun `processQueuedCaseNoteAnnotations propagates csip lookup failures`() {
     val response = testResponse()
 
     whenever(jdaService.getCaseNoteAnnotationsFromQueue())
@@ -132,11 +137,11 @@ class CaseNoteAnnotationsServiceTest {
     whenever(csipRecordService.retrieveCsipRecord(any()))
       .thenThrow(RuntimeException("Something went wrong"))
 
-    service.processQueuedCaseNoteAnnotations()
+    assertThrows<RuntimeException> { service.processQueuedCaseNoteAnnotations() }
 
-    verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
+    verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
     verify(csipRecordService, times(1)).retrieveCsipRecord(any())
-    verify(caseNoteAnalysedRepository, never()).save(any())
+    verify(caseNoteAnalysedRepository, never()).saveAndFlush(any())
     verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
   }
 
@@ -153,7 +158,7 @@ class CaseNoteAnnotationsServiceTest {
 
     verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
     verify(csipRecordService, times(1)).retrieveCsipRecord(any())
-    verify(caseNoteAnalysedRepository, never()).save(any())
+    verify(caseNoteAnalysedRepository, never()).saveAndFlush(any())
     verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
   }
 
@@ -170,7 +175,7 @@ class CaseNoteAnnotationsServiceTest {
 
     verify(jdaService, times(2)).getCaseNoteAnnotationsFromQueue()
     verify(csipRecordService, times(1)).retrieveCsipRecord(any())
-    verify(caseNoteAnalysedRepository, never()).save(any())
+    verify(caseNoteAnalysedRepository, never()).saveAndFlush(any())
     verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
     verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(responseWithoutData.receiptId)
   }

@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -15,6 +17,8 @@ import org.springframework.boot.test.system.CapturedOutput
 import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysed
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnalysedRepository
@@ -45,6 +49,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
   private val jdaService = mock<JdaService>()
   private val personSummaryService = mock<PersonSummaryService>()
   private val userService = mock<UserService>()
+  private val transactionManager = mock<PlatformTransactionManager>()
   private val service = CaseNoteAnnotationsService(
     caseNotesService,
     jdaService,
@@ -55,11 +60,13 @@ class CaseNoteAnnotationsAcknowledgementTest {
     csipRecordService,
     userService,
     Duration.ofSeconds(30),
+    TransactionTemplate(transactionManager),
   )
 
   @BeforeEach
   fun setUp() {
-    whenever(caseNoteAnalysedRepository.save(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
+    whenever(transactionManager.getTransaction(any())).thenReturn(mock())
+    whenever(caseNoteAnalysedRepository.saveAndFlush(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
     whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenReturn(1)
   }
 
@@ -80,18 +87,91 @@ class CaseNoteAnnotationsAcknowledgementTest {
     service.processQueuedCaseNoteAnnotations()
 
     // Verify the analysed case note was persisted and 4 annotation rows were written
-    verify(caseNoteAnalysedRepository, times(1)).save(any<CaseNoteAnalysed>())
+    verify(caseNoteAnalysedRepository, times(1)).saveAndFlush(any<CaseNoteAnalysed>())
     verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
     // Verify acknowledgement was called with correct receiptId
     verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    inOrder(transactionManager, jdaService) {
+      verify(transactionManager).commit(any())
+      verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    }
   }
 
   @Test
-  fun `annotation persistence failure still acknowledges message`() {
+  fun `repeated snapshot replaces existing children and reuses the parent`() {
+    val response = testResponse()
+    val data = response.responseData!!.single()
+    val original = CaseNoteAnalysed(
+      requestId = UUID.randomUUID(),
+      investigationId = response.correlationId,
+      prisonerNumber = "A1234BC",
+      caseNoteId = data.caseNoteId,
+      promptKey = "old-prompt",
+      promptVersion = 0,
+    )
+    var parent = original
+    val annotationTexts = mutableListOf("old annotation")
+    stubCsipRecordLookup(response.correlationId, "A1234BC")
+    whenever(caseNoteAnalysedRepository.findByInvestigationIdAndCaseNoteId(response.correlationId, data.caseNoteId))
+      .thenAnswer { parent }
+    whenever(caseNoteAnnotationRepository.deleteByCaseNotesAnalysedId(original.id)).thenAnswer {
+      annotationTexts.clear()
+    }
+    whenever(caseNoteAnalysedRepository.saveAndFlush(any<CaseNoteAnalysed>())).thenAnswer {
+      parent = it.getArgument(0)
+      parent
+    }
+    whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenAnswer {
+      annotationTexts += it.getArgument<MapSqlParameterSource>(1).getValue("annotatedText") as String
+      1
+    }
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue()).thenReturn(response, response, null)
+
+    service.processQueuedCaseNoteAnnotations()
+
+    assertThat(parent.id).isEqualTo(original.id)
+    assertThat(parent.requestId).isEqualTo(response.requestId)
+    assertThat(parent.promptVersion).isEqualTo(response.prompt.version)
+    assertThat(parent.protectiveFactorsRelevancy).isEqualTo(data.protectiveFactors)
+    assertThat(annotationTexts).containsExactlyElementsOf(data.justifyingSpans.map { it.text })
+    verify(caseNoteAnnotationRepository, times(2)).deleteByCaseNotesAnalysedId(original.id)
+    verify(jdaService, times(2)).acknowledgeCaseNoteAnnotationsMessage(response.receiptId)
+  }
+
+  @Test
+  fun `parent persistence failure stops processing without acknowledgement`() {
+    val response = testResponse(responseData = listOf(testResponseData(), testResponseData()))
+    stubCsipRecordLookup(response.correlationId, "A1234BC")
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue()).thenReturn(response)
+    whenever(caseNoteAnalysedRepository.saveAndFlush(any<CaseNoteAnalysed>()))
+      .thenThrow(RuntimeException("Parent save failed"))
+
+    assertThrows<RuntimeException> { service.processQueuedCaseNoteAnnotations() }
+
+    verify(caseNoteAnalysedRepository).saveAndFlush(any<CaseNoteAnalysed>())
+    verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
+    verify(transactionManager).rollback(any())
+    verify(jdaService, never()).acknowledgeCaseNoteAnnotationsMessage(any())
+  }
+
+  @Test
+  fun `commit failure does not acknowledge message`() {
+    val response = testResponse()
+    stubCsipRecordLookup(response.correlationId, "A1234BC")
+    whenever(jdaService.getCaseNoteAnnotationsFromQueue()).thenReturn(response)
+    doThrow(RuntimeException("Commit failed")).`when`(transactionManager).commit(any())
+
+    assertThrows<RuntimeException> { service.processQueuedCaseNoteAnnotations() }
+
+    verify(jdaService, never()).acknowledgeCaseNoteAnnotationsMessage(any())
+  }
+
+  @Test
+  fun `annotation persistence failure rolls back and does not acknowledge message`() {
     val receiptId = "receipt-fail-456"
     val csipRecordId = UUID.randomUUID()
     val prisonNumber = "B2345CD"
-    val response = testResponse(receiptId = receiptId, correlationId = csipRecordId)
+    val response = testResponse(receiptId = receiptId, correlationId = csipRecordId, responseData = listOf(testResponseData(), testResponseData()))
 
     stubCsipRecordLookup(csipRecordId, prisonNumber)
 
@@ -109,13 +189,13 @@ class CaseNoteAnnotationsAcknowledgementTest {
       .thenReturn(response)
       .thenReturn(null)
 
-    service.processQueuedCaseNoteAnnotations()
+    assertThrows<RuntimeException> { service.processQueuedCaseNoteAnnotations() }
 
-    // The analysed row is still saved and all annotations are attempted
-    verify(caseNoteAnalysedRepository, times(1)).save(any<CaseNoteAnalysed>())
-    verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
-    // Acknowledgement still occurs because annotation persistence errors are swallowed per item
-    verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId)
+    verify(caseNoteAnalysedRepository).saveAndFlush(any<CaseNoteAnalysed>())
+    verify(jdbcTemplate, times(2)).update(any<String>(), any<MapSqlParameterSource>())
+    verify(transactionManager).rollback(any())
+    verify(jdaService, never()).acknowledgeCaseNoteAnnotationsMessage(any())
+    verify(jdaService, times(1)).getCaseNoteAnnotationsFromQueue()
   }
 
   @Test
@@ -141,7 +221,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
     service.processQueuedCaseNoteAnnotations()
 
     // Verify the analysed row and four annotation rows were persisted
-    verify(caseNoteAnalysedRepository, times(1)).save(any<CaseNoteAnalysed>())
+    verify(caseNoteAnalysedRepository, times(1)).saveAndFlush(any<CaseNoteAnalysed>())
     verify(jdbcTemplate, times(4)).update(any<String>(), any<MapSqlParameterSource>())
     // Verify acknowledgement was attempted (even though it failed)
     verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId)
@@ -179,7 +259,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
     verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId1)
     verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId2)
     // Both messages should have been processed
-    verify(caseNoteAnalysedRepository, times(2)).save(any<CaseNoteAnalysed>())
+    verify(caseNoteAnalysedRepository, times(2)).saveAndFlush(any<CaseNoteAnalysed>())
     verify(jdbcTemplate, times(8)).update(any<String>(), any<MapSqlParameterSource>())
   }
 
@@ -197,10 +277,10 @@ class CaseNoteAnnotationsAcknowledgementTest {
       .thenReturn(response)
       .thenReturn(null)
 
-    service.processQueuedCaseNoteAnnotations()
+    assertThrows<RuntimeException> { service.processQueuedCaseNoteAnnotations() }
 
     // No persistence should occur
-    verify(caseNoteAnalysedRepository, never()).save(any<CaseNoteAnalysed>())
+    verify(caseNoteAnalysedRepository, never()).saveAndFlush(any<CaseNoteAnalysed>())
     verify(jdbcTemplate, never()).update(any<String>(), any<MapSqlParameterSource>())
     // No acknowledgement should be attempted
     verify(jdaService, never()).acknowledgeCaseNoteAnnotationsMessage(receiptId)
@@ -240,7 +320,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       verify(jdaService).acknowledgeCaseNoteAnnotationsMessage(receiptId)
     }
     // Verify all 3 analysed rows and 12 annotation rows were written
-    verify(caseNoteAnalysedRepository, times(3)).save(any<CaseNoteAnalysed>())
+    verify(caseNoteAnalysedRepository, times(3)).saveAndFlush(any<CaseNoteAnalysed>())
     verify(jdbcTemplate, times(12)).update(any<String>(), any<MapSqlParameterSource>())
   }
 
@@ -298,7 +378,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
     verify(jdaService, times(3)).getCaseNoteAnnotationsFromQueue()
 
     // Verify both analysed rows and all 8 annotation rows were persisted successfully
-    verify(caseNoteAnalysedRepository, times(2)).save(any<CaseNoteAnalysed>())
+    verify(caseNoteAnalysedRepository, times(2)).saveAndFlush(any<CaseNoteAnalysed>())
     verify(jdbcTemplate, times(8)).update(any<String>(), any<MapSqlParameterSource>())
 
     // Verify acknowledgement was attempted for BOTH messages
@@ -318,6 +398,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       csipRecordService,
       userService,
       Duration.ZERO,
+      TransactionTemplate(transactionManager),
     )
     val receiptId = "receipt-timeout"
     val csipRecordId = UUID.randomUUID()
@@ -347,6 +428,7 @@ class CaseNoteAnnotationsAcknowledgementTest {
       csipRecordService,
       userService,
       Duration.ZERO,
+      TransactionTemplate(transactionManager),
     )
     val receiptId = "receipt-half-timeout"
     val csipRecordId = UUID.randomUUID()
