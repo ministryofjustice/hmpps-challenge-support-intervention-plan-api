@@ -6,7 +6,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.CaseNotesExtension.Companion.caseNotes
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.JdaSearchExtension.Companion.jda
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.ManageUsersExtension.Companion.manageUsers
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.wiremock.PrisonerSearchExtension.Companion.prisonerSearch
 import java.time.LocalDateTime
@@ -28,6 +30,8 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.authApiHealth.status").isEqualTo("UP")
       .jsonPath("components.prisonerSearchApiHealth.status").isEqualTo("UP")
       .jsonPath("components.manageUsersApiHealth.status").isEqualTo("UP")
+      .jsonPath("components.caseNotesApiHealth.status").isEqualTo("UP")
+      .jsonPath("components.jdaSearchApiHealth.status").isEqualTo("UP")
   }
 
   @Test
@@ -43,6 +47,8 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.authApiHealth.status").isEqualTo("DOWN")
       .jsonPath("components.prisonerSearchApiHealth.status").isEqualTo("DOWN")
       .jsonPath("components.manageUsersApiHealth.status").isEqualTo("DOWN")
+      .jsonPath("components.caseNotesApiHealth.status").isEqualTo("DOWN")
+      .jsonPath("components.jdaSearchApiHealth.status").isEqualTo("DOWN")
   }
 
   @Test
@@ -95,7 +101,7 @@ class HealthCheckTest : IntegrationTestBase() {
   }
 
   fun setUpDependencyResponses(responseStatus: HttpStatus) {
-    val dependencies = listOf(hmppsAuth, manageUsers, prisonerSearch)
+    val dependencies = listOf(hmppsAuth, manageUsers, prisonerSearch, caseNotes, jda)
     dependencies.forEach {
       val url = if (it == hmppsAuth) "/auth/health/ping" else "/health/ping"
       it.stubFor(
