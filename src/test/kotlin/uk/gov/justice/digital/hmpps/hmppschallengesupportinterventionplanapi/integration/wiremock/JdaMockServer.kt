@@ -6,6 +6,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.junit.jupiter.api.extension.AfterAllCallback
+import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.BeforeEachCallback
+import org.junit.jupiter.api.extension.ExtensionContext
 
 class JdaMockServer : WireMockServer(8114) {
   private companion object {
@@ -182,4 +186,26 @@ class JdaMockServer : WireMockServer(8114) {
     post("/v1/dequeueresponse")
       .willReturn(aResponse().withStatus(401)),
   )
+}
+
+class JdaSearchExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
+  companion object {
+    @JvmField
+    val jda = JdaMockServer()
+  }
+
+  override fun beforeAll(context: ExtensionContext) {
+    jda.start()
+  }
+
+  override fun beforeEach(context: ExtensionContext) {
+    jda.resetRequests()
+  }
+
+  override fun afterAll(context: ExtensionContext) {
+    jda.stop()
+  }
 }

@@ -5,6 +5,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.junit.jupiter.api.extension.AfterAllCallback
+import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.BeforeEachCallback
+import org.junit.jupiter.api.extension.ExtensionContext
 import java.util.UUID
 
 internal const val OFFENDER_IDENTIFIER = "A1234AA"
@@ -142,4 +146,26 @@ class CaseNotesServer : WireMockServer(8113) {
           .withStatus(200),
       ),
   )
+}
+
+class CaseNotesExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
+  companion object {
+    @JvmField
+    val caseNotes = CaseNotesServer()
+  }
+
+  override fun beforeAll(context: ExtensionContext) {
+    caseNotes.start()
+  }
+
+  override fun beforeEach(context: ExtensionContext) {
+    caseNotes.resetRequests()
+  }
+
+  override fun afterAll(context: ExtensionContext) {
+    caseNotes.stop()
+  }
 }
