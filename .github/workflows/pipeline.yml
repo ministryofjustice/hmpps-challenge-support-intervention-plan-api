@@ -138,4 +138,4 @@ jobs:
       environment: 'prod'
       app_version: '${{ needs.build.outputs.app_version }}'
       helm_timeout: '5m'
-      slack_notification: 'false' # if 'true', it needs a valid PROD_RELEASES_SLACK_CHANNEL variable to be set
+      slack_notification: 'true' # posts to the channel in the PROD_RELEASES_SLACK_CHANNEL variable

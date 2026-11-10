@@ -32,3 +32,9 @@ class ManageUsersApiHealth(@Qualifier("manageUsersHealthWebClient") webClient: W
 
 @Component
 class PrisonerSearchApiHealth(@Qualifier("prisonerSearchHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+
+@Component
+class CaseNotesApiHealth(@Qualifier("caseNotesWebClient") webClient: WebClient) : HealthCheck(webClient)
+
+@Component
+class JdaSearchApiHealth(@Qualifier("jdaWebClient") webClient: WebClient) : HealthCheck(webClient)
