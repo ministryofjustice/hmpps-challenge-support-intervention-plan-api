@@ -62,6 +62,14 @@ class PersonCaseNoteHandler(
       prisonerNumber,
       resolution.eligibleInvestigationIds,
     )
+    if (resolution.eligibleInvestigationIds.isEmpty()) {
+      log.info(
+        "Skipping case note analysis for caseNoteId={}, prisonerNumber={}, eventType={} because no eligible investigations were found",
+        caseNoteId,
+        prisonerNumber,
+        event.eventType,
+      )
+    }
 
     for (investigationId in resolution.eligibleInvestigationIds) {
       if (!caseNoteAnalysedRepository.existsByInvestigationId(investigationId)) {
@@ -101,6 +109,12 @@ class PersonCaseNoteHandler(
           investigationId,
         )
         caseNoteAnnotationsService.persistSynchronousAnnotations(response, prisonerNumber)
+        log.info(
+          "Suggested case notes updated for investigationId={}, requestId={}, caseNoteId={}",
+          investigationId,
+          response.requestId,
+          caseNoteId,
+        )
       }
     }
   }
