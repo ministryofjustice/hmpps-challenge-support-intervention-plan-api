@@ -2,13 +2,18 @@ package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.se
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.boot.test.system.CapturedOutput
+import org.springframework.boot.test.system.OutputCaptureExtension
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesMetadata
@@ -33,6 +38,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@ExtendWith(OutputCaptureExtension::class)
 class JdaServiceTest {
 
   private val caseNotesService = mock<CaseNotesService>()
@@ -97,6 +103,21 @@ class JdaServiceTest {
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
 
     verify(jdaClient, never()).submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
+  }
+
+  @Test
+  fun `submitCaseNotesForAnalysis logs contextual failure and propagates exception`(output: CapturedOutput) {
+    val failure = RuntimeException("queue unavailable")
+    whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(true)
+    whenever(caseNotesService.getCaseNotes(any(), any())).thenReturn(testCaseNotesResponse())
+    doThrow(failure).`when`(jdaClient).queueRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
+
+    val thrown = assertThrows<RuntimeException> {
+      service.submitCaseNotesForAnalysis(offenderIdentifier, prisonCode, correlationId)
+    }
+
+    assertThat(thrown).isSameAs(failure)
+    assertThat(output.out).contains("Failed to submit case notes for JDA analysis for investigationId=$correlationId")
   }
 
   @Test
@@ -181,6 +202,23 @@ class JdaServiceTest {
       .isEqualTo("Prisoner became agitated Amendment text one Amendment text two")
 
     assertThat(result).isEqualTo(response)
+  }
+
+  @Test
+  fun `submitCaseNotesForReAnalysis logs contextual failure and propagates exception`(output: CapturedOutput) {
+    val failure = RuntimeException("submit unavailable")
+    whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenReturn(testCaseNote(prisonCode))
+    whenever(csipAssistConfig.isActivePrison(prisonCode)).thenReturn(true)
+    whenever(jdaClient.submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())).thenThrow(failure)
+
+    val thrown = assertThrows<RuntimeException> {
+      service.submitCaseNotesForReAnalysis(offenderIdentifier, investigationId, caseNoteId)
+    }
+
+    assertThat(thrown).isSameAs(failure)
+    assertThat(output.out).contains(
+      "Failed to submit case note for JDA re-analysis for investigationId=$investigationId, caseNoteId=$caseNoteId",
+    )
     verify(jdaClient, never()).queueRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
   }
 
@@ -267,6 +305,19 @@ class JdaServiceTest {
 
     assertThat(result).isEqualTo(response)
     verify(jdaClient).getCaseNoteAnnotationsFromQueue()
+  }
+
+  @Test
+  fun `getCaseNoteAnnotationsFromQueue logs failure and propagates exception`(output: CapturedOutput) {
+    val failure = RuntimeException("dequeue unavailable")
+    whenever(jdaClient.getCaseNoteAnnotationsFromQueue()).thenThrow(failure)
+
+    val thrown = assertThrows<RuntimeException> {
+      service.getCaseNoteAnnotationsFromQueue()
+    }
+
+    assertThat(thrown).isSameAs(failure)
+    assertThat(output.out).contains("Failed to retrieve JDA analysis results from queue")
   }
 
   private fun testCaseNotesResponse(

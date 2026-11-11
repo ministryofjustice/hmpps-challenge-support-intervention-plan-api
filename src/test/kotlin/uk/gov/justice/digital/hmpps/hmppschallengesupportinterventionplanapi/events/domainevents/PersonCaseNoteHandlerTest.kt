@@ -61,6 +61,9 @@ class PersonCaseNoteHandlerTest {
     verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
     assertThat(output.out).contains("Received person.case-note.created event")
     assertThat(output.out).contains("Resolved prisoner number A1234BC")
+    assertThat(output.out).contains(
+      "Skipping case note analysis for caseNoteId=11111111-1111-1111-1111-111111111111, prisonerNumber=A1234BC, eventType=person.case-note.created because no eligible investigations were found",
+    )
   }
 
   @Test
@@ -75,6 +78,9 @@ class PersonCaseNoteHandlerTest {
     verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
     assertThat(output.out).contains("Received person.case-note.updated event")
     assertThat(output.out).contains("Resolved prisoner number A1234BC")
+    assertThat(output.out).contains(
+      "Skipping case note analysis for caseNoteId=11111111-1111-1111-1111-111111111111, prisonerNumber=A1234BC, eventType=person.case-note.updated because no eligible investigations were found",
+    )
   }
 
   @Test
@@ -102,7 +108,7 @@ class PersonCaseNoteHandlerTest {
   }
 
   @Test
-  fun `eligible investigations persist synchronous annotations when re-analysis returns a response`() {
+  fun `eligible investigations persist synchronous annotations and log completed update`(output: CapturedOutput) {
     val prisonerNumber = "A1234BC"
     val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
     val investigationId = UUID.randomUUID()
@@ -121,6 +127,9 @@ class PersonCaseNoteHandlerTest {
 
     verify(jdaService).submitCaseNotesForReAnalysis(prisonerNumber, investigationId, caseNoteId)
     verify(caseNoteAnnotationsService).persistSynchronousAnnotations(response, prisonerNumber)
+    assertThat(output.out).contains(
+      "Suggested case notes updated for investigationId=$investigationId, requestId=${response.requestId}, caseNoteId=$caseNoteId",
+    )
   }
 
   @Test

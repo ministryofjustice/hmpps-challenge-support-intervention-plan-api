@@ -84,7 +84,6 @@ class CaseNoteAnnotationsService(
           prisonerNumber = prisonerNumber,
         )
       }
-      log.debug("Persisted synchronous JDA response {}", response.requestId)
     } catch (e: Exception) {
       log.error("Failed to persist case note annotations from synchronous JDA response {}", response.requestId, e)
       throw e

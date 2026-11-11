@@ -51,9 +51,14 @@ class JdaService(
     val caseNoteCount = caseNotes.content.size
     if (caseNoteCount > 0) {
       log.info("Queueing case notes for JDA analysis for correlationId={}, offenderIdentifier={}, prisonCode={}", correlationId, offenderIdentifier, prisonCode)
-      jdaClient.queueRequest(
-        caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
-      )
+      try {
+        jdaClient.queueRequest(
+          caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
+        )
+      } catch (e: Exception) {
+        log.error("Failed to submit case notes for JDA analysis for investigationId={}", correlationId, e)
+        throw e
+      }
       log.info("Queued {} case notes for JDA analysis for correlationId={}", caseNoteCount, correlationId)
     } else {
       log.info("No case notes found for offenderIdentifier={} to queue for JDA analysis for correlationId={}", offenderIdentifier, correlationId)
@@ -100,10 +105,25 @@ class JdaService(
       offenderIdentifier,
       prisonCode,
     )
-    return jdaClient.submitRequest(request)
+    return try {
+      jdaClient.submitRequest(request)
+    } catch (e: Exception) {
+      log.error(
+        "Failed to submit case note for JDA re-analysis for investigationId={}, caseNoteId={}",
+        investigationId,
+        caseNoteId,
+        e,
+      )
+      throw e
+    }
   }
 
-  fun getCaseNoteAnnotationsFromQueue() = jdaClient.getCaseNoteAnnotationsFromQueue()
+  fun getCaseNoteAnnotationsFromQueue() = try {
+    jdaClient.getCaseNoteAnnotationsFromQueue()
+  } catch (e: Exception) {
+    log.error("Failed to retrieve JDA analysis results from queue", e)
+    throw e
+  }
 
   fun acknowledgeCaseNoteAnnotationsMessage(receiptId: String) {
     jdaClient.acknowledgeCaseNoteAnnotationsMessage(receiptId)
