@@ -75,9 +75,6 @@ springdoc:
     operations-sorter: alpha
   paths-to-exclude: "/queue-admin/**"
 
-sentry:
-  exception-resolver-order: -2147483647
-
 server:
   port: 8080
   servlet:

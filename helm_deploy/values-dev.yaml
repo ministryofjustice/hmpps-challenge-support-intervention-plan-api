@@ -7,7 +7,6 @@ generic-service:
     host: csip-api-dev.hmpps.service.justice.gov.uk
 
   env:
-    SENTRY_ENVIRONMENT: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     SPRING_PROFILES_ACTIVE: dev
     JDA_PROMPT_VERSION: "2"
