@@ -163,9 +163,16 @@ class CaseNotesClientTest {
   fun `getCaseNotes - tracks GetCaseNoteFailed on downstream failure`() {
     server.stubGetCaseNotesException()
 
-    assertThrows<DownstreamServiceException> { client.getCaseNotes(OFFENDER_IDENTIFIER_THROW_EXCEPTION, request) }
+    assertThrows<DownstreamServiceException> { client.getCaseNotes(OFFENDER_IDENTIFIER_THROW_EXCEPTION, request, "corr-123") }
 
-    verify(telemetryClient).trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
+    verify(telemetryClient).trackEvent(
+      "GetCaseNoteFailed",
+      mapOf(
+        "offenderIdentifier" to OFFENDER_IDENTIFIER_THROW_EXCEPTION,
+        "correlationId" to "corr-123",
+      ),
+      mapOf(),
+    )
   }
 
   @Test
@@ -187,9 +194,19 @@ class CaseNotesClientTest {
   fun `getCaseNote - tracks GetCaseNoteFailed on downstream failure`() {
     server.stubGetCaseNoteByIdException()
 
-    assertThrows<DownstreamServiceException> { client.getCaseNote(OFFENDER_IDENTIFIER, CASE_NOTE_ID) }
+    assertThrows<DownstreamServiceException> {
+      client.getCaseNote(OFFENDER_IDENTIFIER, CASE_NOTE_ID, "corr-456")
+    }
 
-    verify(telemetryClient).trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
+    verify(telemetryClient).trackEvent(
+      "GetCaseNoteFailed",
+      mapOf(
+        "personIdentifier" to OFFENDER_IDENTIFIER,
+        "caseNoteId" to CASE_NOTE_ID.toString(),
+        "correlationId" to "corr-456",
+      ),
+      mapOf(),
+    )
   }
 
   @Test
