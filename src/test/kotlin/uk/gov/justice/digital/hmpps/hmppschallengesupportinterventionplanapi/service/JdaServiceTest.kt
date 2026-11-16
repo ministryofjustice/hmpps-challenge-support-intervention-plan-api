@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -44,12 +45,14 @@ class JdaServiceTest {
   private val caseNotesService = mock<CaseNotesService>()
   private val jdaClient = mock<JdaClient>()
   private val csipAssistConfig = mock<CsipAssistConfig>()
+  private val telemetryClient = mock<TelemetryClient>()
 
   private val service =
     JdaService(
       caseNotesService,
       jdaClient,
       csipAssistConfig,
+      telemetryClient,
       "case-note-analysis",
       1,
       true,
@@ -60,6 +63,7 @@ class JdaServiceTest {
       caseNotesService,
       jdaClient,
       csipAssistConfig,
+      telemetryClient,
       "case-note-analysis",
       1,
       false,
@@ -101,6 +105,18 @@ class JdaServiceTest {
       .isEqualTo("Prisoner became agitated Amendment text one Amendment text two")
     assertThat(requestCaptor.firstValue.requestData.first().caseNoteId)
       .isEqualTo("f4ee95d0-49a4-46a2-a485-b8f26f089170")
+    verify(telemetryClient).trackMetric(
+      "CaseNotesQueued",
+      1.0,
+      null,
+      null,
+      null,
+      null,
+      mapOf(
+        "submissionType" to "initial",
+        "prisonCode" to prisonCode,
+      ),
+    )
 
     verify(jdaClient, never()).submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
   }
@@ -202,6 +218,18 @@ class JdaServiceTest {
       .isEqualTo("Prisoner became agitated Amendment text one Amendment text two")
 
     assertThat(result).isEqualTo(response)
+    verify(telemetryClient).trackMetric(
+      "CaseNotesQueued",
+      1.0,
+      null,
+      null,
+      null,
+      null,
+      mapOf(
+        "submissionType" to "reanalysis",
+        "prisonCode" to prisonCode,
+      ),
+    )
   }
 
   @Test

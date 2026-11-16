@@ -5,12 +5,16 @@ import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.kotlin.clearInvocations
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import tools.jackson.module.kotlin.jsonMapper
@@ -27,6 +31,7 @@ import java.util.UUID
 
 class CaseNotesClientTest {
   private lateinit var client: CaseNotesClient
+  private val telemetryClient = mock<TelemetryClient>()
   private val jsonMapper = jsonMapper()
   private val request = CaseNotesRequest(
     includeSensitive = true,
@@ -45,9 +50,10 @@ class CaseNotesClientTest {
 
   @BeforeEach
   fun resetMocks() {
+    clearInvocations(telemetryClient)
     server.resetRequests()
     val webClient = WebClient.create("http://localhost:${server.port()}")
-    client = CaseNotesClient(webClient)
+    client = CaseNotesClient(webClient, telemetryClient)
   }
 
   @Test
@@ -154,6 +160,15 @@ class CaseNotesClientTest {
   }
 
   @Test
+  fun `getCaseNotes - tracks GetCaseNoteFailed on downstream failure`() {
+    server.stubGetCaseNotesException()
+
+    assertThrows<DownstreamServiceException> { client.getCaseNotes(OFFENDER_IDENTIFIER_THROW_EXCEPTION, request) }
+
+    verify(telemetryClient).trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
+  }
+
+  @Test
   fun `getCaseNote - success`() {
     server.stubGetCaseNoteById()
 
@@ -166,6 +181,15 @@ class CaseNotesClientTest {
       exactly(1),
       getRequestedFor(urlEqualTo("/case-notes/$OFFENDER_IDENTIFIER/$CASE_NOTE_ID")),
     )
+  }
+
+  @Test
+  fun `getCaseNote - tracks GetCaseNoteFailed on downstream failure`() {
+    server.stubGetCaseNoteByIdException()
+
+    assertThrows<DownstreamServiceException> { client.getCaseNote(OFFENDER_IDENTIFIER, CASE_NOTE_ID) }
+
+    verify(telemetryClient).trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
   }
 
   @Test
