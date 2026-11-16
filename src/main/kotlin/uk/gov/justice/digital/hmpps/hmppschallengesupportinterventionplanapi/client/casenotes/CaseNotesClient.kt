@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -15,7 +16,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
-class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: WebClient) {
+class CaseNotesClient(
+  @Qualifier("caseNotesWebClient") private val webClient: WebClient,
+  private val telemetryClient: TelemetryClient,
+) {
   fun getCaseNotes(offenderIdentifier: String, request: CaseNotesRequest): CaseNotesResponse = try {
     webClient
       .post()
@@ -32,6 +36,7 @@ class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: We
       .retryIdempotentRequestOnTransientException()
       .block()!!
   } catch (e: Exception) {
+    telemetryClient.trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
     throw DownstreamServiceException("Get case notes request failed", e)
   }
 
@@ -49,6 +54,7 @@ class CaseNotesClient(@Qualifier("caseNotesWebClient") private val webClient: We
       .retryIdempotentRequestOnTransientException()
       .block()!!
   } catch (e: Exception) {
+    telemetryClient.trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
     throw DownstreamServiceException("Get case note request failed", e)
   }
 }
