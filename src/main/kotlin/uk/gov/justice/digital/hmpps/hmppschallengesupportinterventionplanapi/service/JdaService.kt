@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -19,6 +20,7 @@ class JdaService(
   private val caseNotesService: CaseNotesService,
   private val jdaClient: JdaClient,
   private val csipAssistConfig: CsipAssistConfig,
+  private val telemetryClient: TelemetryClient,
   @Value("\${jda.prompt-key}")
   private val promptKey: String,
   @Value("\${jda.prompt-version:1}")
@@ -28,6 +30,9 @@ class JdaService(
 ) {
 
   private companion object {
+    private const val CASE_NOTES_QUEUED_METRIC = "CaseNotesQueued"
+    private const val SUBMISSION_TYPE_DIMENSION = "submissionType"
+    private const val PRISON_CODE_DIMENSION = "prisonCode"
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
@@ -55,6 +60,7 @@ class JdaService(
         jdaClient.queueRequest(
           caseNotes.toJdaRequest(correlationId, promptKey, promptVersion),
         )
+        trackCaseNotesQueuedMetric(prisonCode, caseNoteCount, "initial")
       } catch (e: Exception) {
         log.error("Failed to submit case notes for JDA analysis for investigationId={}", correlationId, e)
         throw e
@@ -106,7 +112,9 @@ class JdaService(
       prisonCode,
     )
     return try {
-      jdaClient.submitRequest(request)
+      val response = jdaClient.submitRequest(request)
+      trackCaseNotesQueuedMetric(prisonCode, 1, "reanalysis")
+      response
     } catch (e: Exception) {
       log.error(
         "Failed to submit case note for JDA re-analysis for investigationId={}, caseNoteId={}",
@@ -130,6 +138,21 @@ class JdaService(
   }
 
   private fun isFeatureEnabledOrPrisonActive(prisonCode: String): Boolean = featureFlag && csipAssistConfig.isActivePrison(prisonCode)
+
+  private fun trackCaseNotesQueuedMetric(prisonCode: String, caseNoteCount: Int, submissionType: String) {
+    telemetryClient.trackMetric(
+      CASE_NOTES_QUEUED_METRIC,
+      caseNoteCount.toDouble(),
+      null,
+      null,
+      null,
+      null,
+      mapOf(
+        SUBMISSION_TYPE_DIMENSION to submissionType,
+        PRISON_CODE_DIMENSION to prisonCode,
+      ),
+    )
+  }
 
   private fun buildJdaRequest(
     correlationId: String,
