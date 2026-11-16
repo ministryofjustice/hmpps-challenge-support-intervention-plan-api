@@ -49,7 +49,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.6")
 
   constraints {
-    implementation("io.opentelemetry:opentelemetry-api:1.67.0") {
+    implementation("io.opentelemetry:opentelemetry-api:1.68.0") {
       because("CVE-2026-45292 - remove when transitive dependency is updated")
     }
   }
