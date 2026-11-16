@@ -20,7 +20,11 @@ class CaseNotesClient(
   @Qualifier("caseNotesWebClient") private val webClient: WebClient,
   private val telemetryClient: TelemetryClient,
 ) {
-  fun getCaseNotes(offenderIdentifier: String, request: CaseNotesRequest): CaseNotesResponse = try {
+  fun getCaseNotes(
+    offenderIdentifier: String,
+    request: CaseNotesRequest,
+    correlationId: String? = null,
+  ): CaseNotesResponse = try {
     webClient
       .post()
       .uri("/search/case-notes/{offenderIdentifier}", offenderIdentifier)
@@ -36,11 +40,22 @@ class CaseNotesClient(
       .retryIdempotentRequestOnTransientException()
       .block()!!
   } catch (e: Exception) {
-    telemetryClient.trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
+    telemetryClient.trackEvent(
+      "GetCaseNoteFailed",
+      trackGetCaseNoteFailureDimensions(
+        offenderIdentifier = offenderIdentifier,
+        correlationId = correlationId,
+      ),
+      mapOf(),
+    )
     throw DownstreamServiceException("Get case notes request failed", e)
   }
 
-  fun getCaseNote(personIdentifier: String, caseNoteIdentifier: UUID): CaseNote = try {
+  fun getCaseNote(
+    personIdentifier: String,
+    caseNoteIdentifier: UUID,
+    correlationId: String? = null,
+  ): CaseNote = try {
     webClient
       .get()
       .uri("/case-notes/{personIdentifier}/{caseNoteIdentifier}", personIdentifier, caseNoteIdentifier)
@@ -54,8 +69,28 @@ class CaseNotesClient(
       .retryIdempotentRequestOnTransientException()
       .block()!!
   } catch (e: Exception) {
-    telemetryClient.trackEvent("GetCaseNoteFailed", mapOf(), mapOf())
+    telemetryClient.trackEvent(
+      "GetCaseNoteFailed",
+      trackGetCaseNoteFailureDimensions(
+        personIdentifier = personIdentifier,
+        caseNoteId = caseNoteIdentifier.toString(),
+        correlationId = correlationId,
+      ),
+      mapOf(),
+    )
     throw DownstreamServiceException("Get case note request failed", e)
+  }
+
+  private fun trackGetCaseNoteFailureDimensions(
+    offenderIdentifier: String? = null,
+    personIdentifier: String? = null,
+    caseNoteId: String? = null,
+    correlationId: String? = null,
+  ): Map<String, String> = buildMap {
+    offenderIdentifier?.let { put("offenderIdentifier", it) }
+    personIdentifier?.let { put("personIdentifier", it) }
+    caseNoteId?.let { put("caseNoteId", it) }
+    correlationId?.let { put("correlationId", it) }
   }
 }
 
