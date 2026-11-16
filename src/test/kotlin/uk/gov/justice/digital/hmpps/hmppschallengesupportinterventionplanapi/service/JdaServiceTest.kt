@@ -118,7 +118,7 @@ class JdaServiceTest {
       ),
     )
 
-    verify(jdaClient, never()).submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>() )
+    verify(jdaClient, never()).submitRequest(any<JdaRequest<List<CaseNoteAnalysisItem>>>())
   }
 
   @Test
