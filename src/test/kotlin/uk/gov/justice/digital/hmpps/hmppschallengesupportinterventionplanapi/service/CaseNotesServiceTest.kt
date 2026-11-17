@@ -55,7 +55,7 @@ class CaseNotesServiceTest {
       ),
     )
 
-    whenever(caseNotesClient.getCaseNotes(eq("A1234AA"), any())).thenReturn(caseNotesResponse)
+    whenever(caseNotesClient.getCaseNotes(eq("A1234AA"), any(), eq(null))).thenReturn(caseNotesResponse)
 
     val before = LocalDateTime.now()
     val result = service.getCaseNotes(request, params)
@@ -66,6 +66,7 @@ class CaseNotesServiceTest {
     verify(caseNotesClient).getCaseNotes(
       eq("A1234AA"),
       requestCaptor.capture(),
+      eq(null),
     )
 
     val sentRequest = requestCaptor.firstValue
