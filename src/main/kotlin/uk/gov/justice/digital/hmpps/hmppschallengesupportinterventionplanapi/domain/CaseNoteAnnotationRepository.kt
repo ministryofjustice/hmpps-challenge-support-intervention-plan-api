@@ -24,5 +24,5 @@ interface CaseNoteAnnotationRepository : JpaRepository<CaseNoteAnnotation, UUID>
 
   fun deleteByCaseNotesAnalysedId(caseNotesAnalysedId: UUID)
 
-  fun deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId: UUID, investigationIds: Collection<UUID>)
+  fun deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId: UUID, investigationIds: Set<UUID>)
 }

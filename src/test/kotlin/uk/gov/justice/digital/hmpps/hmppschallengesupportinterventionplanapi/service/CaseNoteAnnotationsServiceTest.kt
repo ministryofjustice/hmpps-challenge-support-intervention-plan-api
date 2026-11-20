@@ -103,16 +103,16 @@ class CaseNoteAnnotationsServiceTest {
     val unrelatedCaseNoteId = UUID.randomUUID()
     val unrelatedInvestigationId = UUID.randomUUID()
 
-    val deleted = service.deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))
+    val deleted = service.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
 
     assertThat(deleted).isTrue()
-    verify(caseNoteAnalysedRepository).existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnnotationRepository).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnalysedRepository).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(unrelatedInvestigationId))
-    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(unrelatedInvestigationId))
+    verify(caseNoteAnalysedRepository).existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnnotationRepository).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnalysedRepository).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(unrelatedInvestigationId))
+    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(unrelatedInvestigationId))
     assertThat(output.out).contains(
       "Domain event received following deletion of caseNoteId=$caseNoteId: deleted JDA analysis and annotations for pending investigations [$pendingInvestigationId]",
     )
@@ -124,15 +124,15 @@ class CaseNoteAnnotationsServiceTest {
     val pendingInvestigationId = UUID.randomUUID()
     val unrelatedCaseNoteId = UUID.randomUUID()
     val unrelatedInvestigationId = UUID.randomUUID()
-    whenever(caseNoteAnalysedRepository.existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(pendingInvestigationId))).thenReturn(false)
+    whenever(caseNoteAnalysedRepository.existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))).thenReturn(false)
 
-    val deleted = service.deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))
+    val deleted = service.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
 
     assertThat(deleted).isFalse()
     verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(any(), any())
     verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(any(), any())
-    verify(caseNoteAnalysedRepository, never()).existsByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnalysedRepository, never()).existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, listOf(unrelatedInvestigationId))
+    verify(caseNoteAnalysedRepository, never()).existsByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnalysedRepository, never()).existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(unrelatedInvestigationId))
     assertThat(output.out).contains(
       "Domain event received following deletion of caseNoteId=$caseNoteId: no pending investigations have analysis for this case note, so nothing to delete",
     )

@@ -22,7 +22,7 @@ interface CaseNoteAnalysedRepository : JpaRepository<CaseNoteAnalysed, UUID> {
     investigationId: UUID,
   ): Boolean
 
-  fun existsByCaseNoteIdAndInvestigationIdIn(caseNoteId: UUID, investigationIds: Collection<UUID>): Boolean
+  fun existsByCaseNoteIdAndInvestigationIdIn(caseNoteId: UUID, investigationIds: Set<UUID>): Boolean
 
-  fun deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId: UUID, investigationIds: Collection<UUID>)
+  fun deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId: UUID, investigationIds: Set<UUID>)
 }

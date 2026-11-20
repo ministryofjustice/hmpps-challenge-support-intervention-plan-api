@@ -143,7 +143,7 @@ class PersonCaseNoteHandler(
     prisonerNumber: String,
     resolution: PersonCaseNoteInvestigationResolution,
   ) {
-    val pendingInvestigationIds = resolution.eligibleInvestigationIds
+    val pendingInvestigationIds = resolution.eligibleInvestigationIds.toSet()
     if (pendingInvestigationIds.isEmpty()) {
       log.info("Case note deletion event received but no pending investigations so no action needed: caseNoteId={}, prisonerNumber={}", caseNoteId, prisonerNumber)
       telemetryClient.trackEvent(

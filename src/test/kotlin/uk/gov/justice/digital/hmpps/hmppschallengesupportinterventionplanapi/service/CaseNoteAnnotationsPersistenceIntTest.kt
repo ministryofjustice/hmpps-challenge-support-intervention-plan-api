@@ -173,7 +173,7 @@ class CaseNoteAnnotationsPersistenceIntTest : IntegrationTestBase() {
     )
     entityManager.clear()
 
-    val deleted = caseNoteAnnotationsService.deleteCaseNote(deletedCaseNoteId, listOf(investigationId))
+    val deleted = caseNoteAnnotationsService.deleteCaseNote(deletedCaseNoteId, setOf(investigationId))
     entityManager.clear()
 
     assertThat(deleted).isTrue()
@@ -226,7 +226,7 @@ class CaseNoteAnnotationsPersistenceIntTest : IntegrationTestBase() {
 
     val deleted = caseNoteAnnotationsService.deleteCaseNote(
       deletedCaseNoteId,
-      listOf(pendingInvestigationIdOne, pendingInvestigationIdTwo),
+      setOf(pendingInvestigationIdOne, pendingInvestigationIdTwo),
     )
     entityManager.clear()
 
@@ -260,7 +260,7 @@ class CaseNoteAnnotationsPersistenceIntTest : IntegrationTestBase() {
     )
     entityManager.clear()
 
-    val deleted = caseNoteAnnotationsService.deleteCaseNote(targetCaseNoteId, listOf(pendingInvestigationId))
+    val deleted = caseNoteAnnotationsService.deleteCaseNote(targetCaseNoteId, setOf(pendingInvestigationId))
     entityManager.clear()
 
     assertThat(deleted).isFalse()

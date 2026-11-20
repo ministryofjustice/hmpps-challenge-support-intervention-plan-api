@@ -70,7 +70,7 @@ class CaseNoteAnnotationsService(
   }
 
   @Transactional
-  fun deleteCaseNote(caseNoteId: UUID, investigationIds: Collection<UUID>): Boolean {
+  fun deleteCaseNote(caseNoteId: UUID, investigationIds: Set<UUID>): Boolean {
     if (!caseNoteAnalysedRepository.existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, investigationIds)) {
       log.info(
         "Domain event received following deletion of caseNoteId={}: no pending investigations have analysis for this case note, so nothing to delete",

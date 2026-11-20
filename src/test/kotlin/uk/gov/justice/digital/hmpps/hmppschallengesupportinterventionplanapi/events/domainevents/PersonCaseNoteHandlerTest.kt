@@ -67,12 +67,12 @@ class PersonCaseNoteHandlerTest {
         listOf(InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true)),
       ),
     )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))).thenReturn(true)
+    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenReturn(true)
 
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
 
     verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))
+    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
     verify(telemetryClient).trackEvent(
       "CaseNoteDeletedFollowingDeletionEvent",
       mapOf(
@@ -124,12 +124,12 @@ class PersonCaseNoteHandlerTest {
         listOf(InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true)),
       ),
     )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))).thenReturn(false)
+    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenReturn(false)
 
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
 
     verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))
+    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
     verify(telemetryClient).trackEvent(
       "CaseNoteDeletedNotFound",
       mapOf(
@@ -157,12 +157,12 @@ class PersonCaseNoteHandlerTest {
         ),
       ),
     )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, listOf(pendingInvestigationIdOne, pendingInvestigationIdTwo))).thenReturn(true)
+    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationIdOne, pendingInvestigationIdTwo))).thenReturn(true)
 
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
 
     verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, listOf(pendingInvestigationIdOne, pendingInvestigationIdTwo))
+    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationIdOne, pendingInvestigationIdTwo))
     verify(telemetryClient).trackEvent(
       "CaseNoteDeletedFollowingDeletionEvent",
       mapOf(
@@ -190,13 +190,13 @@ class PersonCaseNoteHandlerTest {
         ),
       ),
     )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))).thenReturn(true)
+    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenReturn(true)
 
     handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
 
     verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))
-    verify(caseNoteAnnotationsService, never()).deleteCaseNote(caseNoteId, listOf(pendingInvestigationId, nonPendingInvestigationId))
+    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
+    verify(caseNoteAnnotationsService, never()).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId, nonPendingInvestigationId))
     verify(telemetryClient).trackEvent(
       "CaseNoteDeletedFollowingDeletionEvent",
       mapOf(
@@ -220,7 +220,7 @@ class PersonCaseNoteHandlerTest {
         listOf(InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true)),
       ),
     )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, listOf(pendingInvestigationId))).thenThrow(RuntimeException("delete failed"))
+    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenThrow(RuntimeException("delete failed"))
 
     assertThrows<RuntimeException> {
       handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
