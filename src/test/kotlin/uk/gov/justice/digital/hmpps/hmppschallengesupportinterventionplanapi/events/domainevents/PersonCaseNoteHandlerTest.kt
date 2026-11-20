@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents
 
-import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
@@ -38,206 +36,17 @@ class PersonCaseNoteHandlerTest {
   private val caseNoteAnnotationsService = mock<CaseNoteAnnotationsService>()
   private val caseNoteAnalysedRepository = mock<CaseNoteAnalysedRepository>()
   private val caseNotesService = mock<CaseNotesService>()
-  private val telemetryClient = mock<TelemetryClient>()
   private val handler = PersonCaseNoteHandler(
     personCaseNoteInvestigationService,
     jdaService,
     caseNoteAnnotationsService,
     caseNoteAnalysedRepository,
     caseNotesService,
-    telemetryClient,
   )
 
   init {
     whenever(caseNoteAnalysedRepository.existsByInvestigationId(any())).thenReturn(true)
     whenever(caseNotesService.getCaseNote(any(), any())).thenReturn(testCaseNote())
-    whenever(personCaseNoteInvestigationService.resolveInvestigations(any())).thenReturn(
-      PersonCaseNoteInvestigationResolution("", emptyList(), emptyList()),
-    )
-  }
-
-  @Test
-  fun `deleted event deletes stored analysis and annotations for the case note`() {
-    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-    val pendingInvestigationId = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations("A1234BC")).thenReturn(
-      PersonCaseNoteInvestigationResolution(
-        "A1234BC",
-        listOf(pendingInvestigationId),
-        listOf(InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true)),
-      ),
-    )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenReturn(true)
-
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
-
-    verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
-    verify(telemetryClient).trackEvent(
-      "CaseNoteDeletedFollowingDeletionEvent",
-      mapOf(
-        "caseNoteId" to caseNoteId.toString(),
-        "personIdentifier" to "A1234BC",
-      ),
-      mapOf(),
-    )
-    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
-    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
-  }
-
-  @Test
-  fun `deleted event with no pending investigations tracks not found and skips deletion`(output: CapturedOutput) {
-    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-    val nonPendingInvestigationId = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations("A1234BC")).thenReturn(
-      PersonCaseNoteInvestigationResolution(
-        "A1234BC",
-        listOf(nonPendingInvestigationId),
-        listOf(InvestigationEvaluation(nonPendingInvestigationId, "INVESTIGATION_COMPLETE", false, "status is not INVESTIGATION_PENDING")),
-      ),
-    )
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
-
-    verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService, never()).deleteCaseNote(any(), any())
-    verify(telemetryClient).trackEvent(
-      "CaseNoteDeletedNotFound",
-      mapOf(
-        "caseNoteId" to caseNoteId.toString(),
-        "personIdentifier" to "A1234BC",
-      ),
-      mapOf(),
-    )
-    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
-    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
-    assertThat(output.out).contains("Case note deletion event received but no pending investigations so no action needed: caseNoteId=11111111-1111-1111-1111-111111111111, prisonerNumber=A1234BC")
-  }
-
-  @Test
-  fun `deleted event tracks not found when pending investigations have no stored case note`() {
-    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-    val pendingInvestigationId = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations("A1234BC")).thenReturn(
-      PersonCaseNoteInvestigationResolution(
-        "A1234BC",
-        listOf(pendingInvestigationId),
-        listOf(InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true)),
-      ),
-    )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenReturn(false)
-
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
-
-    verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
-    verify(telemetryClient).trackEvent(
-      "CaseNoteDeletedNotFound",
-      mapOf(
-        "caseNoteId" to caseNoteId.toString(),
-        "personIdentifier" to "A1234BC",
-      ),
-      mapOf(),
-    )
-    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
-    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
-  }
-
-  @Test
-  fun `deleted event passes multiple pending investigations to deletion and tracks success`() {
-    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-    val pendingInvestigationIdOne = UUID.randomUUID()
-    val pendingInvestigationIdTwo = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations("A1234BC")).thenReturn(
-      PersonCaseNoteInvestigationResolution(
-        "A1234BC",
-        listOf(pendingInvestigationIdOne, pendingInvestigationIdTwo),
-        listOf(
-          InvestigationEvaluation(pendingInvestigationIdOne, "INVESTIGATION_PENDING", true),
-          InvestigationEvaluation(pendingInvestigationIdTwo, "INVESTIGATION_PENDING", true),
-        ),
-      ),
-    )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationIdOne, pendingInvestigationIdTwo))).thenReturn(true)
-
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
-
-    verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationIdOne, pendingInvestigationIdTwo))
-    verify(telemetryClient).trackEvent(
-      "CaseNoteDeletedFollowingDeletionEvent",
-      mapOf(
-        "caseNoteId" to caseNoteId.toString(),
-        "personIdentifier" to "A1234BC",
-      ),
-      mapOf(),
-    )
-    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
-    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
-  }
-
-  @Test
-  fun `deleted event only deletes case notes for pending investigations belonging to the prisoner`() {
-    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-    val pendingInvestigationId = UUID.randomUUID()
-    val nonPendingInvestigationId = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations("A1234BC")).thenReturn(
-      PersonCaseNoteInvestigationResolution(
-        "A1234BC",
-        listOf(pendingInvestigationId, nonPendingInvestigationId),
-        listOf(
-          InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true),
-          InvestigationEvaluation(nonPendingInvestigationId, "INVESTIGATION_COMPLETE", false, "status is not INVESTIGATION_PENDING"),
-        ),
-      ),
-    )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenReturn(true)
-
-    handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
-
-    verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(caseNoteAnnotationsService).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnnotationsService, never()).deleteCaseNote(caseNoteId, setOf(pendingInvestigationId, nonPendingInvestigationId))
-    verify(telemetryClient).trackEvent(
-      "CaseNoteDeletedFollowingDeletionEvent",
-      mapOf(
-        "caseNoteId" to caseNoteId.toString(),
-        "personIdentifier" to "A1234BC",
-      ),
-      mapOf(),
-    )
-    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
-    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
-  }
-
-  @Test
-  fun `deleted event tracks failure and propagates deletion exception`() {
-    val caseNoteId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-    val pendingInvestigationId = UUID.randomUUID()
-    whenever(personCaseNoteInvestigationService.resolveInvestigations("A1234BC")).thenReturn(
-      PersonCaseNoteInvestigationResolution(
-        "A1234BC",
-        listOf(pendingInvestigationId),
-        listOf(InvestigationEvaluation(pendingInvestigationId, "INVESTIGATION_PENDING", true)),
-      ),
-    )
-    whenever(caseNoteAnnotationsService.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))).thenThrow(RuntimeException("delete failed"))
-
-    assertThrows<RuntimeException> {
-      handler.handle(caseNoteEvent(DomainEventsListener.PERSON_CASE_NOTE_DELETED, prisonNumber = "A1234BC"))
-    }
-
-    verify(personCaseNoteInvestigationService).resolveInvestigations("A1234BC")
-    verify(telemetryClient).trackEvent(
-      "CaseNoteDeletedFailed",
-      mapOf(
-        "caseNoteId" to caseNoteId.toString(),
-        "personIdentifier" to "A1234BC",
-        "errorType" to "RuntimeException",
-      ),
-      mapOf(),
-    )
-    verify(jdaService, never()).submitCaseNotesForAnalysis(any(), any(), any())
-    verify(jdaService, never()).submitCaseNotesForReAnalysis(any(), any(), any())
   }
 
   @Test

@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doThrow
@@ -14,8 +13,6 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.boot.test.system.CapturedOutput
-import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -47,7 +44,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
-@ExtendWith(OutputCaptureExtension::class)
 class CaseNoteAnnotationsServiceTest {
   private val testUsername = "TEST_USER"
   private val caseNotesClient = mock<CaseNotesClient>()
@@ -80,7 +76,6 @@ class CaseNoteAnnotationsServiceTest {
 
     whenever(transactionManager.getTransaction(any())).thenReturn(mock())
     whenever(caseNoteAnalysedRepository.saveAndFlush(any<CaseNoteAnalysed>())).thenAnswer { it.getArgument(0) }
-    whenever(caseNoteAnalysedRepository.existsByCaseNoteIdAndInvestigationIdIn(any(), any())).thenReturn(true)
     whenever(jdbcTemplate.update(any<String>(), any<MapSqlParameterSource>())).thenReturn(1)
     whenever(userService.getUserDetails(any())).thenReturn(
       UserDetails(
@@ -94,48 +89,6 @@ class CaseNoteAnnotationsServiceTest {
       ),
     )
     whenever(userService.getUserRoles(any())).thenReturn(emptyList())
-  }
-
-  @Test
-  fun `deleteCaseNote only deletes matching case note data in pending investigations and leaves unrelated case notes and investigations untouched`(output: CapturedOutput) {
-    val caseNoteId = UUID.randomUUID()
-    val pendingInvestigationId = UUID.randomUUID()
-    val unrelatedCaseNoteId = UUID.randomUUID()
-    val unrelatedInvestigationId = UUID.randomUUID()
-
-    val deleted = service.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
-
-    assertThat(deleted).isTrue()
-    verify(caseNoteAnalysedRepository).existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnnotationRepository).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnalysedRepository).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(unrelatedInvestigationId))
-    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(unrelatedInvestigationId))
-    assertThat(output.out).contains(
-      "Domain event received following deletion of caseNoteId=$caseNoteId: deleted JDA analysis and annotations for pending investigations [$pendingInvestigationId]",
-    )
-  }
-
-  @Test
-  fun `deleteCaseNote skips deletion and returns false when case note does not exist in pending investigations`(output: CapturedOutput) {
-    val caseNoteId = UUID.randomUUID()
-    val pendingInvestigationId = UUID.randomUUID()
-    val unrelatedCaseNoteId = UUID.randomUUID()
-    val unrelatedInvestigationId = UUID.randomUUID()
-    whenever(caseNoteAnalysedRepository.existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(pendingInvestigationId))).thenReturn(false)
-
-    val deleted = service.deleteCaseNote(caseNoteId, setOf(pendingInvestigationId))
-
-    assertThat(deleted).isFalse()
-    verify(caseNoteAnnotationRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(any(), any())
-    verify(caseNoteAnalysedRepository, never()).deleteByCaseNoteIdAndInvestigationIdIn(any(), any())
-    verify(caseNoteAnalysedRepository, never()).existsByCaseNoteIdAndInvestigationIdIn(unrelatedCaseNoteId, setOf(pendingInvestigationId))
-    verify(caseNoteAnalysedRepository, never()).existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, setOf(unrelatedInvestigationId))
-    assertThat(output.out).contains(
-      "Domain event received following deletion of caseNoteId=$caseNoteId: no pending investigations have analysis for this case note, so nothing to delete",
-    )
   }
 
   @Test
