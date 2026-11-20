@@ -25,7 +25,6 @@ class PersonCaseNoteHandler(
   fun handle(event: HmppsDomainEvent<PersonCaseNoteInformation>) {
     val caseNoteId = event.additionalInformation.id
     val prisonerNumber = event.personReference?.findNomsNumber()
-    val isDeletedEvent = event.eventType == DomainEventsListener.PERSON_CASE_NOTE_DELETED
 
     log.info("Received {} event for case note {}", event.eventType, caseNoteId)
 
@@ -39,47 +38,26 @@ class PersonCaseNoteHandler(
     }
 
     log.info("Resolved prisoner number {} for case note {}", prisonerNumber, caseNoteId)
-
     val resolution = personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber)
 
-    if (isDeletedEvent) {
-      val pendingInvestigationIds = resolution.eligibleInvestigationIds
-      if (pendingInvestigationIds.isEmpty()) {
-        log.info("Case note deletion event received but no pending investigations so no action needed: caseNoteId={}, prisonerNumber={}", caseNoteId, prisonerNumber)
-        telemetryClient.trackEvent(
-          "CaseNoteDeletedNotFound",
-          deleteTelemetryDimensions(caseNoteId, prisonerNumber),
-          mapOf(),
-        )
-        return
-      }
+    when (event.eventType) {
+      DomainEventsListener.PERSON_CASE_NOTE_DELETED ->
+        handleCaseNoteDeletion(caseNoteId, prisonerNumber, resolution)
 
-      try {
-        val deleteSuccessful = caseNoteAnnotationsService.deleteCaseNote(caseNoteId, pendingInvestigationIds)
-        if (deleteSuccessful) {
-          telemetryClient.trackEvent(
-            "CaseNoteDeletedFollowingDeletionEvent",
-            deleteTelemetryDimensions(caseNoteId, prisonerNumber),
-            mapOf(),
-          )
-        } else {
-          telemetryClient.trackEvent(
-            "CaseNoteDeletedNotFound",
-            deleteTelemetryDimensions(caseNoteId, prisonerNumber),
-            mapOf(),
-          )
-        }
-      } catch (e: Exception) {
-        telemetryClient.trackEvent(
-          "CaseNoteDeletedFailed",
-          deleteTelemetryDimensions(caseNoteId, prisonerNumber, e),
-          mapOf(),
-        )
-        throw e
-      }
-      return
+      DomainEventsListener.PERSON_CASE_NOTE_CREATED,
+      DomainEventsListener.PERSON_CASE_NOTE_UPDATED,
+      -> handleCaseNoteAnalysis(event, caseNoteId, prisonerNumber, resolution)
+
+      else -> log.warn("Ignoring unsupported person case note event type {}", event.eventType)
     }
+  }
 
+  private fun handleCaseNoteAnalysis(
+    event: HmppsDomainEvent<PersonCaseNoteInformation>,
+    caseNoteId: java.util.UUID,
+    prisonerNumber: String,
+    resolution: PersonCaseNoteInvestigationResolution,
+  ) {
     log.info(
       "Found {} distinct investigations for prisoner number {}: {}",
       resolution.discoveredInvestigationIds.size,
@@ -157,6 +135,47 @@ class PersonCaseNoteHandler(
           caseNoteId,
         )
       }
+    }
+  }
+
+  private fun handleCaseNoteDeletion(
+    caseNoteId: java.util.UUID,
+    prisonerNumber: String,
+    resolution: PersonCaseNoteInvestigationResolution,
+  ) {
+    val pendingInvestigationIds = resolution.eligibleInvestigationIds
+    if (pendingInvestigationIds.isEmpty()) {
+      log.info("Case note deletion event received but no pending investigations so no action needed: caseNoteId={}, prisonerNumber={}", caseNoteId, prisonerNumber)
+      telemetryClient.trackEvent(
+        "CaseNoteDeletedNotFound",
+        deleteTelemetryDimensions(caseNoteId, prisonerNumber),
+        mapOf(),
+      )
+      return
+    }
+
+    try {
+      val deleteSuccessful = caseNoteAnnotationsService.deleteCaseNote(caseNoteId, pendingInvestigationIds)
+      if (deleteSuccessful) {
+        telemetryClient.trackEvent(
+          "CaseNoteDeletedFollowingDeletionEvent",
+          deleteTelemetryDimensions(caseNoteId, prisonerNumber),
+          mapOf(),
+        )
+      } else {
+        telemetryClient.trackEvent(
+          "CaseNoteDeletedNotFound",
+          deleteTelemetryDimensions(caseNoteId, prisonerNumber),
+          mapOf(),
+        )
+      }
+    } catch (e: Exception) {
+      telemetryClient.trackEvent(
+        "CaseNoteDeletedFailed",
+        deleteTelemetryDimensions(caseNoteId, prisonerNumber, e),
+        mapOf(),
+      )
+      throw e
     }
   }
 
