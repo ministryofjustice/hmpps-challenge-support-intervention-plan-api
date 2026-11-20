@@ -20,7 +20,7 @@ class DomainEventsListener(
       PRISONER_MERGED -> moveEventHandler.handleMerge(jsonMapper.readValue(notification.message))
       BOOKING_MOVED -> moveEventHandler.handleBookingMoved(jsonMapper.readValue(notification.message))
       PERSON_RECONCILIATION -> reconciliationHandler.handle(jsonMapper.readValue(notification.message))
-      PERSON_CASE_NOTE_CREATED, PERSON_CASE_NOTE_UPDATED, PERSON_CASE_NOTE_DELETED -> personCaseNoteHandler.handle(jsonMapper.readValue(notification.message))
+      PERSON_CASE_NOTE_CREATED, PERSON_CASE_NOTE_UPDATED -> personCaseNoteHandler.handle(jsonMapper.readValue(notification.message))
     }
   }
 
@@ -31,6 +31,5 @@ class DomainEventsListener(
     const val PERSON_RECONCILIATION = "csip.person.reconciliation"
     const val PERSON_CASE_NOTE_CREATED = "person.case-note.created"
     const val PERSON_CASE_NOTE_UPDATED = "person.case-note.updated"
-    const val PERSON_CASE_NOTE_DELETED = "person.case-note.deleted"
   }
 }
