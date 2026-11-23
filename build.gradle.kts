@@ -31,7 +31,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
 
   // AWS
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.6.0")
 
   // Database dependencies
   runtimeOnly("org.springframework.boot:spring-boot-starter-flyway")
@@ -45,7 +45,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.9.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.10.0")
 }
 
 kotlin {
