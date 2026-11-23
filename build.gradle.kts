@@ -2,18 +2,17 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.15"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.1.2"
   kotlin("plugin.spring") version "2.4.21"
   kotlin("plugin.jpa") version "2.4.21"
   jacoco
 }
 
-ext["jackson-bom.version"] = "3.2.3"
-ext["jackson-2-bom.version"] = "2.22.3"
-ext["logback.version"] = "1.6.3"
-ext["tomcat.version"] = "11.0.25"
-ext["postgresql.version"] = "42.7.12"
+ext["jackson-bom.version"] = "3.2.4"
+ext["jackson-2-bom.version"] = "2.22.4"
 ext["httpcore5.version"] = "5.4.3"
+// The plugin aligns OpenTelemetry with the Application Insights agent. Use the patched BOM for CVE-2026-118259.
+ext["opentelemetry.version"] = "1.68.0"
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
@@ -47,12 +46,6 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.9.0")
-
-  constraints {
-    implementation("io.opentelemetry:opentelemetry-api:1.68.0") {
-      because("CVE-2026-45292 - remove when transitive dependency is updated")
-    }
-  }
 }
 
 kotlin {
