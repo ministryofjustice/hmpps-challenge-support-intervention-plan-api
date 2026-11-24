@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNote
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.client.casenotes.CaseNotesClient
@@ -38,5 +39,19 @@ class CaseNotesService(
     return caseNotes.copy(content = caseNotes.content.filter { it.type != "ALERT" })
   }
 
-  fun getCaseNote(prisonerNumber: String, caseNoteId: java.util.UUID): CaseNote = caseNotesClient.getCaseNote(prisonerNumber, caseNoteId)
+  fun getCaseNote(prisonerNumber: String, caseNoteId: java.util.UUID): CaseNote? = try {
+    caseNotesClient.getCaseNote(prisonerNumber, caseNoteId)
+  } catch (e: Exception) {
+    log.warn(
+      "Skipping case note because it could not be retrieved from Case Notes API: prisonerNumber={}, caseNoteId={}",
+      prisonerNumber,
+      caseNoteId,
+      e,
+    )
+    null
+  }
+
+  private companion object {
+    private val log = LoggerFactory.getLogger(CaseNotesService::class.java)
+  }
 }

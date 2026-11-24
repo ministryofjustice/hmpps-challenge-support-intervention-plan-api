@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,6 +16,7 @@ class PersonCaseNoteHandler(
   private val caseNoteAnnotationsService: CaseNoteAnnotationsService,
   private val caseNoteAnalysedRepository: CaseNoteAnalysedRepository,
   private val caseNotesService: CaseNotesService,
+  private val telemetryClient: TelemetryClient,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -36,9 +38,34 @@ class PersonCaseNoteHandler(
     }
 
     log.info("Resolved prisoner number {} for case note {}", prisonerNumber, caseNoteId)
-
     val resolution = personCaseNoteInvestigationService.resolveInvestigations(prisonerNumber)
 
+    log.info(
+      "Routing person case note event: eventType={}, caseNoteId={}, discoveredInvestigationIds={}, evaluations={}",
+      event.eventType,
+      caseNoteId,
+      resolution.discoveredInvestigationIds,
+      resolution.evaluations,
+    )
+
+    when (event.eventType) {
+      DomainEventsListener.PERSON_CASE_NOTE_DELETED ->
+        handleCaseNoteDeletion(caseNoteId, prisonerNumber, resolution)
+
+      DomainEventsListener.PERSON_CASE_NOTE_CREATED,
+      DomainEventsListener.PERSON_CASE_NOTE_UPDATED,
+      -> handleCaseNoteAnalysis(event, caseNoteId, prisonerNumber, resolution)
+
+      else -> log.warn("Ignoring unsupported person case note event type {}", event.eventType)
+    }
+  }
+
+  private fun handleCaseNoteAnalysis(
+    event: HmppsDomainEvent<PersonCaseNoteInformation>,
+    caseNoteId: java.util.UUID,
+    prisonerNumber: String,
+    resolution: PersonCaseNoteInvestigationResolution,
+  ) {
     log.info(
       "Found {} distinct investigations for prisoner number {}: {}",
       resolution.discoveredInvestigationIds.size,
@@ -81,6 +108,7 @@ class PersonCaseNoteHandler(
         )
 
         val caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId)
+          ?: continue
         jdaService.submitCaseNotesForAnalysis(
           offenderIdentifier = prisonerNumber,
           prisonCode = caseNote.locationId,
@@ -117,5 +145,62 @@ class PersonCaseNoteHandler(
         )
       }
     }
+  }
+
+  private fun handleCaseNoteDeletion(
+    caseNoteId: java.util.UUID,
+    prisonerNumber: String,
+    resolution: PersonCaseNoteInvestigationResolution,
+  ) {
+    val pendingInvestigationIds = resolution.eligibleInvestigationIds.toSet()
+    log.info(
+      "Deleting case note for pending investigations: caseNoteId={}, prisonerNumber={}, pendingInvestigationIds={}",
+      caseNoteId,
+      prisonerNumber,
+      pendingInvestigationIds,
+    )
+    if (pendingInvestigationIds.isEmpty()) {
+      log.info("Case note deletion event received but no pending investigations so no action needed: caseNoteId={}, prisonerNumber={}", caseNoteId, prisonerNumber)
+      telemetryClient.trackEvent(
+        "CaseNoteDeletedNotFound",
+        deleteTelemetryDimensions(caseNoteId, prisonerNumber),
+        mapOf(),
+      )
+      return
+    }
+
+    try {
+      val deleteSuccessful = caseNoteAnnotationsService.deleteCaseNote(caseNoteId, pendingInvestigationIds)
+      if (deleteSuccessful) {
+        telemetryClient.trackEvent(
+          "CaseNoteDeletedFollowingDeletionEvent",
+          deleteTelemetryDimensions(caseNoteId, prisonerNumber),
+          mapOf(),
+        )
+      } else {
+        telemetryClient.trackEvent(
+          "CaseNoteDeletedNotFound",
+          deleteTelemetryDimensions(caseNoteId, prisonerNumber),
+          mapOf(),
+        )
+      }
+    } catch (e: Exception) {
+      telemetryClient.trackEvent(
+        "CaseNoteDeletedFailed",
+        deleteTelemetryDimensions(caseNoteId, prisonerNumber, e),
+        mapOf(),
+      )
+      throw e
+    }
+  }
+
+  private fun deleteTelemetryDimensions(
+    caseNoteId: java.util.UUID,
+    prisonerNumber: String?,
+    exception: Exception? = null,
+  ): Map<String, String> = buildMap {
+    put("caseNoteId", caseNoteId.toString())
+    prisonerNumber?.let { put("personIdentifier", it) }
+    exception?.let { put("errorType", it.javaClass.simpleName) }
   }
 }
