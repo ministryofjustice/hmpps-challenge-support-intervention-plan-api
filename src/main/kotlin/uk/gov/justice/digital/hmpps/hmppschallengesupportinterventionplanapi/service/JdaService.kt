@@ -76,15 +76,13 @@ class JdaService(
     investigationId: UUID,
     caseNoteId: UUID,
   ): JdaRequestResponse? {
-    val caseNote = try {
-      caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)
-    } catch (e: Exception) {
+    val caseNote = caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)
+    if (caseNote == null) {
       log.warn(
         "Unable to retrieve case note {} for offenderIdentifier={} during JDA re-analysis for investigationId={}",
         caseNoteId,
         offenderIdentifier,
         investigationId,
-        e,
       )
       return null
     }

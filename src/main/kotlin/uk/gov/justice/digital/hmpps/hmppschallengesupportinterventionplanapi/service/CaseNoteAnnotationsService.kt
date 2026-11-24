@@ -70,6 +70,22 @@ class CaseNoteAnnotationsService(
   }
 
   @Transactional
+  fun deleteCaseNote(caseNoteId: UUID, investigationIds: Set<UUID>): Boolean {
+    if (!caseNoteAnalysedRepository.existsByCaseNoteIdAndInvestigationIdIn(caseNoteId, investigationIds)) {
+      log.info(
+        "Domain event received following deletion of caseNoteId={}: no pending investigations have analysis for this case note, so nothing to delete",
+        caseNoteId,
+      )
+      return false
+    }
+
+    caseNoteAnnotationRepository.deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, investigationIds)
+    caseNoteAnalysedRepository.deleteByCaseNoteIdAndInvestigationIdIn(caseNoteId, investigationIds)
+    log.info("Domain event received following deletion of caseNoteId={}: deleted JDA analysis and annotations for pending investigations {}", caseNoteId, investigationIds)
+    return true
+  }
+
+  @Transactional
   fun persistSynchronousAnnotations(
     response: JdaRequestResponse,
     prisonerNumber: String,
@@ -148,11 +164,13 @@ class CaseNoteAnnotationsService(
       .findByCaseNotesAnalysedIdInAndBehaviourType(analysedCaseNoteIds, behaviourType)
       .groupBy { it.caseNoteId }
 
-    return analysedCaseNotes.keys.map { caseNoteId ->
+    return analysedCaseNotes.keys.mapNotNull { caseNoteId ->
       val relevanceScore = analysedCaseNotes[caseNoteId].orEmpty().maxOfOrNull { it.relevancyFor(behaviourType) } ?: 0
+      val caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId)
+        ?: return@mapNotNull null
 
       CaseNoteWithAnnotations(
-        caseNote = caseNotesService.getCaseNote(prisonerNumber, caseNoteId),
+        caseNote = caseNote,
         annotations = caseNoteAnnotations[caseNoteId].orEmpty().map { it.toSummary() },
         relevanceScore = relevanceScore,
       )

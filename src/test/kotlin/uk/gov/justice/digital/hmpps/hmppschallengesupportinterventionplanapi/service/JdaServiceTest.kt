@@ -285,7 +285,7 @@ class JdaServiceTest {
 
   @Test
   fun `submitCaseNotesForReAnalysis returns null when case note retrieval fails`() {
-    whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenThrow(RuntimeException("boom"))
+    whenever(caseNotesService.getCaseNote(offenderIdentifier, caseNoteId)).thenReturn(null)
 
     val result = service.submitCaseNotesForReAnalysis(
       offenderIdentifier = offenderIdentifier,
