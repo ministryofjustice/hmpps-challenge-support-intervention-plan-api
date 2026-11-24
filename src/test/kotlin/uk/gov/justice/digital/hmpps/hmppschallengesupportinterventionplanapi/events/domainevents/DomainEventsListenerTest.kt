@@ -48,7 +48,7 @@ class DomainEventsListenerTest {
     with(eventCaptor.firstValue) {
       assertThat(eventType).isEqualTo("person.case-note.deleted")
       assertThat(additionalInformation.id).isEqualTo(caseNoteId)
-      assertThat(personReference?.findNomsNumber()).isEqualTo("G0233VH")
+      assertThat(personReference?.findNomsNumber()).isEqualTo("A12345BC")
     }
   }
 }
