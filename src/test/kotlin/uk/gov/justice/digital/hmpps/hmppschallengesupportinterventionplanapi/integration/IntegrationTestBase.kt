@@ -70,6 +70,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.eve
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.CsipMovedInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.EntityEventService
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PersonCaseNoteInformation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.Notification
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.events.domainevents.PersonReference
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.container.LocalStackContainer
@@ -158,6 +159,19 @@ abstract class IntegrationTestBase {
 
   internal fun sendDomainEvent(event: HmppsDomainEvent<*>) {
     domainEventsTopic.publish(event.eventType, jsonMapper.writeValueAsString(event))
+  }
+
+  internal fun sendDeletedCaseNoteEvent(caseNoteId: UUID, prisonerNumber: String) {
+    sendDomainEvent(
+      HmppsDomainEvent(
+        occurredAt = java.time.ZonedDateTime.now(),
+        eventType = "person.case-note.deleted",
+        detailUrl = null,
+        description = "A case note has been deleted",
+        additionalInformation = PersonCaseNoteInformation(id = caseNoteId),
+        personReference = PersonReference.withPrisonNumber(prisonerNumber),
+      ),
+    )
   }
 
   internal fun HmppsQueue.countAllMessagesOnQueue() = sqsClient.countAllMessagesOnQueue(queueUrl).get()

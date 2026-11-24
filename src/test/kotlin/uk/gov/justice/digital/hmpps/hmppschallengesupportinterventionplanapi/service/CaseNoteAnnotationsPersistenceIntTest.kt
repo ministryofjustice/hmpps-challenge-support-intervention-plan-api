@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.service
 
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.dom
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotation
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.domain.CaseNoteAnnotationRepository
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.BehaviourType
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.enumeration.ReferenceDataType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaDequeueResponseData
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaMetadata
@@ -17,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.mod
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestStatus
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JdaRequestType
 import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.model.jda.JustifyingSpan
+import uk.gov.justice.digital.hmpps.hmppschallengesupportinterventionplanapi.utils.EntityGenerator.generateCsipRecord
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -37,6 +42,44 @@ class CaseNoteAnnotationsPersistenceIntTest : IntegrationTestBase() {
     caseNoteAnnotationRepository.deleteAll()
     caseNoteAnalysedRepository.deleteAll()
     entityManager.clear()
+  }
+
+  @Test
+  fun `deleted case note domain event removes only the event case note from pending investigation`() {
+    val deletedCaseNoteId = UUID.randomUUID()
+    val survivingCaseNoteId = UUID.randomUUID()
+
+    val record = dataSetup(generateCsipRecord()) { csip ->
+      csip.withCompletedReferral()
+      requireNotNull(csip.referral)
+        .withSaferCustodyScreeningOutcome(outcome = givenReferenceData(ReferenceDataType.SCREENING_OUTCOME_TYPE, "OPE"))
+      csip
+    }
+
+    val prisonerNumber = record.personSummary.prisonNumber
+    val investigationId = record.id
+    seedAnalysedWithAnnotations(
+      investigationId = investigationId,
+      caseNoteId = deletedCaseNoteId,
+      prisonerNumber = prisonerNumber,
+      annotationTexts = listOf("deleted event base", "deleted event amendment"),
+    )
+    seedAnalysedWithAnnotations(
+      investigationId = investigationId,
+      caseNoteId = survivingCaseNoteId,
+      prisonerNumber = prisonerNumber,
+      annotationTexts = listOf("surviving base", "surviving amendment"),
+    )
+
+    sendDeletedCaseNoteEvent(deletedCaseNoteId, prisonerNumber)
+
+    await untilCallTo { countAnalysedRows(investigationId, deletedCaseNoteId) } matches { it == 0L }
+    entityManager.clear()
+
+    assertThat(findPersistedAnnotations(investigationId, deletedCaseNoteId)).isEmpty()
+    assertThat(countAnalysedRows(investigationId, survivingCaseNoteId)).isEqualTo(1)
+    assertThat(findAnnotationTexts(investigationId, survivingCaseNoteId))
+      .containsExactlyInAnyOrder("surviving base", "surviving amendment")
   }
 
   @Test
